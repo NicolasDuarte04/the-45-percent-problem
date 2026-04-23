@@ -1,0 +1,78 @@
+# ─── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# ─── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ─── Secrets ────────────────────────────────────────────────────────────────────
+.env.local
+secrets.yaml
+*.key
+
+# ─── Data files (reproducible from scripts — don't commit large binaries) ───────
+data/raw/*.parquet
+data/raw/*.csv
+data/raw/*.json
+data/processed/*.parquet
+data/snapshots/*.parquet
+data/snapshots/*.jsonl
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/snapshots/.gitkeep
+
+# ─── Model artefacts (keep frozen JSON param files) ─────────────────────────────
+models/*.pkl
+models/*.joblib
+!models/*.json
+
+# ─── Logs ───────────────────────────────────────────────────────────────────────
+logs/
+*.log
+!logs/.gitkeep
+
+# ─── IDE & OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# ─── Testing & linting ──────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Jupyter ────────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Website build artefacts ────────────────────────────────────────────────────
+website/.next/
+website/node_modules/
+website/out/
+website/.svelte-kit/
+
+# ─── Personal notes & documents (never commit) ───────────────────────────────
+*.docx
+*.doc
+*.pdf
+!evaluation/*.pdf
+
+# ─── Calibration / hypothesis artefacts ──────────────────────────────────────
+.hypothesis/

@@ -1,0 +1,23 @@
+{
+  "c": 0.580386,
+  "mu": 1.715874,
+  "lam3": 0.1,
+  "rho": -0.05,
+  "cv_log_loss": 1.0318,
+  "wc2022_fold_log_loss": 1.058063,
+  "brier_score": 0.618199,
+  "rps": 0.219903,
+  "n_calibration_matches": 283,
+  "data_snapshot_sha": "e02123a3488f8f453d63668b47b6aa51a38d884d9c86c6dfa83eda40ad696627",
+  "sanity_checks": {
+    "reliability_max_drift_pp": 15.57,
+    "calibration_slope": 0.9132,
+    "hold_one_out_c_diff": 0.0804,
+    "hold_one_out_c_excl_wc2018": 0.5,
+    "model_log_loss": 1.0318,
+    "baseline_log_loss": 1.098612,
+    "mean_implied_total_goals": 3.4921,
+    "mean_empirical_total_goals": 2.629,
+    "total_goals_drift": 0.8632
+  }
+}
