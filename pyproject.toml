@@ -1,0 +1,82 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "the-45-percent-problem"
+version = "0.1.0"
+description = "A probabilistic pricing framework for the FIFA World Cup 2026"
+requires-python = ">=3.9"
+
+dependencies = [
+    # ── Core data ──────────────────────────────────────────────────────────────
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "pyarrow>=14.0",
+    "scipy>=1.11",
+
+    # ── Data validation ────────────────────────────────────────────────────────
+    "pydantic>=2.5",
+    "pydantic-settings>=2.1",
+
+    # ── Configuration ──────────────────────────────────────────────────────────
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+
+    # ── HTTP & scraping ────────────────────────────────────────────────────────
+    "httpx>=0.26",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+
+    # ── Logging & CLI ──────────────────────────────────────────────────────────
+    "rich>=13.7",
+    "structlog>=24.1",
+
+    # ── Progress & utilities ───────────────────────────────────────────────────
+    "tqdm>=4.66",
+    "tenacity>=8.2",
+    "python-dateutil>=2.8",
+    "pytz>=2024.1",
+
+    # ── Probabilistic modelling ────────────────────────────────────────────────
+    "statsmodels>=0.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-asyncio>=0.23",
+    "black>=24.0",
+    "ruff>=0.3",
+    "mypy>=1.8",
+    "pandas-stubs>=2.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "ingestion", "models", "simulation",
+    "market", "evaluation", "utils",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=. --cov-report=term-missing"
+asyncio_mode = "auto"

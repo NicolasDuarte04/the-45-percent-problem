@@ -1,0 +1,23 @@
+==============================================================
+  Historical Matches — Ingestion Report
+  Generated : 2026-04-21T17:32:38.947698+00:00
+==============================================================
+  Total matches         :    481
+  Calibration matches   :    417
+  Hold-out (2022 WC)    :     64
+  Date range            : 2010-06-11 → 2024-07-14
+
+  Matches per tournament:
+    AFC Asian Cup 2023                           51
+    Copa America 2021                            28
+    Copa America 2024                            32
+    FIFA World Cup 2010                          64
+    FIFA World Cup 2014                          64
+    FIFA World Cup 2018                          64
+    FIFA World Cup 2022                          64  [HOLD-OUT]
+    UEFA Euro 2020                               63
+    UEFA Euro 2024                               51
+
+  Unique teams  : 92
+  Missing scores: 0
+==============================================================

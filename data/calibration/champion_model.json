@@ -1,0 +1,10 @@
+{
+  "champion_model_id": "M2_fifa",
+  "L_CV": 0.99337,
+  "delta_vs_M0": -0.04096,
+  "sigma_CV": 0.006587,
+  "matrix_sha256": "8ae40a863beb6a7eb78797efd7ab7d4de5d289c13104984293cff83db658f3cf",
+  "CHAMPION_LOCKED": true,
+  "tau_star": 180.0,
+  "w_star": 1.0
+}
