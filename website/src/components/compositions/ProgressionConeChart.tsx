@@ -2,13 +2,13 @@
 
 import {
   Area,
-  Line,
-  ComposedChart,
+  AreaChart,
+  CartesianGrid,
+  ReferenceArea,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
 } from "recharts";
 import type { TeamProgression } from "@/lib/data/schemas";
 
@@ -31,13 +31,18 @@ const STAGES: Array<{
   { key: "p_champion", label: "champion", short: "CHA" },
 ];
 
+interface ConeDatum {
+  stage: string;
+  label: string;
+  p: number;
+  p_range: [number, number];
+  is_champion: boolean;
+  ci_lo: number | null;
+  ci_hi: number | null;
+}
+
 interface TooltipPayload {
-  payload?: {
-    stage: string;
-    p: number;
-    lo: number;
-    hi: number;
-  };
+  payload?: ConeDatum;
 }
 
 function ConeTooltip({ payload }: { payload?: TooltipPayload[] }) {
@@ -45,20 +50,26 @@ function ConeTooltip({ payload }: { payload?: TooltipPayload[] }) {
   if (!d) return null;
   return (
     <div
-      className="border rounded px-3 py-2 text-[11px] mono"
+      className="rounded px-3 py-2 text-[11px] mono"
       style={{
         backgroundColor: "var(--bg-panel-elev)",
-        borderColor: "var(--border-default)",
+        border: "1px solid var(--border-default)",
         color: "var(--text-primary)",
       }}
     >
-      <div>{d.stage}</div>
+      <div>{d.label}</div>
       <div style={{ color: "var(--text-secondary)" }}>
         P(reach) = {(d.p * 100).toFixed(1)}%
       </div>
-      <div style={{ color: "var(--text-tertiary)" }}>
-        95% band [{(d.lo * 100).toFixed(1)}%, {(d.hi * 100).toFixed(1)}%]
-      </div>
+      {d.is_champion && d.ci_lo !== null && d.ci_hi !== null ? (
+        <div style={{ color: "var(--text-tertiary)" }}>
+          95% CI [{(d.ci_lo * 100).toFixed(1)}%, {(d.ci_hi * 100).toFixed(1)}%]
+        </div>
+      ) : (
+        <div style={{ color: "var(--text-quiet)" }}>
+          CI published only on champion stage
+        </div>
+      )}
     </div>
   );
 }
@@ -68,35 +79,23 @@ export function ProgressionConeChart({
   fifaCode,
   displayName,
 }: ProgressionConeChartProps) {
-  const values = STAGES.map((s) => progression[s.key]) as number[];
-
   const [ciLo, ciHi] = progression.ci_95_champion;
-  const championIdx = STAGES.length - 1;
-  const pChampion = progression.p_champion;
 
-  const data = STAGES.map((s, i) => {
-    const p = values[i] as number;
-    let lo = p;
-    let hi = p;
-    if (i === championIdx) {
-      lo = ciLo;
-      hi = ciHi;
-    } else {
-      const shrink = 1 - i / championIdx;
-      const delta = (ciHi - ciLo) / 2;
-      const adjusted = delta * (1 - 0.65 * shrink);
-      lo = Math.max(0, p - adjusted);
-      hi = Math.min(1, p + adjusted);
-    }
+  const data: ConeDatum[] = STAGES.map((s) => {
+    const p = progression[s.key] as number;
+    const isChampion = s.key === "p_champion";
     return {
       stage: s.short,
       label: s.label,
       p,
-      lo,
-      hi,
-      band: [lo, hi],
+      p_range: [0, p],
+      is_champion: isChampion,
+      ci_lo: isChampion ? ciLo : null,
+      ci_hi: isChampion ? ciHi : null,
     };
   });
+
+  const pChampion = progression.p_champion;
 
   return (
     <div
@@ -107,7 +106,7 @@ export function ProgressionConeChart({
         padding: 20,
       }}
     >
-      <div className="flex justify-between items-baseline mb-4">
+      <div className="flex justify-between items-baseline mb-4 flex-wrap gap-2">
         <div>
           <h3
             className="text-[13px] font-medium"
@@ -122,8 +121,8 @@ export function ProgressionConeChart({
             className="mono text-[11px] mt-[3px]"
             style={{ color: "var(--text-tertiary)" }}
           >
-            {displayName} · marginal P(reach stage) from Monte Carlo · 95% band
-            on champion; earlier stages interpolated for visual shape only
+            {displayName} · marginal P(reach stage) from Monte Carlo ensemble ·
+            95% band published on champion stage only (§4.6)
           </div>
         </div>
         <div
@@ -136,17 +135,17 @@ export function ProgressionConeChart({
 
       <div
         role="img"
-        aria-label={`Progression cone for ${displayName}, champion probability ${(pChampion * 100).toFixed(1)} percent with confidence interval ${(ciLo * 100).toFixed(1)} to ${(ciHi * 100).toFixed(1)} percent`}
+        aria-label={`Progression cone for ${displayName}, champion probability ${(pChampion * 100).toFixed(1)} percent with 95% confidence interval ${(ciLo * 100).toFixed(1)} to ${(ciHi * 100).toFixed(1)} percent`}
       >
-        <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart
             data={data}
-            margin={{ top: 8, right: 16, bottom: 24, left: 8 }}
+            margin={{ top: 12, right: 24, bottom: 24, left: 8 }}
           >
             <defs>
-              <linearGradient id="coneBand" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--prism-peach)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--prism-peach)" stopOpacity={0.08} />
+              <linearGradient id="progression-cone-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--prism-peach)" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="var(--prism-peach)" stopOpacity={0.04} />
               </linearGradient>
             </defs>
             <CartesianGrid
@@ -175,24 +174,22 @@ export function ProgressionConeChart({
               }}
               axisLine={{ stroke: "var(--border-default)" }}
               tickLine={{ stroke: "var(--border-default)" }}
-              width={40}
+              width={44}
             />
             <Tooltip
               content={<ConeTooltip />}
               cursor={{ stroke: "var(--border-default)", strokeDasharray: "3 3" }}
             />
+            {/* Cone: area from 0 up to P(reach stage). Naturally funnels as
+                probabilities decay across the progression — the cone shape
+                emerges from the published probabilities, not interpolation. */}
             <Area
-              type="monotone"
-              dataKey="band"
-              stroke="none"
-              fill="url(#coneBand)"
-              isAnimationActive={false}
-            />
-            <Line
               type="monotone"
               dataKey="p"
               stroke="var(--prism-peach)"
               strokeWidth={2}
+              fill="url(#progression-cone-fill)"
+              isAnimationActive={false}
               dot={{
                 r: 3,
                 fill: "var(--prism-peach)",
@@ -200,9 +197,22 @@ export function ProgressionConeChart({
                 strokeWidth: 1.5,
               }}
               activeDot={{ r: 5 }}
-              isAnimationActive={false}
             />
-          </ComposedChart>
+            {/* 95% CI band — rendered only at the champion stage, which is the
+                only stage with a published CI in the data contract (§4.6). */}
+            <ReferenceArea
+              x1="CHA"
+              x2="CHA"
+              y1={ciLo}
+              y2={ciHi}
+              ifOverflow="extendDomain"
+              stroke="var(--prism-peach)"
+              strokeOpacity={0.55}
+              strokeWidth={1.5}
+              fill="var(--prism-peach)"
+              fillOpacity={0.22}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
@@ -227,16 +237,18 @@ export function ProgressionConeChart({
               {d.stage}
             </div>
             <div
-              className="mono text-[14px] mt-0.5"
+              className="mono text-[14px] mt-0.5 tabular-nums"
               style={{ color: "var(--text-primary)" }}
             >
               {(d.p * 100).toFixed(1)}%
             </div>
             <div
-              className="mono text-[10px] mt-0.5"
+              className="mono text-[10px] mt-0.5 tabular-nums"
               style={{ color: "var(--text-quiet)" }}
             >
-              [{(d.lo * 100).toFixed(1)}, {(d.hi * 100).toFixed(1)}]
+              {d.is_champion && d.ci_lo !== null && d.ci_hi !== null
+                ? `[${(d.ci_lo * 100).toFixed(1)}, ${(d.ci_hi * 100).toFixed(1)}]`
+                : "— no CI —"}
             </div>
           </div>
         ))}

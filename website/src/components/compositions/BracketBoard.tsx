@@ -2,6 +2,7 @@ import Link from "next/link";
 import type {
   BracketSnapshot,
   TournamentSnapshot,
+  TournamentTeam,
 } from "@/lib/data/schemas";
 import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
 
@@ -11,6 +12,7 @@ interface BracketBoardProps {
 }
 
 type RoundKey =
+  | "p_group_qualification"
   | "p_r16"
   | "p_quarterfinal"
   | "p_semifinal"
@@ -18,6 +20,7 @@ type RoundKey =
   | "p_champion";
 
 const ROUNDS: Array<{ key: RoundKey; short: string; label: string }> = [
+  { key: "p_group_qualification", short: "GRP", label: "group qualification" },
   { key: "p_r16", short: "R16", label: "round of 16" },
   { key: "p_quarterfinal", short: "QF", label: "quarter-final" },
   { key: "p_semifinal", short: "SF", label: "semi-final" },
@@ -25,27 +28,33 @@ const ROUNDS: Array<{ key: RoundKey; short: string; label: string }> = [
   { key: "p_champion", short: "CHA", label: "champion" },
 ];
 
+function cellBackground(p: number): string {
+  // Prism-only density ramp (cyan → peach → plum). Canvas-invariant hues
+  // mixed into the elevated-panel background via oklch interpolation, so
+  // the ramp reads consistently on the Quant (warm slate) canvas.
+  if (p < 0.01) return "var(--bg-panel-elev)";
+  const scale = Math.min(1, p * 3);
+  if (p < 0.15) {
+    return `color-mix(in oklch, var(--prism-cyan) ${10 + scale * 35}%, var(--bg-panel-elev))`;
+  }
+  if (p < 0.35) {
+    return `color-mix(in oklch, var(--prism-peach) ${25 + scale * 55}%, var(--bg-panel-elev))`;
+  }
+  return `color-mix(in oklch, var(--prism-plum) ${35 + scale * 55}%, var(--bg-panel-elev))`;
+}
+
+function cellTextColor(p: number): string {
+  if (p > 0.35) return "var(--bg-root)";
+  if (p > 0.08) return "var(--text-primary)";
+  return "var(--text-tertiary)";
+}
+
 export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   const slotsPopulated = bracket.rounds.some((r) => r.slots.length > 0);
 
-  const sortedTeams = tournament.teams
+  const sortedTeams: TournamentTeam[] = tournament.teams
     .slice()
     .sort((a, b) => b.p_champion - a.p_champion);
-
-  const topTeams = sortedTeams.slice(0, 16);
-
-  const cellColor = (p: number) => {
-    if (p < 0.02) return "var(--bg-panel-elev)";
-    const scale = Math.min(1, p * 3);
-    if (p < 0.15)
-      return `color-mix(in oklch, var(--prism-cyan) ${10 + scale * 35}%, var(--bg-panel-elev))`;
-    if (p < 0.35)
-      return `color-mix(in oklch, var(--prism-peach) ${25 + scale * 55}%, var(--bg-panel-elev))`;
-    return `color-mix(in oklch, var(--prism-plum) ${35 + scale * 55}%, var(--bg-panel-elev))`;
-  };
-
-  const textColor = (p: number) =>
-    p > 0.35 ? "var(--bg-root)" : p > 0.08 ? "var(--text-primary)" : "var(--text-tertiary)";
 
   return (
     <div
@@ -73,7 +82,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           >
             {slotsPopulated
               ? "draw-resolved bracket with per-round conditional probabilities"
-              : "pre-tournament bracket · slots unresolved · showing marginal P(reach round) across top 16 by champion probability"}
+              : `pre-tournament bracket · slots unresolved · showing marginal P(reach round) for all ${sortedTeams.length} teams, sorted by champion probability`}
           </div>
         </div>
         <div
@@ -84,16 +93,17 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         </div>
       </div>
 
-      {/* CSS Grid bracket — native, no external library */}
+      {/* Native CSS Grid — no external bracket library (§12.7) */}
       <div
         role="table"
         aria-label="Bracket board: per-round marginal probabilities"
         className="overflow-x-auto"
+        style={{ maxHeight: 640, overflowY: "auto" }}
       >
         <div
           className="grid"
           style={{
-            gridTemplateColumns: `minmax(160px, 1.2fr) repeat(${ROUNDS.length}, minmax(100px, 1fr))`,
+            gridTemplateColumns: `minmax(180px, 1.4fr) repeat(${ROUNDS.length}, minmax(92px, 1fr))`,
             gap: 1,
             background: "var(--border-subtle)",
             border: "1px solid var(--border-subtle)",
@@ -101,12 +111,15 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             overflow: "hidden",
           }}
         >
-          {/* Header row */}
+          {/* Header row — sticky so it stays visible during vertical scroll */}
           <div
             className="mono text-[10px] uppercase tracking-[.08em] px-3 py-2"
             style={{
               background: "var(--bg-panel-elev)",
               color: "var(--text-quiet)",
+              position: "sticky",
+              top: 0,
+              zIndex: 2,
             }}
             role="columnheader"
           >
@@ -119,19 +132,23 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               style={{
                 background: "var(--bg-panel-elev)",
                 color: "var(--text-quiet)",
+                position: "sticky",
+                top: 0,
+                zIndex: 2,
               }}
               role="columnheader"
+              title={r.label}
             >
               {r.short}
             </div>
           ))}
 
           {/* Team rows */}
-          {topTeams.map((team) => (
+          {sortedTeams.map((team) => (
             <div key={team.fifa_code} className="contents" role="row">
               <Link
                 href={`/team/${team.fifa_code}`}
-                className="px-3 py-2 flex items-center gap-2"
+                className="px-3 py-2 flex items-center gap-2 transition-colors duration-[120ms]"
                 style={{
                   background: "var(--bg-panel)",
                   color: "var(--text-primary)",
@@ -139,7 +156,11 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               >
                 <span
                   className="mono text-[11px]"
-                  style={{ color: "var(--accent-focus)", minWidth: 36 }}
+                  style={{
+                    color: "var(--accent-focus)",
+                    minWidth: 36,
+                    letterSpacing: ".02em",
+                  }}
                 >
                   {team.fifa_code}
                 </span>
@@ -153,7 +174,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                   {team.display_name}
                 </span>
                 <span
-                  className="mono text-[10px] ml-auto"
+                  className="mono text-[10px] ml-auto tabular-nums"
                   style={{ color: "var(--text-quiet)" }}
                 >
                   #{team.seed} · {team.group ?? "—"}
@@ -169,8 +190,8 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                     aria-label={`${team.display_name} probability of reaching ${r.label}: ${(p * 100).toFixed(1)} percent`}
                     className="flex items-center justify-center py-2"
                     style={{
-                      background: cellColor(p),
-                      color: textColor(p),
+                      background: cellBackground(p),
+                      color: cellTextColor(p),
                     }}
                   >
                     <ProbabilityCell p={p} decimals={1} />
@@ -182,17 +203,17 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         </div>
       </div>
 
-      {/* Legend */}
+      {/* Legend — Prism ramp strip */}
       <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
         <div
           className="mono text-[10px] uppercase tracking-[.08em]"
           style={{ color: "var(--text-quiet)" }}
         >
-          P(reach round) density
+          P(reach round) density · Prism ramp
         </div>
         <div className="flex items-center gap-2" style={{ minWidth: 240 }}>
           <span
-            className="mono text-[10px]"
+            className="mono text-[10px] tabular-nums"
             style={{ color: "var(--text-quiet)" }}
           >
             0%
@@ -207,7 +228,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             }}
           />
           <span
-            className="mono text-[10px]"
+            className="mono text-[10px] tabular-nums"
             style={{ color: "var(--text-quiet)" }}
           >
             100%

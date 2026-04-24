@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright test runtime output
+tests/visual/.playwright-output/
+
+# Claude Code local config
+/.claude/
