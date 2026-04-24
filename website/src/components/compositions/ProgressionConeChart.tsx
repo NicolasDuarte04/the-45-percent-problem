@@ -4,7 +4,8 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  ReferenceArea,
+  ReferenceDot,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -198,19 +199,35 @@ export function ProgressionConeChart({
               }}
               activeDot={{ r: 5 }}
             />
-            {/* 95% CI band — rendered only at the champion stage, which is the
-                only stage with a published CI in the data contract (§4.6). */}
-            <ReferenceArea
-              x1="CHA"
-              x2="CHA"
-              y1={ciLo}
-              y2={ciHi}
-              ifOverflow="extendDomain"
+            {/* 95% CI segment — rendered only at the champion stage, which is
+                the only stage with a published CI in the data contract (§4.6).
+                Drawn as a vertical segment from ciLo to ciHi at x=CHA, with
+                small cap dots at both bounds. */}
+            <ReferenceLine
+              segment={[
+                { x: "CHA", y: ciLo },
+                { x: "CHA", y: ciHi },
+              ]}
               stroke="var(--prism-peach)"
-              strokeOpacity={0.55}
-              strokeWidth={1.5}
+              strokeWidth={3}
+              strokeOpacity={0.75}
+              ifOverflow="extendDomain"
+            />
+            <ReferenceDot
+              x="CHA"
+              y={ciLo}
+              r={3}
               fill="var(--prism-peach)"
-              fillOpacity={0.22}
+              stroke="var(--bg-panel)"
+              strokeWidth={1}
+            />
+            <ReferenceDot
+              x="CHA"
+              y={ciHi}
+              r={3}
+              fill="var(--prism-peach)"
+              stroke="var(--bg-panel)"
+              strokeWidth={1}
             />
           </AreaChart>
         </ResponsiveContainer>
