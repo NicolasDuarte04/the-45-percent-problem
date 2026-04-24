@@ -32,3 +32,17 @@ export function formatCI(lo: number, hi: number, decimals = 3): string {
 export function formatSha(sha: string): string {
   return sha.slice(0, 7);
 }
+
+/** Formats a UTC ISO timestamp to "MM-DD HH:MMZ" with string fallback. */
+export function formatUtcShort(utc: string): string {
+  try {
+    const d = new Date(utc);
+    const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const dy = String(d.getUTCDate()).padStart(2, "0");
+    const hh = String(d.getUTCHours()).padStart(2, "0");
+    const mm = String(d.getUTCMinutes()).padStart(2, "0");
+    return `${mo}-${dy} ${hh}:${mm}Z`;
+  } catch {
+    return utc.slice(0, 16).replace("T", " ");
+  }
+}

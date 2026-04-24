@@ -1,5 +1,6 @@
 import type { MatchDetail } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
+import { formatProbability } from "@/lib/formatters";
 
 interface MatchHeaderProps {
   match: MatchDetail;
@@ -74,7 +75,11 @@ export function MatchHeader({ match }: MatchHeaderProps) {
             style={{ color: "var(--text-primary)" }}
           >
             <span className="flex flex-col items-start">
-              <ProbabilityCell p={p.H} />
+              <NumericCell
+                value={p.H}
+                formatter={(x) => formatProbability(x, 1)}
+                ariaLabel={`${(p.H * 100).toFixed(1)} percent`}
+              />
               <span className="text-[10px]" style={{ color: "var(--text-quiet)" }}>
                 {home.fifa_code} win
               </span>
@@ -83,13 +88,21 @@ export function MatchHeader({ match }: MatchHeaderProps) {
               className="flex flex-col items-center"
               style={{ color: "var(--text-tertiary)" }}
             >
-              <ProbabilityCell p={p.D} />
+              <NumericCell
+                value={p.D}
+                formatter={(x) => formatProbability(x, 1)}
+                ariaLabel={`${(p.D * 100).toFixed(1)} percent`}
+              />
               <span className="text-[10px]" style={{ color: "var(--text-quiet)" }}>
                 draw
               </span>
             </span>
             <span className="flex flex-col items-end">
-              <ProbabilityCell p={p.A} />
+              <NumericCell
+                value={p.A}
+                formatter={(x) => formatProbability(x, 1)}
+                ariaLabel={`${(p.A * 100).toFixed(1)} percent`}
+              />
               <span className="text-[10px]" style={{ color: "var(--text-quiet)" }}>
                 {away.fifa_code} win
               </span>

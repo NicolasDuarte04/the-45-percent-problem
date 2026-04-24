@@ -1,5 +1,6 @@
 import type { MatchDetail } from "@/lib/data/schemas";
-import { MonoNumber } from "@/components/primitives/MonoNumber";
+import { NumericCell } from "@/components/primitives/NumericCell";
+import { formatMono } from "@/lib/formatters";
 
 interface StrengthInputsPanelProps {
   match: MatchDetail;
@@ -131,7 +132,10 @@ export function StrengthInputsPanel({ match }: StrengthInputsPanelProps) {
           }}
         >
           Shootout applicable · P({match.home.fifa_code} wins shootout | knock-out) ={" "}
-          <MonoNumber value={match.p_shootout_home_if_ko * 100} decimals={1} />%
+          <NumericCell
+            value={match.p_shootout_home_if_ko * 100}
+            formatter={(v) => formatMono(v, 1)}
+          />%
         </div>
       )}
     </div>

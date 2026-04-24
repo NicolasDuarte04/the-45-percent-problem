@@ -8,25 +8,22 @@ import {
   useTransition,
   useEffect,
 } from "react";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  type ColumnDef,
-  type SortingState,
-} from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { DivergenceRow } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
-import { MonoNumber } from "@/components/primitives/MonoNumber";
-import { ConfidenceInterval } from "@/components/primitives/ConfidenceInterval";
 import { DivergenceBar } from "@/components/primitives/DivergenceBar";
 import { EdgeSparkline } from "@/components/primitives/EdgeSparkline";
-import { formatMono } from "@/lib/formatters";
+import {
+  formatCI,
+  formatMono,
+  formatProbability,
+  formatUtcShort,
+} from "@/lib/formatters";
+import { MARKET_LABELS } from "@/lib/markets";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,37 +32,42 @@ import { formatMono } from "@/lib/formatters";
 const COL_GRID =
   "6rem 2.5rem minmax(0,1fr) 4.5rem 3rem 5rem 5rem 5rem 5.5rem 3rem 5rem 7rem 3.5rem";
 
-const MARKET_LABELS: Record<string, string> = {
-  "1X2": "1X2",
-  BTTS: "BTTS",
-  OU_2_5: "O/U 2.5",
-  "AH_-0.5": "AH −0.5",
-  "AH_+0.5": "AH +0.5",
-  ADV_KO: "Adv. KO",
+// ── Sort model ────────────────────────────────────────────────────────────────
+
+type SortKey =
+  | "kickoff_utc"
+  | "round"
+  | "p_model"
+  | "q_market_devigged"
+  | "absEdge"
+  | "gate_status";
+type SortDir = "asc" | "desc";
+
+const DEFAULT_SORT: { key: SortKey; dir: SortDir } = {
+  key: "absEdge",
+  dir: "desc",
 };
 
-const ROUND_ORDER: Record<string, number> = {
-  GRP: 0,
-  R32: 1,
-  R16: 2,
-  QF: 3,
-  SF: 4,
-  "3P": 5,
-  FIN: 6,
-};
-
-function formatKickoff(utc: string): string {
-  try {
-    const d = new Date(utc);
-    const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const dy = String(d.getUTCDate()).padStart(2, "0");
-    const hh = String(d.getUTCHours()).padStart(2, "0");
-    const mm = String(d.getUTCMinutes()).padStart(2, "0");
-    return `${mo}-${dy} ${hh}:${mm}Z`;
-  } catch {
-    return utc.slice(0, 16).replace("T", " ");
+function sortValue(row: DivergenceRow, key: SortKey): string | number {
+  switch (key) {
+    case "absEdge":
+      return Math.abs(row.edge_E);
+    case "kickoff_utc":
+      return row.kickoff_utc;
+    case "round":
+      return row.round;
+    case "p_model":
+      return row.p_model;
+    case "q_market_devigged":
+      return row.q_market_devigged;
+    case "gate_status":
+      return row.gate_status;
   }
 }
+
+// Team-search debounce window (§12.5 terminal UX). Keeps URL mutations rare
+// enough to preserve Back/Forward without losing keystrokes.
+const TEAM_SEARCH_DEBOUNCE_MS = 200;
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -81,19 +83,23 @@ interface DivergenceTableProps {
 function FilterBar({
   allTeams,
   onParamChange,
+  onClearAll,
   activeRound,
   activeMarket,
   activeGate,
   activeEdge,
-  activeTeam,
+  teamInput,
+  onTeamInputChange,
 }: {
   allTeams: string[];
   onParamChange: (key: string, value: string) => void;
+  onClearAll: () => void;
   activeRound: string;
   activeMarket: string;
   activeGate: string;
   activeEdge: string;
-  activeTeam: string;
+  teamInput: string;
+  onTeamInputChange: (v: string) => void;
 }) {
   const selectCls =
     "mono text-[11px] px-2 py-1 rounded border bg-transparent transition-colors duration-[120ms] focus:outline-none focus:ring-1";
@@ -172,15 +178,15 @@ function FilterBar({
         <option value="5">|E| ≥ 5%</option>
       </select>
 
-      {/* Team autocomplete */}
+      {/* Team autocomplete (debounced — URL syncs after TEAM_SEARCH_DEBOUNCE_MS). */}
       <input
         type="search"
         className={selectCls}
         style={{ ...selectStyle, minWidth: 120 }}
         placeholder="Team…"
-        value={activeTeam}
+        value={teamInput}
         aria-label="Filter by team name"
-        onChange={(e) => onParamChange("team", e.target.value)}
+        onChange={(e) => onTeamInputChange(e.target.value)}
         list="terminal-teams-list"
       />
       <datalist id="terminal-teams-list">
@@ -190,7 +196,7 @@ function FilterBar({
       </datalist>
 
       {/* Clear all */}
-      {(activeRound || activeMarket || activeGate !== "all" || activeEdge !== "all" || activeTeam) && (
+      {(activeRound || activeMarket || activeGate !== "all" || activeEdge !== "all" || teamInput) && (
         <button
           className="mono text-[11px] px-2 py-1 rounded border transition-colors duration-[120ms]"
           style={{
@@ -198,13 +204,7 @@ function FilterBar({
             color: "var(--accent-focus)",
             backgroundColor: "transparent",
           }}
-          onClick={() => {
-            onParamChange("round", "");
-            onParamChange("market", "");
-            onParamChange("gate", "all");
-            onParamChange("edge", "all");
-            onParamChange("team", "");
-          }}
+          onClick={onClearAll}
           aria-label="Clear all filters"
         >
           Clear
@@ -236,13 +236,24 @@ function RowDisclosure({ row }: { row: DivergenceRow }) {
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
           <DisclosureRow label="p (model)" mono>
-            <ProbabilityCell p={row.p_model} decimals={3} />
+            <NumericCell
+              value={row.p_model}
+              formatter={(p) => formatProbability(p, 3)}
+              ariaLabel={`${(row.p_model * 100).toFixed(3)} percent`}
+            />
           </DisclosureRow>
           <DisclosureRow label="q (market)" mono>
-            <ProbabilityCell p={row.q_market_devigged} decimals={3} />
+            <NumericCell
+              value={row.q_market_devigged}
+              formatter={(p) => formatProbability(p, 3)}
+              ariaLabel={`${(row.q_market_devigged * 100).toFixed(3)} percent`}
+            />
           </DisclosureRow>
           <DisclosureRow label="q (raw decimal)" mono>
-            <MonoNumber value={row.q_market_raw_decimal} decimals={4} />
+            <NumericCell
+              value={row.q_market_raw_decimal}
+              formatter={(v) => formatMono(v, 4)}
+            />
           </DisclosureRow>
           <DisclosureRow label="Edge E" mono>
             <EdgeBadge edge={row.edge_E} threshold={row.edge_threshold} />
@@ -251,7 +262,11 @@ function RowDisclosure({ row }: { row: DivergenceRow }) {
             <span className="mono">{formatMono(row.edge_threshold * 100, 1)}%</span>
           </DisclosureRow>
           <DisclosureRow label="95% CI" mono>
-            <ConfidenceInterval lo={row.confidence_band[0]} hi={row.confidence_band[1]} />
+            <NumericCell<[number, number]>
+              value={row.confidence_band}
+              formatter={([l, h]) => formatCI(l, h)}
+              ariaLabel={`95 percent confidence interval, ${(row.confidence_band[0] * 100).toFixed(1)} to ${(row.confidence_band[1] * 100).toFixed(1)} percent`}
+            />
           </DisclosureRow>
           <DisclosureRow label="Source book" mono>
             <span className="mono">{row.source_book}</span>
@@ -400,25 +415,27 @@ function DisclosureRow({
 function SortHeader({
   label,
   colId,
-  sorting,
+  sortKey,
+  sortDir,
   onSort,
   align = "left",
 }: {
   label: string;
-  colId: string;
-  sorting: SortingState;
-  onSort: (id: string) => void;
+  colId: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (id: SortKey) => void;
   align?: "left" | "right";
 }) {
-  const current = sorting.find((s) => s.id === colId);
-  const indicator = current ? (current.desc ? " ▼" : " ▲") : "";
+  const isActive = sortKey === colId;
+  const indicator = isActive ? (sortDir === "desc" ? " ▼" : " ▲") : "";
 
   return (
     <button
       className={`w-full text-[11px] font-medium flex items-center gap-0.5 transition-colors duration-[120ms] ${align === "right" ? "justify-end" : "justify-start"}`}
-      style={{ color: current ? "var(--text-primary)" : "var(--text-tertiary)" }}
+      style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)" }}
       onClick={() => onSort(colId)}
-      aria-label={`Sort by ${label}${current ? (current.desc ? ", descending" : ", ascending") : ""}`}
+      aria-label={`Sort by ${label}${isActive ? (sortDir === "desc" ? ", descending" : ", ascending") : ""}`}
     >
       {label}
       {indicator && (
@@ -451,9 +468,8 @@ export function DivergenceTable({
   const activeTeam   = searchParams.get("team")   ?? "";
 
   // ── Sort state ─────────────────────────────────────────────────────────────
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "absEdge", desc: true },
-  ]);
+  const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_SORT.key);
+  const [sortDir, setSortDir] = useState<SortDir>(DEFAULT_SORT.dir);
 
   // ── Expanded rows ──────────────────────────────────────────────────────────
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -467,7 +483,8 @@ export function DivergenceTable({
     });
   }, []);
 
-  // ── URL update helper ──────────────────────────────────────────────────────
+  // ── URL update helpers ─────────────────────────────────────────────────────
+  // Single-key change — used by all filter <select>s.
   const onParamChange = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -483,6 +500,38 @@ export function DivergenceTable({
     [searchParams, router, pathname]
   );
 
+  // Atomic clear — one URLSearchParams rebuild, one router.replace. Prevents
+  // the race where five sequential onParamChange calls clobber each other.
+  const clearAllFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("round");
+    params.delete("market");
+    params.delete("gate");
+    params.delete("edge");
+    params.delete("team");
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [searchParams, router, pathname]);
+
+  // ── Debounced team search ──────────────────────────────────────────────────
+  // `teamInput` tracks the literal textbox value; the URL syncs after
+  // TEAM_SEARCH_DEBOUNCE_MS so "Brazil" triggers one router.replace, not six.
+  const [teamInput, setTeamInput] = useState<string>(activeTeam);
+
+  // Re-sync when the URL changes from elsewhere (Clear, Back/Forward, etc.).
+  useEffect(() => {
+    setTeamInput(activeTeam);
+  }, [activeTeam]);
+
+  useEffect(() => {
+    if (teamInput === activeTeam) return;
+    const handle = setTimeout(() => {
+      onParamChange("team", teamInput);
+    }, TEAM_SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [teamInput, activeTeam, onParamChange]);
+
   // ── Derived team list ──────────────────────────────────────────────────────
   const allTeams = useMemo(() => {
     const names = new Set<string>();
@@ -494,8 +543,10 @@ export function DivergenceTable({
   }, [rows]);
 
   // ── Filtered rows ──────────────────────────────────────────────────────────
+  // Filter reads `teamInput` (the live textbox value) rather than `activeTeam`
+  // (URL) so the list responds to keystrokes before the debounce flushes.
   const filteredRows = useMemo(() => {
-    const teamQ = activeTeam.toLowerCase();
+    const teamQ = teamInput.toLowerCase();
     const edgeMin = activeEdge === "3" ? 0.03 : activeEdge === "5" ? 0.05 : 0;
 
     return rows.filter((r) => {
@@ -514,39 +565,20 @@ export function DivergenceTable({
       }
       return true;
     });
-  }, [rows, activeRound, activeMarket, activeGate, activeEdge, activeTeam]);
+  }, [rows, activeRound, activeMarket, activeGate, activeEdge, teamInput]);
 
-  // ── Tanstack table ─────────────────────────────────────────────────────────
-  type RowWithAbsEdge = DivergenceRow & { absEdge: number };
-  const tableRows: RowWithAbsEdge[] = useMemo(
-    () => filteredRows.map((r) => ({ ...r, absEdge: Math.abs(r.edge_E) })),
-    [filteredRows]
-  );
-
-  const columns = useMemo<ColumnDef<RowWithAbsEdge>[]>(
-    () => [
-      { id: "kickoff_utc", accessorKey: "kickoff_utc", enableSorting: true },
-      { id: "round",       accessorKey: "round",       enableSorting: true },
-      { id: "p_model",     accessorKey: "p_model",     enableSorting: true },
-      { id: "q_market_devigged", accessorKey: "q_market_devigged", enableSorting: true },
-      { id: "absEdge",     accessorKey: "absEdge",     enableSorting: true },
-      { id: "edge_E",      accessorKey: "edge_E",      enableSorting: false },
-      { id: "gate_status", accessorKey: "gate_status", enableSorting: true },
-    ],
-    []
-  );
-
-  const table = useReactTable({
-    data: tableRows,
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getRowId: (row) => row.row_id,
-  });
-
-  const sortedRows = table.getRowModel().rows;
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const sortedRows = useMemo(() => {
+    const out = filteredRows.slice();
+    out.sort((a, b) => {
+      const av = sortValue(a, sortKey);
+      const bv = sortValue(b, sortKey);
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return out;
+  }, [filteredRows, sortKey, sortDir]);
 
   // ── Virtualizer ────────────────────────────────────────────────────────────
   const containerRef = useRef<HTMLDivElement>(null);
@@ -555,7 +587,7 @@ export function DivergenceTable({
     count: sortedRows.length,
     getScrollElement: () => containerRef.current,
     estimateSize: (i) =>
-      expandedIds.has(sortedRows[i]?.original.row_id ?? "") ? 260 : 44,
+      expandedIds.has(sortedRows[i]?.row_id ?? "") ? 260 : 44,
     overscan: 8,
     measureElement:
       typeof window !== "undefined"
@@ -570,16 +602,23 @@ export function DivergenceTable({
   }, [expandedIds, virtualizer]);
 
   // ── Column sort handler ────────────────────────────────────────────────────
+  // Cycle: new column → desc → asc → reset to default (absEdge desc).
   const handleSort = useCallback(
-    (colId: string) => {
-      setSorting((prev) => {
-        const existing = prev.find((s) => s.id === colId);
-        if (!existing) return [{ id: colId, desc: true }];
-        if (existing.desc) return [{ id: colId, desc: false }];
-        return [{ id: "absEdge", desc: true }];
-      });
+    (colId: SortKey) => {
+      if (colId !== sortKey) {
+        setSortKey(colId);
+        setSortDir("desc");
+        return;
+      }
+      if (sortDir === "desc") {
+        setSortDir("asc");
+        return;
+      }
+      // Third click on the same column — reset.
+      setSortKey(DEFAULT_SORT.key);
+      setSortDir(DEFAULT_SORT.dir);
     },
-    []
+    [sortKey, sortDir],
   );
 
   // ── Derived flags ──────────────────────────────────────────────────────────
@@ -591,7 +630,7 @@ export function DivergenceTable({
   const isEmpty = filteredRows.length === 0;
 
   const noEdgeAboveThreshold =
-    !activeRound && !activeMarket && activeGate === "all" && activeEdge === "all" && !activeTeam &&
+    !activeRound && !activeMarket && activeGate === "all" && activeEdge === "all" && !teamInput &&
     rows.length > 0 &&
     rows.every((r) => Math.abs(r.edge_E) < r.edge_threshold);
 
@@ -614,11 +653,13 @@ export function DivergenceTable({
       <FilterBar
         allTeams={allTeams}
         onParamChange={onParamChange}
+        onClearAll={clearAllFilters}
         activeRound={activeRound}
         activeMarket={activeMarket}
         activeGate={activeGate}
         activeEdge={activeEdge}
-        activeTeam={activeTeam}
+        teamInput={teamInput}
+        onTeamInputChange={setTeamInput}
       />
 
       {/* ── No-edge-above-threshold note ────────────────────────────────── */}
@@ -657,13 +698,7 @@ export function DivergenceTable({
           <button
             className="transition-colors duration-[120ms]"
             style={{ color: "var(--accent-focus)" }}
-            onClick={() => {
-              onParamChange("round", "");
-              onParamChange("market", "");
-              onParamChange("gate", "all");
-              onParamChange("edge", "all");
-              onParamChange("team", "");
-            }}
+            onClick={clearAllFilters}
           >
             Clear filters
           </button>{" "}
@@ -710,23 +745,23 @@ export function DivergenceTable({
               }}
             >
               <div role="columnheader" className="py-2 pl-3 pr-2">
-                <SortHeader label="Kickoff (UTC)" colId="kickoff_utc" sorting={sorting} onSort={handleSort} />
+                <SortHeader label="Kickoff (UTC)" colId="kickoff_utc" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
               <div role="columnheader" className="py-2 px-2">
-                <SortHeader label="Round" colId="round" sorting={sorting} onSort={handleSort} />
+                <SortHeader label="Round" colId="round" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
               <div role="columnheader" className="py-2 px-2">Matchup</div>
               <div role="columnheader" className="py-2 px-2">Market</div>
               <div role="columnheader" className="py-2 px-2">Outcome</div>
               <div role="columnheader" className="py-2 px-2">
-                <SortHeader label="p (model)" colId="p_model" sorting={sorting} onSort={handleSort} align="right" />
+                <SortHeader label="p (model)" colId="p_model" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
               <div role="columnheader" className="py-2 px-2">
-                <SortHeader label="q (mkt)" colId="q_market_devigged" sorting={sorting} onSort={handleSort} align="right" />
+                <SortHeader label="q (mkt)" colId="q_market_devigged" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
               <div role="columnheader" className="py-2 px-2">Divergence</div>
               <div role="columnheader" className="py-2 px-2">
-                <SortHeader label="Edge E" colId="absEdge" sorting={sorting} onSort={handleSort} align="right" />
+                <SortHeader label="Edge E" colId="absEdge" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
               <div
                 role="columnheader"
@@ -736,7 +771,7 @@ export function DivergenceTable({
                 ε
               </div>
               <div role="columnheader" className="py-2 px-2">
-                <SortHeader label="Gate" colId="gate_status" sorting={sorting} onSort={handleSort} />
+                <SortHeader label="Gate" colId="gate_status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
               <div role="columnheader" className="py-2 px-2 text-right">95% CI</div>
               <div role="columnheader" className="py-2 pr-3 pl-2 text-right">Age (m)</div>
@@ -760,9 +795,8 @@ export function DivergenceTable({
                 }}
               >
               {virtualItems.map((vItem) => {
-                const tableRow = sortedRows[vItem.index];
-                if (!tableRow) return null;
-                const row = tableRow.original;
+                const row = sortedRows[vItem.index];
+                if (!row) return null;
                 const isExpanded = expandedIds.has(row.row_id);
                 const isFired = row.gate_status === "FIRED";
 
@@ -807,9 +841,9 @@ export function DivergenceTable({
                       <div role="gridcell" className="py-2.5 pl-3 pr-2">
                         <span
                           className="mono"
-                          aria-label={`kickoff ${formatKickoff(row.kickoff_utc)}`}
+                          aria-label={`kickoff ${formatUtcShort(row.kickoff_utc)}`}
                         >
-                          {formatKickoff(row.kickoff_utc)}
+                          {formatUtcShort(row.kickoff_utc)}
                         </span>
                       </div>
                       {/* Round */}
@@ -845,11 +879,19 @@ export function DivergenceTable({
                       </div>
                       {/* p_model */}
                       <div role="gridcell" className="py-2.5 px-2 text-right">
-                        <ProbabilityCell p={row.p_model} decimals={1} />
+                        <NumericCell
+                          value={row.p_model}
+                          formatter={(p) => formatProbability(p, 1)}
+                          ariaLabel={`${(row.p_model * 100).toFixed(1)} percent`}
+                        />
                       </div>
                       {/* q_market */}
                       <div role="gridcell" className="py-2.5 px-2 text-right">
-                        <ProbabilityCell p={row.q_market_devigged} decimals={1} />
+                        <NumericCell
+                          value={row.q_market_devigged}
+                          formatter={(p) => formatProbability(p, 1)}
+                          ariaLabel={`${(row.q_market_devigged * 100).toFixed(1)} percent`}
+                        />
                       </div>
                       {/* Divergence bar */}
                       <div role="gridcell" className="py-2.5 px-2">
@@ -874,9 +916,10 @@ export function DivergenceTable({
                       </div>
                       {/* 95% CI */}
                       <div role="gridcell" className="py-2.5 px-2 text-right">
-                        <ConfidenceInterval
-                          lo={row.confidence_band[0]}
-                          hi={row.confidence_band[1]}
+                        <NumericCell<[number, number]>
+                          value={row.confidence_band}
+                          formatter={([l, h]) => formatCI(l, h)}
+                          ariaLabel={`95 percent confidence interval, ${(row.confidence_band[0] * 100).toFixed(1)} to ${(row.confidence_band[1] * 100).toFixed(1)} percent`}
                         />
                       </div>
                       {/* Age */}

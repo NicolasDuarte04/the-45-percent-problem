@@ -1,0 +1,108 @@
+name: Snapshot Deploy CI
+
+# Triggered by the upstream nightly emitter committing a new snapshot bundle
+# to the deploy/snapshot branch (see scripts/emit_snapshot.py).
+# On green, this workflow merges the commit to main → Vercel auto-deploys.
+
+on:
+  push:
+    branches:
+      - deploy/snapshot
+
+jobs:
+  ci:
+    name: Validate, build, audit, deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Node / pnpm setup ─────────────────────────────────────────────────
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── Step 1 · Zod contract validation ─────────────────────────────────
+      # Belt-and-braces: the upstream emitter already validated the bundle,
+      # but we re-validate here against the schemas in-repo so a schema
+      # drift between emitter and web repo is caught before any UI code runs.
+      - name: Zod contract validation
+        run: pnpm run test:contracts
+
+      # ── Step 2 · Unit tests ───────────────────────────────────────────────
+      - name: Unit tests
+        run: pnpm run test
+
+      # ── Step 3 · next build --profile ────────────────────────────────────
+      # --profile enables React Profiler in the production build and emits
+      # per-chunk bundle-size annotations in the build output.
+      # §9.4: ≤180 KB JS on /terminal, ≤100 KB on content pages — review
+      # the "First Load JS" column in the build output for regressions.
+      - name: Check forbidden words (prebuild)
+        run: node scripts/check-forbidden-words.mjs
+
+      - name: Generate /healthz (prebuild)
+        run: node scripts/generate-healthz.mjs
+
+      - name: Build (next build --profile)
+        run: pnpm exec next build --profile
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      # ── Step 4 · Playwright visual regression ────────────────────────────
+      # Compares component screenshots against reference snapshots committed
+      # in tests/visual/__snapshots__/. Covers §12.3 primitive value-range
+      # tests (EdgeBadge, ProbabilityCell, etc.) and the §12.6 Ledger
+      # HIT/MISS parity test. Runs against the production build from Step 3.
+      # Fail here surfaces a visual regression before the a11y audit runs.
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Playwright visual regression
+        run: pnpm run test:visual
+        env:
+          CI: '1'
+
+      # ── Step 5 · axe-core accessibility audit ─────────────────────────────
+      # Playwright starts `next start` via the webServer config in
+      # playwright.a11y.config.ts; pages are audited for WCAG 2.2 AA.
+      # Any serious or critical violation is a build failure (§10.1).
+      - name: axe accessibility audit
+        run: pnpm run test:a11y
+
+      # ── Step 6 · Lighthouse CI ────────────────────────────────────────────
+      # Thresholds (§9.3): Performance ≥ 92, Accessibility ≥ 98,
+      # Best-Practices ≥ 95, SEO ≥ 95. Config in lighthouserc.js.
+      - name: Lighthouse CI
+        run: pnpm exec lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      # ── Merge to main on green ────────────────────────────────────────────
+      # All gates passed → fast-forward main so Vercel picks up the new
+      # snapshot. [skip ci] prevents a second CI run on main.
+      - name: Merge deploy/snapshot → main
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git merge --no-ff origin/deploy/snapshot \
+            -m "chore(deploy): auto-merge snapshot [skip ci]"
+          git push origin main

@@ -1,11 +1,9 @@
-export { MonoNumber } from "./MonoNumber";
-export { ProbabilityCell } from "./ProbabilityCell";
-export { OddsCell } from "./OddsCell";
+export { NumericCell } from "./NumericCell";
 export { EdgeBadge } from "./EdgeBadge";
 export { DivergenceBar } from "./DivergenceBar";
 export { SnapshotTimestamp } from "./SnapshotTimestamp";
 export { GateStatusPill } from "./GateStatusPill";
 export { HashChip } from "./HashChip";
-export { ConfidenceInterval } from "./ConfidenceInterval";
 export { KillCriteriaBanner } from "./KillCriteriaBanner";
 export { EdgeSparkline } from "./EdgeSparkline";
+export { ProgressionSparkline } from "./ProgressionSparkline";

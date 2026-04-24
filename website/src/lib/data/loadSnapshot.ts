@@ -31,6 +31,12 @@ import {
 const DATA_ROOT = path.join(process.cwd(), "public", "data");
 const LATEST_DIR = path.join(DATA_ROOT, "latest");
 
+/** Returns the directory for a given snapshotId, defaulting to `latest`. */
+export function getSnapshotDir(snapshotId: string = "latest"): string {
+  if (snapshotId === "latest") return LATEST_DIR;
+  return path.join(DATA_ROOT, "snapshots", snapshotId);
+}
+
 function readJson(filePath: string): unknown {
   const raw = fs.readFileSync(filePath, "utf-8");
   return JSON.parse(raw);
@@ -53,29 +59,34 @@ function validate<T>(schema: SafeParseSchema<T>, data: unknown, label: string): 
   return result.data;
 }
 
-export function loadSnapshotMeta(): SnapshotMeta {
-  const data = readJson(path.join(LATEST_DIR, "snapshot_meta.json"));
+export function loadSnapshotMeta(snapshotId?: string): SnapshotMeta {
+  const dir = getSnapshotDir(snapshotId);
+  const data = readJson(path.join(dir, "snapshot_meta.json"));
   return validate(SnapshotMetaSchema, data, "snapshot_meta.json");
 }
 
-export function loadTournament(): TournamentSnapshot {
-  const data = readJson(path.join(LATEST_DIR, "tournament.json"));
+export function loadTournament(snapshotId?: string): TournamentSnapshot {
+  const dir = getSnapshotDir(snapshotId);
+  const data = readJson(path.join(dir, "tournament.json"));
   return validate(TournamentSnapshotSchema, data, "tournament.json");
 }
 
-export function loadDivergence(): DivergenceSnapshot {
-  const data = readJson(path.join(LATEST_DIR, "divergence.json"));
+export function loadDivergence(snapshotId?: string): DivergenceSnapshot {
+  const dir = getSnapshotDir(snapshotId);
+  const data = readJson(path.join(dir, "divergence.json"));
   return validate(DivergenceSnapshotSchema, data, "divergence.json");
 }
 
-export function loadMatch(matchId: string): MatchDetail {
-  const p = path.join(LATEST_DIR, "matches", `${matchId}.json`);
+export function loadMatch(matchId: string, snapshotId?: string): MatchDetail {
+  const dir = getSnapshotDir(snapshotId);
+  const p = path.join(dir, "matches", `${matchId}.json`);
   const data = readJson(p);
   return validate(MatchDetailSchema, data, `matches/${matchId}.json`);
 }
 
-export function loadAllMatches(): MatchDetail[] {
-  const matchesDir = path.join(LATEST_DIR, "matches");
+export function loadAllMatches(snapshotId?: string): MatchDetail[] {
+  const dir = getSnapshotDir(snapshotId);
+  const matchesDir = path.join(dir, "matches");
   if (!fs.existsSync(matchesDir)) return [];
   return fs
     .readdirSync(matchesDir)
@@ -86,14 +97,16 @@ export function loadAllMatches(): MatchDetail[] {
     });
 }
 
-export function loadTeam(fifaCode: string): TeamProgression {
-  const p = path.join(LATEST_DIR, "teams", `${fifaCode}.json`);
+export function loadTeam(fifaCode: string, snapshotId?: string): TeamProgression {
+  const dir = getSnapshotDir(snapshotId);
+  const p = path.join(dir, "teams", `${fifaCode}.json`);
   const data = readJson(p);
   return validate(TeamProgressionSchema, data, `teams/${fifaCode}.json`);
 }
 
-export function loadAllTeams(): TeamProgression[] {
-  const teamsDir = path.join(LATEST_DIR, "teams");
+export function loadAllTeams(snapshotId?: string): TeamProgression[] {
+  const dir = getSnapshotDir(snapshotId);
+  const teamsDir = path.join(dir, "teams");
   if (!fs.existsSync(teamsDir)) return [];
   return fs
     .readdirSync(teamsDir)
@@ -104,8 +117,9 @@ export function loadAllTeams(): TeamProgression[] {
     });
 }
 
-export function loadLedger(): LedgerRecord[] {
-  const p = path.join(LATEST_DIR, "ledger.jsonl");
+export function loadLedger(snapshotId?: string): LedgerRecord[] {
+  const dir = getSnapshotDir(snapshotId);
+  const p = path.join(dir, "ledger.jsonl");
   if (!fs.existsSync(p)) return [];
   const lines = fs.readFileSync(p, "utf-8").split("\n").filter(Boolean);
   return lines.map((line, i) => {
@@ -114,18 +128,21 @@ export function loadLedger(): LedgerRecord[] {
   });
 }
 
-export function loadEvaluationMetrics(): EvaluationMetrics {
-  const data = readJson(path.join(LATEST_DIR, "evaluation_metrics.json"));
+export function loadEvaluationMetrics(snapshotId?: string): EvaluationMetrics {
+  const dir = getSnapshotDir(snapshotId);
+  const data = readJson(path.join(dir, "evaluation_metrics.json"));
   return validate(EvaluationMetricsSchema, data, "evaluation_metrics.json");
 }
 
-export function loadFreshness(): Freshness {
-  const data = readJson(path.join(LATEST_DIR, "freshness.json"));
+export function loadFreshness(snapshotId?: string): Freshness {
+  const dir = getSnapshotDir(snapshotId);
+  const data = readJson(path.join(dir, "freshness.json"));
   return validate(FreshnessSchema, data, "freshness.json");
 }
 
-export function loadBracket(): BracketSnapshot {
-  const data = readJson(path.join(LATEST_DIR, "bracket.json"));
+export function loadBracket(snapshotId?: string): BracketSnapshot {
+  const dir = getSnapshotDir(snapshotId);
+  const data = readJson(path.join(dir, "bracket.json"));
   return validate(BracketSnapshotSchema, data, "bracket.json");
 }
 
@@ -135,13 +152,13 @@ export function loadManifest(): Manifest {
   return validate(ManifestSchema, data, "manifest.json");
 }
 
-export function loadSnapshot() {
+export function loadSnapshot(snapshotId?: string) {
   return {
-    meta: loadSnapshotMeta(),
-    tournament: loadTournament(),
-    divergence: loadDivergence(),
-    evaluation: loadEvaluationMetrics(),
-    freshness: loadFreshness(),
-    bracket: loadBracket(),
+    meta: loadSnapshotMeta(snapshotId),
+    tournament: loadTournament(snapshotId),
+    divergence: loadDivergence(snapshotId),
+    evaluation: loadEvaluationMetrics(snapshotId),
+    freshness: loadFreshness(snapshotId),
+    bracket: loadBracket(snapshotId),
   };
 }

@@ -1,6 +1,7 @@
 import type { EvaluationMetrics } from "@/lib/data/schemas";
-import { MonoNumber } from "@/components/primitives/MonoNumber";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { ReliabilityDiagram } from "@/components/compositions/ReliabilityDiagram";
+import { formatMono } from "@/lib/formatters";
 
 interface LedgerSummaryPanelProps {
   metrics: EvaluationMetrics;
@@ -36,7 +37,7 @@ function MetricRow({
                 —
               </span>
             ) : (
-              <MonoNumber value={v} decimals={4} />
+              <NumericCell value={v} formatter={(x) => formatMono(x, 4)} />
             )}
           </td>
         );

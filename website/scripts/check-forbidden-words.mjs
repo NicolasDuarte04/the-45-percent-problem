@@ -154,13 +154,26 @@ for (const root of SCAN_ROOTS) {
         }
       });
     } else if (PROSE_EXTENSIONS.has(ext)) {
-      // MDX/MD: flag any !, excluding code blocks and inline code
+      // MDX/MD: flag any !, excluding code blocks, inline code, and math.
+      // KaTeX factorial (x!) and negative-space (\!) are legitimate math
+      // characters — strip all math spans/blocks before the exclamation check.
       let inFence = false;
+      let inMathFence = false;
       lines.forEach((line, idx) => {
-        if (/^```/.test(line.trimStart())) { inFence = !inFence; return; }
+        const trimmed = line.trimStart();
+        // Code fence toggle
+        if (/^```/.test(trimmed)) { inFence = !inFence; return; }
         if (inFence) return;
-        // Strip inline code spans before checking
-        const stripped = line.replace(/`[^`]*`/g, "");
+        // Display-math fence toggle (line is exactly $$ possibly with trailing whitespace)
+        if (/^\$\$\s*$/.test(trimmed)) { inMathFence = !inMathFence; return; }
+        if (inMathFence) return;
+        // Strip inline code, inline math ($...$), and math="..." JSX attributes
+        // (KaTeX factorial x! and negative-space \! are valid math characters)
+        const stripped = line
+          .replace(/`[^`]*`/g, "")
+          .replace(/\$[^$]+\$/g, "")
+          .replace(/math="[^"]*"/g, "")
+          .replace(/math='[^']*'/g, "");
         if (/!/.test(stripped)) {
           console.error(
             `[§6.6 FORBIDDEN-EXCL] Exclamation mark in ./${rel}:${idx + 1}: ${line.trim().slice(0, 80)}`
