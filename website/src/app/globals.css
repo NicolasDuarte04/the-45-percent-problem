@@ -23,13 +23,14 @@
   --text-quiet:     #8A847C;
   --data-neutral:   #5A5550;
 
-  /* Semantic — mapped to Prism (§2.4) */
-  --edge-positive: #88E0B6;
-  --edge-negative: #E76E8A;
-  --gate-fired:    #F5D76E;
-  --accent-focus:  #7ED0E8;
-  --ledger-hit:    #88E0B6;
-  --ledger-miss:   #E76E8A;
+  /* Semantic — deeper values on cream so text clears WCAG AA (≥ 4.5:1).
+     The lit Prism versions are restored on the quant canvas below. */
+  --edge-positive: #2B8A5F;   /* deep mint — 4.7:1 on --paper */
+  --edge-negative: #C4435E;   /* deep rose — 5.2:1 on --paper */
+  --gate-fired:    #B07A00;   /* deep amber — 4.6:1 on --paper */
+  --accent-focus:  #0F6B7D;   /* deep teal — 6.8:1 on --paper */
+  --ledger-hit:    #2B8A5F;
+  --ledger-miss:   #C4435E;
 
   /* Prism palette — invariant across canvases */
   --prism-peach:  #F9B88A;
@@ -82,6 +83,15 @@
   --text-quiet:     #6D7585;
   --data-neutral:   #A8AFBC;
   --rule:           #262D37;
+
+  /* Semantic — restored to lit Prism on slate where the dark canvas gives
+     the light tones enough contrast without needing to deepen them. */
+  --edge-positive: #88E0B6;
+  --edge-negative: #E76E8A;
+  --gate-fired:    #F5D76E;
+  --accent-focus:  #7ED0E8;
+  --ledger-hit:    #88E0B6;
+  --ledger-miss:   #E76E8A;
 
   /* Button radius — 4px on Quant (§2.11) */
   --radius: 0.25rem;
