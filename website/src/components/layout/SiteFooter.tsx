@@ -5,34 +5,78 @@ export function SiteFooter() {
 
   return (
     <footer
-      className="w-full mt-auto border-t px-4 py-6"
+      className="w-full mt-auto border-t px-4"
       style={{
-        borderColor: "var(--border-subtle)",
+        borderColor: "var(--border-default)",
         color: "var(--text-tertiary)",
+        marginTop: 80,
+        paddingTop: 40,
+        paddingBottom: 32,
       }}
     >
-      <div className="max-w-screen-xl mx-auto space-y-2 text-[11px]">
-        <p>
-          <strong style={{ color: "var(--text-secondary)" }}>
-            The 45% Problem
-          </strong>{" "}
-          — Probabilistic Pricing for FIFA World Cup 2026
-        </p>
-        <p>
-          Research publication. No content on this site constitutes investment
-          or gambling advice.
-        </p>
-        <p className="mono" style={{ color: "var(--text-tertiary)" }}>
-          snapshot: {meta.snapshot_id} &nbsp;|&nbsp; code: {meta.code_sha}{" "}
-          &nbsp;|&nbsp; data: {meta.data_sha}
-        </p>
-        <p>
-          How to cite:{" "}
-          <span className="mono">
-            Duarte Jaraba, N. (2026). <em>The 45% Problem</em>. OSF.
-            https://osf.io/8b5hd
-          </span>
-        </p>
+      <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 text-[11px]">
+        {/* Col 1 — Research description */}
+        <div className="space-y-2">
+          <div
+            className="mono text-[10px] uppercase tracking-[.08em]"
+            style={{ color: "var(--text-quiet)" }}
+          >
+            About
+          </div>
+          <p style={{ color: "var(--text-secondary)" }}>
+            <strong style={{ color: "var(--text-primary)" }}>
+              The 45% Problem
+            </strong>{" "}
+            — Probabilistic Pricing for FIFA World Cup 2026.
+          </p>
+          <p>
+            Research publication. No content on this site constitutes investment
+            or gambling advice.
+          </p>
+        </div>
+
+        {/* Col 2 — Technical metadata (SHA / data / snapshot) */}
+        <div className="space-y-2">
+          <div
+            className="mono text-[10px] uppercase tracking-[.08em]"
+            style={{ color: "var(--text-quiet)" }}
+          >
+            Provenance
+          </div>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 mono">
+            <dt style={{ color: "var(--text-quiet)" }}>snapshot</dt>
+            <dd style={{ color: "var(--text-secondary)" }}>{meta.snapshot_id}</dd>
+            <dt style={{ color: "var(--text-quiet)" }}>code</dt>
+            <dd style={{ color: "var(--text-secondary)" }}>{meta.code_sha}</dd>
+            <dt style={{ color: "var(--text-quiet)" }}>data</dt>
+            <dd style={{ color: "var(--text-secondary)" }}>{meta.data_sha}</dd>
+          </dl>
+        </div>
+
+        {/* Col 3 — Citation */}
+        <div className="space-y-2">
+          <div
+            className="mono text-[10px] uppercase tracking-[.08em]"
+            style={{ color: "var(--text-quiet)" }}
+          >
+            Cite
+          </div>
+          <p className="mono leading-relaxed">
+            Duarte Jaraba, N. (2026).{" "}
+            <em style={{ color: "var(--text-secondary)" }}>
+              The 45% Problem
+            </em>
+            . OSF.{" "}
+            <a
+              href="https://osf.io/8b5hd"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--accent-focus)", textDecoration: "none" }}
+            >
+              osf.io/8b5hd
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );
