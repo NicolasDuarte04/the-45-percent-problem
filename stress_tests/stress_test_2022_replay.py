@@ -22,6 +22,7 @@ Exit code: 0 = pass, 1 = fail.
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import sys
@@ -168,6 +169,94 @@ WC2022_MARKETS: List[Dict[str, Any]] = [
         "home": "ARG", "away": "FRA", "stage": "final",
         "odds": [2.50, 3.30, 2.80],
         "p_model": [0.37, 0.29, 0.34],  # tight — the actual final was 3-3 aet
+    },
+    # ── Additional Group Stage (synthetic, structurally valid) ────────────────
+    {
+        "market_id": "2022-11-28_NED_ECU",
+        "home": "NED", "away": "ECU", "stage": "group",
+        "odds": [2.00, 3.20, 3.80],
+        "p_model": [0.47, 0.29, 0.24],
+    },
+    {
+        "market_id": "2022-11-29_MEX_POL",
+        "home": "MEX", "away": "POL", "stage": "group",
+        "odds": [2.60, 3.20, 2.75],
+        "p_model": [0.36, 0.31, 0.33],
+    },
+    {
+        "market_id": "2022-11-30_URU_KOR",
+        "home": "URU", "away": "KOR", "stage": "group",
+        "odds": [1.90, 3.20, 4.20],
+        "p_model": [0.49, 0.29, 0.22],
+    },
+    {
+        "market_id": "2022-12-01_CRO_BEL",
+        "home": "CRO", "away": "BEL", "stage": "group",
+        "odds": [2.50, 3.20, 2.90],
+        "p_model": [0.37, 0.31, 0.32],
+    },
+    {
+        "market_id": "2022-12-02_MEX_SAU",
+        "home": "MEX", "away": "SAU", "stage": "group",
+        "odds": [1.55, 4.00, 5.50],
+        "p_model": [0.62, 0.23, 0.15],
+    },
+    {
+        "market_id": "2022-12-02_POL_ARG",
+        "home": "POL", "away": "ARG", "stage": "group",
+        "odds": [8.50, 5.50, 1.35],
+        "p_model": [0.08, 0.20, 0.72],
+    },
+    {
+        "market_id": "2022-12-01_TUN_FRA",
+        "home": "TUN", "away": "FRA", "stage": "group",
+        "odds": [5.50, 4.00, 1.65],
+        "p_model": [0.14, 0.28, 0.58],
+    },
+    {
+        "market_id": "2022-11-30_URU_GHA",
+        "home": "URU", "away": "GHA", "stage": "group",
+        "odds": [1.80, 3.40, 4.50],
+        "p_model": [0.52, 0.28, 0.20],
+    },
+    # ── Additional Round of 16 ────────────────────────────────────────────────
+    {
+        "market_id": "2022-12-03_USA_NED",
+        "home": "USA", "away": "NED", "stage": "round_of_16",
+        "odds": [3.50, 3.20, 2.20],
+        "p_model": [0.24, 0.30, 0.46],
+    },
+    {
+        "market_id": "2022-12-05_JPN_CRO",
+        "home": "JPN", "away": "CRO", "stage": "round_of_16",
+        "odds": [2.80, 3.20, 2.55],
+        "p_model": [0.33, 0.30, 0.37],
+    },
+    {
+        "market_id": "2022-12-06_MAR_ESP",
+        "home": "MAR", "away": "ESP", "stage": "round_of_16",
+        "odds": [5.00, 3.50, 1.75],
+        "p_model": [0.16, 0.30, 0.54],
+    },
+    {
+        "market_id": "2022-12-06_POR_SUI",
+        "home": "POR", "away": "SUI", "stage": "round_of_16",
+        "odds": [1.45, 4.50, 7.00],
+        "p_model": [0.68, 0.21, 0.11],
+    },
+    # ── Additional Quarter-final ──────────────────────────────────────────────
+    {
+        "market_id": "2022-12-09_BRA_CRO",
+        "home": "BRA", "away": "CRO", "stage": "quarter_final",
+        "odds": [1.65, 3.60, 5.50],
+        "p_model": [0.58, 0.25, 0.17],
+    },
+    # ── Additional Semi-final ─────────────────────────────────────────────────
+    {
+        "market_id": "2022-12-13_ARG_CRO",
+        "home": "ARG", "away": "CRO", "stage": "semi_final",
+        "odds": [1.70, 3.50, 5.00],
+        "p_model": [0.57, 0.25, 0.18],
     },
 ]
 
@@ -317,17 +406,21 @@ def _make_shadow_results() -> Dict[str, ShadowCLVResult]:
 # Main replay routine
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run_replay() -> bool:
+def run_replay(output_dir: Path | None = None) -> bool:
     print("\n" + "=" * 70)
     print("STRESS TEST 1 — The Time Machine: 2022 WC Replay")
     print("=" * 70)
+
+    if output_dir is not None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[Config] Snapshot bundles → {output_dir}")
 
     with tempfile.TemporaryDirectory(prefix="stress_replay_") as tmpdir:
         tmp = Path(tmpdir)
         forecast_log = tmp / "forecast_log.jsonl"
         gate_log = tmp / "gate_log.jsonl"
-        output_dir = tmp / "ablation_output"
-        output_dir.mkdir()
+        ablation_dir = tmp / "ablation_output"
+        ablation_dir.mkdir()
 
         cfg = PipelineConfig(
             forecast_log_path=forecast_log,
@@ -340,7 +433,8 @@ def run_replay() -> bool:
         pipeline = MarketPipeline(cfg)
 
         # ── Phase 6: Run the pipeline for each 2022 match ──────────────────
-        print("\n[Phase 6] Running market pipeline over 16 WC 2022 markets …")
+        n_markets = len(WC2022_MARKETS)
+        print(f"\n[Phase 6] Running market pipeline over {n_markets} WC 2022 markets …")
         total_markets = 0
         total_flags = 0
         total_suppressed = 0
@@ -366,7 +460,22 @@ def run_replay() -> bool:
             state = pipeline._bankroll_state
             bankroll_snapshots.append(state.current_bankroll)
 
-        assert_check(total_markets == 16, "All 16 markets processed", f"got {total_markets}")
+            # Write per-market snapshot bundle when --output-dir is set
+            if output_dir is not None:
+                bundle = {
+                    "bundle_index": i,
+                    "market_id": mkt["market_id"],
+                    "stage": mkt["stage"],
+                    "timestamp_utc": ts.isoformat(),
+                    "odds": mkt["odds"],
+                    "p_model": mkt["p_model"],
+                    "pipeline_summary": summary.to_dict(),
+                    "bankroll": state.current_bankroll,
+                }
+                fname = output_dir / f"bundle_{i:03d}_{mkt['market_id']}.json"
+                fname.write_text(json.dumps(bundle, indent=2))
+
+        assert_check(total_markets == n_markets, f"All {n_markets} markets processed", f"got {total_markets}")
 
         # ── Kelly bankroll stability checks ─────────────────────────────────
         print("\n[Kelly] Bankroll stability checks …")
@@ -419,7 +528,7 @@ def run_replay() -> bool:
                 metrics=metrics,
                 mstar_report=mstar_report,
                 shadow_results=shadow_results,
-                output_dir=output_dir,
+                output_dir=ablation_dir,
                 tournament="WC2022_REPLAY",
                 expected_constants_sha=None,
                 generated_at_utc="2022-12-18T22:00:00Z",
@@ -432,7 +541,7 @@ def run_replay() -> bool:
 
         assert_check(not ablation_crashed, "compile_ablation() completed without exception")
 
-        ablation_path = output_dir / "ablation.json"
+        ablation_path = ablation_dir / "ablation.json"
         assert_check(ablation_path.exists(), "ablation.json was created on disk")
 
         if ablation_path.exists():
@@ -460,7 +569,7 @@ def run_replay() -> bool:
                     metrics=metrics,
                     mstar_report=mstar_report,
                     shadow_results=shadow_results,
-                    output_dir=output_dir,
+                    output_dir=ablation_dir,
                     tournament="WC2022_REPLAY",
                     expected_constants_sha=None,
                     generated_at_utc="2022-12-18T22:00:00Z",
@@ -479,11 +588,25 @@ def run_replay() -> bool:
         print(f"        Bankroll mode:       {pipeline._bankroll_state.mode.value}")
         print(f"        Peak bankroll:       {peak:,.2f}")
 
+        if output_dir is not None:
+            bundles = sorted(output_dir.glob("bundle_*.json"))
+            print(f"\n[Output] {len(bundles)} snapshot bundle(s) written to {output_dir}")
+
     return len(_failures) == 0
 
 
 if __name__ == "__main__":
-    passed = run_replay()
+    parser = argparse.ArgumentParser(description="Stress Test 1 — 2022 WC Replay")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Directory to write per-market JSON snapshot bundles into.",
+    )
+    args = parser.parse_args()
+
+    passed = run_replay(output_dir=args.output_dir)
+
     print("\n" + "=" * 70)
     if passed:
         print("RESULT: ALL CHECKS PASSED — Phase 6+7 pipeline is structurally sound.")
