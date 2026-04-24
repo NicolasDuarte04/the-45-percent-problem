@@ -8,7 +8,6 @@ import {
   SectionHead,
   GhostLink,
 } from "@/components/compositions/SectionHead";
-import { HeroGraphic } from "@/components/ui/HeroGraphic";
 
 export const dynamic = "force-static";
 
@@ -25,8 +24,7 @@ export default function Home() {
       }}
     >
       {/* ── Project intro header ───────────────────────────────────────────── */}
-      <header style={{ marginBottom: 72, position: "relative" }}>
-        <HeroGraphic teams={tournament.teams} />
+      <header style={{ marginBottom: 72 }}>
         <div style={{ maxWidth: 640 }}>
           <h1
             style={{
