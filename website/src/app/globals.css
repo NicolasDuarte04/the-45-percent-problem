@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -318,5 +319,241 @@
   [data-canvas="quant"] .wordmark-accent {
     color: var(--text-primary);
   }
+
+  /* ── §8.3 Vault article template ──────────────────────────────────────── */
+  /* Two-column grid: reading column (≤ 68ch) + 220px side rail at ≥ 1280px. */
+  .vault-article-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 68ch);
+    column-gap: 48px;
+    row-gap: 0;
+    justify-content: start;
+  }
+
+  @media (min-width: 1280px) {
+    .vault-article-grid {
+      grid-template-columns: minmax(0, 68ch) 220px;
+    }
+  }
+
+  /* Side-rail column target for <MarginNote> elements (≥ 1280px) */
+  .vault-side-rail {
+    display: none;
+  }
+  @media (min-width: 1280px) {
+    .vault-side-rail {
+      display: block;
+      grid-column: 2;
+    }
+  }
+
+  /* Inline/narrow margin-note fallback: shown below 1280px, hidden on wide */
+  .vault-margin-inline {
+    display: block;
+    margin: 16px 0;
+    padding: 12px 16px;
+    border-left: 2px solid var(--rule);
+    background: var(--bg-panel);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+  @media (min-width: 1280px) {
+    .vault-margin-inline { display: none; }
+  }
+
+  .vault-margin-rail {
+    display: none;
+  }
+  @media (min-width: 1280px) {
+    .vault-margin-rail {
+      display: block;
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--text-tertiary);
+      border-left: 1px solid var(--rule);
+      padding-left: 16px;
+      margin-block-end: 24px;
+    }
+  }
+
+  /* Dropcap — first glyph of first paragraph, display-md, floated left.
+     The wrapper is a <div> so MDX-nested <p> children stay valid markup;
+     ::first-letter targets the first paragraph inside. */
+  .vault-dropcap p:first-child::first-letter,
+  .vault-dropcap::first-letter {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--text-primary);
+    float: left;
+    padding-right: 10px;
+    padding-top: 6px;
+    margin-bottom: -6px;
+  }
+
+  /* Section rule between H2s — centered · · · in --ink-quiet */
+  .vault-section-rule {
+    text-align: center;
+    color: var(--text-quiet);
+    letter-spacing: 0.5em;
+    font-size: 12px;
+    margin: 56px 0;
+    user-select: none;
+  }
+  .vault-section-rule::before {
+    content: "\00B7  \00B7  \00B7";
+  }
+
+  /* Pull quote — left-hang indent on ≥ 1024px, 96px opening serif quote */
+  .vault-pullquote {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 40px;
+    color: var(--text-primary);
+    margin: 48px 0;
+    position: relative;
+    padding-left: 24px;
+    border-left: 2px solid var(--prism-peach);
+  }
+  @media (min-width: 1024px) {
+    .vault-pullquote {
+      margin-left: -48px;
+      padding-left: 48px;
+    }
+  }
+  .vault-pullquote-cite {
+    display: block;
+    margin-top: 12px;
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+  }
+
+  /* Figure — 56px above, 40px below, italic caption in --ink-quiet */
+  .vault-figure {
+    margin: 56px 0 40px;
+  }
+  .vault-figure figcaption {
+    margin-top: 16px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 18px;
+    font-style: italic;
+    color: var(--text-quiet);
+  }
+
+  /* Eyebrow label — §2.5 meta token */
+  .vault-eyebrow {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+  }
+
+  /* Byline row */
+  .vault-byline {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-tertiary);
+  }
+
+  /* Cite chip — click-to-copy BibTeX surface at foot of article */
+  .vault-citechip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--text-tertiary);
+    padding: 10px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-panel-elev);
+    white-space: pre-wrap;
+  }
+
+  /* MDX prose defaults on the editorial canvas */
+  .vault-prose p {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 30px;
+    color: var(--text-secondary);
+    margin-block-end: 20px;
+  }
+  .vault-prose h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-block-start: 72px;
+    margin-block-end: 16px;
+  }
+  .vault-prose h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 32px;
+    color: var(--text-primary);
+    margin-block-start: 40px;
+    margin-block-end: 12px;
+  }
+  .vault-prose a {
+    color: var(--accent-focus);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent-focus) 40%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 120ms ease-out;
+  }
+  .vault-prose a:hover {
+    text-decoration-color: var(--accent-focus);
+  }
+  .vault-prose strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .vault-prose em {
+    font-style: italic;
+  }
+  .vault-prose code {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-panel);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .vault-prose ul,
+  .vault-prose ol {
+    margin-block-end: 20px;
+    padding-left: 24px;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 30px;
+    color: var(--text-secondary);
+  }
+  .vault-prose li {
+    margin-block-end: 8px;
+  }
+  .vault-prose blockquote {
+    margin: 32px 0;
+    padding-left: 20px;
+    border-left: 2px solid var(--rule);
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+
+  /* KaTeX output size tune for body readability */
+  .vault-prose .katex { font-size: 1.05em; }
 
 }

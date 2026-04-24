@@ -97,20 +97,18 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
       <div
         role="table"
         aria-label="Bracket board: per-round marginal probabilities"
-        className="overflow-x-auto"
-        style={{ maxHeight: 640, overflowY: "auto" }}
+        className="grid"
+        style={{
+          gridTemplateColumns: `minmax(180px, 1.4fr) repeat(${ROUNDS.length}, minmax(92px, 1fr))`,
+          gap: 1,
+          background: "var(--border-subtle)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: 6,
+          maxHeight: 640,
+          overflowY: "auto",
+          overflowX: "auto",
+        }}
       >
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `minmax(180px, 1.4fr) repeat(${ROUNDS.length}, minmax(92px, 1fr))`,
-            gap: 1,
-            background: "var(--border-subtle)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: 6,
-            overflow: "hidden",
-          }}
-        >
           {/* Header row — sticky so it stays visible during vertical scroll */}
           <div
             className="mono text-[10px] uppercase tracking-[.08em] px-3 py-2"
@@ -200,7 +198,6 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               })}
             </div>
           ))}
-        </div>
       </div>
 
       {/* Legend — Prism ramp strip */}
