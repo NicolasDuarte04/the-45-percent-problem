@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   loadBracket,
   loadSnapshotMeta,
@@ -7,6 +6,7 @@ import {
 import { BracketBoard } from "@/components/compositions/BracketBoard";
 import { RoundProbabilityLegend } from "@/components/compositions/RoundProbabilityLegend";
 import { HashChip } from "@/components/primitives/HashChip";
+import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -29,38 +29,38 @@ export default function BracketPage() {
         color: "var(--text-primary)",
       }}
     >
+      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+        <SubNav
+          links={[
+            { href: "/terminal", label: "Terminal", direction: "back" },
+            { href: "/ledger", label: "Ledger", direction: "forward" },
+          ]}
+        />
+      </div>
+
       <div
-        className="shrink-0 px-6 pt-6 pb-4 border-b"
+        className="shrink-0 px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-screen-2xl mx-auto flex flex-wrap items-baseline justify-between gap-3">
-          <div>
-            <h1
-              className="text-[18px] font-medium tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Bracket
-            </h1>
-            <p
-              className="text-[12px] mt-0.5"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              Per-round marginal probabilities · snapshot{" "}
-              <span className="mono">{meta.snapshot_id}</span> · phase{" "}
-              <span className="mono">{meta.tournament_phase.replace(/_/g, " ")}</span>
-            </p>
-          </div>
-          <nav
-            className="flex gap-4 text-[12px]"
-            style={{ color: "var(--accent-focus)" }}
+        <div className="max-w-[1400px] mx-auto">
+          <h1
+            className="text-[18px] font-medium tracking-tight"
+            style={{ color: "var(--text-primary)" }}
           >
-            <Link href="/terminal">← Terminal</Link>
-            <Link href="/ledger">Ledger →</Link>
-          </nav>
+            Bracket
+          </h1>
+          <p
+            className="text-[12px] mt-0.5"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            Per-round marginal probabilities · snapshot{" "}
+            <span className="mono">{meta.snapshot_id}</span> · phase{" "}
+            <span className="mono">{meta.tournament_phase.replace(/_/g, " ")}</span>
+          </p>
         </div>
       </div>
 
-      <div className="max-w-screen-2xl mx-auto w-full px-6 py-6 flex flex-col gap-6">
+      <div className="max-w-[1400px] mx-auto w-full px-6 py-6 flex flex-col gap-6">
         <BracketBoard bracket={bracket} tournament={tournament} />
 
         <RoundProbabilityLegend />

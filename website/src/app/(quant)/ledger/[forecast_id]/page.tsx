@@ -6,6 +6,7 @@ import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
 import { MonoNumber } from "@/components/primitives/MonoNumber";
+import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -84,20 +85,21 @@ export default async function ForecastDetailPage({
       className="min-h-screen"
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
+      {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
+      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+        <SubNav
+          links={[
+            { href: "/ledger", label: "Transparency Ledger", direction: "back" },
+          ]}
+        />
+      </div>
+
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div
-        className="px-4 pt-6 pb-4 border-b"
+        className="px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-screen-lg mx-auto">
-          <nav
-            className="text-[12px] mb-3"
-            style={{ color: "var(--accent-focus)" }}
-          >
-            <Link href="/ledger" className="transition-colors duration-[120ms]">
-              ← Transparency Ledger
-            </Link>
-          </nav>
+        <div className="max-w-[1400px] mx-auto">
           <div className="flex flex-wrap items-baseline gap-3">
             <h1
               className="text-[16px] font-medium tracking-tight"
@@ -125,7 +127,7 @@ export default async function ForecastDetailPage({
         </div>
       </div>
 
-      <div className="max-w-screen-lg mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-6">
         {/* ── Full schema fields ────────────────────────────────────────── */}
         <section
           aria-label="Forecast fields"

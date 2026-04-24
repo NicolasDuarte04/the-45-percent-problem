@@ -2,6 +2,7 @@ import Link from "next/link";
 import { loadLedger, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { LedgerSummaryPanel } from "@/components/compositions/LedgerSummaryPanel";
 import { LedgerTable } from "@/components/compositions/LedgerTable";
+import { SubNav } from "@/components/layout/SubNav";
 import type { LedgerRecord } from "@/lib/data/schemas";
 
 export const dynamic = "force-static";
@@ -170,49 +171,46 @@ export default function LedgerPage() {
       className="min-h-screen"
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
+      {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
+      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+        <SubNav
+          links={[
+            { href: "/terminal", label: "Divergence Terminal", direction: "back" },
+            { href: "/vault", label: "Research Vault", direction: "forward" },
+          ]}
+        />
+      </div>
+
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div
-        className="px-4 pt-6 pb-4 border-b"
+        className="px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-screen-xl mx-auto flex flex-wrap items-baseline justify-between gap-3">
-          <div>
-            <h1
-              className="text-[18px] font-medium tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Transparency Ledger
-            </h1>
-            <p
-              className="text-[12px] mt-0.5"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Append-only forecast record ·{" "}
-              <span className="mono">{records.length}</span> records ·{" "}
-              <span className="mono" style={{ color: "var(--ledger-hit)" }}>
-                {totalHits} HIT
-              </span>{" "}
-              ·{" "}
-              <span className="mono" style={{ color: "var(--ledger-miss)" }}>
-                {totalMisses} MISS
-              </span>{" "}
-              ·{" "}
-              <span className="mono" style={{ color: "var(--text-tertiary)" }}>
-                {totalNeutral} NEUTRAL
-              </span>
-            </p>
-          </div>
-          <nav
-            className="flex gap-4 text-[12px]"
-            style={{ color: "var(--accent-focus)" }}
+        <div className="max-w-[1400px] mx-auto">
+          <h1
+            className="text-[18px] font-medium tracking-tight"
+            style={{ color: "var(--text-primary)" }}
           >
-            <Link href="/terminal" className="transition-colors duration-[120ms]">
-              ← Divergence Terminal
-            </Link>
-            <Link href="/vault" className="transition-colors duration-[120ms]">
-              Research Vault →
-            </Link>
-          </nav>
+            Transparency Ledger
+          </h1>
+          <p
+            className="text-[12px] mt-0.5"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Append-only forecast record ·{" "}
+            <span className="mono">{records.length}</span> records ·{" "}
+            <span className="mono" style={{ color: "var(--ledger-hit)" }}>
+              {totalHits} HIT
+            </span>{" "}
+            ·{" "}
+            <span className="mono" style={{ color: "var(--ledger-miss)" }}>
+              {totalMisses} MISS
+            </span>{" "}
+            ·{" "}
+            <span className="mono" style={{ color: "var(--text-tertiary)" }}>
+              {totalNeutral} NEUTRAL
+            </span>
+          </p>
         </div>
       </div>
 
@@ -225,7 +223,7 @@ export default function LedgerPage() {
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-screen-xl mx-auto">
+        <div className="max-w-[1400px] mx-auto px-6">
           Pre-registration invariant §7.2: hits and misses are rendered with identical
           visual weight. No forecast is ever deleted. Calibration, not accuracy, is the
           evaluation metric. Methodology pre-registered at{" "}
@@ -242,7 +240,7 @@ export default function LedgerPage() {
         </div>
       </div>
 
-      <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-8">
+      <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-8">
         {/* ── §7.3 Summary panel ────────────────────────────────────────── */}
         <LedgerSummaryPanel metrics={metrics} />
 
