@@ -1,0 +1,222 @@
+<Dropcap>
+  Five models compete on the same problem. One of them — the one selected
+  before the tournament began — is M★. The others are shadow models: they
+  run in parallel, they appear in the ledger, and they exist to make failure
+  visible. If M★ is worse than M0 by the Round of 16, we know.
+</Dropcap>
+
+The architecture is deliberate. A single model without comparators is hard
+to evaluate honestly. A suite of models with a pre-registered champion, a
+null baseline, and explicit calibration metrics makes the honest evaluation
+the default.
+
+<MarginNote>
+  M★ (M-star) is pronounced "M star." The notation borrows from the
+  statistical convention for a selected or optimal estimator. The ★ symbol
+  appears in every data cell in the terminal and ledger that refers to the
+  champion model.
+</MarginNote>
+
+<SectionRule />
+
+## M0 — the null baseline
+
+M0 assigns a constant probability to each of the three 1X2 outcomes. It is
+not a model of football. It is a lower bound: any model that cannot outperform
+M0 on calibration has added no information relative to an uninformed prior.
+
+For the group stage, where draws are possible, M0 uses an equal-weight prior:
+
+<BlockMath math="P_{M_0}(H) = P_{M_0}(D) = P_{M_0}(A) = \tfrac{1}{3}" />
+
+For knockout rounds, where draws result in extra time and a potential
+shootout, M0 collapses to:
+
+<BlockMath math="P_{M_0}(H) = P_{M_0}(A) = \tfrac{1}{2}" />
+
+<MarginNote>
+  In knockout rounds the "draw at 90 minutes" outcome is not the terminal
+  outcome; it triggers further play. M0 treats the final result (home/away
+  advance) as binary. All higher models do the same.
+</MarginNote>
+
+M0 carries no information about team quality, form, or recent results. Its
+Brier score, log-loss, and RPS represent the floor of what a calibrated model
+must beat. The kill criterion is defined against M0 specifically because it
+is the hardest to cheat: if M★ cannot outperform a coin flip, the project
+publishes a null result.
+
+<SectionRule />
+
+## M1 — Elo-based Poisson
+
+M1 introduces team-specific strength by mapping current Elo ratings to
+expected goal rates (<InlineMath math="\lambda" />). The Elo expected score
+for team A against team B is:
+
+<BlockMath math="E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}" />
+
+where <InlineMath math="R_A" /> and <InlineMath math="R_B" /> are current
+Elo ratings.
+
+<MarginNote>
+  The Elo system was developed by Arpad Elo for chess rating and later
+  adapted for football. The divisor 400 is a conventional constant: a
+  400-point Elo gap corresponds to a 90.9% win probability.
+</MarginNote>
+
+M1 uses <InlineMath math="E_A" /> to parameterize expected goals via a
+log-linear form:
+
+<BlockMath math="\log \lambda_h = \mu + \alpha_h - \beta_a + \delta_\text{HFA}" />
+
+<BlockMath math="\log \lambda_a = \mu + \alpha_a - \beta_h" />
+
+where <InlineMath math="\mu" /> is the mean log-goals across the calibration
+corpus, <InlineMath math="\alpha" /> and <InlineMath math="\beta" /> are
+attack and defence strength parameters derived from Elo, and
+<InlineMath math="\delta_\text{HFA}" /> is a home-field advantage offset
+estimated on historical data.
+
+The joint score probability uses the independent Poisson assumption:
+
+<BlockMath math="P(X = x,\, Y = y) = \frac{e^{-\lambda_h}\,\lambda_h^x}{x!} \cdot \frac{e^{-\lambda_a}\,\lambda_a^y}{y!}" />
+
+<MarginNote>
+  The independent Poisson assumption is known to underestimate the frequency
+  of 0-0, 1-0, and 0-1 scorelines. M2 and M3 correct for this; M1 does not,
+  by design, so that the correction's effect on calibration is isolatable.
+</MarginNote>
+
+The 1X2 probabilities are obtained by summing across all score combinations:
+
+<BlockMath math="P(H) = \sum_{x > y} P(X=x, Y=y), \quad P(D) = \sum_{x=y} P(X=x, Y=y), \quad P(A) = \sum_{x < y} P(X=x, Y=y)" />
+
+The sum is truncated at ten goals per side, capturing more than 99.99% of
+the probability mass at realistic <InlineMath math="\lambda" /> values for
+international football.
+
+<SectionRule />
+
+## M2 — Dixon-Coles Poisson with FIFA ranking blend
+
+M2 extends M1 in two ways. First, it blends Elo with FIFA world rankings to
+produce the strength parameters. Second, it applies the **Dixon-Coles
+correction**, which adjusts the joint probability for low-scoring outcomes
+where the independence assumption fails most visibly.
+
+The blended strength for team <InlineMath math="i" /> is:
+
+<BlockMath math="s_i = w_\text{Elo} \cdot \tilde{R}^\text{Elo}_i + (1 - w_\text{Elo}) \cdot \tilde{R}^\text{FIFA}_i" />
+
+where <InlineMath math="\tilde{R}" /> denotes a normalized and log-scaled
+rank score, and <InlineMath math="w_\text{Elo}" /> is a pre-registered blend
+weight estimated on historical data.
+
+<MarginNote>
+  The optimal blend weight <InlineMath math="w_\text{Elo}" /> was estimated
+  on international matches from 2018–2022, held out from the M★ selection
+  corpus. Its value is stored in `pre_reg_constants.yaml`.
+</MarginNote>
+
+The Dixon-Coles correction factor <InlineMath math="\tau" /> modifies the
+independent Poisson joint probability for the four low-score cells:
+
+<BlockMath math="\tau(x,y) = \begin{cases} 1 - \lambda_h\,\lambda_a\,\rho & x=0,\; y=0 \\ 1 + \lambda_h\,\rho & x=0,\; y=1 \\ 1 + \lambda_a\,\rho & x=1,\; y=0 \\ 1 - \rho & x=1,\; y=1 \\ 1 & \text{otherwise} \end{cases}" />
+
+where <InlineMath math="\rho" /> is a small negative parameter that reduces
+the probability of 0-1 and 1-0 draws while raising 0-0 and 1-1 to their
+empirically observed frequency. The corrected joint probability is:
+
+<BlockMath math="P_{M_2}(X=x, Y=y) = \tau(x,y) \cdot \frac{e^{-\lambda_h}\,\lambda_h^x}{x!} \cdot \frac{e^{-\lambda_a}\,\lambda_a^y}{y!}" />
+
+<PullQuote cite="Dixon and Coles (1997)">
+  The low-score correction is not decorative. In international football,
+  0-0 draws occur at roughly 1.8× the frequency the independent Poisson
+  model predicts. The correction is where the model earns its keep.
+</PullQuote>
+
+<SectionRule />
+
+## M3 — macro-prior with confederation hierarchy
+
+M3 retains the Dixon-Coles Poisson from M2 and adds a **hierarchical
+confederation prior**. Teams from the same confederation share a partial-
+pooling prior on their strength parameters, reflecting the observation that
+intra-confederation calibration data is richer than cross-confederation data
+during the group stage.
+
+The hierarchical prior on team <InlineMath math="i" />'s attack strength
+<InlineMath math="\alpha_i" /> is:
+
+<BlockMath math="\alpha_i \sim \mathcal{N}(\mu_c,\; \sigma_c^2), \quad c = \text{confederation}(i)" />
+
+The confederation-level hyper-parameters <InlineMath math="\mu_c" /> and
+<InlineMath math="\sigma_c" /> are estimated jointly with team-level
+parameters. For confederations with fewer teams in the calibration corpus,
+this pooling prevents extreme strength estimates.
+
+<MarginNote>
+  The six FIFA confederations are: CONMEBOL, UEFA, CONCACAF, AFC, CAF, OFC.
+  UEFA and CONMEBOL together account for more than half the 48-team field.
+</MarginNote>
+
+M3 also includes a **recency-weighted form factor** <InlineMath math="f" />,
+a rolling measure of recent results that decays exponentially:
+
+<BlockMath math="f_{i,t} = \sum_{k=0}^{K} e^{-\gamma k} \cdot r_{i,t-k}" />
+
+where <InlineMath math="r_{i,t-k}" /> is the Elo-points change from the
+match <InlineMath math="k" /> slots before the current fixture, and
+<InlineMath math="\gamma" /> is the decay constant (pre-registered at
+<InlineMath math="\gamma = 0.30" />).
+
+<SectionRule />
+
+## M★ — the pre-registered champion
+
+M★ is whichever of M1, M2, and M3 achieved the best out-of-sample log-loss
+on the 2018–2022 international match corpus, evaluated in Phase 8 before the
+2026 tournament began. The identity of M★ is sealed in the pre-registration.
+
+<MarginNote>
+  You can read which model was selected as M★ in
+  [`pre_reg_constants.yaml`](/vault/preregistration) under the
+  `champion_model` key. The selection was locked on 2026-04-22.
+</MarginNote>
+
+The champion is not necessarily the most complex model. If M1's simpler
+specification achieved better calibration on the hold-out corpus, M1 becomes
+M★. Complexity is not rewarded; calibration is.
+
+All four candidate models continue to run in parallel through the tournament.
+Their forecasts appear in the ledger alongside M★. This parallel tracking
+serves two purposes: it makes the evaluation of M★ relative to alternatives
+transparent, and it provides the Diebold-Mariano test a richer comparison set
+than the M0 baseline alone.
+
+## Elo drift during the tournament
+
+The figure below shows how Elo ratings for four featured teams evolve across
+the snapshots taken so far. Ratings update after each settled match using the
+standard Elo formula with <InlineMath math="K = 20" /> for group matches and
+<InlineMath math="K = 32" /> for knockout rounds.
+
+<EloDriftFigure mode="interactive" />
+
+<SectionRule />
+
+## What the models do not do
+
+None of the five models:
+
+- incorporate player-level injury data (not pre-registered, not available at
+  scale from public sources without introducing lookahead bias)
+- update intra-match (all predictions are pre-match, using the prior night's
+  snapshot)
+- model draw-specific factors in knockout rounds beyond the Poisson extension
+  described in M2
+
+These omissions are deliberate. A model with more levers is harder to
+calibrate and easier to overfit. The pre-registration commits us to these
+boundaries; adding them mid-tournament would invalidate the evaluation.

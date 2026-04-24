@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "freshness",
+  "title": "FreshnessRecord",
+  "description": "Phase 9 §4.9 — Single small file consumed by the global freshness banner.",
+  "type": "object",
+  "required": [
+    "snapshot_id", "generated_at_utc",
+    "max_expected_staleness_hours", "current_staleness_hours", "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "snapshot_id":                { "type": "string" },
+    "generated_at_utc":           { "type": "string" },
+    "max_expected_staleness_hours":{ "type": "number", "minimum": 0 },
+    "current_staleness_hours":    { "type": "number", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["FRESH", "STALE", "BROKEN"]
+    }
+  }
+}

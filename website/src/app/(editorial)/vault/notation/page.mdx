@@ -1,0 +1,139 @@
+This table mirrors the notation in the Phase 1 framework paper. Every symbol
+listed here appears in the model specification, the evaluation metrics, or
+the pre-registration constants. The canonical value column shows the
+pre-registered value where the symbol has one; "—" denotes a variable or a
+value estimated from data.
+
+Symbols are grouped thematically: model parameters first, then market and
+evaluation quantities, then meta and infrastructure notation.
+
+<SectionRule />
+
+## Match and score variables
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="X" /> | Home team goals (random variable) | — | Poisson-distributed with rate <InlineMath math="\lambda_h" /> |
+| <InlineMath math="Y" /> | Away team goals (random variable) | — | Poisson-distributed with rate <InlineMath math="\lambda_a" /> |
+| <InlineMath math="x, y" /> | Realized home / away goal counts | — | Lowercase = realization of <InlineMath math="X" />, <InlineMath math="Y" /> |
+| <InlineMath math="N" /> | Number of settled matches | — | Grows monotonically during the tournament |
+| <InlineMath math="i" /> | Match index | — | Ranges from 1 to <InlineMath math="N" /> |
+
+<SectionRule />
+
+## Poisson rate parameters
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="\lambda_h" /> | Expected home team goals | — | <InlineMath math="> 0" />; parameterizes the home Poisson |
+| <InlineMath math="\lambda_a" /> | Expected away team goals | — | <InlineMath math="> 0" />; parameterizes the away Poisson |
+| <InlineMath math="\mu" /> | Mean log-goals across calibration corpus | — | Baseline intercept in the log-linear model |
+| <InlineMath math="\alpha_i" /> | Attack strength for team <InlineMath math="i" /> | — | Estimated from historical match data |
+| <InlineMath math="\beta_i" /> | Defence strength for team <InlineMath math="i" /> | — | Estimated from historical match data |
+| <InlineMath math="\delta_\text{HFA}" /> | Home-field advantage offset | — | Log-scale; estimated from historical data |
+
+The log-linear parameterization of expected goals:
+
+<BlockMath math="\log \lambda_h = \mu + \alpha_h - \beta_a + \delta_\text{HFA}" />
+<BlockMath math="\log \lambda_a = \mu + \alpha_a - \beta_h" />
+
+<SectionRule />
+
+## Dixon-Coles correction
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="\rho" /> | Dixon-Coles low-score correlation parameter | — | Small negative value, <InlineMath math="\rho \in (-1/(\lambda_h \lambda_a), 0)" /> |
+| <InlineMath math="\tau(x,y)" /> | Correction factor for score <InlineMath math="(x,y)" /> | — | Equals 1 for <InlineMath math="\max(x,y) \geq 2" /> |
+
+The correction factor in full:
+
+<BlockMath math="\tau(x,y,\lambda_h,\lambda_a,\rho) = \begin{cases} 1 - \lambda_h\lambda_a\rho & x=0,\; y=0 \\ 1 + \lambda_h\rho & x=0,\; y=1 \\ 1 + \lambda_a\rho & x=1,\; y=0 \\ 1 - \rho & x=1,\; y=1 \\ 1 & \text{otherwise} \end{cases}" />
+
+<SectionRule />
+
+## Elo and strength parameters
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="R_i" /> | Current Elo rating for team <InlineMath math="i" /> | — | Updates after each settled match |
+| <InlineMath math="R'_i" /> | Updated Elo rating | — | Post-match value |
+| <InlineMath math="E_i" /> | Elo expected score for team <InlineMath math="i" /> | — | <InlineMath math="E_i = 1/(1 + 10^{(R_j - R_i)/400})" /> |
+| <InlineMath math="S_i" /> | Actual match score for team <InlineMath math="i" /> | — | 1 = win, 0.5 = draw, 0 = loss |
+| <InlineMath math="K" /> | Elo update magnitude | 20 (group) / 32 (KO) | Pre-registered; higher <InlineMath math="K" /> for knockout rounds |
+| <InlineMath math="w_\text{Elo}" /> | FIFA-blend weight on Elo ratings (M2) | — | Estimated on 2018–2022 hold-out corpus |
+| <InlineMath math="s_i" /> | Blended strength for team <InlineMath math="i" /> (M2) | — | <InlineMath math="s_i = w_\text{Elo}\,\tilde{R}^\text{Elo}_i + (1-w_\text{Elo})\,\tilde{R}^\text{FIFA}_i" /> |
+| <InlineMath math="f_{i,t}" /> | Recency-weighted form factor (M3) | — | Rolling exponential decay over recent matches |
+| <InlineMath math="\gamma" /> | Form factor decay constant (M3) | 0.30 | Pre-registered |
+
+<SectionRule />
+
+## Market and edge quantities
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="p_m" /> | Model-implied probability for outcome | — | <InlineMath math="p_m \in [0,1]" /> |
+| <InlineMath math="q_\text{raw}" /> | Raw bookmaker decimal odds (inverted) | — | Before margin removal |
+| <InlineMath math="q_d" /> | De-vigged market probability | — | Power-method de-vigging; <InlineMath math="\sum_j q_{d,j} = 1" /> |
+| <InlineMath math="E" /> | Edge | — | <InlineMath math="E = p_m - q_d" />; positive = model higher than market |
+| <InlineMath math="\varepsilon" /> | Edge threshold | 0.03 (mainline) / 0.05 (longshot) | Pre-registered; governs gate status |
+| <InlineMath math="k" /> | Power-method exponent for de-vigging | — | Estimated to zero overround |
+
+The power-method de-vigging formula:
+
+<BlockMath math="q_{d,i} = \frac{o_i^{-1/k}}{\displaystyle\sum_j o_j^{-1/k}}" />
+
+where <InlineMath math="o_i" /> is the decimal odds for outcome <InlineMath math="i" />.
+
+<SectionRule />
+
+## Evaluation and scoring metrics
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="p_i" /> | Model probability on the realized outcome of match <InlineMath math="i" /> | — | The "score" that feeds all loss functions |
+| <InlineMath math="o_i" /> | Indicator: 1 if outcome <InlineMath math="i" /> realized, 0 otherwise | — | In practice always 1 for the event that occurred |
+| <InlineMath math="\text{BS}" /> | Brier score | — | <InlineMath math="\text{BS} = \frac{1}{N}\sum_i (p_i - o_i)^2" /> |
+| <InlineMath math="\mathcal{L}" /> | Log-loss (cross-entropy loss) | — | <InlineMath math="\mathcal{L} = -\frac{1}{N}\sum_i \log p_i" /> |
+| <InlineMath math="\text{RPS}" /> | Ranked probability score | — | Cumulative distribution squared error |
+| <InlineMath math="\text{CLV}_i" /> | Closing-line value for forecast <InlineMath math="i" /> (M★ only) | — | <InlineMath math="\log(p_m/q_\text{close}) \times 10{,}000" /> bps |
+| <InlineMath math="p_k" /> | Mean model probability in calibration bin <InlineMath math="k" /> | — | For reliability diagram |
+| <InlineMath math="\hat{f}_k" /> | Empirical frequency in calibration bin <InlineMath math="k" /> | — | Fraction of events that occurred |
+
+<SectionRule />
+
+## Monte Carlo and simulation
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="n_\text{MC}" /> | Number of Monte Carlo simulation runs | 10,000 | Pre-registered; fixed for all snapshots |
+| <InlineMath math="s" /> | Random seed | 42 | Pre-registered; reproducibility anchor |
+| <InlineMath math="[p_\text{lo}, p_\text{hi}]" /> | 95% Monte Carlo confidence interval | — | 2.5th and 97.5th percentile across simulations |
+
+<SectionRule />
+
+## Hierarchical prior (M3)
+
+| Symbol | Definition | Canonical value | Notes |
+|--------|-----------|-----------------|-------|
+| <InlineMath math="c" /> | Confederation index | — | One of: CONMEBOL, UEFA, CONCACAF, AFC, CAF, OFC |
+| <InlineMath math="\mu_c" /> | Confederation-level mean attack strength | — | Hyper-parameter, estimated jointly |
+| <InlineMath math="\sigma_c" /> | Confederation-level attack strength spread | — | Hyper-parameter, estimated jointly |
+
+The partial-pooling prior:
+
+<BlockMath math="\alpha_i \sim \mathcal{N}(\mu_c,\; \sigma_c^2), \quad c = \text{confederation}(i)" />
+
+<SectionRule />
+
+## Infrastructure and audit notation
+
+| Symbol | Definition | Example |
+|--------|-----------|---------|
+| `snapshot_id` | ISO-8601 timestamp identifying a data bundle | `2026-06-11T04:00Z` |
+| `code_sha` | Short git commit SHA of the build that generated the snapshot | `a1b2c3d` |
+| `data_sha` | SHA-256 of the data bundle, for tamper detection | `sha256:7f2e…` |
+| `forecast_id` | ULID uniquely identifying a single forecast row | `01HX…` |
+| `match_id` | Unique match identifier following the canonical schema | `FIFA2026-GRP-…` |
+| `pre_reg_tag` | Git tag for the pre-registration lockdown commit | `v1.0.0-mstar-lock` |
+| `model_id` | Model identifier | `M0`, `M1`, `M2`, `M3`, `M_STAR` |

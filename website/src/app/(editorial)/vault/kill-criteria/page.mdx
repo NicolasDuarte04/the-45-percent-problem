@@ -1,0 +1,110 @@
+<Dropcap>
+  If M★ performs worse than the null baseline by the Round of 16, this
+  project publishes a null result, the terminal is frozen, and no further
+  forecasts are issued. This is not a contingency plan. It is the pre-
+  registered design.
+</Dropcap>
+
+The kill criterion exists because a project that can run indefinitely without
+consequence is not falsifiable. Pre-registering a stopping rule before the
+tournament makes the negative result legible — not as a failure, but as the
+correct outcome of an honest test.
+
+<SectionRule />
+
+## The mathematical statement
+
+The kill condition is a one-sided log-loss comparison evaluated at a single
+pre-specified checkpoint: the end of the Round of 16 (R16), when at least 16
+group-stage matches and the first four R16 matches have settled.
+
+Let <InlineMath math="\mathcal{L}_{M^\star}" /> and <InlineMath math="\mathcal{L}_{M_0}" /> denote the cumulative
+mean log-loss of M★ and the null baseline M0 respectively, computed over all
+settled matches up to and including R16:
+
+<BlockMath math="\mathcal{L} = -\frac{1}{N} \sum_{i=1}^{N} \log p_i" />
+
+where <InlineMath math="p_i" /> is the model's assigned probability to the realized outcome of
+match <InlineMath math="i" />, and <InlineMath math="N" /> is the count of settled matches.
+
+<MarginNote>
+  Log-loss (also called log-likelihood loss or cross-entropy) penalizes
+  confident wrong predictions more heavily than uncertain ones. A model that
+  assigns 0.90 probability to the losing outcome receives a loss of
+  <InlineMath math="-\log(0.10) \approx 2.30" /> for that match — far higher than the 0.69
+  penalty for an equal-probability guess.
+</MarginNote>
+
+The kill criterion fires if and only if:
+
+<BlockMath math="\mathcal{L}_{M^\star}(R16) > \mathcal{L}_{M_0}(R16)" />
+
+That is: M★'s average surprise per match exceeds the null model's. The null
+model assigns <InlineMath math="\tfrac{1}{3}" /> to every outcome in the group stage; its
+log-loss is a constant <InlineMath math="\log 3 \approx 1.099" /> nats. M★ must beat this number
+to remain active.
+
+No margin is required. A single nat of improvement over M0 is sufficient.
+The criterion is strict in the statistical sense — it requires *any* positive
+improvement — but generous in the practical sense, because the bar is a
+deliberately naive comparator.
+
+<SectionRule />
+
+## Why pre-registering the stopping rule matters
+
+Pre-registering the kill condition prevents the worst form of result-chasing:
+keeping a model alive indefinitely because no one has formally decided when
+to stop.
+
+Without a kill condition, a project that goes negative after 20 matches can
+explain away the result ("small sample"), continue to 40 matches, explain
+it again, and eventually either find a positive run or simply never publish
+the full record. Pre-registration removes that option.
+
+If the criterion fires, we must publish the null result. The ledger remains
+visible. The model cards are updated with the outcome. The terminal displays
+a permanent banner. There is no path to quietly removing the project from
+public record.
+
+<PullQuote cite="this project's pre-registration, OSF 2026-04-22">
+  Publishing a null result under a pre-registered stopping rule is not
+  failure. It is the project working as designed.
+</PullQuote>
+
+<SectionRule />
+
+## Operational response if the criterion fires
+
+If <InlineMath math="\mathcal{L}_{M^\star}(R16) > \mathcal{L}_{M_0}(R16)" />:
+
+1. The site displays a global banner on every page identifying the null
+   result and the matched condition.
+2. The divergence terminal is frozen: no new divergence rows are added, and
+   the gate status on all existing rows is marked `SUSPENDED`.
+3. The ledger continues to accept settled matches for the remainder of the
+   tournament — the forecast record remains public — but no new forecasts
+   are issued after R16.
+4. A null-result report is published under `/vault/null-result` within
+   72 hours of the criterion firing, following the template committed in the
+   pre-registration.
+5. The OSF record is updated with a link to the null-result report.
+
+<MarginNote>
+  Steps 2 and 3 are not equivalent. The terminal shows predictive output;
+  freezing it is the honest response to a model that has failed its
+  pre-registered performance test. The ledger shows historical facts;
+  those remain visible regardless of model performance.
+</MarginNote>
+
+<SectionRule />
+
+## Live status
+
+The block below reflects the current state of the kill criterion as of the
+most recent snapshot. It updates nightly with each build.
+
+<KillCriteriaStatusBlock />
+
+The [Transparency Ledger](/ledger) shows the full kill-criteria check panel
+alongside the rolling calibration metrics.

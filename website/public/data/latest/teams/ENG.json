@@ -1,0 +1,26 @@
+{
+  "fifa_code": "ENG",
+  "display_name": "England",
+  "group": "H",
+  "progression": {
+    "p_group_qualification": 0.892,
+    "p_r16": 0.573,
+    "p_qf": 0.337,
+    "p_sf": 0.164,
+    "p_final": 0.084,
+    "p_champion": 0.052,
+    "ci_95_champion": [
+      0.039873,
+      0.067556
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-14_England_Belgium",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "opponent": "Belgium",
+      "is_home": true
+    }
+  ]
+}

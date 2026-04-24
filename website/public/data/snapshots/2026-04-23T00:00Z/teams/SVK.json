@@ -1,0 +1,26 @@
+{
+  "fifa_code": "SVK",
+  "display_name": "Slovakia",
+  "group": "L",
+  "progression": {
+    "p_group_qualification": 0.385,
+    "p_r16": 0.111,
+    "p_qf": 0.033,
+    "p_sf": 0.008,
+    "p_final": 0.003,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.003827
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-16_Slovakia_Jordan",
+      "kickoff_utc": "2026-06-16T21:00:00+00:00",
+      "opponent": "Jordan",
+      "is_home": true
+    }
+  ]
+}

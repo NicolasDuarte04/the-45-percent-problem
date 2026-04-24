@@ -65,6 +65,13 @@ kelly:
   cap_per_day: 0.15
   drawdown_halve_trigger: 0.2
   drawdown_recover_trigger: 0.9
+  # Aliases consumed by evaluation/pseudo_clv.py (Phase 8 rename)
+  fraction_mainline: 0.25
+  fraction_longshot: 0.125
+  longshot_threshold: 0.1
+  drawdown_stop: 0.2
+  edge_threshold_mainline: 0.03
+  edge_threshold_derivative: 0.05
 sim:
   runs_website: 10000
   runs_paper: 100000
@@ -81,3 +88,67 @@ eval:
   - 1
   - 2
   - 3
+# ---------------------------------------------------------------------------
+# Phase 8 lockdown — keys consumed by evaluation/accuracy_metrics.py
+# scoring_rules / diebold_mariano / nyberg were consolidated from config.yaml
+# into this file during pre-registration. kill_criterion mirrors kill.ll_gap_se.
+# ---------------------------------------------------------------------------
+scoring_rules:
+  log_loss_eps_min: 1.0e-6
+diebold_mariano:
+  comparisons:
+    mstar_vs_m0:
+      alpha: 0.05
+    mstar_vs_market:
+      alpha: 0.05
+    all_other_pairwise:
+      alpha: 0.005   # Bonferroni: 0.05 / 4 shadow comparisons
+nyberg:
+  logit_clip: 1.0e-6
+  comparisons:
+    mstar_primary:
+      critical_value: 5.991  # chi2(2) at alpha=0.05
+    shadow_bonferroni:
+      critical_value: 8.668  # chi2(2) at alpha=0.0125 (Bonferroni)
+accuracy_bootstrap:
+  n_bootstrap: 10000
+kill_criterion:
+  threshold_standard_errors: 2.0   # mirrors kill.ll_gap_se
+models:
+  valid_model_ids:
+  - M0
+  - M1
+  - M2
+  - M3
+  - M_STAR
+  - MARKET_DEVIGGED
+  all:
+  - M0
+  - M1
+  - M2
+  - M3
+  - M_STAR
+  - MARKET_DEVIGGED
+  shadow:
+  - M0
+  - M1
+  - M2
+  - M3
+dashboard:
+  output_files:
+    json: ablation.json
+    tex: ablation_table.tex
+    caption_tex: ablation_caption.tex
+clv:
+  bootstrap:
+    n_bootstrap: 10000
+    block_length_min: 4
+    block_length_max: 20
+  z_test:
+    critical_value: 1.6449   # z at one-sided alpha=0.05
+    alpha_one_sided: 0.05
+  edge_decision:
+    labels:
+      genuine: GENUINE_EDGE
+      weak: WEAK_EDGE
+      no_edge: NO_EDGE
