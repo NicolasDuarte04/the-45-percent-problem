@@ -556,4 +556,40 @@
   /* KaTeX output size tune for body readability */
   .vault-prose .katex { font-size: 1.05em; }
 
+  /* Vault pillar cards — lift on hover so it reads as affordance rather
+     than ornament. Background flips to --paper-elev on editorial and to
+     --bg-panel-elev on quant (both are the canvas's "card" surface). A
+     faint shadow and a 2px Y-translate make the lift visible without
+     bouncing the page. Reduced-motion readers get only the bg shift. */
+  .vault-pillar {
+    transition:
+      transform 140ms ease-out,
+      background-color 140ms ease-out,
+      border-color 140ms ease-out,
+      box-shadow 140ms ease-out;
+    will-change: transform;
+  }
+  .vault-pillar:hover {
+    transform: translateY(-2px);
+    background-color: var(--paper-elev, var(--bg-panel-elev));
+    border-color: color-mix(in oklch, var(--text-primary) 18%, var(--border-subtle));
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 28px rgb(0 0 0 / 0.08);
+  }
+  .vault-pillar:focus-within {
+    border-color: color-mix(in oklch, var(--accent-focus) 70%, var(--border-subtle));
+  }
+  /* Inner entry rows — group-hover underline feels right for a text link. */
+  .vault-pillar a.group:hover span:first-child {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, var(--text-primary) 30%, transparent);
+    text-underline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vault-pillar,
+    .vault-pillar:hover {
+      transform: none;
+      transition: background-color 140ms ease-out, border-color 140ms ease-out;
+    }
+  }
+
 }

@@ -4,7 +4,8 @@ import type {
   TournamentSnapshot,
   TournamentTeam,
 } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
+import { formatProbability } from "@/lib/formatters";
 
 interface BracketBoardProps {
   bracket: BracketSnapshot;
@@ -93,6 +94,48 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         </div>
       </div>
 
+      {/* Pre-tournament empty-state note. A traditional knockout tree
+          requires resolved slots — in the pre-tournament phase we have no
+          match-to-match edges to draw, so we explain the fallback instead
+          of showing an empty lattice. Once the draw is played and the
+          bracket.json slots populate, this note hides and the matrix is
+          augmented with slot labels. */}
+      {!slotsPopulated && (
+        <div
+          className="mb-4 rounded px-4 py-3"
+          role="note"
+          style={{
+            background: "color-mix(in oklch, var(--prism-peach) 6%, var(--bg-panel-elev))",
+            border: "1px solid color-mix(in oklch, var(--prism-peach) 28%, var(--border-subtle))",
+          }}
+        >
+          <div
+            className="mono text-[10px] uppercase tracking-[.1em] font-semibold"
+            style={{ color: "var(--prism-peach)", marginBottom: 4 }}
+          >
+            Pre-tournament · slots unresolved
+          </div>
+          <p
+            className="text-[12.5px]"
+            style={{
+              fontFamily: "var(--font-sans)",
+              color: "var(--text-secondary)",
+              lineHeight: 1.55,
+              margin: 0,
+            }}
+          >
+            A traditional knockout tree cannot be drawn yet — the draw has not
+            been played, so the model has no match-to-match edges between
+            slots. The matrix below is the faithful substitute: each row is a
+            team, each column is a round, and each cell is the marginal
+            probability that the team reaches that round across {" "}
+            <span className="mono">10k</span> Monte Carlo simulations. Once
+            the draw resolves, this view augments with slot labels and the
+            conditional (reach-given-survival) probabilities.
+          </p>
+        </div>
+      )}
+
       {/* Native CSS Grid — no external bracket library (§12.7) */}
       <div
         role="table"
@@ -109,12 +152,15 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           overflowX: "auto",
         }}
       >
-          {/* Header row — sticky so it stays visible during vertical scroll */}
+          {/* Header row — sticky so it stays visible during vertical scroll.
+              Lifted from --text-quiet to --text-tertiary (slate-ink-soft)
+              and weighted/tracked so the round labels read clearly above
+              the Prism heatmap instead of dissolving into the panel. */}
           <div
-            className="mono text-[10px] uppercase tracking-[.08em] px-3 py-2"
+            className="mono text-[11px] uppercase font-semibold tracking-[.12em] px-3 py-2.5"
             style={{
               background: "var(--bg-panel-elev)",
-              color: "var(--text-quiet)",
+              color: "var(--text-tertiary)",
               position: "sticky",
               top: 0,
               zIndex: 2,
@@ -126,10 +172,10 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           {ROUNDS.map((r) => (
             <div
               key={r.key}
-              className="mono text-[10px] uppercase tracking-[.08em] px-3 py-2 text-center"
+              className="mono text-[11px] uppercase font-semibold tracking-[.12em] px-3 py-2.5 text-center"
               style={{
                 background: "var(--bg-panel-elev)",
-                color: "var(--text-quiet)",
+                color: "var(--text-tertiary)",
                 position: "sticky",
                 top: 0,
                 zIndex: 2,
@@ -192,7 +238,11 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                       color: cellTextColor(p),
                     }}
                   >
-                    <ProbabilityCell p={p} decimals={1} />
+                    <NumericCell
+                      value={p}
+                      formatter={(x) => formatProbability(x, 1)}
+                      ariaLabel={`${(p * 100).toFixed(1)} percent`}
+                    />
                   </div>
                 );
               })}

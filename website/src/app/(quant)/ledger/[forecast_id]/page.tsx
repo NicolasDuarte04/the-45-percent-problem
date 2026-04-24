@@ -2,10 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { loadLedger } from "@/lib/data/loadSnapshot";
 import { HashChip } from "@/components/primitives/HashChip";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
-import { MonoNumber } from "@/components/primitives/MonoNumber";
+import { formatMono, formatProbability } from "@/lib/formatters";
+import { LABEL_COLOR } from "@/lib/labels";
 
 export const dynamic = "force-static";
 
@@ -68,12 +69,6 @@ export default async function ForecastDetailPage({
   const matchLabel = record.match_id
     .replace(/^\d{4}-\d{2}-\d{2}_/, "")
     .replace(/_/g, " vs ");
-
-  const LABEL_COLOR = {
-    HIT: "var(--ledger-hit)",
-    MISS: "var(--ledger-miss)",
-    NEUTRAL: "var(--text-tertiary)",
-  };
 
   const distEntries = Object.entries(record.outcome_predicted_distribution).sort(
     ([, a], [, b]) => b - a
@@ -187,7 +182,11 @@ export default async function ForecastDetailPage({
                         >
                           {outcome}
                         </span>
-                        <ProbabilityCell p={p} />
+                        <NumericCell
+                          value={p}
+                          formatter={(x) => formatProbability(x, 1)}
+                          ariaLabel={`${(p * 100).toFixed(1)} percent`}
+                        />
                         <div
                           className="h-1.5 rounded"
                           style={{
@@ -214,10 +213,18 @@ export default async function ForecastDetailPage({
                   <span className="mono">{record.outcome_realized}</span>
                 </FieldRow>
                 <FieldRow label="p_model_on_realized">
-                  <ProbabilityCell p={record.p_model_on_realized} />
+                  <NumericCell
+                    value={record.p_model_on_realized}
+                    formatter={(x) => formatProbability(x, 1)}
+                    ariaLabel={`${(record.p_model_on_realized * 100).toFixed(1)} percent`}
+                  />
                 </FieldRow>
                 <FieldRow label="q_market_devigged_on_realized">
-                  <ProbabilityCell p={record.q_market_devigged_on_realized} />
+                  <NumericCell
+                    value={record.q_market_devigged_on_realized}
+                    formatter={(x) => formatProbability(x, 1)}
+                    ariaLabel={`${(record.q_market_devigged_on_realized * 100).toFixed(1)} percent`}
+                  />
                 </FieldRow>
                 <FieldRow label="edge_E_at_close">
                   <EdgeBadge edge={record.edge_E_at_close} threshold={0.03} />
@@ -229,13 +236,22 @@ export default async function ForecastDetailPage({
                   />
                 </FieldRow>
                 <FieldRow label="brier_contribution">
-                  <MonoNumber value={record.brier_contribution} decimals={4} />
+                  <NumericCell
+                    value={record.brier_contribution}
+                    formatter={(v) => formatMono(v, 4)}
+                  />
                 </FieldRow>
                 <FieldRow label="log_loss_contribution">
-                  <MonoNumber value={record.log_loss_contribution} decimals={4} />
+                  <NumericCell
+                    value={record.log_loss_contribution}
+                    formatter={(v) => formatMono(v, 4)}
+                  />
                 </FieldRow>
                 <FieldRow label="rps_contribution">
-                  <MonoNumber value={record.rps_contribution} decimals={4} />
+                  <NumericCell
+                    value={record.rps_contribution}
+                    formatter={(v) => formatMono(v, 4)}
+                  />
                 </FieldRow>
                 <FieldRow label="clv_bps">
                   {record.clv_bps !== null ? (

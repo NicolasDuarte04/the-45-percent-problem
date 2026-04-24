@@ -3,36 +3,18 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { LedgerRecord } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
 import { HashChip } from "@/components/primitives/HashChip";
-import { MonoNumber } from "@/components/primitives/MonoNumber";
-import { formatMono } from "@/lib/formatters";
+import { formatMono, formatProbability, formatUtcShort } from "@/lib/formatters";
+import { LABEL_STYLES, type LedgerLabel } from "@/lib/labels";
 
 // ── Label chip ────────────────────────────────────────────────────────────────
 // §7.2 invariant: the ONLY visual delta between hit and miss rows.
 // Font size, padding, and weight are identical to each other.
 
-const LABEL_STYLES: Record<string, { color: string; bg: string; glyph: string }> = {
-  HIT: {
-    color: "var(--ledger-hit)",
-    bg: "rgba(167,243,208,0.08)",
-    glyph: "◆",
-  },
-  MISS: {
-    color: "var(--ledger-miss)",
-    bg: "rgba(253,164,175,0.08)",
-    glyph: "◆",
-  },
-  NEUTRAL: {
-    color: "var(--text-tertiary)",
-    bg: "transparent",
-    glyph: "●",
-  },
-};
-
-function LabelChip({ label }: { label: "HIT" | "MISS" | "NEUTRAL" }) {
+function LabelChip({ label }: { label: LedgerLabel }) {
   const s = LABEL_STYLES[label];
   return (
     <span
@@ -81,21 +63,6 @@ function SortHeader({
       )}
     </th>
   );
-}
-
-// ── Settled timestamp formatter ───────────────────────────────────────────────
-
-function fmtSettled(utc: string): string {
-  try {
-    const d = new Date(utc);
-    const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const dy = String(d.getUTCDate()).padStart(2, "0");
-    const hh = String(d.getUTCHours()).padStart(2, "0");
-    const mm = String(d.getUTCMinutes()).padStart(2, "0");
-    return `${mo}-${dy} ${hh}:${mm}Z`;
-  } catch {
-    return utc.slice(0, 16).replace("T", " ");
-  }
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -264,7 +231,7 @@ export function LedgerTable({ records }: LedgerTableProps) {
                     className="mono"
                     aria-label={`settled at ${r.settled_at_utc}`}
                   >
-                    {fmtSettled(r.settled_at_utc)}
+                    {formatUtcShort(r.settled_at_utc)}
                   </span>
                 </td>
 
@@ -311,12 +278,20 @@ export function LedgerTable({ records }: LedgerTableProps) {
 
                 {/* p model on realized */}
                 <td className="py-1.5 px-2 text-right">
-                  <ProbabilityCell p={r.p_model_on_realized} />
+                  <NumericCell
+                    value={r.p_model_on_realized}
+                    formatter={(p) => formatProbability(p, 1)}
+                    ariaLabel={`${(r.p_model_on_realized * 100).toFixed(1)} percent`}
+                  />
                 </td>
 
                 {/* q market devigged on realized */}
                 <td className="py-1.5 px-2 text-right">
-                  <ProbabilityCell p={r.q_market_devigged_on_realized} />
+                  <NumericCell
+                    value={r.q_market_devigged_on_realized}
+                    formatter={(p) => formatProbability(p, 1)}
+                    ariaLabel={`${(r.q_market_devigged_on_realized * 100).toFixed(1)} percent`}
+                  />
                 </td>
 
                 {/* Edge at close */}
@@ -337,7 +312,10 @@ export function LedgerTable({ records }: LedgerTableProps) {
                   className="py-1.5 px-2 text-right"
                   aria-label={`Brier contribution ${r.brier_contribution.toFixed(4)}`}
                 >
-                  <MonoNumber value={r.brier_contribution} decimals={4} />
+                  <NumericCell
+                    value={r.brier_contribution}
+                    formatter={(v) => formatMono(v, 4)}
+                  />
                 </td>
 
                 {/* Log-loss */}
@@ -345,7 +323,10 @@ export function LedgerTable({ records }: LedgerTableProps) {
                   className="py-1.5 px-2 text-right"
                   aria-label={`Log-loss contribution ${r.log_loss_contribution.toFixed(4)}`}
                 >
-                  <MonoNumber value={r.log_loss_contribution} decimals={4} />
+                  <NumericCell
+                    value={r.log_loss_contribution}
+                    formatter={(v) => formatMono(v, 4)}
+                  />
                 </td>
 
                 {/* RPS */}
@@ -353,7 +334,10 @@ export function LedgerTable({ records }: LedgerTableProps) {
                   className="py-1.5 px-2 text-right"
                   aria-label={`RPS contribution ${r.rps_contribution.toFixed(4)}`}
                 >
-                  <MonoNumber value={r.rps_contribution} decimals={4} />
+                  <NumericCell
+                    value={r.rps_contribution}
+                    formatter={(v) => formatMono(v, 4)}
+                  />
                 </td>
 
                 {/* CLV bps — M★ only */}

@@ -1,0 +1,161 @@
+<Dropcap>
+  A pre-registration is a commitment made in public, in advance. Before a
+  match is played, before a result is known, you write down exactly what you
+  will measure, how you will measure it, and — critically — when you will
+  stop. Then you seal it, timestamp it, and make the seal independently
+  verifiable.
+</Dropcap>
+
+This project pre-registered its hypothesis, model specification, evaluation
+metrics, and kill criterion at the **Open Science Framework** on
+**2026-04-22**, the day before the opening match of the 2026 FIFA World Cup.
+The registration is publicly readable and cannot be amended without creating
+a visible fork in the audit trail.
+
+<MarginNote>
+  The Open Science Framework (OSF) is free scholarly infrastructure hosted
+  by the Center for Open Science. Pre-registrations receive a DOI and are
+  time-stamped against an immutable server log. The record for this project
+  is at [osf.io/8b5hd](https://osf.io/8b5hd).
+</MarginNote>
+
+<SectionRule />
+
+## What the registration seals
+
+Four commitments are sealed. None can be amended without a deviation notice
+that is itself part of the permanent record.
+
+**The champion model (M★).** Phase 8 of the project selected a champion
+model from the candidate set M1, M2, M3 using out-of-sample performance on
+historical data, before a single 2026 match was settled. M★ is identified in
+the registration by name. The terminal, ledger, and all calibration metrics
+are reported for M★ as pre-selected — not for whichever model performed best
+in hindsight.
+
+<MarginNote>
+  The champion selection procedure is documented in [§ IV · Model
+  anatomy](/vault/models). The key invariant: selection used only
+  pre-tournament data, completed before the opening match.
+</MarginNote>
+
+**The evaluation metrics.** The project reports Brier score, log-loss, and
+Ranked Probability Score (RPS) as primary calibration measures. Cumulative
+closing-line value (CLV) is a secondary, M★-only metric. No additional
+metrics are added after the tournament begins.
+
+**The edge thresholds ε.** Mainline markets (1X2, BTTS, OU 2.5) use a
+threshold of ε = 0.03. Longshot markets (Asian Handicap ±0.5, Advance KO)
+use ε = 0.05. These thresholds determine which rows in the divergence
+terminal carry an active gate status. They are instruments, not targets.
+
+**The kill criterion.** If M★'s log-loss exceeds M0's log-loss by the Round
+of 16, this project publishes a null result and the terminal is frozen. The
+full statement is at [Kill criteria](/vault/kill-criteria).
+
+<SectionRule />
+
+## How to verify independently
+
+**OSF record.** The registration is permanently accessible at DOI
+`10.17605/OSF.IO/8B5HD`. The record carries a creation timestamp, a PDF
+snapshot of the registration form as submitted, and an immutable canonical
+URL. No account is required to read it.
+
+**Signed git tag.** The same constant set is committed to this repository
+under the signed tag `v1.0.0-mstar-lock`. A signed tag cannot be moved or
+backdated without invalidating the cryptographic signature. To verify locally:
+
+```bash
+git clone https://github.com/the45percent/the-45-percent
+git verify-tag v1.0.0-mstar-lock
+```
+
+A successful response shows the tagger identity, the signing key fingerprint,
+and the commit SHA the tag points to. That commit contains
+`pre_reg_constants.yaml` — the single source of truth for every threshold,
+parameter, and evaluation rule used on this site.
+
+<MarginNote>
+  The `git verify-tag` command requires that the tagger's GPG public key is
+  in your local keyring. The key fingerprint is published on the OSF record
+  and in the repository's `SECURITY.md`.
+</MarginNote>
+
+<SectionRule />
+
+## The pre_reg_constants file
+
+The constants below are reproduced from the tagged commit for reference.
+The canonical version lives at `v1.0.0-mstar-lock:pre_reg_constants.yaml`
+in the project repository. Any discrepancy between this page and the tagged
+file is an error in this page.
+
+```yaml
+# pre_reg_constants.yaml
+# Sealed 2026-04-22 · tag v1.0.0-mstar-lock
+
+project: "The 45% Problem"
+lockdown_date: "2026-04-22"
+osf_doi: "10.17605/OSF.IO/8B5HD"
+git_tag: "v1.0.0-mstar-lock"
+
+# Champion model — selected before tournament open
+champion_model: "M_STAR"
+champion_selection_basis: "out_of_sample_log_loss_2018_2022"
+
+# Monte Carlo simulation parameters
+mc_runs: 10000
+mc_seed: 42
+
+# Edge thresholds (pre-registered, not tuned post-hoc)
+edge_threshold_mainline: 0.03
+edge_threshold_longshot: 0.05
+
+# Evaluation metrics (primary)
+evaluation_metrics:
+  - brier_score
+  - log_loss
+  - ranked_probability_score
+
+# Evaluation metrics (secondary, M★ only)
+evaluation_metrics_secondary:
+  - cumulative_clv_bps
+
+# Kill criterion
+kill_criterion:
+  condition: "M_STAR.log_loss > M0.log_loss"
+  evaluation_point: "Round of 16 (R16)"
+  action: "publish_null_result_and_freeze_terminal"
+
+# Volatility gate rules (five; any trip suppresses gate-OPEN status)
+volatility_gate:
+  - named_event_exclusion
+  - price_discovery_window_hours: 48
+  - liquidity_floor_polymarket_usd: 50000
+  - max_line_move_pct: 0.12
+  - settlement_proximity_hours: 2
+```
+
+<SectionRule />
+
+## What pre-registration does not commit us to
+
+Pre-registration is not a claim that the model is correct. It is a claim
+that the model's evaluation is honest.
+
+A pre-registered negative result — M★ worse than M0, kill criterion tripped,
+null result published — is not a failure. It is the correct outcome of a
+correctly run experiment. The kill criterion exists precisely because we
+acknowledged this possibility in advance.
+
+Pre-registration does not prevent exploratory analysis. If an unexpected
+pattern emerges during the tournament, we can describe it — but we must label
+it clearly as post-hoc, unregistered, and outside the project's primary
+evaluation. The distinction matters because everything in the terminal and
+ledger is a pre-registered claim. Everything else is descriptive.
+
+<PullQuote cite="Center for Open Science, Why Pre-register?">
+  Pre-registration distinguishes confirmatory from exploratory research. Both
+  are valuable; only one is what this project is doing.
+</PullQuote>

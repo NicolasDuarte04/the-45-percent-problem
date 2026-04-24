@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { LedgerRecord, MatchDetail } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
+import { formatProbability } from "@/lib/formatters";
 
 interface RelatedLedgerRecordsProps {
   match: MatchDetail;
@@ -102,10 +103,18 @@ export function RelatedLedgerRecords({
                 {r.model_id} · {r.market}
               </span>
               <span className="text-right">
-                <ProbabilityCell p={r.p_model_on_realized} decimals={2} />
+                <NumericCell
+                  value={r.p_model_on_realized}
+                  formatter={(p) => formatProbability(p, 2)}
+                  ariaLabel={`${(r.p_model_on_realized * 100).toFixed(2)} percent`}
+                />
               </span>
               <span className="text-right">
-                <ProbabilityCell p={r.q_market_devigged_on_realized} decimals={2} />
+                <NumericCell
+                  value={r.q_market_devigged_on_realized}
+                  formatter={(p) => formatProbability(p, 2)}
+                  ariaLabel={`${(r.q_market_devigged_on_realized * 100).toFixed(2)} percent`}
+                />
               </span>
               <span className="text-right">
                 <EdgeBadge edge={r.edge_E_at_close} />

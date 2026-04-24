@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
-import { MonoNumber } from "@/components/primitives/MonoNumber";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
-import { OddsCell } from "@/components/primitives/OddsCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { DivergenceBar } from "@/components/primitives/DivergenceBar";
 import { SnapshotTimestamp } from "@/components/primitives/SnapshotTimestamp";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
 import { HashChip } from "@/components/primitives/HashChip";
-import { ConfidenceInterval } from "@/components/primitives/ConfidenceInterval";
 import { KillCriteriaBanner } from "@/components/primitives/KillCriteriaBanner";
+import {
+  formatCI,
+  formatDecimalOdds,
+  formatMono,
+  formatProbability,
+} from "@/lib/formatters";
 
 export default function PrimitivesShowcase() {
   if (process.env.NODE_ENV === "production") notFound();
@@ -27,51 +30,51 @@ export default function PrimitivesShowcase() {
         </p>
       </header>
 
-      <Section title="MonoNumber">
+      <Section title="NumericCell · mono">
         <Row label="zero">
-          <MonoNumber value={0} decimals={2} />
+          <NumericCell value={0} formatter={(v) => formatMono(v, 2)} />
         </Row>
         <Row label="small (0.042)">
-          <MonoNumber value={0.042} decimals={3} />
+          <NumericCell value={0.042} formatter={(v) => formatMono(v, 3)} />
         </Row>
         <Row label="large (1234567.89)">
-          <MonoNumber value={1234567.89} decimals={2} />
+          <NumericCell value={1234567.89} formatter={(v) => formatMono(v, 2)} />
         </Row>
         <Row label="negative">
-          <MonoNumber value={-42.5} decimals={1} />
+          <NumericCell value={-42.5} formatter={(v) => formatMono(v, 1)} />
         </Row>
       </Section>
 
-      <Section title="ProbabilityCell">
+      <Section title="NumericCell · probability">
         <Row label="near-zero (0.8%)">
-          <ProbabilityCell p={0.008} />
+          <NumericCell value={0.008} formatter={(p) => formatProbability(p, 1)} />
         </Row>
         <Row label="mid (41.2%)">
-          <ProbabilityCell p={0.412} />
+          <NumericCell value={0.412} formatter={(p) => formatProbability(p, 1)} />
         </Row>
         <Row label="near-certain (97.3%)">
-          <ProbabilityCell p={0.973} />
+          <NumericCell value={0.973} formatter={(p) => formatProbability(p, 1)} />
         </Row>
         <Row label="exactly 0%">
-          <ProbabilityCell p={0} />
+          <NumericCell value={0} formatter={(p) => formatProbability(p, 1)} />
         </Row>
         <Row label="exactly 100%">
-          <ProbabilityCell p={1} />
+          <NumericCell value={1} formatter={(p) => formatProbability(p, 1)} />
         </Row>
       </Section>
 
-      <Section title="OddsCell">
+      <Section title="NumericCell · decimal odds">
         <Row label="short-price (1.150)">
-          <OddsCell decimal={1.15} />
+          <NumericCell value={1.15} formatter={(d) => formatDecimalOdds(d, 3)} />
         </Row>
         <Row label="evens (2.000)">
-          <OddsCell decimal={2.0} />
+          <NumericCell value={2.0} formatter={(d) => formatDecimalOdds(d, 3)} />
         </Row>
         <Row label="long-price (12.500)">
-          <OddsCell decimal={12.5} />
+          <NumericCell value={12.5} formatter={(d) => formatDecimalOdds(d, 3)} />
         </Row>
         <Row label="extreme (250.000)">
-          <OddsCell decimal={250.0} />
+          <NumericCell value={250.0} formatter={(d) => formatDecimalOdds(d, 3)} />
         </Row>
       </Section>
 
@@ -150,18 +153,30 @@ export default function PrimitivesShowcase() {
         </Row>
       </Section>
 
-      <Section title="ConfidenceInterval">
+      <Section title="NumericCell · confidence interval">
         <Row label="tight CI">
-          <ConfidenceInterval lo={0.038} hi={0.047} />
+          <NumericCell<[number, number]>
+            value={[0.038, 0.047]}
+            formatter={([l, h]) => formatCI(l, h)}
+          />
         </Row>
         <Row label="wide CI">
-          <ConfidenceInterval lo={0.041} hi={0.213} />
+          <NumericCell<[number, number]>
+            value={[0.041, 0.213]}
+            formatter={([l, h]) => formatCI(l, h)}
+          />
         </Row>
         <Row label="near-zero lower">
-          <ConfidenceInterval lo={0.001} hi={0.024} />
+          <NumericCell<[number, number]>
+            value={[0.001, 0.024]}
+            formatter={([l, h]) => formatCI(l, h)}
+          />
         </Row>
         <Row label="high probability">
-          <ConfidenceInterval lo={0.712} hi={0.891} />
+          <NumericCell<[number, number]>
+            value={[0.712, 0.891]}
+            formatter={([l, h]) => formatCI(l, h)}
+          />
         </Row>
       </Section>
 

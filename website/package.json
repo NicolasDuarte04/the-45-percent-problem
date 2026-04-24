@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-forbidden-words.mjs",
+    "prebuild": "node scripts/check-forbidden-words.mjs && node scripts/generate-healthz.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:contracts": "tsx tests/contracts/run_contracts.ts",
-    "test:visual": "playwright test tests/visual/primitives.spec.ts",
-    "test:visual:update": "playwright test tests/visual/primitives.spec.ts --update-snapshots"
+    "test:a11y": "playwright test --config playwright.a11y.config.ts",
+    "test:visual": "playwright test --config playwright.config.ts",
+    "test:visual:update": "playwright test --config playwright.config.ts --update-snapshots"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -19,14 +20,6 @@
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.4",
     "@observablehq/plot": "^0.6.17",
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-popover": "^1.1.15",
-    "@radix-ui/react-scroll-area": "^1.2.10",
-    "@radix-ui/react-separator": "^1.1.8",
-    "@radix-ui/react-slot": "^1.2.4",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "@radix-ui/react-tooltip": "^1.2.8",
-    "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.24",
     "@types/mdx": "^2.0.13",
     "class-variance-authority": "^0.7.1",
@@ -51,6 +44,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

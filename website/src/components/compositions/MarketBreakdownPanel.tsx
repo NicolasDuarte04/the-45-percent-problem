@@ -1,6 +1,7 @@
 import type { MatchDetail } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
+import { NumericCell } from "@/components/primitives/NumericCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
+import { formatProbability } from "@/lib/formatters";
 
 interface MarketBreakdownPanelProps {
   match: MatchDetail;
@@ -160,7 +161,11 @@ function MarketRow({ row }: { row: Row }) {
         </div>
       </div>
       <div className="text-right">
-        <ProbabilityCell p={row.p} decimals={2} />
+        <NumericCell
+          value={row.p}
+          formatter={(x) => formatProbability(x, 2)}
+          ariaLabel={`${(row.p * 100).toFixed(2)} percent`}
+        />
         <div
           className="mono text-[10px]"
           style={{ color: "var(--text-quiet)", letterSpacing: ".04em" }}
@@ -170,7 +175,11 @@ function MarketRow({ row }: { row: Row }) {
       </div>
       <div className="text-right">
         {row.q !== undefined ? (
-          <ProbabilityCell p={row.q} decimals={2} />
+          <NumericCell
+            value={row.q}
+            formatter={(x) => formatProbability(x, 2)}
+            ariaLabel={`${(row.q * 100).toFixed(2)} percent`}
+          />
         ) : (
           <span
             className="mono text-[13px]"

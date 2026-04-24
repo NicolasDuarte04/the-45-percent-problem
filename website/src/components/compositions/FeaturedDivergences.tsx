@@ -1,27 +1,11 @@
 import Link from "next/link";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import type { DivergenceRow, DivergenceSnapshot } from "@/lib/data/schemas";
+import { formatUtcShort } from "@/lib/formatters";
+import { MARKET_LABELS } from "@/lib/markets";
 
 interface FeaturedDivergencesProps {
   divergence: DivergenceSnapshot;
-}
-
-const MARKET_LABELS: Record<string, string> = {
-  "1X2": "1X2",
-  BTTS: "BTTS",
-  OU_2_5: "O/U 2.5",
-  "AH_-0.5": "AH −0.5",
-  "AH_+0.5": "AH +0.5",
-  ADV_KO: "Adv. KO",
-};
-
-function formatKickoff(utc: string): string {
-  const d = new Date(utc);
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${month}-${day} ${hh}:${mm}Z`;
 }
 
 export function FeaturedDivergences({ divergence }: FeaturedDivergencesProps) {
@@ -100,7 +84,7 @@ function DivergenceCard({ row }: { row: DivergenceRow }) {
           }}
         >
           <span style={{ color: "var(--accent-focus)" }}>§</span> Featured
-          divergence · {formatKickoff(row.kickoff_utc)}
+          divergence · {formatUtcShort(row.kickoff_utc)}
         </div>
 
         <h3

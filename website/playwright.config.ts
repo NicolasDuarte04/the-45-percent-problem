@@ -19,9 +19,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    // In CI a `next build` has already run; reuse the production artifact.
+    // Locally, `next dev` is faster (no prior build required).
+    command: process.env.CI ? "pnpm start" : "pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    stdout: "ignore",
+    stderr: "pipe",
   },
 });

@@ -1,6 +1,6 @@
 import type { TeamProgression } from "@/lib/data/schemas";
-import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
-import { ConfidenceInterval } from "@/components/primitives/ConfidenceInterval";
+import { NumericCell } from "@/components/primitives/NumericCell";
+import { formatCI, formatProbability } from "@/lib/formatters";
 
 interface TeamHeaderProps {
   team: TeamProgression;
@@ -92,13 +92,22 @@ export function TeamHeader({ team }: TeamHeaderProps) {
               fontWeight: 500,
             }}
           >
-            <ProbabilityCell p={team.progression.p_champion} decimals={1} />
+            <NumericCell
+              value={team.progression.p_champion}
+              formatter={(p) => formatProbability(p, 1)}
+              ariaLabel={`${(team.progression.p_champion * 100).toFixed(1)} percent`}
+            />
           </div>
           <div
             className="mono text-[11px]"
             style={{ color: "var(--text-tertiary)" }}
           >
-            95% band <ConfidenceInterval lo={lo} hi={hi} />
+            95% band{" "}
+            <NumericCell<[number, number]>
+              value={[lo, hi]}
+              formatter={([l, h]) => formatCI(l, h)}
+              ariaLabel={`95 percent confidence interval, ${(lo * 100).toFixed(1)} to ${(hi * 100).toFixed(1)} percent`}
+            />
           </div>
         </div>
       </div>

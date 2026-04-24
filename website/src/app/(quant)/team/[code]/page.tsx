@@ -8,7 +8,7 @@ import { TeamHeader } from "@/components/compositions/TeamHeader";
 import { ProgressionConeChart } from "@/components/compositions/ProgressionConeChart";
 import { HistoricalChampionSparkline } from "@/components/compositions/HistoricalChampionSparkline";
 import { UpcomingMatchesList } from "@/components/compositions/UpcomingMatchesList";
-import { HashChip } from "@/components/primitives/HashChip";
+import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 
 export const dynamic = "force-static";
 
@@ -98,40 +98,7 @@ export default async function TeamPage({
           fifaCode={team.fifa_code}
         />
 
-        <div
-          className="rounded-lg"
-          style={{
-            background: "var(--bg-panel)",
-            border: "1px solid var(--border-subtle)",
-            padding: "14px 16px",
-          }}
-        >
-          <div className="flex items-center gap-3 flex-wrap">
-            <span
-              className="mono text-[10px] uppercase tracking-[.08em]"
-              style={{ color: "var(--text-quiet)" }}
-            >
-              provenance
-            </span>
-            <HashChip sha={meta.code_sha} kind="code_sha" />
-            <HashChip sha={meta.data_sha} kind="data_sha" />
-            <span className="flex-1" />
-            <span
-              className="mono text-[11px]"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              pre-registered ·{" "}
-              <a
-                href="https://osf.io/8b5hd"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "var(--accent-focus)", textDecoration: "none" }}
-              >
-                osf.io/8b5hd
-              </a>
-            </span>
-          </div>
-        </div>
+        <ProvenanceBlock meta={meta} />
       </div>
     </div>
   );
