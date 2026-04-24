@@ -172,7 +172,7 @@ export default function LedgerPage() {
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
       {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
-      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
         <SubNav
           links={[
             { href: "/terminal", label: "Divergence Terminal", direction: "back" },
@@ -186,7 +186,7 @@ export default function LedgerPage() {
         className="px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-[1152px] mx-auto px-12">
           <h1
             className="text-[18px] font-medium tracking-tight"
             style={{ color: "var(--text-primary)" }}
@@ -223,7 +223,7 @@ export default function LedgerPage() {
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-[1400px] mx-auto px-6">
+        <div className="max-w-[1152px] mx-auto px-12">
           Pre-registration invariant §7.2: hits and misses are rendered with identical
           visual weight. No forecast is ever deleted. Calibration, not accuracy, is the
           evaluation metric. Methodology pre-registered at{" "}
@@ -240,7 +240,7 @@ export default function LedgerPage() {
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-8">
+      <div className="max-w-[1152px] mx-auto px-12 py-6 space-y-8">
         {/* ── §7.3 Summary panel ────────────────────────────────────────── */}
         <LedgerSummaryPanel metrics={metrics} />
 

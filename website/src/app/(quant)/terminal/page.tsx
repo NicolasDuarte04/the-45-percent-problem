@@ -31,7 +31,7 @@ export default async function TerminalPage({
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
       {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
-      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
         <SubNav
           links={[
             { href: "/", label: "Overview", direction: "back" },
@@ -45,7 +45,7 @@ export default async function TerminalPage({
         className="shrink-0 px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1400px] mx-auto flex flex-wrap items-baseline justify-between gap-3">
+        <div className="max-w-[1152px] mx-auto px-12 flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <h1
               className="text-[18px] font-medium tracking-tight"
@@ -74,7 +74,7 @@ export default async function TerminalPage({
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-[1152px] mx-auto px-12">
           Research publication. Divergences are descriptive statistics — model-implied
           probability minus de-vigged market-implied probability. No content on this
           terminal constitutes investment or gambling advice. Methodology pre-registered
@@ -103,7 +103,7 @@ export default async function TerminalPage({
           }}
           role="alert"
         >
-          <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-[1152px] mx-auto px-12">
             ◆ Volatility Gate tripped on all {divergence.rows.length} rows in this snapshot.
             All rows remain visible — the gate annotates, it does not filter. Gate rules
             are shown in the Gate column tooltip.
@@ -112,7 +112,7 @@ export default async function TerminalPage({
       )}
 
       {/* ── Main table ───────────────────────────────────────────────────── */}
-      <div className="max-w-[1400px] mx-auto w-full px-6 py-6">
+      <div className="max-w-[1152px] mx-auto w-full px-12 py-6">
         <DivergenceTable
           rows={divergence.rows}
           snapshotId={divergence.snapshot_id}
@@ -129,7 +129,7 @@ export default async function TerminalPage({
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-[1400px] mx-auto space-y-1">
+        <div className="max-w-[1152px] mx-auto px-12 space-y-1">
           <p>
             <span className="mono" style={{ color: "var(--data-neutral)" }}>p (model)</span>{" "}
             — M&#9733; model-implied probability for the outcome.{" "}
