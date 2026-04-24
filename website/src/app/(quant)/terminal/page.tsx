@@ -1,6 +1,6 @@
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
-import Link from "next/link";
+import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -30,12 +30,22 @@ export default async function TerminalPage({
       className="flex flex-col"
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
+      {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
+      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+        <SubNav
+          links={[
+            { href: "/", label: "Overview", direction: "back" },
+            { href: "/ledger", label: "Transparency Ledger", direction: "forward" },
+          ]}
+        />
+      </div>
+
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div
-        className="shrink-0 px-6 pt-6 pb-4 border-b"
+        className="shrink-0 px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-screen-2xl mx-auto flex flex-wrap items-baseline justify-between gap-3">
+        <div className="max-w-[1400px] mx-auto flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <h1
               className="text-[18px] font-medium tracking-tight"
@@ -52,14 +62,6 @@ export default async function TerminalPage({
               <span className="mono">{divergence.snapshot_id}</span>
             </p>
           </div>
-          <nav className="flex gap-4 text-[12px]" style={{ color: "var(--accent-focus)" }}>
-            <Link href="/" className="transition-colors duration-[120ms]">
-              ← Overview
-            </Link>
-            <Link href="/ledger" className="transition-colors duration-[120ms]">
-              Transparency Ledger →
-            </Link>
-          </nav>
         </div>
       </div>
 
@@ -72,7 +74,7 @@ export default async function TerminalPage({
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-screen-2xl mx-auto">
+        <div className="max-w-[1400px] mx-auto">
           Research publication. Divergences are descriptive statistics — model-implied
           probability minus de-vigged market-implied probability. No content on this
           terminal constitutes investment or gambling advice. Methodology pre-registered
@@ -101,7 +103,7 @@ export default async function TerminalPage({
           }}
           role="alert"
         >
-          <div className="max-w-screen-2xl mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             ◆ Volatility Gate tripped on all {divergence.rows.length} rows in this snapshot.
             All rows remain visible — the gate annotates, it does not filter. Gate rules
             are shown in the Gate column tooltip.
@@ -110,7 +112,7 @@ export default async function TerminalPage({
       )}
 
       {/* ── Main table ───────────────────────────────────────────────────── */}
-      <div className="max-w-screen-2xl mx-auto w-full">
+      <div className="max-w-[1400px] mx-auto w-full px-6 py-6">
         <DivergenceTable
           rows={divergence.rows}
           snapshotId={divergence.snapshot_id}
@@ -127,7 +129,7 @@ export default async function TerminalPage({
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-screen-2xl mx-auto space-y-1">
+        <div className="max-w-[1400px] mx-auto space-y-1">
           <p>
             <span className="mono" style={{ color: "var(--data-neutral)" }}>p (model)</span>{" "}
             — M&#9733; model-implied probability for the outcome.{" "}

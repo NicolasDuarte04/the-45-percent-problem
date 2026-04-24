@@ -69,7 +69,7 @@ export function EditorialMasthead() {
           }}
         >
           The{" "}
-          <span style={{ color: "rgb(15, 107, 125)" }}>45%</span>{" "}
+          <span className="wordmark-accent">45%</span>{" "}
           Problem
         </Link>
 
