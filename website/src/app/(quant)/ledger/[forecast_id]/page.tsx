@@ -6,7 +6,6 @@ import { ProbabilityCell } from "@/components/primitives/ProbabilityCell";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
 import { MonoNumber } from "@/components/primitives/MonoNumber";
-import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -85,18 +84,9 @@ export default async function ForecastDetailPage({
       className="min-h-screen"
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
-      {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
-      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
-        <SubNav
-          links={[
-            { href: "/ledger", label: "Transparency Ledger", direction: "back" },
-          ]}
-        />
-      </div>
-
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div
-        className="px-6 pt-4 pb-4 border-b"
+        className="px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
         <div className="max-w-[1152px] mx-auto px-12">

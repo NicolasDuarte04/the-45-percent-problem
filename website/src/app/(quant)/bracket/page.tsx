@@ -6,7 +6,6 @@ import {
 import { BracketBoard } from "@/components/compositions/BracketBoard";
 import { RoundProbabilityLegend } from "@/components/compositions/RoundProbabilityLegend";
 import { HashChip } from "@/components/primitives/HashChip";
-import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -29,17 +28,8 @@ export default function BracketPage() {
         color: "var(--text-primary)",
       }}
     >
-      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
-        <SubNav
-          links={[
-            { href: "/terminal", label: "Terminal", direction: "back" },
-            { href: "/ledger", label: "Ledger", direction: "forward" },
-          ]}
-        />
-      </div>
-
       <div
-        className="shrink-0 px-6 pt-4 pb-4 border-b"
+        className="shrink-0 px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
         <div className="max-w-[1152px] mx-auto px-12">

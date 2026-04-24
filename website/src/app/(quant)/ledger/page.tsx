@@ -2,7 +2,6 @@ import Link from "next/link";
 import { loadLedger, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { LedgerSummaryPanel } from "@/components/compositions/LedgerSummaryPanel";
 import { LedgerTable } from "@/components/compositions/LedgerTable";
-import { SubNav } from "@/components/layout/SubNav";
 import type { LedgerRecord } from "@/lib/data/schemas";
 
 export const dynamic = "force-static";
@@ -171,19 +170,9 @@ export default function LedgerPage() {
       className="min-h-screen"
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
-      {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
-      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
-        <SubNav
-          links={[
-            { href: "/terminal", label: "Divergence Terminal", direction: "back" },
-            { href: "/vault", label: "Research Vault", direction: "forward" },
-          ]}
-        />
-      </div>
-
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div
-        className="px-6 pt-4 pb-4 border-b"
+        className="px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
         <div className="max-w-[1152px] mx-auto px-12">
