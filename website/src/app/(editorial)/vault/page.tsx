@@ -175,9 +175,12 @@ export default function VaultIndexPage() {
             <article
               key={pillar.title}
               className="vault-pillar"
+              // Background is deliberately *not* set inline — it lives on the
+              // .vault-pillar class in globals.css so the :hover rule can
+              // override it. An inline `background` shorthand would trump
+              // any background-color rule on any pseudo-class.
               style={{
                 border: "1px solid var(--border-subtle)",
-                background: "var(--bg-panel-elev)",
                 padding: "28px 28px 20px",
                 borderRadius: "var(--radius-sm)",
                 display: "flex",

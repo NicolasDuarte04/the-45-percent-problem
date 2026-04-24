@@ -6,4 +6,3 @@ export { GateStatusPill } from "./GateStatusPill";
 export { HashChip } from "./HashChip";
 export { KillCriteriaBanner } from "./KillCriteriaBanner";
 export { EdgeSparkline } from "./EdgeSparkline";
-export { ProgressionSparkline } from "./ProgressionSparkline";

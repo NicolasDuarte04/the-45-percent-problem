@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { TournamentSnapshot } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
-import { ProgressionSparkline } from "@/components/primitives/ProgressionSparkline";
 import { formatCI } from "@/lib/formatters";
 
 interface TournamentLeaderboardProps {
@@ -105,47 +104,24 @@ export function TournamentLeaderboard({
                     </Link>
                   </td>
                   <td style={{ padding: "10px 24px 10px 0" }}>
-                    {/* Twin signals: the Prism bar reports the single
-                        champion-probability magnitude, the sparkline above
-                        it reports the GRP → CHA shape so each row carries
-                        a distinctive trajectory fingerprint. */}
                     <div
-                      className="flex flex-col"
-                      style={{ gap: 6 }}
+                      role="img"
+                      aria-label={`${team.display_name} championship probability ${(team.p_champion * 100).toFixed(1)} percent`}
+                      style={{
+                        height: 6,
+                        background: "var(--bg-panel)",
+                        borderRadius: 3,
+                        overflow: "hidden",
+                      }}
                     >
-                      <ProgressionSparkline
-                        values={[
-                          team.p_group_qualification,
-                          team.p_r16,
-                          team.p_quarterfinal,
-                          team.p_semifinal,
-                          team.p_final,
-                          team.p_champion,
-                        ]}
-                        stroke={color}
-                        width={180}
-                        height={20}
-                        ariaLabel={`${team.display_name} progression: group ${(team.p_group_qualification * 100).toFixed(0)}%, R16 ${(team.p_r16 * 100).toFixed(0)}%, QF ${(team.p_quarterfinal * 100).toFixed(0)}%, SF ${(team.p_semifinal * 100).toFixed(0)}%, final ${(team.p_final * 100).toFixed(0)}%, champion ${(team.p_champion * 100).toFixed(0)}%`}
-                      />
                       <div
-                        role="img"
-                        aria-label={`${team.display_name} championship probability ${(team.p_champion * 100).toFixed(1)} percent, bar`}
                         style={{
-                          height: 6,
-                          background: "var(--bg-panel)",
+                          width: `${(team.p_champion / max) * 100}%`,
+                          height: "100%",
+                          background: color,
                           borderRadius: 3,
-                          overflow: "hidden",
                         }}
-                      >
-                        <div
-                          style={{
-                            width: `${(team.p_champion / max) * 100}%`,
-                            height: "100%",
-                            background: color,
-                            borderRadius: 3,
-                          }}
-                        />
-                      </div>
+                      />
                     </div>
                   </td>
                   <td

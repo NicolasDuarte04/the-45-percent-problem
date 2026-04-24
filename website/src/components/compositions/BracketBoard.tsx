@@ -153,17 +153,19 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         }}
       >
           {/* Header row — sticky so it stays visible during vertical scroll.
-              Lifted from --text-quiet to --text-tertiary (slate-ink-soft)
-              and weighted/tracked so the round labels read clearly above
-              the Prism heatmap instead of dissolving into the panel. */}
+              Color lifted to --text-primary (slate-ink / paper-ink) so the
+              round labels are unmistakably legible above the Prism heatmap.
+              Weight semibold, tracking .14em, with a hairline bottom border
+              so the header strip reads as its own register. */}
           <div
-            className="mono text-[11px] uppercase font-semibold tracking-[.12em] px-3 py-2.5"
+            className="mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3"
             style={{
               background: "var(--bg-panel-elev)",
-              color: "var(--text-tertiary)",
+              color: "var(--text-primary)",
               position: "sticky",
               top: 0,
               zIndex: 2,
+              borderBottom: "1px solid var(--border-default)",
             }}
             role="columnheader"
           >
@@ -172,13 +174,14 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           {ROUNDS.map((r) => (
             <div
               key={r.key}
-              className="mono text-[11px] uppercase font-semibold tracking-[.12em] px-3 py-2.5 text-center"
+              className="mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3 text-center"
               style={{
                 background: "var(--bg-panel-elev)",
-                color: "var(--text-tertiary)",
+                color: "var(--text-primary)",
                 position: "sticky",
                 top: 0,
                 zIndex: 2,
+                borderBottom: "1px solid var(--border-default)",
               }}
               role="columnheader"
               title={r.label}
