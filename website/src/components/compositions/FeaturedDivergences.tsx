@@ -159,7 +159,11 @@ function DivergenceCard({ row }: { row: DivergenceRow }) {
             >
               edge
             </div>
-            <EdgeBadge edge={row.edge_E} threshold={row.edge_threshold} />
+            {/* threshold=0 so the badge is always colored in editorial cards.
+                The pre-reg ε gate still applies on the /terminal row, where
+                the muted-grey state is meaningful. Here the edge IS the
+                headline, so it always earns saturation. */}
+            <EdgeBadge edge={row.edge_E} threshold={0} />
           </div>
         </div>
       </article>
