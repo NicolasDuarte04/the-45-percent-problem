@@ -1,0 +1,26 @@
+{
+  "fifa_code": "ECU",
+  "display_name": "Ecuador",
+  "group": "D",
+  "progression": {
+    "p_group_qualification": 0.752,
+    "p_r16": 0.512,
+    "p_qf": 0.212,
+    "p_sf": 0.135,
+    "p_final": 0.052,
+    "p_champion": 0.023,
+    "ci_95_champion": [
+      0.015374,
+      0.034277
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-12_Ecuador_Poland",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "opponent": "Poland",
+      "is_home": true
+    }
+  ]
+}

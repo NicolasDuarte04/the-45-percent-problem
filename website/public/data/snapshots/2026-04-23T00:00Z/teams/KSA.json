@@ -1,0 +1,26 @@
+{
+  "fifa_code": "KSA",
+  "display_name": "Saudi Arabia",
+  "group": "I",
+  "progression": {
+    "p_group_qualification": 0.165,
+    "p_r16": 0.023,
+    "p_qf": 0.006,
+    "p_sf": 0.001,
+    "p_final": 0.0,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.003827
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-15_Saudi_Arabia_Scotland",
+      "kickoff_utc": "2026-06-15T18:00:00+00:00",
+      "opponent": "Scotland",
+      "is_home": true
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "snapshot_meta",
+  "title": "SnapshotMeta",
+  "description": "Phase 9 §4.2 — Every snapshot bundle begins with this manifest.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "generated_at_utc",
+    "code_sha",
+    "data_sha",
+    "pre_reg_tag",
+    "champion_model",
+    "mc_runs",
+    "tournament_phase",
+    "matches_settled",
+    "matches_remaining",
+    "kill_criteria_active"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string" },
+    "snapshot_id":    { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z$" },
+    "generated_at_utc": { "type": "string" },
+    "code_sha":       { "type": "string" },
+    "data_sha":       { "type": "string" },
+    "pre_reg_tag":    { "type": "string" },
+    "champion_model": { "type": "string", "enum": ["M0", "M1", "M2", "M3", "M_STAR"] },
+    "mc_runs":        { "type": "integer", "minimum": 100 },
+    "tournament_phase": {
+      "type": "string",
+      "enum": ["pre_tournament", "group_stage", "round_of_32", "round_of_16", "quarter_final", "semi_final", "final", "completed"]
+    },
+    "matches_settled":   { "type": "integer", "minimum": 0 },
+    "matches_remaining": { "type": "integer", "minimum": 0 },
+    "kill_criteria_active": { "type": "boolean" },
+    "notes": { "type": ["string", "null"] }
+  }
+}

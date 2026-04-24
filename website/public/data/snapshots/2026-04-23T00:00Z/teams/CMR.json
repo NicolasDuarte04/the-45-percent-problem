@@ -1,0 +1,26 @@
+{
+  "fifa_code": "CMR",
+  "display_name": "Cameroon",
+  "group": "G",
+  "progression": {
+    "p_group_qualification": 0.326,
+    "p_r16": 0.21,
+    "p_qf": 0.045,
+    "p_sf": 0.013,
+    "p_final": 0.001,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.003827
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-14_Egypt_Cameroon",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "opponent": "Egypt",
+      "is_home": false
+    }
+  ]
+}

@@ -1,0 +1,341 @@
+Terms appear in the order a new reader is likely to encounter them: foundational
+concepts first, technical machinery second, evaluation and audit vocabulary
+last. Each entry carries a formal definition and a plain-English equivalent.
+Cross-links point to the Vault article where the concept is used in context.
+
+Jump to: [B](#brier-score) · [C](#calibration) · [D](#de-vigging) ·
+[E](#edge) · [G](#gate) · [K](#kill-criterion) · [L](#log-loss) ·
+[M](#m-star) · [P](#poisson-model) · [R](#ranked-probability-score) ·
+[S](#snapshot) · [V](#volatility-gate)
+
+<SectionRule />
+
+## B
+
+### Brier score
+
+**Formal.** The mean squared error between a probability forecast and the
+binary realization:
+
+<BlockMath math="\text{BS} = \frac{1}{N} \sum_{i=1}^{N} (p_i - o_i)^2" />
+
+where <InlineMath math="p_i" /> is the model-assigned probability of the realized outcome and
+<InlineMath math="o_i = 1" /> for all settled matches (the realized outcome always occurred).
+
+**Plain English.** A number between 0 and 1 measuring how surprised a model
+was, on average, by the outcomes it observed. Lower is better. A Brier score
+of 0.25 corresponds to always forecasting 50/50, regardless of the match.
+
+**Where it matters.** [Transparency Ledger](/ledger) · [Model anatomy](/vault/models)
+
+<MarginNote>
+  The Brier score was introduced by Glenn Brier in 1950 for weather forecast
+  verification. It remains the canonical proper scoring rule for binary and
+  multi-class probability forecasts.
+</MarginNote>
+
+<SectionRule />
+
+## C
+
+### Calibration
+
+**Formal.** A forecaster is well-calibrated if, across all predictions
+assigned probability <InlineMath math="p" />, approximately <InlineMath math="p" /> fraction of those events occur.
+Formally, for a partition of predictions into bins <InlineMath math="[b_k, b_{k+1})" />:
+
+<BlockMath math="\left| \bar{p}_k - \hat{f}_k \right| \approx 0 \quad \forall\, k" />
+
+where <InlineMath math="\bar{p}_k" /> is the mean forecast in bin <InlineMath math="k" /> and <InlineMath math="\hat{f}_k" /> is the
+empirical frequency.
+
+**Plain English.** When a well-calibrated model says "40% probability," the
+event happens roughly 40% of the time. Calibration is the fundamental
+honesty property. A model can be calibrated and useless (if it always says
+50/50); calibration is necessary but not sufficient for predictive value.
+
+**Where it matters.** [The 45% problem](/vault/the-45-percent) · [Ledger reliability diagram](/ledger)
+
+---
+
+### Closing line value (CLV)
+
+**Formal.** The log-ratio of the model's closing-price-equivalent probability
+to the actual closing market price:
+
+<BlockMath math="\text{CLV}_i = \log\!\left(\frac{p^{\text{model}}_i}{q^{\text{close}}_i}\right) \times 10{,}000 \text{ bps}" />
+
+**Plain English.** A measure of whether the model's prediction was closer
+to the true outcome than the market's final price. Positive CLV (in basis
+points) indicates the model was systematically sharper than the bookmaker's
+closing line.
+
+**Where it matters.** [Transparency Ledger](/ledger)
+
+<MarginNote>
+  CLV is reported only for M★ (the champion model), not for shadow models,
+  because it has a different statistical interpretation when applied to a
+  retrospectively-selected model. See the pre-registration for details.
+</MarginNote>
+
+---
+
+### Confidence interval
+
+**Formal.** A 95% Monte Carlo confidence interval on <InlineMath math="p_\text{model}" />:
+the interval <InlineMath math="[p_{0.025}, p_{0.975}]" /> across 10,000 independent Monte Carlo
+draws.
+
+**Plain English.** The range within which the true model probability would
+fall if we re-ran the simulation 95 times out of 100 with the same inputs
+but different random seeds.
+
+**Where it matters.** All probability columns in the terminal.
+
+<SectionRule />
+
+## D
+
+### De-vigging
+
+**Formal.** The process of removing the bookmaker's margin (overround or
+"vig") from raw decimal odds to recover an implied probability. This project
+uses the **power method**:
+
+<BlockMath math="q_i = \frac{o_i^{-1/k}}{\sum_j o_j^{-1/k}}" />
+
+where <InlineMath math="o_i" /> is the decimal odds for outcome <InlineMath math="i" /> and <InlineMath math="k" /> is the power
+parameter estimated to minimize the overround to zero.
+
+**Plain English.** A bookmaker's raw odds deliberately sum to more than 100%
+(that excess is the house margin). De-vigging is the arithmetic of peeling
+the margin back out so the implied probabilities sum to exactly 1.
+
+**Where it matters.** [Divergence terminal](/terminal) · [Model anatomy](/vault/models)
+
+---
+
+### Dixon-Coles correction
+
+**Formal.** A multiplicative adjustment <InlineMath math="\tau(x, y, \lambda_h, \lambda_a, \rho)" />
+to the independent Poisson joint probability that corrects for empirically
+observed over-frequency of low-scoring draws. See [notation](/vault/notation)
+for the full definition.
+
+**Plain English.** The independent Poisson model underestimates 0-0 and 1-1
+draws in football by roughly 20–30%. The Dixon-Coles correction adds back the
+missing probability mass for those four low-score cells. Introduced by Dixon
+and Coles (1997).
+
+**Where it matters.** [Model anatomy](/vault/models)
+
+---
+
+### Divergence
+
+**Formal.** See **edge** below. In table headers, "divergence" is used
+interchangeably with edge to avoid over-use of a single word.
+
+**Plain English.** The gap between what the model thinks a probability is and
+what the market says it is.
+
+<SectionRule />
+
+## E
+
+### Edge (E)
+
+**Formal.** The signed difference between the model-implied probability
+<InlineMath math="p_\text{model}" /> and the de-vigged market probability <InlineMath math="q_\text{devigged}" />:
+
+<BlockMath math="E = p_\text{model} - q_\text{devigged}" />
+
+**Plain English.** Positive edge means the model thinks the outcome is more
+likely than the market does. Negative edge means the model thinks it is less
+likely. Neither positive nor negative edge is described as "good" on this
+site — the terminal shows the gap, not a recommendation.
+
+**Where it matters.** Every row in the [divergence terminal](/terminal).
+
+---
+
+### Elo rating
+
+**Formal.** A numerical skill rating for a team, updated after each match by:
+
+<BlockMath math="R'_A = R_A + K (S_A - E_A)" />
+
+where <InlineMath math="S_A \in \{0, 0.5, 1\}" /> is the actual match score (loss/draw/win),
+<InlineMath math="E_A" /> is the Elo expected score, and <InlineMath math="K" /> is the update magnitude constant
+(<InlineMath math="K = 20" /> for group matches, <InlineMath math="K = 32" /> for knockout rounds in this project).
+
+**Plain English.** A number that rises when a team beats teams it was
+expected to beat (by less) and falls when it loses to weaker teams (by more).
+
+**Where it matters.** [Model anatomy](/vault/models)
+
+<SectionRule />
+
+## G
+
+### Gate
+
+**Formal.** See **volatility gate** below.
+
+**Plain English.** A logical filter applied to each forecast row: if any of
+the five gate rules are triggered, the row's gate status changes from `OPEN`
+to `FIRED`. Gate-fired rows remain visible in the terminal but are annotated
+with the triggered rules.
+
+<SectionRule />
+
+## K
+
+### Kill criterion
+
+**Formal.** The pre-registered stopping condition: <InlineMath math="\mathcal{L}_{M^\star}(R16) > \mathcal{L}_{M_0}(R16)" />.
+See [Kill criteria](/vault/kill-criteria) for the full statement.
+
+**Plain English.** If M★ is calibrated worse than a coin flip by the Round of
+16, the project publishes a null result and the terminal is frozen.
+
+**Where it matters.** [Kill criteria](/vault/kill-criteria) · [Transparency Ledger](/ledger)
+
+<SectionRule />
+
+## L
+
+### Log-loss
+
+**Formal.** The mean negative log-probability assigned to realized outcomes:
+
+<BlockMath math="\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N} \log p_i" />
+
+where <InlineMath math="p_i" /> is the model probability on the realized outcome of match <InlineMath math="i" />.
+Lower log-loss is better.
+
+**Plain English.** A scoring rule that penalizes confident wrong predictions
+severely. Saying "90% probability" when the opposite outcome occurs incurs a
+loss of <InlineMath math="-\log(0.10) \approx 2.3" /> nats; saying "50/50" incurs <InlineMath math="-\log(0.50) \approx 0.69" /> nats. Log-loss is the primary evaluation metric for this
+project because it is sensitive to the full probability distribution, not
+just the modal prediction.
+
+**Where it matters.** [Kill criteria](/vault/kill-criteria) · [Ledger](/ledger)
+
+<SectionRule />
+
+## M
+
+### M★ (M-star)
+
+**Formal.** The pre-registered champion model, selected from candidates
+M1, M2, M3 based on out-of-sample log-loss on 2018–2022 international
+match data, before the 2026 World Cup.
+
+**Plain English.** The model this project committed to before the tournament
+started. M★ is identified in the OSF pre-registration and is sealed — it
+cannot be swapped mid-tournament.
+
+**Where it matters.** Every probability on this site.
+
+---
+
+### Monte Carlo simulation
+
+**Formal.** Numerical estimation of the joint tournament outcome distribution
+by running <InlineMath math="N = 10{,}000" /> independent stochastic simulations of the full
+bracket, using match-level probabilities from M★.
+
+**Plain English.** Running the tournament ten thousand times in software,
+tracking who wins each match in each simulated run, and using the frequency
+of each team winning overall as the estimated championship probability.
+
+**Where it matters.** All <InlineMath math="p_\text{champion}" /> values.
+
+<SectionRule />
+
+## P
+
+### Poisson model
+
+**Formal.** A probability model for football scores that treats goals as
+independent Poisson random variables. For expected goal rates <InlineMath math="\lambda_h" />
+and <InlineMath math="\lambda_a" />:
+
+<BlockMath math="P(X=x,\, Y=y) = \frac{e^{-\lambda_h}\lambda_h^x}{x!} \cdot \frac{e^{-\lambda_a}\lambda_a^y}{y!}" />
+
+**Plain English.** A mathematical model that says goals arrive randomly at
+a steady rate — as if each second of a match has a tiny probability of
+producing a goal, and that probability does not change during the match.
+
+**Where it matters.** [Model anatomy](/vault/models)
+
+---
+
+### Pre-registration
+
+**Formal.** A time-stamped, publicly accessible commitment to a study's
+hypothesis, model specification, data sources, evaluation metrics, and
+stopping rules, made before data collection begins.
+
+**Plain English.** Writing down what you will measure and how before you
+know the result, so readers can distinguish a prediction from a post-hoc
+rationalization.
+
+**Where it matters.** [Pre-registration](/vault/preregistration)
+
+<SectionRule />
+
+## R
+
+### Ranked probability score (RPS)
+
+**Formal.** A proper scoring rule for ordered categorical outcomes that
+measures the difference between the cumulative forecast distribution and the
+cumulative empirical distribution:
+
+<BlockMath math="\text{RPS} = \frac{1}{K-1}\sum_{k=1}^{K-1}\left(\sum_{j=1}^{k} p_j - \sum_{j=1}^{k} o_j\right)^2" />
+
+where <InlineMath math="K" /> is the number of ordered categories (three for 1X2: H, D, A).
+
+**Plain English.** Like Brier score, but credits partial credit for "almost
+right" distributions. Assigning 0.40/0.30/0.30 when the away team wins
+is penalized less than assigning 0.85/0.10/0.05 for the same miss.
+
+**Where it matters.** [Transparency Ledger](/ledger)
+
+<SectionRule />
+
+## S
+
+### Snapshot
+
+**Formal.** A versioned bundle of all data artifacts (`tournament.json`,
+`divergence.json`, `ledger.jsonl`, etc.) generated at a single point in
+time and identified by a `snapshot_id` of the form `YYYY-MM-DDTHH:MMZ`.
+
+**Plain English.** A frozen copy of everything the site knows at one moment.
+Every number displayed on this site traces to a specific snapshot, which can
+be inspected or reproduced.
+
+**Where it matters.** Every page footer.
+
+<SectionRule />
+
+## V
+
+### Volatility gate
+
+**Formal.** A logical filter with five pre-registered rules. A forecast row's
+gate status is `FIRED` if any rule is triggered; `OPEN` otherwise. Rules:
+(1) named-event exclusion, (2) price-discovery window (48 h before kick-off),
+(3) liquidity floor on Polymarket ($50k 24 h volume), (4) maximum line-move
+threshold (12%), (5) settlement proximity (2 h before kick-off).
+
+**Plain English.** Five conditions under which the model's pre-match
+probability is considered unreliable due to market conditions — not because
+the math is wrong, but because the market price it is being compared to is
+noisy. Gate-fired rows remain in the terminal, annotated with the triggered
+rule.
+
+**Where it matters.** [Divergence terminal](/terminal)

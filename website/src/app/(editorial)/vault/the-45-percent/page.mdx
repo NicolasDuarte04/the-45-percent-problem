@@ -1,0 +1,65 @@
+<Dropcap>
+  Bookmakers are good at their job. Across thousands of World Cup matches,
+  the markets they set resolve, on average, close to the probabilities those
+  markets imply. That is the headline. Read it carefully; it is less
+  reassuring than it sounds.
+</Dropcap>
+
+The residual — the part of outcome variance the market does **not** explain
+— is the subject of this essay. About 45% of it, we will argue, is neither
+predictable market edge nor pure randomness. It is something else: a
+structural gap between the way tournament markets are priced and the way
+tournament outcomes actually fall.
+
+<MarginNote>
+  Residual here means variance left over after accounting for market-implied
+  probabilities. The 45% figure is not a point estimate of edge; see
+  [§ Evaluation](/vault/evaluation) for how it is decomposed.
+</MarginNote>
+
+<SectionRule />
+
+## Why residuals matter more than point predictions
+
+A point prediction says *Brazil wins*. A distribution says *Brazil wins with
+probability 0.24, draws 0.28, loses 0.48*. The second statement is harder to
+be wrong about, and harder to be right about by accident. It is the only
+statement that can be calibrated.
+
+<PullQuote cite="this project, stated plainly">
+  The question is not whether a model beats the bookmaker on any single
+  match. The question is whether the residuals, aggregated across hundreds
+  of matches, are where the model says they will be.
+</PullQuote>
+
+## What this project is doing about it
+
+M★ is a bivariate Poisson model with a Dixon-Coles correction, calibrated
+on recent international match data and compared nightly to bookmaker-implied
+probabilities. Its output is a distribution, not a tip. Its evaluation
+metric is calibration, not accuracy.
+
+The project publishes a [Transparency Ledger](/ledger) of every M★
+forecast, settled and unsettled, with realized outcomes and the calibration
+metrics the pre-registration commits us to.
+
+## What this project is not doing
+
+This is not a tipping service. It does not recommend positions. It does
+not claim edge on any single match. It is a public, pre-registered test of
+a specific hypothesis about tournament-market residuals — and it has a
+[kill-criterion](/vault/kill-criteria) that forces publication of a null
+result if the hypothesis fails.
+
+<SectionRule />
+
+## Champion evolution across the tournament
+
+<ChampionEvolution snapshotId="latest" mode="interactive" topN={8} />
+
+## Where to go next
+
+If you want to see the pre-registration commitments that govern this
+project, read [Pre-registration](/vault/preregistration). If you want to
+watch the calibration unfold live, open the
+[Transparency Ledger](/ledger).

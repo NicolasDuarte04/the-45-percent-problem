@@ -1,0 +1,26 @@
+{
+  "fifa_code": "IRN",
+  "display_name": "Iran",
+  "group": "L",
+  "progression": {
+    "p_group_qualification": 0.579,
+    "p_r16": 0.22,
+    "p_qf": 0.098,
+    "p_sf": 0.033,
+    "p_final": 0.01,
+    "p_champion": 0.002,
+    "ci_95_champion": [
+      0.000549,
+      0.007263
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-16_Iran_Ukraine",
+      "kickoff_utc": "2026-06-16T21:00:00+00:00",
+      "opponent": "Ukraine",
+      "is_home": true
+    }
+  ]
+}
