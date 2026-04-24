@@ -1,0 +1,26 @@
+{
+  "fifa_code": "UZB",
+  "display_name": "Uzbekistan",
+  "group": "A",
+  "progression": {
+    "p_group_qualification": 0.575,
+    "p_r16": 0.414,
+    "p_qf": 0.183,
+    "p_sf": 0.045,
+    "p_final": 0.018,
+    "p_champion": 0.005,
+    "ci_95_champion": [
+      0.002138,
+      0.011651
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-11_Senegal_Uzbekistan",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "opponent": "Senegal",
+      "is_home": false
+    }
+  ]
+}

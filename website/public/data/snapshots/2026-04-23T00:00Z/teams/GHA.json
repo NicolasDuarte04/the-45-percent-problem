@@ -1,0 +1,26 @@
+{
+  "fifa_code": "GHA",
+  "display_name": "Ghana",
+  "group": "B",
+  "progression": {
+    "p_group_qualification": 0.282,
+    "p_r16": 0.078,
+    "p_qf": 0.018,
+    "p_sf": 0.004,
+    "p_final": 0.0,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.003827
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-11_Ghana_Costa_Rica",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "opponent": "Costa Rica",
+      "is_home": true
+    }
+  ]
+}

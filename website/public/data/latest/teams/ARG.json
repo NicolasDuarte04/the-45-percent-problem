@@ -1,0 +1,26 @@
+{
+  "fifa_code": "ARG",
+  "display_name": "Argentina",
+  "group": "D",
+  "progression": {
+    "p_group_qualification": 0.941,
+    "p_r16": 0.763,
+    "p_qf": 0.597,
+    "p_sf": 0.493,
+    "p_final": 0.288,
+    "p_champion": 0.222,
+    "ci_95_champion": [
+      0.197333,
+      0.248795
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-12_Argentina_Peru",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "opponent": "Peru",
+      "is_home": true
+    }
+  ]
+}
