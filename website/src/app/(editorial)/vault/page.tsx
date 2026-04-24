@@ -22,8 +22,9 @@ interface Pillar {
   }>;
 }
 
-// §8.2 page system — four editorial pillars.
-const pillars: Pillar[] = [
+// §8.2 page system — three primary pillars read as equal-height columns,
+// the Reference rail anchors the bottom as a full-width horizontal bar.
+const primaryPillars: Pillar[] = [
   {
     eyebrow: "§ I · Essays",
     title: "Long-form",
@@ -106,18 +107,19 @@ const pillars: Pillar[] = [
       },
     ],
   },
-  {
-    eyebrow: "§ IV · Reference",
-    title: "Glossary & notation",
-    blurb:
-      "Definitions, the symbol table mirroring the paper, and the canonical citation block.",
-    entries: [
-      { href: "/vault/glossary", title: "Glossary A\u2013Z", kind: "Reference" },
-      { href: "/vault/notation", title: "Symbol table", kind: "Reference" },
-      { href: "/vault/citation", title: "BibTeX & APA", kind: "Reference" },
-    ],
-  },
 ];
+
+const referenceRail: Pillar = {
+  eyebrow: "§ IV · Reference",
+  title: "Glossary & notation",
+  blurb:
+    "Definitions, the symbol table mirroring the paper, and the canonical citation block.",
+  entries: [
+    { href: "/vault/glossary", title: "Glossary A\u2013Z", kind: "Reference" },
+    { href: "/vault/notation", title: "Symbol table", kind: "Reference" },
+    { href: "/vault/citation", title: "BibTeX & APA", kind: "Reference" },
+  ],
+};
 
 export default function VaultIndexPage() {
   return (
@@ -162,16 +164,13 @@ export default function VaultIndexPage() {
           </p>
         </header>
 
-        {/* ── Four pillar panels ──────────────────────────────────────── */}
+        {/* ── Primary pillars ─ three equal-height columns ────────────── */}
         <section
           aria-label="Vault pillars"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 24,
-          }}
+          className="grid grid-cols-1 md:grid-cols-3"
+          style={{ gap: 24, alignItems: "stretch" }}
         >
-          {pillars.map((pillar) => (
+          {primaryPillars.map((pillar) => (
             <article
               key={pillar.title}
               className="vault-pillar"
@@ -185,7 +184,7 @@ export default function VaultIndexPage() {
                 borderRadius: "var(--radius-sm)",
                 display: "flex",
                 flexDirection: "column",
-                minHeight: 360,
+                height: "100%",
               }}
             >
               <Eyebrow style={{ marginBottom: 12 }}>{pillar.eyebrow}</Eyebrow>
@@ -227,10 +226,10 @@ export default function VaultIndexPage() {
                       href={entry.href}
                       className="group block"
                       style={{
-                        display: "flex",
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto",
                         alignItems: "baseline",
-                        justifyContent: "space-between",
-                        gap: 12,
+                        columnGap: 12,
                         padding: "8px 0",
                         borderTop: "1px solid var(--rule)",
                         color: "var(--text-primary)",
@@ -246,35 +245,137 @@ export default function VaultIndexPage() {
                       >
                         {entry.title}
                       </span>
-                      {entry.length ? (
-                        <span
-                          className="mono"
-                          style={{
-                            fontSize: 11,
-                            color: "var(--text-quiet)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {entry.length}
-                        </span>
-                      ) : (
-                        <span
-                          className="vault-eyebrow"
-                          style={{
-                            fontSize: 10,
-                            color: "var(--text-quiet)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {entry.kind}
-                        </span>
-                      )}
+                      <span
+                        className="mono"
+                        style={{
+                          fontSize: 11,
+                          lineHeight: "22px",
+                          fontWeight: 500,
+                          letterSpacing: "0.04em",
+                          color: "var(--text-quiet)",
+                          whiteSpace: "nowrap",
+                          textAlign: "right",
+                          textTransform: entry.length
+                            ? "none"
+                            : "uppercase",
+                        }}
+                      >
+                        {entry.length ?? entry.kind}
+                      </span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </article>
           ))}
+        </section>
+
+        {/* ── Reference rail ─ full-width bar anchoring the bottom ───── */}
+        <section
+          aria-label="Reference materials"
+          style={{ marginTop: 24 }}
+        >
+          <article
+            className="vault-pillar"
+            style={{
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-sm)",
+              padding: "28px 32px",
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 320px) 1fr",
+              columnGap: 48,
+              rowGap: 24,
+              alignItems: "start",
+            }}
+          >
+            <div>
+              <Eyebrow style={{ marginBottom: 12 }}>
+                {referenceRail.eyebrow}
+              </Eyebrow>
+              <h2
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontWeight: 500,
+                  fontSize: 24,
+                  lineHeight: "32px",
+                  color: "var(--text-primary)",
+                  margin: "0 0 8px",
+                }}
+              >
+                {referenceRail.title}
+              </h2>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 15,
+                  lineHeight: "24px",
+                  color: "var(--text-tertiary)",
+                  margin: 0,
+                }}
+              >
+                {referenceRail.blurb}
+              </p>
+            </div>
+            <ul
+              className="grid grid-cols-1 sm:grid-cols-3"
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                gap: 0,
+                borderTop: "1px solid var(--rule)",
+              }}
+            >
+              {referenceRail.entries.map((entry) => (
+                <li
+                  key={entry.href}
+                  style={{
+                    borderRight: "1px solid var(--rule)",
+                  }}
+                  className="last:border-r-0"
+                >
+                  <Link
+                    href={entry.href}
+                    className="group block"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      alignItems: "baseline",
+                      columnGap: 12,
+                      padding: "16px 20px 16px 0",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontSize: 16,
+                        lineHeight: "22px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {entry.title}
+                    </span>
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 11,
+                        lineHeight: "22px",
+                        fontWeight: 500,
+                        letterSpacing: "0.04em",
+                        color: "var(--text-quiet)",
+                        whiteSpace: "nowrap",
+                        textAlign: "right",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {entry.kind}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </article>
         </section>
       </div>
     </>
