@@ -86,9 +86,11 @@
   --rule:           #262D37;
 
   /* Semantic — restored to lit Prism on slate where the dark canvas gives
-     the light tones enough contrast without needing to deepen them. */
+     the light tones enough contrast without needing to deepen them.
+     --edge-negative is chroma-bumped on quant (#EF5A7D vs #E76E8A on editorial)
+     so the warning signal reads clearly against the dark slate canvas. */
   --edge-positive: #88E0B6;
-  --edge-negative: #E76E8A;
+  --edge-negative: #EF5A7D;
   --gate-fired:    #F5D76E;
   --accent-focus:  #7ED0E8;
   --ledger-hit:    #88E0B6;
