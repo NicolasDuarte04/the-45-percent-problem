@@ -1,0 +1,26 @@
+{
+  "fifa_code": "COL",
+  "display_name": "Colombia",
+  "group": "E",
+  "progression": {
+    "p_group_qualification": 0.856,
+    "p_r16": 0.5,
+    "p_qf": 0.276,
+    "p_sf": 0.168,
+    "p_final": 0.079,
+    "p_champion": 0.039,
+    "ci_95_champion": [
+      0.028659,
+      0.05287
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-13_Algeria_Colombia",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "opponent": "Algeria",
+      "is_home": false
+    }
+  ]
+}

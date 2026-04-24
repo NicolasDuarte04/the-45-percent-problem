@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "evaluation_metrics",
+  "title": "EvaluationMetrics",
+  "description": "Phase 9 §4.8 — Rolling metrics computed by Phase 7, cached into the snapshot.",
+  "type": "object",
+  "required": [
+    "snapshot_id", "matches_settled",
+    "brier", "log_loss", "rps",
+    "reliability_diagram",
+    "clv_cumulative_bps", "clv_z_score",
+    "diebold_mariano_vs_M0",
+    "kill_criteria_check"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "snapshot_id":      { "type": "string" },
+    "matches_settled":  { "type": "integer", "minimum": 0 },
+    "brier":     { "$ref": "#/definitions/ModelMetrics" },
+    "log_loss":  { "$ref": "#/definitions/ModelMetrics" },
+    "rps":       { "$ref": "#/definitions/ModelMetrics" },
+    "reliability_diagram": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["bin_lower", "bin_upper", "p_model_mean", "frequency_realized", "n"],
+        "additionalProperties": false,
+        "properties": {
+          "bin_lower":          { "type": "number", "minimum": 0, "maximum": 1 },
+          "bin_upper":          { "type": "number", "minimum": 0, "maximum": 1 },
+          "p_model_mean":       { "type": "number", "minimum": 0, "maximum": 1 },
+          "frequency_realized": { "type": "number", "minimum": 0, "maximum": 1 },
+          "n":                  { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "clv_cumulative_bps": { "type": "number" },
+    "clv_z_score":        { "type": "number" },
+    "nyberg_test_pvalue": { "type": ["number", "null"] },
+    "diebold_mariano_vs_M0": {
+      "type": "object",
+      "required": ["stat", "pvalue"],
+      "additionalProperties": false,
+      "properties": {
+        "stat":   { "type": ["number", "null"] },
+        "pvalue": { "type": ["number", "null"] }
+      }
+    },
+    "kill_criteria_check": {
+      "type": "object",
+      "required": ["condition", "triggered", "margin"],
+      "additionalProperties": false,
+      "properties": {
+        "condition": { "type": "string" },
+        "triggered": { "type": "boolean" },
+        "margin":    { "type": "number" }
+      }
+    }
+  },
+  "definitions": {
+    "ModelMetrics": {
+      "type": "object",
+      "required": ["M0", "M1", "M2", "M3", "M_STAR"],
+      "additionalProperties": false,
+      "properties": {
+        "M0":     { "type": ["number", "null"] },
+        "M1":     { "type": ["number", "null"] },
+        "M2":     { "type": ["number", "null"] },
+        "M3":     { "type": ["number", "null"] },
+        "M_STAR": { "type": ["number", "null"] }
+      }
+    }
+  }
+}

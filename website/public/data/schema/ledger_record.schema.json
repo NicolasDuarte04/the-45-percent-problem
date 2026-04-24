@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ledger_record",
+  "title": "LedgerRecord",
+  "description": "Phase 9 §4.7 — One row of the append-only Transparency Ledger (from ledger.jsonl).",
+  "type": "object",
+  "required": [
+    "forecast_id", "match_id", "model_id", "market",
+    "outcome_predicted_distribution", "outcome_realized",
+    "p_model_on_realized", "q_market_devigged_on_realized",
+    "edge_E_at_close", "gate_status_at_close",
+    "brier_contribution", "log_loss_contribution", "rps_contribution",
+    "hit_miss_label", "code_sha", "data_sha", "mc_seed", "settled_at_utc"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "forecast_id": { "type": "string" },
+    "match_id":    { "type": "string" },
+    "model_id": {
+      "type": "string",
+      "enum": ["M0", "M1", "M2", "M3", "M_STAR"]
+    },
+    "market":      { "type": "string" },
+    "outcome_predicted_distribution": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "outcome_realized":             { "type": "string" },
+    "p_model_on_realized":          { "type": "number", "minimum": 0, "maximum": 1 },
+    "q_market_devigged_on_realized":{ "type": "number", "minimum": 0, "maximum": 1 },
+    "edge_E_at_close":              { "type": "number" },
+    "gate_status_at_close":         { "type": "string", "enum": ["OPEN", "FIRED"] },
+    "brier_contribution":           { "type": "number" },
+    "log_loss_contribution":        { "type": "number" },
+    "rps_contribution":             { "type": "number" },
+    "clv_bps": { "type": ["number", "null"] },
+    "hit_miss_label": { "type": "string", "enum": ["HIT", "MISS", "NEUTRAL"] },
+    "code_sha":       { "type": "string" },
+    "data_sha":       { "type": "string" },
+    "mc_seed":        { "type": "integer" },
+    "settled_at_utc": { "type": "string" }
+  }
+}
