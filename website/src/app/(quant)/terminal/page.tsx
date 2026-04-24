@@ -1,6 +1,5 @@
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
-import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -30,19 +29,9 @@ export default async function TerminalPage({
       className="flex flex-col"
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
-      {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
-      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
-        <SubNav
-          links={[
-            { href: "/", label: "Overview", direction: "back" },
-            { href: "/ledger", label: "Transparency Ledger", direction: "forward" },
-          ]}
-        />
-      </div>
-
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div
-        className="shrink-0 px-6 pt-4 pb-4 border-b"
+        className="shrink-0 px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
         <div className="max-w-[1152px] mx-auto px-12 flex flex-wrap items-baseline justify-between gap-3">

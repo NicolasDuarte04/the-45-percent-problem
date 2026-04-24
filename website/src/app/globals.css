@@ -309,11 +309,4 @@
     color: var(--text-primary);
   }
 
-  /* Subtle breadcrumb row used on data-detail pages. Resting = slate-ink-soft,
-     hover = slate-ink, with a faint background wash so the hover feels like
-     a target rather than a text color change. */
-  .subnav-link:hover {
-    color: var(--text-primary);
-    background-color: color-mix(in oklch, var(--text-primary) 6%, transparent);
-  }
 }

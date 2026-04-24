@@ -11,7 +11,6 @@ import { GoalMatrixHeatmap } from "@/components/compositions/GoalMatrixHeatmap";
 import { StrengthInputsPanel } from "@/components/compositions/StrengthInputsPanel";
 import { RelatedLedgerRecords } from "@/components/compositions/RelatedLedgerRecords";
 import { HashChip } from "@/components/primitives/HashChip";
-import { SubNav } from "@/components/layout/SubNav";
 
 export const dynamic = "force-static";
 
@@ -62,27 +61,8 @@ export default async function MatchDetailPage({
         color: "var(--text-primary)",
       }}
     >
-      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
-        <SubNav
-          links={[
-            { href: "/terminal", label: "Terminal", direction: "back" },
-            {
-              href: `/team/${match.home.fifa_code}`,
-              label: `${match.home.fifa_code} team`,
-              direction: "forward",
-            },
-            {
-              href: `/team/${match.away.fifa_code}`,
-              label: `${match.away.fifa_code} team`,
-              direction: "forward",
-            },
-            { href: "/bracket", label: "Bracket", direction: "forward" },
-          ]}
-        />
-      </div>
-
       <div
-        className="shrink-0 px-6 pt-4 pb-4 border-b"
+        className="shrink-0 px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
         <div className="max-w-[1152px] mx-auto px-12">
