@@ -62,7 +62,7 @@ export default async function MatchDetailPage({
         color: "var(--text-primary)",
       }}
     >
-      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
         <SubNav
           links={[
             { href: "/terminal", label: "Terminal", direction: "back" },
@@ -85,7 +85,7 @@ export default async function MatchDetailPage({
         className="shrink-0 px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-[1152px] mx-auto px-12">
           <h1
             className="text-[18px] font-medium tracking-tight"
             style={{ color: "var(--text-primary)" }}
@@ -103,7 +103,7 @@ export default async function MatchDetailPage({
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto w-full px-6 py-6 flex flex-col gap-6">
+      <div className="max-w-[1152px] mx-auto w-full px-12 py-6 flex flex-col gap-6">
         <MatchHeader match={match} />
 
         <MarketBreakdownPanel match={match} />

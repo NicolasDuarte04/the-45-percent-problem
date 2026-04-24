@@ -86,7 +86,7 @@ export default async function ForecastDetailPage({
       style={{ backgroundColor: "var(--bg-root)", color: "var(--text-primary)" }}
     >
       {/* ── Sub-nav row ──────────────────────────────────────────────────── */}
-      <div className="max-w-[1400px] mx-auto w-full px-6 pt-5 pb-2">
+      <div className="max-w-[1152px] mx-auto w-full px-12 pt-5 pb-2">
         <SubNav
           links={[
             { href: "/ledger", label: "Transparency Ledger", direction: "back" },
@@ -99,7 +99,7 @@ export default async function ForecastDetailPage({
         className="px-6 pt-4 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-[1152px] mx-auto px-12">
           <div className="flex flex-wrap items-baseline gap-3">
             <h1
               className="text-[16px] font-medium tracking-tight"
@@ -127,7 +127,7 @@ export default async function ForecastDetailPage({
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-[1152px] mx-auto px-12 py-6 space-y-6">
         {/* ── Full schema fields ────────────────────────────────────────── */}
         <section
           aria-label="Forecast fields"
