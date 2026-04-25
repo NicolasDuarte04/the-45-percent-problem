@@ -50,8 +50,8 @@ export function EditorialMasthead() {
     <header
       className="border-b"
       style={{
-        borderColor: "var(--rule)",
-        background: "var(--bg-root)",
+        borderColor: "var(--border-default)",
+        background: "var(--bg-panel-elev)",
       }}
     >
       <div
