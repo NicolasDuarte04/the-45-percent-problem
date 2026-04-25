@@ -111,10 +111,11 @@ function FilterBar({
 
   return (
     <div
-      className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-2 border-b text-[11px]"
+      className="sticky top-0 z-20 flex flex-wrap items-center gap-2 px-4 py-3 border rounded-md text-[11px]"
       style={{
-        backgroundColor: "var(--bg-panel)",
-        borderColor: "var(--border-subtle)",
+        backgroundColor: "var(--bg-panel-elev)",
+        borderColor: "var(--border-default)",
+        marginBottom: 12,
       }}
       role="search"
       aria-label="Terminal filters"
@@ -587,11 +588,11 @@ export function DivergenceTable({
     count: sortedRows.length,
     getScrollElement: () => containerRef.current,
     estimateSize: (i) =>
-      expandedIds.has(sortedRows[i]?.row_id ?? "") ? 260 : 44,
+      expandedIds.has(sortedRows[i]?.row_id ?? "") ? 280 : 52,
     overscan: 8,
     measureElement:
       typeof window !== "undefined"
-        ? (el) => el?.getBoundingClientRect().height ?? 44
+        ? (el) => el?.getBoundingClientRect().height ?? 52
         : undefined,
   });
 
@@ -744,37 +745,37 @@ export function DivergenceTable({
                 color: "var(--text-tertiary)",
               }}
             >
-              <div role="columnheader" className="py-2 pl-3 pr-2">
+              <div role="columnheader" className="py-3 pl-3 pr-2">
                 <SortHeader label="Kickoff (UTC)" colId="kickoff_utc" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
-              <div role="columnheader" className="py-2 px-2">
+              <div role="columnheader" className="py-3 px-2">
                 <SortHeader label="Round" colId="round" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
-              <div role="columnheader" className="py-2 px-2">Matchup</div>
-              <div role="columnheader" className="py-2 px-2">Market</div>
-              <div role="columnheader" className="py-2 px-2">Outcome</div>
-              <div role="columnheader" className="py-2 px-2">
+              <div role="columnheader" className="py-3 px-2">Matchup</div>
+              <div role="columnheader" className="py-3 px-2">Market</div>
+              <div role="columnheader" className="py-3 px-2">Outcome</div>
+              <div role="columnheader" className="py-3 px-2">
                 <SortHeader label="p (model)" colId="p_model" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
-              <div role="columnheader" className="py-2 px-2">
+              <div role="columnheader" className="py-3 px-2">
                 <SortHeader label="q (mkt)" colId="q_market_devigged" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
-              <div role="columnheader" className="py-2 px-2">Divergence</div>
-              <div role="columnheader" className="py-2 px-2">
+              <div role="columnheader" className="py-3 px-2">Divergence</div>
+              <div role="columnheader" className="py-3 px-2">
                 <SortHeader label="Edge E" colId="absEdge" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
               <div
                 role="columnheader"
-                className="py-2 px-2 text-right"
+                className="py-3 px-2 text-right"
                 aria-label="Pre-registered edge threshold"
               >
                 ε
               </div>
-              <div role="columnheader" className="py-2 px-2">
+              <div role="columnheader" className="py-3 px-2">
                 <SortHeader label="Gate" colId="gate_status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
-              <div role="columnheader" className="py-2 px-2 text-right">95% CI</div>
-              <div role="columnheader" className="py-2 pr-3 pl-2 text-right">Age (m)</div>
+              <div role="columnheader" className="py-3 px-2 text-right">95% CI</div>
+              <div role="columnheader" className="py-3 pr-3 pl-2 text-right">Age (m)</div>
             </div>
 
             {/* ── Vertical scroll container — div height is respected, unlike tbody */}
@@ -838,7 +839,7 @@ export function DivergenceTable({
                       aria-label={`${isExpanded ? "Collapse" : "Expand"} details for ${row.home.display_name} vs ${row.away.display_name} ${MARKET_LABELS[row.market] ?? row.market} ${row.outcome}`}
                     >
                       {/* Kickoff */}
-                      <div role="gridcell" className="py-2.5 pl-3 pr-2">
+                      <div role="gridcell" className="py-3.5 pl-3 pr-2">
                         <span
                           className="mono"
                           aria-label={`kickoff ${formatUtcShort(row.kickoff_utc)}`}
@@ -847,38 +848,38 @@ export function DivergenceTable({
                         </span>
                       </div>
                       {/* Round */}
-                      <div role="gridcell" className="py-2.5 px-2 mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                      <div role="gridcell" className="py-3.5 px-2 mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                         {row.round}
                       </div>
                       {/* Matchup */}
-                      <div role="gridcell" className="py-2.5 px-2 min-w-0 overflow-hidden">
+                      <div role="gridcell" className="py-3.5 px-2 min-w-0 overflow-hidden">
                         <Link
                           href={`/match/${row.match_id}`}
-                          className="transition-colors duration-[120ms] block truncate"
-                          style={{ color: "var(--text-secondary)" }}
+                          className="transition-colors duration-[120ms] block truncate font-medium"
+                          style={{ color: "var(--text-primary)" }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span className="mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                          <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
                             {row.home.fifa_code}
                           </span>{" "}
                           {row.home.display_name}{" "}
-                          <span style={{ color: "var(--text-tertiary)" }}>‒</span>{" "}
+                          <span style={{ color: "var(--text-quiet)" }}>‒</span>{" "}
                           {row.away.display_name}{" "}
-                          <span className="mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                          <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
                             {row.away.fifa_code}
                           </span>
                         </Link>
                       </div>
                       {/* Market */}
-                      <div role="gridcell" className="py-2.5 px-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                      <div role="gridcell" className="py-3.5 px-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                         {MARKET_LABELS[row.market] ?? row.market}
                       </div>
                       {/* Outcome */}
-                      <div role="gridcell" className="py-2.5 px-2 mono text-[11px]" style={{ color: "var(--text-secondary)" }}>
+                      <div role="gridcell" className="py-3.5 px-2 mono text-[11px]" style={{ color: "var(--text-secondary)" }}>
                         {row.outcome}
                       </div>
                       {/* p_model */}
-                      <div role="gridcell" className="py-2.5 px-2 text-right">
+                      <div role="gridcell" className="py-3.5 px-2 text-right">
                         <NumericCell
                           value={row.p_model}
                           formatter={(p) => formatProbability(p, 1)}
@@ -886,7 +887,7 @@ export function DivergenceTable({
                         />
                       </div>
                       {/* q_market */}
-                      <div role="gridcell" className="py-2.5 px-2 text-right">
+                      <div role="gridcell" className="py-3.5 px-2 text-right">
                         <NumericCell
                           value={row.q_market_devigged}
                           formatter={(p) => formatProbability(p, 1)}
@@ -894,28 +895,28 @@ export function DivergenceTable({
                         />
                       </div>
                       {/* Divergence bar */}
-                      <div role="gridcell" className="py-2.5 px-2">
+                      <div role="gridcell" className="py-3.5 px-2">
                         <DivergenceBar p_model={row.p_model} q_market={row.q_market_devigged} />
                       </div>
                       {/* Edge E */}
-                      <div role="gridcell" className="py-2.5 px-2 text-right">
+                      <div role="gridcell" className="py-3.5 px-2 text-right">
                         <EdgeBadge edge={row.edge_E} threshold={row.edge_threshold} />
                       </div>
                       {/* Threshold ε */}
-                      <div role="gridcell" className="py-2.5 px-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                      <div role="gridcell" className="py-3.5 px-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                         <span aria-label={`threshold ${(row.edge_threshold * 100).toFixed(0)} percent`}>
                           {formatMono(row.edge_threshold * 100, 0)}%
                         </span>
                       </div>
                       {/* Gate */}
-                      <div role="gridcell" className="py-2.5 px-2 text-center">
+                      <div role="gridcell" className="py-3.5 px-2 text-center">
                         <GateStatusPill
                           status={row.gate_status}
                           rulesTripped={row.gate_rules_tripped}
                         />
                       </div>
                       {/* 95% CI */}
-                      <div role="gridcell" className="py-2.5 px-2 text-right">
+                      <div role="gridcell" className="py-3.5 px-2 text-right">
                         <NumericCell<[number, number]>
                           value={row.confidence_band}
                           formatter={([l, h]) => formatCI(l, h)}
@@ -923,7 +924,7 @@ export function DivergenceTable({
                         />
                       </div>
                       {/* Age */}
-                      <div role="gridcell" className="py-2.5 pr-3 pl-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                      <div role="gridcell" className="py-3.5 pr-3 pl-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                         <span aria-label={`snapshot age ${row.snapshot_age_minutes} minutes`}>
                           {row.snapshot_age_minutes}
                         </span>
