@@ -596,4 +596,44 @@
     }
   }
 
+  /* Most-likely bracket — interactive states.
+     Team rows link to /team/[code]. The row highlights on hover, and the
+     enclosing card lifts slightly. */
+  .bracket-team-row {
+    transition: background-color 120ms ease-out;
+  }
+  .bracket-team-row:hover {
+    background-color: color-mix(in oklch, var(--text-primary) 5%, transparent);
+  }
+  .bracket-team-row:focus-visible {
+    outline: 2px solid var(--accent-focus);
+    outline-offset: -2px;
+    border-radius: 2px;
+  }
+  .bracket-match-card {
+    transition:
+      transform 140ms ease-out,
+      border-color 140ms ease-out,
+      box-shadow 140ms ease-out;
+  }
+  .bracket-match-card:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklch, var(--text-primary) 20%, var(--border-subtle));
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.04),
+      0 10px 24px rgb(0 0 0 / 0.08);
+  }
+  .bracket-champion-link:hover {
+    color: var(--accent-focus);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bracket-match-card,
+    .bracket-match-card:hover {
+      transform: none;
+    }
+  }
+
 }

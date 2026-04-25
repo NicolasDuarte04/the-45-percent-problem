@@ -1,9 +1,11 @@
 import { loadSnapshot } from "@/lib/data/loadSnapshot";
 import { TournamentLeaderboard } from "@/components/compositions/TournamentLeaderboard";
+import { MostLikelyBracket } from "@/components/compositions/MostLikelyBracket";
 import { FeaturedDivergences } from "@/components/compositions/FeaturedDivergences";
 import { TournamentCalibrationStrip } from "@/components/compositions/TournamentCalibrationStrip";
 import { RecentWritingList } from "@/components/compositions/RecentWritingList";
 import { TerminalCTA } from "@/components/compositions/TerminalCTA";
+import { HeroGraphic, HERO_TROPHY_CAPTION } from "@/components/ui/HeroGraphic";
 import {
   SectionHead,
   GhostLink,
@@ -24,7 +26,10 @@ export default function Home() {
       }}
     >
       {/* ── Project intro header ───────────────────────────────────────────── */}
-      <header style={{ marginBottom: 72 }}>
+      <header
+        className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-8 md:items-start"
+        style={{ marginBottom: 72 }}
+      >
         <div style={{ maxWidth: 640 }}>
           <h1
             style={{
@@ -81,7 +86,23 @@ export default function Home() {
             remaining
           </p>
         </div>
+        <HeroGraphic />
+        <p
+          className="hidden md:block md:col-span-2"
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontStyle: "italic",
+            fontSize: 13,
+            lineHeight: 1.5,
+            color: "var(--text-tertiary)",
+            textAlign: "left",
+            margin: "-48px 0 0",
+          }}
+        >
+          {HERO_TROPHY_CAPTION}
+        </p>
         <div
+          className="md:col-span-2"
           style={{ marginTop: 32, borderTop: "1px solid var(--rule)" }}
         />
       </header>
@@ -94,6 +115,16 @@ export default function Home() {
           rightSlot={<GhostLink href="/bracket">All 48 teams →</GhostLink>}
         />
         <TournamentLeaderboard tournament={tournament} />
+      </section>
+
+      {/* ── Most likely bracket ───────────────────────────────────────────── */}
+      <section style={{ marginBottom: 56 }}>
+        <SectionHead
+          eyebrow="§ 1.5 · Modal path"
+          title="Most likely bracket"
+          rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
+        />
+        <MostLikelyBracket tournament={tournament} />
       </section>
 
       {/* ── § 2 · This window ──────────────────────────────────────────────── */}
