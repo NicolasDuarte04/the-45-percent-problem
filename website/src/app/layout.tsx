@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
+import Script from "next/script";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { KillCriteriaBanner } from "@/components/primitives/KillCriteriaBanner";
 import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
@@ -55,6 +56,7 @@ export default function RootLayout({
       }
     >
       <body className="min-h-screen antialiased">
+        <Script src="https://plausible.io/js/script.js" data-domain="45analytics.com" strategy="afterInteractive" />
         <TooltipProvider>
           <KillCriteriaBanner
             active={killTripped}
