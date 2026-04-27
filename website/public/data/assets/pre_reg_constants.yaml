@@ -1,0 +1,154 @@
+# evaluation/pre_reg_constants.yaml
+# =====================================
+# Phase 8 — Pre-registration & M★ Lockdown
+# STATUS: LOCKED — sealed by src/lockdown/seal_constants.py
+# DO NOT EDIT. Amendments require an OSF child registration.
+# Schema: schema/pre_reg_constants_v8.json
+
+meta:
+  schema_version: '8.0'
+  created_at_utc: '2026-04-22T00:00:00Z'
+  author: "Nicol\xE1s Duarte Jaraba"
+  project: The 45% Problem
+  pre_registration_status: LOCKED
+  data_snapshot_sha: 94389c17ff6ba2a980337b1f2f08efa774aeeefc39d8712cf4ab8953c80033fc
+  cv_report_sha: 56a819fb25f06e1b5f1b82a23a774d86138b5d8a2fb70f3c468bdbd03bf716d9
+  cv_result_sha: 2d917befcc75162d208e85e4fe6982522bed4a83ff78c4ec6992dcfa78c56b25
+  git_sha_at_freeze: ''
+elo:
+  c_star: 0.580386
+  mu_star: 1.715874
+  k_factor_base: 40.0
+  home_advantage: 100.0
+  initial_rating: 1500.0
+match_model:
+  rho: -0.05
+  lambda_3: 0.1
+  max_goals: 10
+form:
+  half_life_days: 180.0
+  cap_pct: 0.15
+  window_matches: 8
+fifa_blend:
+  w: 1.0
+  rank_to_rating_scale: 3.247027
+macro_prior:
+  tau_0: 0.4
+  gdp_weight: -5.782676
+  population_weight: 8.153003
+  temp_weight: -6.633938
+  host_weight: -83.548027
+  culture_weight: 58.807991
+  alpha_min: 0.05
+  alpha_max: 0.4
+market:
+  devig_method: power
+  pinnacle_bias:
+    draw_delta: 0.014
+    host_delta: -0.006
+  edge_threshold_mainline: 0.03
+  edge_threshold_derivative: 0.05
+gate:
+  news_window_hours: 6
+  price_discovery_pct: 0.03
+  price_discovery_window_min: 30
+  cross_book_spread_pp: 0.025
+  liquidity_floor_usd: 50000
+  pinnacle_staleness_hours: 4
+kelly:
+  phi_mainline: 0.25
+  phi_longshot: 0.125
+  longshot_cutoff: 0.1
+  cap_per_market: 0.05
+  cap_per_market_longshot: 0.025
+  cap_per_event: 0.08
+  cap_per_day: 0.15
+  drawdown_halve_trigger: 0.2
+  drawdown_recover_trigger: 0.9
+  # Aliases consumed by evaluation/pseudo_clv.py (Phase 8 rename)
+  fraction_mainline: 0.25
+  fraction_longshot: 0.125
+  longshot_threshold: 0.1
+  drawdown_stop: 0.2
+  edge_threshold_mainline: 0.03
+  edge_threshold_derivative: 0.05
+sim:
+  runs_website: 10000
+  runs_paper: 100000
+  seed_master: 20260611
+kill:
+  checkpoint_round: R16
+  ll_gap_se: 2.0
+  action: pivot_paper_framing
+eval:
+  alpha: 0.05
+  bootstrap_resamples: 10000
+  dm_small_sample_correction: HLN
+  nyberg_lags:
+  - 1
+  - 2
+  - 3
+# ---------------------------------------------------------------------------
+# Phase 8 lockdown — keys consumed by evaluation/accuracy_metrics.py
+# scoring_rules / diebold_mariano / nyberg were consolidated from config.yaml
+# into this file during pre-registration. kill_criterion mirrors kill.ll_gap_se.
+# ---------------------------------------------------------------------------
+scoring_rules:
+  log_loss_eps_min: 1.0e-6
+diebold_mariano:
+  comparisons:
+    mstar_vs_m0:
+      alpha: 0.05
+    mstar_vs_market:
+      alpha: 0.05
+    all_other_pairwise:
+      alpha: 0.005   # Bonferroni: 0.05 / 4 shadow comparisons
+nyberg:
+  logit_clip: 1.0e-6
+  comparisons:
+    mstar_primary:
+      critical_value: 5.991  # chi2(2) at alpha=0.05
+    shadow_bonferroni:
+      critical_value: 8.668  # chi2(2) at alpha=0.0125 (Bonferroni)
+accuracy_bootstrap:
+  n_bootstrap: 10000
+kill_criterion:
+  threshold_standard_errors: 2.0   # mirrors kill.ll_gap_se
+models:
+  valid_model_ids:
+  - M0
+  - M1
+  - M2
+  - M3
+  - M_STAR
+  - MARKET_DEVIGGED
+  all:
+  - M0
+  - M1
+  - M2
+  - M3
+  - M_STAR
+  - MARKET_DEVIGGED
+  shadow:
+  - M0
+  - M1
+  - M2
+  - M3
+dashboard:
+  output_files:
+    json: ablation.json
+    tex: ablation_table.tex
+    caption_tex: ablation_caption.tex
+clv:
+  bootstrap:
+    n_bootstrap: 10000
+    block_length_min: 4
+    block_length_max: 20
+  z_test:
+    critical_value: 1.6449   # z at one-sided alpha=0.05
+    alpha_one_sided: 0.05
+  edge_decision:
+    labels:
+      genuine: GENUINE_EDGE
+      weak: WEAK_EDGE
+      no_edge: NO_EDGE

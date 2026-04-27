@@ -239,6 +239,15 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* FOUC fix — §2.1 dual-canvas: when a quant-canvas div is present anywhere
+     in the tree (terminal, ledger, bracket, match, team routes), promote the
+     slate background to <body> so overscroll/pull-to-refresh never reveals
+     the editorial cream. Uses :has() which is supported in all evergreen
+     browsers since 2023; no fallback needed for this site's audience. */
+  body:has([data-canvas="quant"]) {
+    background-color: var(--slate-canvas);
+  }
+
   * {
     @apply border-border;
     box-sizing: border-box;
