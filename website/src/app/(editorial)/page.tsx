@@ -2,6 +2,7 @@ import { loadSnapshot } from "@/lib/data/loadSnapshot";
 import { TournamentLeaderboard } from "@/components/compositions/TournamentLeaderboard";
 import { MostLikelyBracket } from "@/components/compositions/MostLikelyBracket";
 import { FeaturedDivergences } from "@/components/compositions/FeaturedDivergences";
+import { TerminalDashboard } from "@/components/compositions/TerminalDashboard";
 import { TournamentCalibrationStrip } from "@/components/compositions/TournamentCalibrationStrip";
 import { RecentWritingList } from "@/components/compositions/RecentWritingList";
 import { TerminalCTA } from "@/components/compositions/TerminalCTA";
@@ -125,6 +126,18 @@ export default function Home() {
           rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
         />
         <MostLikelyBracket tournament={tournament} />
+      </section>
+
+      {/* ── § 1.6 · Terminal dashboard ─────────────────────────────────────── */}
+      <section style={{ marginBottom: 56 }}>
+        <SectionHead
+          eyebrow="§ 1.6 · Terminal"
+          title="Dashboard"
+        />
+        <TerminalDashboard
+          divergence={divergence}
+          tournament={tournament}
+        />
       </section>
 
       {/* ── § 2 · This window ──────────────────────────────────────────────── */}

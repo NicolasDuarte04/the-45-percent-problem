@@ -204,11 +204,17 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                 }}
               >
                 <span
-                  className="mono text-[11px]"
+                  className="mono inline-flex items-center justify-center shrink-0"
                   style={{
-                    color: "var(--accent-focus)",
-                    minWidth: 36,
-                    letterSpacing: ".02em",
+                    height: 17,
+                    padding: "0 6px",
+                    borderRadius: 2,
+                    fontSize: 9.5,
+                    fontWeight: 600,
+                    letterSpacing: "0.02em",
+                    color: "var(--text-primary)",
+                    background: "rgb(31 31 31 / 0.05)",
+                    border: "1px solid rgb(31 31 31 / 0.18)",
                   }}
                 >
                   {team.fifa_code}

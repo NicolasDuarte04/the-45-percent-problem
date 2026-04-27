@@ -5,52 +5,19 @@ import { Flag } from "@/components/primitives/Flag";
 /**
  * Most Likely Bracket — modal path through the 48-team draw.
  *
- * Data wiring: we derive round-by-round slots from tournament.json by taking
+ * Data wiring: round-by-round slots are derived from tournament.json by taking
  * the top-k teams sorted by the round-specific p_reach. Pairwise advancement
  * probabilities are approximated as a ratio of next-round reach probabilities
  * (defensible under bracket independence). See _design_handoff/Bracket.jsx
  * for the original design reference.
+ *
+ * Visual style is uniform-neutral: every team chip is graphite-ink on cream,
+ * every match card has a 1px subtle border on all sides. Lineage colour and
+ * the colour legend were retired in favour of the Terminal Dashboard.
  */
-
-type TintKey =
-  | "peach"
-  | "coral"
-  | "rose"
-  | "plum"
-  | "indigo"
-  | "cyan"
-  | "mint"
-  | "sun"
-  | "neutral";
-
-const PRISM: Record<TintKey, string> = {
-  peach: "var(--prism-peach)",
-  coral: "var(--prism-coral)",
-  rose: "var(--prism-rose)",
-  plum: "var(--prism-plum)",
-  indigo: "var(--prism-indigo)",
-  cyan: "var(--prism-cyan)",
-  mint: "var(--prism-mint)",
-  sun: "var(--prism-sun)",
-  neutral: "transparent",
-};
-
-// Stable tint assigned per favoured team so the lineage reads from group stage
-// through the final. Order mirrors the champion leaderboard.
-const TINT_SEQUENCE: TintKey[] = [
-  "peach",
-  "coral",
-  "indigo",
-  "plum",
-  "mint",
-  "sun",
-  "cyan",
-  "rose",
-];
 
 type Slot = {
   team: TournamentTeam;
-  tint: TintKey;
   p: number; // probability of advancing from *this* round
 };
 
@@ -60,12 +27,6 @@ type Match = {
   b: Slot;
   label?: string;
 };
-
-function tintFor(code: string, favouriteCodes: string[]): TintKey {
-  const idx = favouriteCodes.indexOf(code);
-  if (idx < 0 || idx >= TINT_SEQUENCE.length) return "neutral";
-  return TINT_SEQUENCE[idx];
-}
 
 /** Pair-wise advancement probability given each team's p(reach next round). */
 function winProb(a: number, b: number): number {
@@ -87,14 +48,11 @@ function buildBracket(tournament: TournamentSnapshot) {
   const byF = [...tournament.teams].sort((a, b) => b.p_final - a.p_final);
   const byC = [...tournament.teams].sort((a, b) => b.p_champion - a.p_champion);
 
-  // Top-8 favourites anchor the tint lineage.
-  const favouriteCodes = byC.slice(0, 8).map((t) => t.fifa_code);
-
   // ── R16 (8 matches) ────────────────────────────────────────────────────
   // Pair each of the top 8 reach-favourites against an underdog. Underdogs
   // are drawn from the next band of p_r16 so both sides are plausible R16
   // participants.
-  const r16Favs = byQF.slice(0, 8); // 8 highest p(reach QF)
+  const r16Favs = byQF.slice(0, 8);
   const favCodes = new Set(r16Favs.map((t) => t.fifa_code));
   const underdogPool = byR16.filter((t) => !favCodes.has(t.fifa_code)).slice(0, 8);
 
@@ -104,17 +62,13 @@ function buildBracket(tournament: TournamentSnapshot) {
     return {
       id: `r16-${i + 1}`,
       label: `R16 · Match ${String(i + 1).padStart(2, "0")}`,
-      a: {
-        team: fav,
-        tint: tintFor(fav.fifa_code, favouriteCodes),
-        p: pFav,
-      },
-      b: { team: und, tint: "neutral", p: 1 - pFav },
+      a: { team: fav, p: pFav },
+      b: { team: und, p: 1 - pFav },
     };
   });
 
   // ── QF (4 matches) ─────────────────────────────────────────────────────
-  const qfTeams = byQF.slice(0, 8); // expected QF participants
+  const qfTeams = byQF.slice(0, 8);
   const qf: Match[] = [];
   const qfLabels = ["Upper A", "Upper B", "Lower A", "Lower B"];
   for (let i = 0; i < 4; i++) {
@@ -124,8 +78,8 @@ function buildBracket(tournament: TournamentSnapshot) {
     qf.push({
       id: `qf-${i + 1}`,
       label: qfLabels[i],
-      a: { team: a, tint: tintFor(a.fifa_code, favouriteCodes), p: pA },
-      b: { team: b, tint: tintFor(b.fifa_code, favouriteCodes), p: 1 - pA },
+      a: { team: a, p: pA },
+      b: { team: b, p: 1 - pA },
     });
   }
 
@@ -140,8 +94,8 @@ function buildBracket(tournament: TournamentSnapshot) {
     sf.push({
       id: `sf-${i + 1}`,
       label: sfLabels[i],
-      a: { team: a, tint: tintFor(a.fifa_code, favouriteCodes), p: pA },
-      b: { team: b, tint: tintFor(b.fifa_code, favouriteCodes), p: 1 - pA },
+      a: { team: a, p: pA },
+      b: { team: b, p: 1 - pA },
     });
   }
 
@@ -150,23 +104,13 @@ function buildBracket(tournament: TournamentSnapshot) {
   const pFinA = winProb(finalTeams[0].p_champion, finalTeams[1].p_champion);
   const final: Match = {
     id: "final",
-    a: {
-      team: finalTeams[0],
-      tint: tintFor(finalTeams[0].fifa_code, favouriteCodes),
-      p: pFinA,
-    },
-    b: {
-      team: finalTeams[1],
-      tint: tintFor(finalTeams[1].fifa_code, favouriteCodes),
-      p: 1 - pFinA,
-    },
+    a: { team: finalTeams[0], p: pFinA },
+    b: { team: finalTeams[1], p: 1 - pFinA },
   };
 
-  // Champion slot = highest p_champion.
   const champion = byC[0];
-  const champTint = tintFor(champion.fifa_code, favouriteCodes);
 
-  return { r16, qf, sf, final, champion, champTint, favouriteCodes };
+  return { r16, qf, sf, final, champion };
 }
 
 // ── Presentational pieces ─────────────────────────────────────────────────
@@ -180,8 +124,6 @@ function TeamRow({
   advancing: boolean;
   dim: boolean;
 }) {
-  const tint = PRISM[slot.tint];
-  const neutral = slot.tint === "neutral";
   return (
     <Link
       href={`/team/${slot.team.fifa_code}`}
@@ -200,13 +142,9 @@ function TeamRow({
           fontSize: 9.5,
           fontWeight: 600,
           letterSpacing: "0.02em",
-          color: neutral ? "var(--text-tertiary)" : "var(--text-primary)",
-          background: neutral
-            ? "transparent"
-            : `color-mix(in oklch, ${tint} 45%, transparent)`,
-          border: neutral
-            ? "1px solid var(--border-subtle)"
-            : `1px solid color-mix(in oklch, ${tint} 70%, transparent)`,
+          color: "var(--text-primary)",
+          background: "rgb(31 31 31 / 0.05)",
+          border: "1px solid rgb(31 31 31 / 0.18)",
         }}
       >
         {slot.team.fifa_code}
@@ -244,8 +182,6 @@ function TeamRow({
 
 function MatchCard({ match }: { match: Match }) {
   const aWins = match.a.p >= match.b.p;
-  const winner = aWins ? match.a : match.b;
-  const winnerTint = PRISM[winner.tint];
   return (
     <div
       className="bracket-match-card overflow-hidden"
@@ -254,10 +190,6 @@ function MatchCard({ match }: { match: Match }) {
         border: "1px solid var(--border-subtle)",
         borderRadius: "var(--radius)",
         boxShadow: "0 1px 2px rgb(0 0 0 / 0.03)",
-        borderLeft:
-          winner.tint === "neutral"
-            ? "1px solid var(--border-subtle)"
-            : `2px solid color-mix(in oklch, ${winnerTint} 80%, #141414)`,
       }}
     >
       {match.label ? (
@@ -293,14 +225,11 @@ function StageHeader({
   kicker,
   label,
   align = "left",
-  accentTint,
 }: {
   kicker: string;
   label: string;
   align?: "left" | "right" | "center";
-  accentTint?: TintKey;
 }) {
-  const tint = accentTint ? PRISM[accentTint] : null;
   return (
     <div
       style={{
@@ -349,18 +278,6 @@ function StageHeader({
         >
           {label}
         </span>
-        {tint ? (
-          <span
-            style={{
-              display: "inline-block",
-              width: 18,
-              height: 2,
-              borderRadius: 1,
-              background: `color-mix(in oklch, ${tint} 75%, #141414)`,
-              transform: "translateY(-2px)",
-            }}
-          />
-        ) : null}
       </div>
       <div style={{ height: 1, background: "var(--rule)" }} />
     </div>
@@ -371,23 +288,16 @@ function RoundColumn({
   kicker,
   label,
   align,
-  accentTint,
   children,
 }: {
   kicker: string;
   label: string;
   align: "left" | "right";
-  accentTint?: TintKey;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col min-w-0">
-      <StageHeader
-        kicker={kicker}
-        label={label}
-        align={align}
-        accentTint={accentTint}
-      />
+      <StageHeader kicker={kicker} label={label} align={align} />
       <div className="flex flex-col flex-1 justify-around gap-[10px]">
         {children}
       </div>
@@ -461,154 +371,6 @@ function ConnectorColumn({
   );
 }
 
-// ── Colour legend ──────────────────────────────────────────────────────────
-
-function ColorLegend({
-  favourites,
-}: {
-  favourites: { team: TournamentTeam; tint: TintKey }[];
-}) {
-  return (
-    <section
-      className="mt-7"
-      style={{
-        padding: "20px 2px 4px",
-        borderTop: "1px solid var(--rule)",
-      }}
-    >
-      <div
-        className="mono"
-        style={{
-          fontSize: 10,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          color: "var(--text-quiet)",
-          marginBottom: 6,
-        }}
-      >
-        Legend
-      </div>
-      <h3
-        style={{
-          fontFamily: "var(--font-serif)",
-          fontSize: 18,
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          margin: "0 0 6px",
-        }}
-      >
-        How to read the colours
-      </h3>
-      <p
-        style={{
-          fontSize: 13,
-          color: "var(--text-secondary)",
-          lineHeight: 1.55,
-          margin: "0 0 16px",
-          maxWidth: "64ch",
-        }}
-      >
-        Each favoured side is assigned a perceptually-normalised Prism hue
-        (equal lightness and chroma, hue varies). Tint appears on the team
-        code chip and as a 2px left-accent on the match card, so the lineage
-        reads visually from qualifier to final.
-      </p>
-      <div
-        className="grid gap-y-[10px] gap-x-6"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
-      >
-        {favourites.map(({ team, tint }) => {
-          const neutral = tint === "neutral";
-          const prism = PRISM[tint];
-          return (
-            <div
-              key={team.fifa_code}
-              className="flex items-start gap-[10px] pb-2"
-              style={{ borderBottom: "1px dashed var(--rule)" }}
-            >
-              <div className="flex items-center gap-[6px] shrink-0">
-                <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    background: neutral
-                      ? "transparent"
-                      : `color-mix(in oklch, ${prism} 75%, #141414)`,
-                    border: neutral
-                      ? "1px dashed var(--border-subtle)"
-                      : `1px solid color-mix(in oklch, ${prism} 85%, #141414)`,
-                    marginTop: 4,
-                  }}
-                />
-                <span
-                  className="mono inline-flex items-center justify-center"
-                  style={{
-                    width: 28,
-                    height: 17,
-                    borderRadius: 2,
-                    fontSize: 9.5,
-                    fontWeight: 600,
-                    letterSpacing: "0.02em",
-                    color: neutral
-                      ? "var(--text-tertiary)"
-                      : "var(--text-primary)",
-                    background: neutral
-                      ? "transparent"
-                      : `color-mix(in oklch, ${prism} 45%, transparent)`,
-                    border: neutral
-                      ? "1px solid var(--border-subtle)"
-                      : `1px solid color-mix(in oklch, ${prism} 70%, transparent)`,
-                  }}
-                >
-                  {team.fifa_code}
-                </span>
-                <Flag code={team.fifa_code} size={14} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  style={{
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    color: "var(--text-primary)",
-                    letterSpacing: "-0.005em",
-                  }}
-                >
-                  {team.display_name}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11.5,
-                    color: "var(--text-tertiary)",
-                    lineHeight: 1.45,
-                    marginTop: 1,
-                  }}
-                >
-                  P(champion) = {(team.p_champion * 100).toFixed(1)}%
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <p
-        className="mono"
-        style={{
-          fontSize: 11,
-          color: "var(--text-quiet)",
-          marginTop: 18,
-          lineHeight: 1.6,
-          maxWidth: "72ch",
-        }}
-      >
-        Prism hues L = 85 · C = 0.09 · hue varies. Perceptually-normalised so
-        no single colour dominates the figure — a structural decision, not a
-        decorative one.
-      </p>
-    </section>
-  );
-}
-
 // ── Root ─────────────────────────────────────────────────────────────────
 
 interface MostLikelyBracketProps {
@@ -616,8 +378,7 @@ interface MostLikelyBracketProps {
 }
 
 export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
-  const { r16, qf, sf, final, champion, champTint, favouriteCodes } =
-    buildBracket(tournament);
+  const { r16, qf, sf, final, champion } = buildBracket(tournament);
 
   const r16Left = r16.slice(0, 4);
   const r16Right = r16.slice(4, 8);
@@ -625,15 +386,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
   const qfRight = qf.slice(2, 4);
   const sfLeft = sf[0];
   const sfRight = sf[1];
-
-  // Legend: top 8 favourites + neutral row
-  const legendFavourites = favouriteCodes
-    .map((code, i) => {
-      const team = tournament.teams.find((t) => t.fifa_code === code);
-      if (!team) return null;
-      return { team, tint: TINT_SEQUENCE[i] };
-    })
-    .filter((x): x is { team: TournamentTeam; tint: TintKey } => x !== null);
 
   return (
     <section
@@ -674,7 +426,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             kicker="Stage 1 · 14 – 18 Jun"
             label="Round of 16"
             align="left"
-            accentTint="peach"
           >
             {r16Left.map((m) => (
               <MatchCard key={m.id} match={m} />
@@ -685,7 +436,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             kicker="Stage 2 · 28 – 29 Jun"
             label="Quarterfinals"
             align="left"
-            accentTint="plum"
           >
             {qfLeft.map((m) => (
               <MatchCard key={m.id} match={m} />
@@ -696,7 +446,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             kicker="Stage 3 · 02 Jul"
             label="Semifinal"
             align="left"
-            accentTint="indigo"
           >
             <MatchCard match={sfLeft} />
           </RoundColumn>
@@ -708,7 +457,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
               kicker="Stage 4 · 19 Jul · MetLife"
               label="Final"
               align="center"
-              accentTint={champTint}
             />
             <div className="flex-1 flex flex-col justify-center">
               <div
@@ -802,7 +550,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             kicker="Stage 3 · 02 Jul"
             label="Semifinal"
             align="right"
-            accentTint="mint"
           >
             <MatchCard match={sfRight} />
           </RoundColumn>
@@ -811,7 +558,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             kicker="Stage 2 · 28 – 29 Jun"
             label="Quarterfinals"
             align="right"
-            accentTint="cyan"
           >
             {qfRight.map((m) => (
               <MatchCard key={m.id} match={m} />
@@ -822,7 +568,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             kicker="Stage 1 · 14 – 18 Jun"
             label="Round of 16"
             align="right"
-            accentTint="rose"
           >
             {r16Right.map((m) => (
               <MatchCard key={m.id} match={m} />
@@ -830,8 +575,6 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
           </RoundColumn>
         </div>
       </div>
-
-      <ColorLegend favourites={legendFavourites} />
     </section>
   );
 }
