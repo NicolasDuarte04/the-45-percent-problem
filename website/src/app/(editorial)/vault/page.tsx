@@ -32,6 +32,12 @@ const primaryPillars: Pillar[] = [
       "Web-native readings of the methodology. Each piece stands alone; figures inside read from the current snapshot.",
     entries: [
       {
+        href: "/vault/methodology",
+        title: "Methodology",
+        kind: "Long-form",
+        length: "20 min",
+      },
+      {
         href: "/vault/the-45-percent",
         title: "The 45% Problem",
         kind: "Titular essay",

@@ -567,6 +567,115 @@
   /* KaTeX output size tune for body readability */
   .vault-prose .katex { font-size: 1.05em; }
 
+  /* ── Sticky table of contents (side rail, ≥1280px) ───────────────────── */
+  .vault-toc {
+    position: sticky;
+    top: 96px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 18px;
+    padding-left: 16px;
+    border-left: 1px solid var(--rule);
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+  }
+  .vault-toc-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin-bottom: 14px;
+  }
+  .vault-toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .vault-toc-item a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    display: block;
+    padding: 2px 0;
+    transition: color 120ms ease-out;
+  }
+  .vault-toc-item a:hover {
+    color: var(--text-primary);
+  }
+  .vault-toc-item--sub {
+    padding-left: 14px;
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--text-quiet);
+  }
+  .vault-toc-item--active > a {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* ── Footnotes ───────────────────────────────────────────────────────── */
+  .vault-fnref {
+    font-family: var(--font-mono);
+    font-size: 0.7em;
+    line-height: 0;
+    margin-left: 1px;
+    vertical-align: super;
+  }
+  .vault-fnref a {
+    color: var(--accent-focus);
+    text-decoration: none;
+    padding: 0 2px;
+  }
+  .vault-fnref a:hover {
+    text-decoration: underline;
+  }
+  .vault-fns {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .vault-prose h2.vault-fns-heading,
+  .vault-fns-heading {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin: 0 0 16px;
+  }
+  .vault-fns-list {
+    list-style: decimal;
+    padding-left: 24px;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--text-tertiary);
+  }
+  .vault-fn {
+    padding-left: 4px;
+  }
+  .vault-fn::marker {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-quiet);
+  }
+  .vault-fn-back {
+    color: var(--text-quiet);
+    text-decoration: none;
+    margin-left: 4px;
+    font-size: 13px;
+  }
+  .vault-fn-back:hover {
+    color: var(--accent-focus);
+  }
+
   /* Vault pillar cards — the base background lives here (instead of an
      inline `style={{ background }}`) so the hover state's background-color
      rule can actually win against the `background` shorthand specificity.

@@ -1,5 +1,5 @@
 /**
- * §3 — /methodology alias → /vault
+ * §3 — /methodology alias → /vault/methodology
  * Preserved for SEO link-rot prevention.
  */
 import { redirect } from "next/navigation";
@@ -7,5 +7,5 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-static";
 
 export default function MethodologyPage() {
-  redirect("/vault");
+  redirect("/vault/methodology");
 }

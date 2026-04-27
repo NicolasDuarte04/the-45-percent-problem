@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Eyebrow } from "@/components/editorial/Eyebrow";
 import { Byline } from "@/components/editorial/Byline";
 import { CiteChip } from "@/components/editorial/CiteChip";
+import { VaultToc } from "@/components/editorial/VaultToc";
 import { loadSnapshotMeta } from "@/lib/data/loadSnapshot";
 
 export interface VaultArticleProps {
@@ -124,7 +125,9 @@ export function VaultArticle({
         <div className="vault-prose" style={{ maxWidth: "68ch", minWidth: 0 }}>
           {children}
         </div>
-        <div className="vault-side-rail" aria-hidden />
+        <div className="vault-side-rail">
+          <VaultToc />
+        </div>
       </div>
 
       {/* ── Footer — footnotes, citation, what to read next ──────────────── */}
