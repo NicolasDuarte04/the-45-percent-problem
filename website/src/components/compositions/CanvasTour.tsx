@@ -162,7 +162,14 @@ export function CanvasTour({
 
   const isLast = stepIndex === steps.length - 1;
   const isFirst = stepIndex === 0;
-  const placement = computePlacement(rect, step.side, step.align ?? "center");
+  const placement = computePlacement(
+    rect,
+    step.side,
+    step.align ?? "center",
+    window.innerWidth,
+    window.innerHeight,
+  );
+  const effectiveSide = placement.effectiveSide;
 
   // Portal into the nearest canvas container so canvas-aware CSS variables
   // (--bg-panel, --border-default, --accent-focus, ...) resolve to the
@@ -191,7 +198,7 @@ export function CanvasTour({
         animation: reducedMotion ? undefined : "tg-fade-in 120ms ease-out",
       }}
     >
-      <Arrow side={step.side} align={step.align ?? "center"} />
+      <Arrow side={effectiveSide} align={step.align ?? "center"} />
       <div className="flex items-baseline justify-between gap-3">
         <h3
           className="text-[12px] font-medium tracking-tight"
@@ -259,34 +266,71 @@ export function CanvasTour({
   );
 }
 
+// Approximate card box, used for one-pass space-fit detection. The actual
+// card width is fixed (300, max 320); the height varies with copy length but
+// 240 is a generous upper bound for our 7-or-fewer-step tours.
+const EST_CARD_W = 320;
+const EST_CARD_H = 240;
+const VIEWPORT_MARGIN = 8;
+
+function pickEffectiveSide(
+  r: DOMRect,
+  side: TourSide,
+  vw: number,
+  vh: number,
+): TourSide {
+  const m = VIEWPORT_MARGIN;
+  const fits = (s: TourSide): boolean => {
+    if (s === "left")   return r.left  - SIDE_OFFSET - EST_CARD_W >= m;
+    if (s === "right")  return r.right + SIDE_OFFSET + EST_CARD_W <= vw - m;
+    if (s === "top")    return r.top   - SIDE_OFFSET - EST_CARD_H >= m;
+    /* bottom */        return r.bottom + SIDE_OFFSET + EST_CARD_H <= vh - m;
+  };
+  if (fits(side)) return side;
+  const opposite: Record<TourSide, TourSide> = {
+    left: "right",
+    right: "left",
+    top: "bottom",
+    bottom: "top",
+  };
+  if (fits(opposite[side])) return opposite[side];
+  // Cross-axis fallback: prefer bottom, then top, then opposite of original.
+  if (fits("bottom")) return "bottom";
+  if (fits("top")) return "top";
+  return opposite[side];
+}
+
 function computePlacement(
   r: DOMRect,
   side: TourSide,
   align: TourAlign,
-): { left: number; top: number; transform: string } {
-  if (side === "bottom") {
+  vw: number,
+  vh: number,
+): { left: number; top: number; transform: string; effectiveSide: TourSide } {
+  const s = pickEffectiveSide(r, side, vw, vh);
+  if (s === "bottom") {
     const top = r.bottom + SIDE_OFFSET;
-    if (align === "start") return { left: r.left, top, transform: "none" };
-    if (align === "end") return { left: r.right, top, transform: "translateX(-100%)" };
-    return { left: r.left + r.width / 2, top, transform: "translateX(-50%)" };
+    if (align === "start") return { left: r.left, top, transform: "none", effectiveSide: s };
+    if (align === "end") return { left: r.right, top, transform: "translateX(-100%)", effectiveSide: s };
+    return { left: r.left + r.width / 2, top, transform: "translateX(-50%)", effectiveSide: s };
   }
-  if (side === "top") {
+  if (s === "top") {
     const top = r.top - SIDE_OFFSET;
-    if (align === "start") return { left: r.left, top, transform: "translateY(-100%)" };
-    if (align === "end") return { left: r.right, top, transform: "translate(-100%, -100%)" };
-    return { left: r.left + r.width / 2, top, transform: "translate(-50%, -100%)" };
+    if (align === "start") return { left: r.left, top, transform: "translateY(-100%)", effectiveSide: s };
+    if (align === "end") return { left: r.right, top, transform: "translate(-100%, -100%)", effectiveSide: s };
+    return { left: r.left + r.width / 2, top, transform: "translate(-50%, -100%)", effectiveSide: s };
   }
-  if (side === "right") {
+  if (s === "right") {
     const left = r.right + SIDE_OFFSET;
-    if (align === "start") return { left, top: r.top, transform: "none" };
-    if (align === "end") return { left, top: r.bottom, transform: "translateY(-100%)" };
-    return { left, top: r.top + r.height / 2, transform: "translateY(-50%)" };
+    if (align === "start") return { left, top: r.top, transform: "none", effectiveSide: s };
+    if (align === "end") return { left, top: r.bottom, transform: "translateY(-100%)", effectiveSide: s };
+    return { left, top: r.top + r.height / 2, transform: "translateY(-50%)", effectiveSide: s };
   }
-  // side === "left"
+  // s === "left"
   const left = r.left - SIDE_OFFSET;
-  if (align === "start") return { left, top: r.top, transform: "translateX(-100%)" };
-  if (align === "end") return { left, top: r.bottom, transform: "translate(-100%, -100%)" };
-  return { left, top: r.top + r.height / 2, transform: "translate(-100%, -50%)" };
+  if (align === "start") return { left, top: r.top, transform: "translateX(-100%)", effectiveSide: s };
+  if (align === "end") return { left, top: r.bottom, transform: "translate(-100%, -100%)", effectiveSide: s };
+  return { left, top: r.top + r.height / 2, transform: "translate(-100%, -50%)", effectiveSide: s };
 }
 
 function Arrow({ side, align }: { side: TourSide; align: TourAlign }) {
