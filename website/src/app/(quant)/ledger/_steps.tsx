@@ -54,7 +54,7 @@ export const LEDGER_STEPS: TourStep[] = [
     body: (
       <>
         <span className="mono">CLV</span> measures whether the market moved
-        toward our position between bet placement and market close, in basis
+        toward our position between forecast issuance and market close, in basis
         points. The <span className="mono">z-score</span> normalises
         cumulative CLV by its sampling standard error, giving a dimensionless
         test statistic. Reported for M&#9733; only.
