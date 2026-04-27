@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
-import { TerminalGuide } from "@/components/compositions/TerminalGuide";
-import { GuideTriggerButton } from "@/components/compositions/GuideTriggerButton";
+import { CanvasTour } from "@/components/compositions/CanvasTour";
+import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
+import { TERMINAL_STEPS, TERMINAL_DURATION_SEC } from "./_steps";
 
 export const dynamic = "force-static";
 
@@ -58,7 +59,10 @@ export default async function TerminalPage({
             </p>
           </div>
           <Suspense fallback={null}>
-            <GuideTriggerButton />
+            <TourTriggerButton
+              steps={TERMINAL_STEPS}
+              durationSeconds={TERMINAL_DURATION_SEC}
+            />
           </Suspense>
         </div>
       </div>
@@ -154,13 +158,17 @@ export default async function TerminalPage({
           </p>
           <p>
             <Suspense fallback={null}>
-              <GuideTriggerButton variant="inline" />
+              <TourTriggerButton
+                steps={TERMINAL_STEPS}
+                durationSeconds={TERMINAL_DURATION_SEC}
+                variant="inline"
+              />
             </Suspense>
           </p>
         </div>
       </div>
       <Suspense fallback={null}>
-        <TerminalGuide />
+        <CanvasTour steps={TERMINAL_STEPS} />
       </Suspense>
     </div>
   );

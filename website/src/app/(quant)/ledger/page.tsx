@@ -1,8 +1,12 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { loadLedger, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { LedgerSummaryPanel } from "@/components/compositions/LedgerSummaryPanel";
 import { LedgerTable } from "@/components/compositions/LedgerTable";
+import { CanvasTour } from "@/components/compositions/CanvasTour";
+import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
 import type { LedgerRecord } from "@/lib/data/schemas";
+import { LEDGER_STEPS, LEDGER_DURATION_SEC } from "./_steps";
 
 export const dynamic = "force-static";
 
@@ -175,8 +179,10 @@ export default function LedgerPage() {
         className="px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1152px] mx-auto px-12">
+        <div className="max-w-[1152px] mx-auto px-12 flex flex-wrap items-baseline justify-between gap-3">
+          <div>
           <h1
+            data-guide-id="ledger-masthead-title"
             className="text-[18px] font-medium tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
@@ -200,6 +206,13 @@ export default function LedgerPage() {
               {totalNeutral} NEUTRAL
             </span>
           </p>
+          </div>
+          <Suspense fallback={null}>
+            <TourTriggerButton
+              steps={LEDGER_STEPS}
+              durationSeconds={LEDGER_DURATION_SEC}
+            />
+          </Suspense>
         </div>
       </div>
 
@@ -265,6 +278,9 @@ export default function LedgerPage() {
           <TopMissesNarrative records={records} />
         </section>
       </div>
+      <Suspense fallback={null}>
+        <CanvasTour steps={LEDGER_STEPS} />
+      </Suspense>
     </div>
   );
 }

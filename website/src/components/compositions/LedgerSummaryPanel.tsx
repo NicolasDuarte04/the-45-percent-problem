@@ -104,7 +104,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
           >
             Proper Scoring Rules — lower is better
           </p>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" data-guide-id="ledger-scoring-table">
             <table className="w-full text-[12px]" style={{ color: "var(--data-neutral)" }}>
               <thead>
                 <tr>
@@ -142,6 +142,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
 
           {/* ── CLV and statistical tests ──────────────────────────────── */}
           <div
+            data-guide-id="ledger-clv-block"
             className="mt-4 pt-4 border-t space-y-2"
             style={{ borderColor: "var(--border-subtle)" }}
           >
@@ -229,7 +230,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
         </div>
 
         {/* ── Reliability diagram ───────────────────────────────────────── */}
-        <div>
+        <div data-guide-id="ledger-reliability-diagram">
           <p
             className="text-[11px] mb-2 font-medium"
             style={{ color: "var(--text-secondary)" }}

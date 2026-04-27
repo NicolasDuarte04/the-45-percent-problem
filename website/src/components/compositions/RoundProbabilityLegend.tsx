@@ -1,6 +1,7 @@
 export function RoundProbabilityLegend() {
   return (
     <div
+      data-guide-id="bracket-round-legend"
       className="rounded-lg"
       style={{
         background: "var(--bg-panel)",
