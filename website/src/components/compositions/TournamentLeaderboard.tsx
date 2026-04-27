@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { TournamentSnapshot } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
+import { Flag } from "@/components/primitives/Flag";
 import { formatCI } from "@/lib/formatters";
 
 interface TournamentLeaderboardProps {
@@ -100,6 +101,7 @@ export function TournamentLeaderboard({
                       >
                         {team.fifa_code}
                       </span>
+                      <Flag code={team.fifa_code} size={16} />{" "}
                       {team.display_name}
                     </Link>
                   </td>

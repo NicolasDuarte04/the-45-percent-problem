@@ -1,5 +1,6 @@
 import type { TeamProgression } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
+import { Flag } from "@/components/primitives/Flag";
 import { formatCI, formatProbability } from "@/lib/formatters";
 
 interface TeamHeaderProps {
@@ -38,20 +39,20 @@ export function TeamHeader({ team }: TeamHeaderProps) {
       >
         <div className="flex items-center gap-4">
           <span
-            className="mono inline-flex items-center justify-center"
+            className="inline-flex items-center justify-center"
             style={{
               width: 64,
               height: 44,
               borderRadius: 4,
               background: "var(--bg-panel-elev)",
               border: "1px solid var(--border-subtle)",
-              color: "var(--text-secondary)",
-              fontSize: 14,
-              letterSpacing: ".04em",
             }}
-            aria-label={`${team.display_name} crest placeholder`}
           >
-            {team.fifa_code}
+            <Flag
+              code={team.fifa_code}
+              size={48}
+              style={{ borderRadius: 2 }}
+            />
           </span>
           <div>
             <div

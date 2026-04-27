@@ -12,7 +12,8 @@
     "test:contracts": "tsx tests/contracts/run_contracts.ts",
     "test:a11y": "playwright test --config playwright.a11y.config.ts",
     "test:visual": "playwright test --config playwright.config.ts",
-    "test:visual:update": "playwright test --config playwright.config.ts --update-snapshots"
+    "test:visual:update": "playwright test --config playwright.config.ts --update-snapshots",
+    "flags:fetch": "node scripts/fetch-flags.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

@@ -5,6 +5,7 @@ import {
   loadTeam,
 } from "@/lib/data/loadSnapshot";
 import { TeamHeader } from "@/components/compositions/TeamHeader";
+import { Flag } from "@/components/primitives/Flag";
 import { ProgressionConeChart } from "@/components/compositions/ProgressionConeChart";
 import { HistoricalChampionSparkline } from "@/components/compositions/HistoricalChampionSparkline";
 import { UpcomingMatchesList } from "@/components/compositions/UpcomingMatchesList";
@@ -67,7 +68,7 @@ export default async function TeamPage({
             className="text-[18px] font-medium tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
-            {team.display_name}
+            <Flag code={team.fifa_code} size={14} /> {team.display_name}
           </h1>
           <p
             className="text-[12px] mt-0.5"

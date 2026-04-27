@@ -6,6 +6,7 @@ import {
   loadSnapshotMeta,
 } from "@/lib/data/loadSnapshot";
 import { MatchHeader } from "@/components/compositions/MatchHeader";
+import { Flag } from "@/components/primitives/Flag";
 import { MarketBreakdownPanel } from "@/components/compositions/MarketBreakdownPanel";
 import { GoalMatrixHeatmap } from "@/components/compositions/GoalMatrixHeatmap";
 import { StrengthInputsPanel } from "@/components/compositions/StrengthInputsPanel";
@@ -70,7 +71,10 @@ export default async function MatchDetailPage({
             className="text-[18px] font-medium tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
-            {match.home.display_name} vs {match.away.display_name}
+            <Flag code={match.home.fifa_code} size={14} />{" "}
+            {match.home.display_name} vs{" "}
+            <Flag code={match.away.fifa_code} size={14} />{" "}
+            {match.away.display_name}
           </h1>
           <p
             className="text-[12px] mt-0.5"

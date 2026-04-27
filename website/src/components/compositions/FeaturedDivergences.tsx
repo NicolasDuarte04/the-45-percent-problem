@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EdgeBadge } from "@/components/primitives/EdgeBadge";
+import { Flag } from "@/components/primitives/Flag";
 import type { DivergenceRow, DivergenceSnapshot } from "@/lib/data/schemas";
 import { formatUtcShort } from "@/lib/formatters";
 import { MARKET_LABELS } from "@/lib/markets";
@@ -43,7 +44,6 @@ export function FeaturedDivergences({ divergence }: FeaturedDivergencesProps) {
 
 function DivergenceCard({ row }: { row: DivergenceRow }) {
   const marketLabel = MARKET_LABELS[row.market] ?? row.market;
-  const matchup = `${row.home.display_name} vs ${row.away.display_name}`;
 
   // Short, generic blurb built from the row — we do not invent unsourced
   // narratives. The structure is: which side the edge favors + gate state.
@@ -98,7 +98,11 @@ function DivergenceCard({ row }: { row: DivergenceRow }) {
             lineHeight: 1.15,
           }}
         >
-          {matchup}
+          <Flag code={row.home.fifa_code} size={18} />{" "}
+          {row.home.display_name}{" "}
+          <span style={{ color: "var(--text-tertiary)" }}>vs</span>{" "}
+          <Flag code={row.away.fifa_code} size={18} />{" "}
+          {row.away.display_name}
           {row.market !== "1X2" ? ` (${marketLabel})` : ""}
         </h3>
 

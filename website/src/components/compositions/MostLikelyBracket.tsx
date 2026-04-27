@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { TournamentSnapshot, TournamentTeam } from "@/lib/data/schemas";
+import { Flag } from "@/components/primitives/Flag";
 
 /**
  * Most Likely Bracket — modal path through the 48-team draw.
@@ -210,6 +211,7 @@ function TeamRow({
       >
         {slot.team.fifa_code}
       </span>
+      <Flag code={slot.team.fifa_code} size={14} />
       <span
         className="flex-1 truncate"
         style={{
@@ -561,6 +563,7 @@ function ColorLegend({
                 >
                   {team.fifa_code}
                 </span>
+                <Flag code={team.fifa_code} size={14} />
               </div>
               <div className="flex-1 min-w-0">
                 <div
@@ -744,6 +747,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
                     >
                       ◆
                     </span>
+                    <Flag code={champion.fifa_code} size={18} />
                     <Link
                       href={`/team/${champion.fifa_code}`}
                       prefetch={false}

@@ -1,5 +1,6 @@
 import type { MatchDetail } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
+import { Flag } from "@/components/primitives/Flag";
 import { formatProbability } from "@/lib/formatters";
 
 interface MatchHeaderProps {
@@ -133,20 +134,20 @@ function TeamSide({
       }}
     >
       <span
-        className="mono inline-flex items-center justify-center"
+        className="inline-flex items-center justify-center"
         style={{
           width: 56,
           height: 36,
           borderRadius: 4,
           background: "var(--bg-panel-elev)",
           border: "1px solid var(--border-subtle)",
-          color: "var(--text-secondary)",
-          fontSize: 12,
-          letterSpacing: ".04em",
         }}
-        aria-label={`${team.display_name} crest placeholder`}
       >
-        {team.fifa_code}
+        <Flag
+          code={team.fifa_code}
+          size={40}
+          style={{ borderRadius: 2 }}
+        />
       </span>
       <div
         style={{

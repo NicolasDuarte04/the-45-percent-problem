@@ -5,6 +5,7 @@ import type {
   TournamentTeam,
 } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
+import { Flag } from "@/components/primitives/Flag";
 import { formatProbability } from "@/lib/formatters";
 
 interface BracketBoardProps {
@@ -212,6 +213,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                 >
                   {team.fifa_code}
                 </span>
+                <Flag code={team.fifa_code} size={16} />
                 <span
                   className="text-[12px] truncate"
                   style={{

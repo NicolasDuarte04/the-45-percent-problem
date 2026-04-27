@@ -17,6 +17,7 @@ import { EdgeBadge } from "@/components/primitives/EdgeBadge";
 import { GateStatusPill } from "@/components/primitives/GateStatusPill";
 import { DivergenceBar } from "@/components/primitives/DivergenceBar";
 import { EdgeSparkline } from "@/components/primitives/EdgeSparkline";
+import { Flag } from "@/components/primitives/Flag";
 import {
   formatCI,
   formatMono,
@@ -862,9 +863,11 @@ export function DivergenceTable({
                           <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
                             {row.home.fifa_code}
                           </span>{" "}
+                          <Flag code={row.home.fifa_code} size={16} />{" "}
                           {row.home.display_name}{" "}
                           <span style={{ color: "var(--text-quiet)" }}>‒</span>{" "}
                           {row.away.display_name}{" "}
+                          <Flag code={row.away.fifa_code} size={16} />{" "}
                           <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
                             {row.away.fifa_code}
                           </span>
