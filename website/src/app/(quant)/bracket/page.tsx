@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   loadBracket,
   loadSnapshotMeta,
@@ -6,6 +7,9 @@ import {
 import { BracketBoard } from "@/components/compositions/BracketBoard";
 import { RoundProbabilityLegend } from "@/components/compositions/RoundProbabilityLegend";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
+import { CanvasTour } from "@/components/compositions/CanvasTour";
+import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
+import { BRACKET_STEPS, BRACKET_DURATION_SEC } from "./_steps";
 
 export const dynamic = "force-static";
 
@@ -32,21 +36,30 @@ export default function BracketPage() {
         className="shrink-0 px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1152px] mx-auto px-12">
-          <h1
-            className="text-[18px] font-medium tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Bracket
-          </h1>
-          <p
-            className="text-[12px] mt-0.5"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            Per-round marginal probabilities · snapshot{" "}
-            <span className="mono">{meta.snapshot_id}</span> · phase{" "}
-            <span className="mono">{meta.tournament_phase.replace(/_/g, " ")}</span>
-          </p>
+        <div className="max-w-[1152px] mx-auto px-12 flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <h1
+              data-guide-id="bracket-masthead-title"
+              className="text-[18px] font-medium tracking-tight"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Bracket
+            </h1>
+            <p
+              className="text-[12px] mt-0.5"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              Per-round marginal probabilities · snapshot{" "}
+              <span className="mono">{meta.snapshot_id}</span> · phase{" "}
+              <span className="mono">{meta.tournament_phase.replace(/_/g, " ")}</span>
+            </p>
+          </div>
+          <Suspense fallback={null}>
+            <TourTriggerButton
+              steps={BRACKET_STEPS}
+              durationSeconds={BRACKET_DURATION_SEC}
+            />
+          </Suspense>
         </div>
       </div>
 
@@ -57,6 +70,9 @@ export default function BracketPage() {
 
         <ProvenanceBlock meta={meta} />
       </div>
+      <Suspense fallback={null}>
+        <CanvasTour steps={BRACKET_STEPS} />
+      </Suspense>
     </div>
   );
 }

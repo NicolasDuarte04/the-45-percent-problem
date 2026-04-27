@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import type { TourStep } from "./CanvasTour";
 
 type Variant = "masthead" | "inline";
 
-export function GuideTriggerButton({ variant = "masthead" }: { variant?: Variant }) {
+export function TourTriggerButton({
+  steps,
+  durationSeconds,
+  paramName = "guide",
+  variant = "masthead",
+}: {
+  steps: TourStep[];
+  durationSeconds: number;
+  paramName?: string;
+  variant?: Variant;
+}) {
   const pathname = usePathname();
   const params = useSearchParams();
 
   const sp = new URLSearchParams(params.toString());
-  sp.set("guide", "1");
+  sp.set(paramName, "1");
   const href = `${pathname}?${sp.toString()}`;
 
   if (variant === "inline") {
@@ -43,7 +54,7 @@ export function GuideTriggerButton({ variant = "masthead" }: { variant?: Variant
         How to read this
       </Link>
       <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-        Guided tour &middot; 7 steps &middot; ~90s
+        Guided tour &middot; {steps.length} steps &middot; ~{durationSeconds}s
       </span>
     </div>
   );

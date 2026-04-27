@@ -139,6 +139,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
       {/* Native CSS Grid — no external bracket library (§12.7) */}
       <div
         role="table"
+        data-guide-id="bracket-matrix"
         aria-label="Bracket board: per-round marginal probabilities"
         className="grid"
         style={{
