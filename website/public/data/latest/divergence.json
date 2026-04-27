@@ -1,822 +1,1686 @@
 {
   "snapshot_id": "2026-04-27T00:00Z",
-  "generated_at_utc": "2026-04-27T16:30:48Z",
+  "generated_at_utc": "2026-04-27T16:40:51Z",
   "rows": [
     {
       "row_id": "ROW-00000",
       "match_id": "2026-06-11_Ghana_Costa_Rica",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "GHA",
+        "display_name": "Ghana"
+      },
+      "away": {
+        "fifa_code": "CRC",
+        "display_name": "Costa Rica"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.277873,
       "q_market_raw_decimal": 3.3951,
       "q_market_devigged": 0.273827,
       "edge_E": 0.004046,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.269093,
+        0.286653
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00001",
       "match_id": "2026-06-11_Ghana_Costa_Rica",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "GHA",
+        "display_name": "Ghana"
+      },
+      "away": {
+        "fifa_code": "CRC",
+        "display_name": "Costa Rica"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.224316,
       "q_market_raw_decimal": 4.2057,
       "q_market_devigged": 0.218243,
       "edge_E": 0.006073,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.21614,
+        0.232491
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00002",
       "match_id": "2026-06-11_Ghana_Costa_Rica",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "GHA",
+        "display_name": "Ghana"
+      },
+      "away": {
+        "fifa_code": "CRC",
+        "display_name": "Costa Rica"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.497811,
       "q_market_raw_decimal": 1.8951,
       "q_market_devigged": 0.50793,
       "edge_E": -0.010119,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.488011,
+        0.507611
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00003",
       "match_id": "2026-06-11_Mexico_South_Korea",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "MEX",
+        "display_name": "Mexico"
+      },
+      "away": {
+        "fifa_code": "KOR",
+        "display_name": "South Korea"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.495647,
       "q_market_raw_decimal": 1.9034,
       "q_market_devigged": 0.505619,
       "edge_E": -0.009972,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.485848,
+        0.505447
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00004",
       "match_id": "2026-06-11_Mexico_South_Korea",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "MEX",
+        "display_name": "Mexico"
+      },
+      "away": {
+        "fifa_code": "KOR",
+        "display_name": "South Korea"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.224664,
       "q_market_raw_decimal": 4.1991,
       "q_market_devigged": 0.218629,
       "edge_E": 0.006035,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.216484,
+        0.232844
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00005",
       "match_id": "2026-06-11_Mexico_South_Korea",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "MEX",
+        "display_name": "Mexico"
+      },
+      "away": {
+        "fifa_code": "KOR",
+        "display_name": "South Korea"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.279689,
       "q_market_raw_decimal": 3.373,
       "q_market_devigged": 0.275752,
       "edge_E": 0.003937,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.270891,
+        0.288486
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00006",
       "match_id": "2026-06-11_Senegal_Uzbekistan",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "SEN",
+        "display_name": "Senegal"
+      },
+      "away": {
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.545413,
       "q_market_raw_decimal": 1.7297,
       "q_market_devigged": 0.558816,
       "edge_E": -0.013403,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.535653,
+        0.555172
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00007",
       "match_id": "2026-06-11_Senegal_Uzbekistan",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "SEN",
+        "display_name": "Senegal"
+      },
+      "away": {
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.215183,
       "q_market_raw_decimal": 4.3841,
       "q_market_devigged": 0.208111,
       "edge_E": 0.007072,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.207129,
+        0.223238
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00008",
       "match_id": "2026-06-11_Senegal_Uzbekistan",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "SEN",
+        "display_name": "Senegal"
+      },
+      "away": {
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.239404,
       "q_market_raw_decimal": 3.9406,
       "q_market_devigged": 0.233073,
       "edge_E": 0.006331,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.23104,
+        0.247768
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00009",
       "match_id": "2026-06-11_USA_Panama",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "USA",
+        "display_name": "USA"
+      },
+      "away": {
+        "fifa_code": "PAN",
+        "display_name": "Panama"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.366634,
       "q_market_raw_decimal": 2.5731,
       "q_market_devigged": 0.368101,
       "edge_E": -0.001466,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.357189,
+        0.376079
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00010",
       "match_id": "2026-06-11_USA_Panama",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "USA",
+        "display_name": "USA"
+      },
+      "away": {
+        "fifa_code": "PAN",
+        "display_name": "Panama"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.23377,
       "q_market_raw_decimal": 4.0356,
       "q_market_devigged": 0.228717,
       "edge_E": 0.005053,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.225475,
+        0.242065
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00011",
       "match_id": "2026-06-11_USA_Panama",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "USA",
+        "display_name": "USA"
+      },
+      "away": {
+        "fifa_code": "PAN",
+        "display_name": "Panama"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.399596,
       "q_market_raw_decimal": 2.3609,
       "q_market_devigged": 0.403182,
       "edge_E": -0.003587,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.389995,
+        0.409196
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00012",
       "match_id": "2026-06-12_Argentina_Peru",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ARG",
+        "display_name": "Argentina"
+      },
+      "away": {
+        "fifa_code": "PER",
+        "display_name": "Peru"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.802815,
       "q_market_raw_decimal": 1.1751,
       "q_market_devigged": 0.836115,
       "edge_E": -0.0333,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.795017,
+        0.810613
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00013",
       "match_id": "2026-06-12_Argentina_Peru",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ARG",
+        "display_name": "Argentina"
+      },
+      "away": {
+        "fifa_code": "PER",
+        "display_name": "Peru"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.122134,
       "q_market_raw_decimal": 7.7243,
       "q_market_devigged": 0.103551,
       "edge_E": 0.018584,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.115716,
+        0.128552
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00014",
       "match_id": "2026-06-12_Argentina_Peru",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ARG",
+        "display_name": "Argentina"
+      },
+      "away": {
+        "fifa_code": "PER",
+        "display_name": "Peru"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.075051,
       "q_market_raw_decimal": 12.5701,
       "q_market_devigged": 0.060335,
       "edge_E": 0.014716,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.069887,
+        0.080215
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00015",
       "match_id": "2026-06-12_Canada_Uruguay",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "CAN",
+        "display_name": "Canada"
+      },
+      "away": {
+        "fifa_code": "URU",
+        "display_name": "Uruguay"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.277873,
       "q_market_raw_decimal": 3.3951,
       "q_market_devigged": 0.273827,
       "edge_E": 0.004046,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.269093,
+        0.286653
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00016",
       "match_id": "2026-06-12_Canada_Uruguay",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "CAN",
+        "display_name": "Canada"
+      },
+      "away": {
+        "fifa_code": "URU",
+        "display_name": "Uruguay"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.224316,
       "q_market_raw_decimal": 4.2057,
       "q_market_devigged": 0.218243,
       "edge_E": 0.006073,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.21614,
+        0.232491
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00017",
       "match_id": "2026-06-12_Canada_Uruguay",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "CAN",
+        "display_name": "Canada"
+      },
+      "away": {
+        "fifa_code": "URU",
+        "display_name": "Uruguay"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.497811,
       "q_market_raw_decimal": 1.8951,
       "q_market_devigged": 0.50793,
       "edge_E": -0.010119,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.488011,
+        0.507611
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00018",
       "match_id": "2026-06-12_Ecuador_Poland",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ECU",
+        "display_name": "Ecuador"
+      },
+      "away": {
+        "fifa_code": "POL",
+        "display_name": "Poland"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.601039,
       "q_market_raw_decimal": 1.5696,
       "q_market_devigged": 0.61839,
       "edge_E": -0.017351,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.591441,
+        0.610637
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00019",
       "match_id": "2026-06-12_Ecuador_Poland",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ECU",
+        "display_name": "Ecuador"
+      },
+      "away": {
+        "fifa_code": "POL",
+        "display_name": "Poland"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.201117,
       "q_market_raw_decimal": 4.6908,
       "q_market_devigged": 0.192473,
       "edge_E": 0.008643,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.19326,
+        0.208973
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00020",
       "match_id": "2026-06-12_Ecuador_Poland",
+      "kickoff_utc": "2026-06-12T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ECU",
+        "display_name": "Ecuador"
+      },
+      "away": {
+        "fifa_code": "POL",
+        "display_name": "Poland"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.197844,
       "q_market_raw_decimal": 4.7684,
       "q_market_devigged": 0.189136,
       "edge_E": 0.008708,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.190036,
+        0.205652
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00021",
       "match_id": "2026-06-12_Morocco_New_Zealand",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "MAR",
+        "display_name": "Morocco"
+      },
+      "away": {
+        "fifa_code": "NZL",
+        "display_name": "New Zealand"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.634512,
       "q_market_raw_decimal": 1.4868,
       "q_market_devigged": 0.654305,
       "edge_E": -0.019793,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.625074,
+        0.643951
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00022",
       "match_id": "2026-06-12_Morocco_New_Zealand",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "MAR",
+        "display_name": "Morocco"
+      },
+      "away": {
+        "fifa_code": "NZL",
+        "display_name": "New Zealand"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.190981,
       "q_market_raw_decimal": 4.9397,
       "q_market_devigged": 0.181179,
       "edge_E": 0.009802,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.183277,
+        0.198686
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00023",
       "match_id": "2026-06-12_Morocco_New_Zealand",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "MAR",
+        "display_name": "Morocco"
+      },
+      "away": {
+        "fifa_code": "NZL",
+        "display_name": "New Zealand"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.174506,
       "q_market_raw_decimal": 5.4061,
       "q_market_devigged": 0.164515,
       "edge_E": 0.009991,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.167067,
+        0.181945
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00024",
       "match_id": "2026-06-13_Algeria_Colombia",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ALG",
+        "display_name": "Algeria"
+      },
+      "away": {
+        "fifa_code": "COL",
+        "display_name": "Colombia"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.177328,
       "q_market_raw_decimal": 5.3201,
       "q_market_devigged": 0.16749,
       "edge_E": 0.009838,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.169842,
+        0.184814
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00025",
       "match_id": "2026-06-13_Algeria_Colombia",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ALG",
+        "display_name": "Algeria"
+      },
+      "away": {
+        "fifa_code": "COL",
+        "display_name": "Colombia"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.192302,
       "q_market_raw_decimal": 4.9058,
       "q_market_devigged": 0.182652,
       "edge_E": 0.00965,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.184577,
+        0.200026
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00026",
       "match_id": "2026-06-13_Algeria_Colombia",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ALG",
+        "display_name": "Algeria"
+      },
+      "away": {
+        "fifa_code": "COL",
+        "display_name": "Colombia"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.630371,
       "q_market_raw_decimal": 1.4966,
       "q_market_devigged": 0.649858,
       "edge_E": -0.019488,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.620909,
+        0.639832
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00027",
       "match_id": "2026-06-13_Australia_Iraq",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "AUS",
+        "display_name": "Australia"
+      },
+      "away": {
+        "fifa_code": "IRQ",
+        "display_name": "Iraq"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.571227,
       "q_market_raw_decimal": 1.6515,
       "q_market_devigged": 0.586447,
       "edge_E": -0.01522,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.561527,
+        0.580928
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00028",
       "match_id": "2026-06-13_Australia_Iraq",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "AUS",
+        "display_name": "Australia"
+      },
+      "away": {
+        "fifa_code": "IRQ",
+        "display_name": "Iraq"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.209096,
       "q_market_raw_decimal": 4.5118,
       "q_market_devigged": 0.201349,
       "edge_E": 0.007747,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.201126,
+        0.217067
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00029",
       "match_id": "2026-06-13_Australia_Iraq",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "AUS",
+        "display_name": "Australia"
+      },
+      "away": {
+        "fifa_code": "IRQ",
+        "display_name": "Iraq"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.219676,
       "q_market_raw_decimal": 4.2945,
       "q_market_devigged": 0.212204,
       "edge_E": 0.007473,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.211561,
+        0.227791
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00030",
       "match_id": "2026-06-13_Brazil_Japan",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "BRA",
+        "display_name": "Brazil"
+      },
+      "away": {
+        "fifa_code": "JPN",
+        "display_name": "Japan"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.467575,
       "q_market_raw_decimal": 2.0176,
       "q_market_devigged": 0.475649,
       "edge_E": -0.008074,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.457796,
+        0.477354
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00031",
       "match_id": "2026-06-13_Brazil_Japan",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "BRA",
+        "display_name": "Brazil"
+      },
+      "away": {
+        "fifa_code": "JPN",
+        "display_name": "Japan"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.228634,
       "q_market_raw_decimal": 4.1262,
       "q_market_devigged": 0.223029,
       "edge_E": 0.005605,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.220403,
+        0.236865
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00032",
       "match_id": "2026-06-13_Brazil_Japan",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "BRA",
+        "display_name": "Brazil"
+      },
+      "away": {
+        "fifa_code": "JPN",
+        "display_name": "Japan"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.303791,
       "q_market_raw_decimal": 3.1054,
       "q_market_devigged": 0.301322,
       "edge_E": 0.002469,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.294777,
+        0.312804
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00033",
       "match_id": "2026-06-13_Spain_Netherlands",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ESP",
+        "display_name": "Spain"
+      },
+      "away": {
+        "fifa_code": "NED",
+        "display_name": "Netherlands"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.601039,
       "q_market_raw_decimal": 1.5696,
       "q_market_devigged": 0.61839,
       "edge_E": -0.017351,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.591441,
+        0.610637
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00034",
       "match_id": "2026-06-13_Spain_Netherlands",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ESP",
+        "display_name": "Spain"
+      },
+      "away": {
+        "fifa_code": "NED",
+        "display_name": "Netherlands"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.201117,
       "q_market_raw_decimal": 4.6908,
       "q_market_devigged": 0.192473,
       "edge_E": 0.008643,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.19326,
+        0.208973
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00035",
       "match_id": "2026-06-13_Spain_Netherlands",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ESP",
+        "display_name": "Spain"
+      },
+      "away": {
+        "fifa_code": "NED",
+        "display_name": "Netherlands"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.197844,
       "q_market_raw_decimal": 4.7684,
       "q_market_devigged": 0.189136,
       "edge_E": 0.008708,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.190036,
+        0.205652
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00036",
       "match_id": "2026-06-14_Egypt_Cameroon",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "EGY",
+        "display_name": "Egypt"
+      },
+      "away": {
+        "fifa_code": "CMR",
+        "display_name": "Cameroon"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.462196,
       "q_market_raw_decimal": 2.0411,
       "q_market_devigged": 0.469909,
       "edge_E": -0.007713,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.452424,
+        0.471968
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00037",
       "match_id": "2026-06-14_Egypt_Cameroon",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "EGY",
+        "display_name": "Egypt"
+      },
+      "away": {
+        "fifa_code": "CMR",
+        "display_name": "Cameroon"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.229277,
       "q_market_raw_decimal": 4.1147,
       "q_market_devigged": 0.223741,
       "edge_E": 0.005536,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.221037,
+        0.237516
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00038",
       "match_id": "2026-06-14_Egypt_Cameroon",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "EGY",
+        "display_name": "Egypt"
+      },
+      "away": {
+        "fifa_code": "CMR",
+        "display_name": "Cameroon"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.308528,
       "q_market_raw_decimal": 3.0577,
       "q_market_devigged": 0.30635,
       "edge_E": 0.002177,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.299475,
+        0.317581
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00039",
       "match_id": "2026-06-14_England_Belgium",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ENG",
+        "display_name": "England"
+      },
+      "away": {
+        "fifa_code": "BEL",
+        "display_name": "Belgium"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.54757,
       "q_market_raw_decimal": 1.7229,
       "q_market_devigged": 0.561124,
       "edge_E": -0.013554,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.537815,
+        0.557326
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00040",
       "match_id": "2026-06-14_England_Belgium",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ENG",
+        "display_name": "England"
+      },
+      "away": {
+        "fifa_code": "BEL",
+        "display_name": "Belgium"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.214704,
       "q_market_raw_decimal": 4.3939,
       "q_market_devigged": 0.207579,
       "edge_E": 0.007125,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.206656,
+        0.222753
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00041",
       "match_id": "2026-06-14_England_Belgium",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "ENG",
+        "display_name": "England"
+      },
+      "away": {
+        "fifa_code": "BEL",
+        "display_name": "Belgium"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.237725,
       "q_market_raw_decimal": 3.9684,
       "q_market_devigged": 0.231296,
       "edge_E": 0.006429,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.229382,
+        0.246069
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00042",
       "match_id": "2026-06-14_France_Denmark",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "FRA",
+        "display_name": "France"
+      },
+      "away": {
+        "fifa_code": "DEN",
+        "display_name": "Denmark"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.609475,
       "q_market_raw_decimal": 1.5479,
       "q_market_devigged": 0.627437,
       "edge_E": -0.017962,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.599913,
+        0.619038
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00043",
       "match_id": "2026-06-14_France_Denmark",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "FRA",
+        "display_name": "France"
+      },
+      "away": {
+        "fifa_code": "DEN",
+        "display_name": "Denmark"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.198678,
       "q_market_raw_decimal": 4.7484,
       "q_market_devigged": 0.189758,
       "edge_E": 0.00892,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.190858,
+        0.206499
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00044",
       "match_id": "2026-06-14_France_Denmark",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "FRA",
+        "display_name": "France"
+      },
+      "away": {
+        "fifa_code": "DEN",
+        "display_name": "Denmark"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.191847,
       "q_market_raw_decimal": 4.9175,
       "q_market_devigged": 0.182805,
       "edge_E": 0.009042,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.184129,
+        0.199564
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00045",
       "match_id": "2026-06-14_Nigeria_Venezuela",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "NGA",
+        "display_name": "Nigeria"
+      },
+      "away": {
+        "fifa_code": "VEN",
+        "display_name": "Venezuela"
+      },
+      "market": "1X2",
       "outcome": "HOME",
       "p_model": 0.409012,
       "q_market_raw_decimal": 2.3065,
       "q_market_devigged": 0.413211,
       "edge_E": -0.004199,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.399376,
+        0.418648
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00046",
       "match_id": "2026-06-14_Nigeria_Venezuela",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "NGA",
+        "display_name": "Nigeria"
+      },
+      "away": {
+        "fifa_code": "VEN",
+        "display_name": "Venezuela"
+      },
+      "market": "1X2",
       "outcome": "DRAW",
       "p_model": 0.233459,
       "q_market_raw_decimal": 4.041,
       "q_market_devigged": 0.228372,
       "edge_E": 0.005086,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.225167,
+        0.24175
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     },
     {
       "row_id": "ROW-00047",
       "match_id": "2026-06-14_Nigeria_Venezuela",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "round": "GRP",
+      "home": {
+        "fifa_code": "NGA",
+        "display_name": "Nigeria"
+      },
+      "away": {
+        "fifa_code": "VEN",
+        "display_name": "Venezuela"
+      },
+      "market": "1X2",
       "outcome": "AWAY",
       "p_model": 0.357529,
       "q_market_raw_decimal": 2.6387,
       "q_market_devigged": 0.358417,
       "edge_E": -0.000887,
+      "edge_threshold": 0.03,
       "gate_status": "OPEN",
+      "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
+      "confidence_band": [
+        0.348136,
+        0.366923
+      ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@91133d775e6a74ac"
+      "model_version": "M_STAR@7ae81d62abb216ae",
+      "history": []
     }
   ]
 }

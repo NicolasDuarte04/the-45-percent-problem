@@ -5,15 +5,15 @@
   "confederation": "CAF",
   "elo_rating": 1752.0,
   "progression": {
-    "p_champion": 0.0012,
-    "p_final": 0.0056,
-    "p_semifinal": 0.0186,
-    "p_quarterfinal": 0.0508,
-    "p_r16": 0.1695,
-    "p_group_qualification": 0.3937,
+    "p_champion": 0.0011,
+    "p_final": 0.0055,
+    "p_sf": 0.0185,
+    "p_qf": 0.0509,
+    "p_r16": 0.1698,
+    "p_group_qualification": 0.3944,
     "ci_95_champion": [
-      0.000687,
-      0.002096
+      0.000614,
+      0.001969
     ]
   },
   "history": [],

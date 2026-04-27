@@ -5,15 +5,15 @@
   "confederation": "CONMEBOL",
   "elo_rating": 1975.0,
   "progression": {
-    "p_champion": 0.0387,
-    "p_final": 0.0827,
-    "p_semifinal": 0.159,
-    "p_quarterfinal": 0.269,
-    "p_r16": 0.4941,
+    "p_champion": 0.0385,
+    "p_final": 0.0826,
+    "p_sf": 0.1599,
+    "p_qf": 0.2694,
+    "p_r16": 0.4944,
     "p_group_qualification": 0.8483,
     "ci_95_champion": [
-      0.035093,
-      0.042661
+      0.034903,
+      0.042452
     ]
   },
   "history": [],

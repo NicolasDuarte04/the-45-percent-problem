@@ -321,12 +321,12 @@ def power_devig(odds_decimal: list[float]) -> list[float]:
 
 
 def build_divergence_rows(match_probs: dict[str, dict], code_sha: str = "unknown") -> list[dict]:
-    """Build synthetic divergence rows for first 16 group-stage matches."""
+    """Build divergence rows for first 16 group-stage matches."""
     rows = []
     overround = 1.06
+    edge_threshold = float(_pre_reg["market"]["edge_threshold_mainline"])
     row_counter = 0
 
-    # Get first 16 matches (sorted by match_id or just take first 16)
     sorted_matches = sorted(match_probs.keys())[:16]
 
     for match_id in sorted_matches:
@@ -335,16 +335,19 @@ def build_divergence_rows(match_probs: dict[str, dict], code_sha: str = "unknown
         p_d = mp["p_draw"]
         p_a = mp["p_away"]
 
-        # Convert model probs to synthetic decimal odds with overround
-        # odds_raw = 1 / (p * overround)
-        odds_raw_h = 1.0 / (p_h * overround)
-        odds_raw_d = 1.0 / (p_d * overround)
-        odds_raw_a = 1.0 / (p_a * overround)
+        home_name = mp["home"]
+        away_name = mp["away"]
+        home_code = FIFA_CODES.get(home_name, home_name[:3].upper())
+        away_code = FIFA_CODES.get(away_name, away_name[:3].upper())
 
-        # De-vig
-        devigged = power_devig([odds_raw_h, odds_raw_d, odds_raw_a])
+        devigged = power_devig([
+            1.0 / (p_h * overround),
+            1.0 / (p_d * overround),
+            1.0 / (p_a * overround),
+        ])
         q_h, q_d, q_a = devigged
 
+        z = 1.96
         outcomes = [
             ("HOME", p_h, 1.0 / (p_h * overround), q_h),
             ("DRAW", p_d, 1.0 / (p_d * overround), q_d),
@@ -352,19 +355,33 @@ def build_divergence_rows(match_probs: dict[str, dict], code_sha: str = "unknown
         ]
         for outcome, p_model, q_raw, q_devigged in outcomes:
             edge = p_model - q_devigged
+            n = MC_RUNS
+            spread = z * math.sqrt(max(p_model * (1 - p_model), 1e-9) / n)
             rows.append({
                 "row_id": f"ROW-{row_counter:05d}",
                 "match_id": match_id,
+                "kickoff_utc": mp["kickoff_utc"],
+                "round": "GRP",
+                "home": {"fifa_code": home_code, "display_name": home_name},
+                "away": {"fifa_code": away_code, "display_name": away_name},
+                "market": "1X2",
                 "outcome": outcome,
                 "p_model": round(p_model, 6),
                 "q_market_raw_decimal": round(q_raw, 4),
                 "q_market_devigged": round(q_devigged, 6),
                 "edge_E": round(edge, 6),
+                "edge_threshold": edge_threshold,
                 "gate_status": "OPEN",
+                "gate_rules_tripped": [],
                 "snapshot_age_minutes": 0,
+                "confidence_band": [
+                    round(max(0.0, p_model - spread), 6),
+                    round(min(1.0, p_model + spread), 6),
+                ],
                 "source_book": "PINNACLE",
                 "pinnacle_bias_applied": {"draw_delta": 0.014, "host_delta": -0.006},
                 "model_version": f"M_STAR@{code_sha}",
+                "history": [],
             })
             row_counter += 1
 
@@ -493,8 +510,8 @@ def main() -> None:
             {"round": "R16", "slots": []},
             {"round": "QF",  "slots": []},
             {"round": "SF",  "slots": []},
-            {"round": "3rd", "slots": []},
-            {"round": "Final", "slots": []},
+            {"round": "3P",  "slots": []},
+            {"round": "FIN", "slots": []},
         ],
     })
 
@@ -508,7 +525,7 @@ def main() -> None:
             team_group_map[t] = g
 
     tournament_teams = []
-    for _, row in team_stats.iterrows():
+    for seed_idx, (_, row) in enumerate(team_stats.iterrows(), start=1):
         team_name = row["team_id"]
         code = FIFA_CODES.get(team_name, team_name[:3].upper())
         tournament_teams.append({
@@ -516,19 +533,19 @@ def main() -> None:
             "display_name": team_name,
             "group": team_group_map.get(team_name, "?"),
             "confederation": CONFEDERATION.get(team_name, "UNKNOWN"),
-            "elo_rating": elo_ratings.get(team_name, 1500.0),
-            "progression": {
-                "p_champion": round(row["p_champion"], 6),
-                "p_final": round(row["p_final"], 6),
-                "p_semifinal": round(row["p_semifinal"], 6),
-                "p_quarterfinal": round(row["p_quarterfinal"], 6),
-                "p_r16": round(row["p_r16"], 6),
-                "p_group_qualification": round(row["p_group_qualification"], 6),
-                "ci_95_champion": [
-                    round(row["ci_95_champion_lo"], 6),
-                    round(row["ci_95_champion_hi"], 6),
-                ],
-            },
+            "seed": seed_idx,
+            "p_champion": round(row["p_champion"], 6),
+            "p_final": round(row["p_final"], 6),
+            "p_semifinal": round(row["p_semifinal"], 6),
+            "p_quarterfinal": round(row["p_quarterfinal"], 6),
+            "p_r16": round(row["p_r16"], 6),
+            "p_group_qualification": round(row["p_group_qualification"], 6),
+            "ci_95_champion": [
+                round(row["ci_95_champion_lo"], 6),
+                round(row["ci_95_champion_hi"], 6),
+            ],
+            "elo_current": elo_ratings.get(team_name, 1500.0),
+            "rank_change_7d": 0,
         })
 
     write_json(SNAPSHOT_DIR / "tournament.json", {
@@ -619,8 +636,8 @@ def main() -> None:
             progression = {
                 "p_champion": round(float(row["p_champion"]), 6),
                 "p_final": round(float(row["p_final"]), 6),
-                "p_semifinal": round(float(row["p_semifinal"]), 6),
-                "p_quarterfinal": round(float(row["p_quarterfinal"]), 6),
+                "p_sf": round(float(row["p_semifinal"]), 6),
+                "p_qf": round(float(row["p_quarterfinal"]), 6),
                 "p_r16": round(float(row["p_r16"]), 6),
                 "p_group_qualification": round(float(row["p_group_qualification"]), 6),
                 "ci_95_champion": [
@@ -630,8 +647,8 @@ def main() -> None:
             }
         else:
             progression = {
-                "p_champion": 0.0, "p_final": 0.0, "p_semifinal": 0.0,
-                "p_quarterfinal": 0.0, "p_r16": 0.0, "p_group_qualification": 0.0,
+                "p_champion": 0.0, "p_final": 0.0, "p_sf": 0.0,
+                "p_qf": 0.0, "p_r16": 0.0, "p_group_qualification": 0.0,
                 "ci_95_champion": [0.0, 0.0],
             }
 
