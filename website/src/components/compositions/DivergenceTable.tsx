@@ -760,8 +760,8 @@ export function DivergenceTable({
               <div role="columnheader" className="py-3 px-2">
                 <SortHeader label="q (mkt)" colId="q_market_devigged" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
-              <div role="columnheader" className="py-3 px-2">Divergence</div>
-              <div role="columnheader" className="py-3 px-2">
+              <div role="columnheader" data-guide-id="col-divergence" className="py-3 px-2">Divergence</div>
+              <div role="columnheader" data-guide-id="col-edge" className="py-3 px-2">
                 <SortHeader label="Edge E" colId="absEdge" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
               </div>
               <div
@@ -771,7 +771,7 @@ export function DivergenceTable({
               >
                 ε
               </div>
-              <div role="columnheader" className="py-3 px-2">
+              <div role="columnheader" data-guide-id="col-gate" className="py-3 px-2">
                 <SortHeader label="Gate" colId="gate_status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
               <div role="columnheader" className="py-3 px-2 text-right">95% CI</div>
