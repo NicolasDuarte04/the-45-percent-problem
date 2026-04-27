@@ -1,5 +1,8 @@
+import { Suspense } from "react";
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
+import { TerminalGuide } from "@/components/compositions/TerminalGuide";
+import { GuideTriggerButton } from "@/components/compositions/GuideTriggerButton";
 
 export const dynamic = "force-static";
 
@@ -37,6 +40,7 @@ export default async function TerminalPage({
         <div className="max-w-[1152px] mx-auto px-12 flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <h1
+              data-guide-id="masthead-title"
               className="text-[18px] font-medium tracking-tight"
               style={{ color: "var(--text-primary)" }}
             >
@@ -48,9 +52,14 @@ export default async function TerminalPage({
             >
               Model-vs-market divergence · sorted by{" "}
               <span className="mono">|E|</span> descending · snapshot{" "}
-              <span className="mono">{divergence.snapshot_id}</span>
+              <span className="mono" data-guide-id="snapshot-id">
+                {divergence.snapshot_id}
+              </span>
             </p>
           </div>
+          <Suspense fallback={null}>
+            <GuideTriggerButton />
+          </Suspense>
         </div>
       </div>
 
@@ -69,6 +78,7 @@ export default async function TerminalPage({
           terminal constitutes investment or gambling advice. Methodology pre-registered
           at{" "}
           <a
+            data-guide-id="osf-link"
             href="https://osf.io/8b5hd"
             target="_blank"
             rel="noopener noreferrer"
@@ -84,6 +94,7 @@ export default async function TerminalPage({
       {/* ── All-gated banner ─────────────────────────────────────────────── */}
       {allGated && (
         <div
+          data-guide-id="all-gated-banner"
           className="shrink-0 px-6 py-2 text-[12px] font-medium"
           style={{
             backgroundColor: "color-mix(in srgb, var(--gate-fired) 12%, transparent)",
@@ -141,8 +152,16 @@ export default async function TerminalPage({
             <span className="mono">edge_E</span> history sparkline. URL encodes all active
             filters — copy the address bar to share a specific view.
           </p>
+          <p>
+            <Suspense fallback={null}>
+              <GuideTriggerButton variant="inline" />
+            </Suspense>
+          </p>
         </div>
       </div>
+      <Suspense fallback={null}>
+        <TerminalGuide />
+      </Suspense>
     </div>
   );
 }
