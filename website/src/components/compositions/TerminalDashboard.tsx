@@ -172,7 +172,6 @@ function TeamCell({ code, name }: { code: string; name: string }) {
       style={{ gap: 10, lineHeight: 1, minWidth: 0 }}
     >
       <Flag code={code} size={22} />
-      <InkChip>{code}</InkChip>
       <span
         className="truncate"
         style={{
@@ -186,28 +185,6 @@ function TeamCell({ code, name }: { code: string; name: string }) {
         {name}
       </span>
     </div>
-  );
-}
-
-function InkChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      className="mono inline-flex items-center"
-      style={{
-        height: 20,
-        padding: "0 8px",
-        borderRadius: 4,
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: ".06em",
-        lineHeight: 1,
-        color: "#1A1A1A",
-        background: "rgb(31 31 31 / 0.05)",
-        border: "1px solid rgb(31 31 31 / 0.18)",
-      }}
-    >
-      {children}
-    </span>
   );
 }
 

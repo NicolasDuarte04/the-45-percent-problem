@@ -132,23 +132,6 @@ function TeamRow({
       className="bracket-team-row flex items-center gap-2 px-[9px] py-[5px] no-underline transition-colors"
       style={{ opacity: dim ? 0.45 : 1, color: "inherit" }}
     >
-      <span
-        className="mono inline-flex items-center justify-center shrink-0"
-        aria-hidden="true"
-        style={{
-          width: 28,
-          height: 17,
-          borderRadius: 2,
-          fontSize: 9.5,
-          fontWeight: 600,
-          letterSpacing: "0.02em",
-          color: "var(--text-primary)",
-          background: "rgb(31 31 31 / 0.05)",
-          border: "1px solid rgb(31 31 31 / 0.18)",
-        }}
-      >
-        {slot.team.fifa_code}
-      </span>
       <Flag code={slot.team.fifa_code} size={14} />
       <span
         className="flex-1 truncate"
