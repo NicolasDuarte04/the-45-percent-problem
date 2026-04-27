@@ -1,19 +1,23 @@
 """
 scripts/generate_snapshot.py
 =============================
-Generates a synthetic WC 2026 snapshot bundle for 2026-04-23T00:00Z.
+Generates the production WC 2026 Phase 7 snapshot bundle.
 
 Writes files to:
-  /Users/nicolasduarte/Documents/Claude/Projects/The 45% Problem/website/public/data/snapshots/2026-04-23T00:00Z/
+  website/public/data/snapshots/<SNAPSHOT_ID>/
 and also copies to:
-  /Users/nicolasduarte/Documents/Claude/Projects/The 45% Problem/website/public/data/latest/
+  website/public/data/latest/
+and updates:
+  website/public/api/snapshot/manifest.json
 """
 
 from __future__ import annotations
 
 import json
 import math
+import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -24,21 +28,56 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from utils.hasher import DataSnapshotHasher
+
 from simulation.match_model import MatchModel
 from simulation.shootout_model import ShootoutModel
 from simulation.bracket_encoder import BracketEncoder
 from simulation.monte_carlo_runner import SimpleEloProvider, MonteCarloRunner
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-SNAPSHOT_ID = "2026-04-23T00:00Z"
-GENERATED_AT = "2026-04-23T00:00:03Z"
-MC_RUNS = 1000
-SEED = 20260611
+SNAPSHOT_ID = "2026-04-27T00:00Z"
+_NOW_UTC = datetime.now(tz=timezone.utc)
+GENERATED_AT = _NOW_UTC.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-WEBSITE_ROOT = Path("/Users/nicolasduarte/Documents/Claude/Projects/The 45% Problem/website")
+# Read MC_RUNS and seed from pre-registered constants (invariant: 10,000 for website)
+_pre_reg_path = PROJECT_ROOT / "evaluation" / "pre_reg_constants.yaml"
+with open(_pre_reg_path) as _fh:
+    _pre_reg = yaml.safe_load(_fh)
+MC_RUNS = int(_pre_reg["sim"]["runs_website"])   # 10000
+SEED = int(_pre_reg["sim"]["seed_master"])        # 20260611
+
+WEBSITE_ROOT = PROJECT_ROOT / "website"
 SNAPSHOT_DIR = WEBSITE_ROOT / "public" / "data" / "snapshots" / SNAPSHOT_ID
 LATEST_DIR   = WEBSITE_ROOT / "public" / "data" / "latest"
 MANIFEST_PATH = WEBSITE_ROOT / "public" / "data" / "manifest.json"
+API_MANIFEST_PATH = WEBSITE_ROOT / "public" / "api" / "snapshot" / "manifest.json"
+
+
+def _real_code_sha() -> str:
+    """Return the current git HEAD SHA (first 16 hex chars)."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()[:16]
+    except Exception:
+        return "unknown"
+
+
+def _real_data_sha() -> str:
+    """Return SHA-256 of the key input data files."""
+    hasher = DataSnapshotHasher()
+    for fname in ("elo_ratings.parquet", "wc2026_fixtures.parquet"):
+        p = PROJECT_ROOT / "data" / "raw" / fname
+        if p.exists():
+            hasher.add_file(p, label=fname)
+    sha = hasher.finalise()
+    return f"sha256:{sha[:32]}"
 
 GROUPS = {
     "A": ["Mexico",        "South Korea",   "Senegal",        "Uzbekistan"],
@@ -129,7 +168,7 @@ def load_elo_ratings() -> dict[str, float]:
     return ratings
 
 
-def run_monte_carlo(elo_ratings: dict[str, float]) -> pd.DataFrame:
+def run_monte_carlo(elo_ratings: dict[str, float], code_sha: str, data_sha: str) -> pd.DataFrame:
     """Run MC simulation and return aggregated team_runs DataFrame."""
     print(f"\nRunning Monte Carlo ({MC_RUNS} runs, seed={SEED})...")
 
@@ -142,22 +181,23 @@ def run_monte_carlo(elo_ratings: dict[str, float]) -> pd.DataFrame:
         shootout_model=sm,
         bracket_encoder=be,
         strength_provider=sp,
-        code_sha="synthetic",
+        code_sha=code_sha,
         tournament_variant="wc2026",
     )
 
+    timestamp = pd.Timestamp(GENERATED_AT, tz="UTC")
     all_team_rows = []
     for i in range(MC_RUNS):
         seed_i = SEED + i
         team_df, _ = runner.run_one(
             run_idx=i,
             seed=seed_i,
-            model_id="M_STAR@synthetic",
-            data_hash="sha256:synthetic",
-            timestamp_utc=pd.Timestamp("2026-04-23T00:00:03Z", tz="UTC"),
+            model_id=f"M_STAR@{code_sha}",
+            data_hash=data_sha,
+            timestamp_utc=timestamp,
         )
         all_team_rows.append(team_df)
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 500 == 0:
             print(f"  {i+1}/{MC_RUNS} runs complete")
 
     all_runs = pd.concat(all_team_rows, ignore_index=True)
@@ -280,7 +320,7 @@ def power_devig(odds_decimal: list[float]) -> list[float]:
     return devigged
 
 
-def build_divergence_rows(match_probs: dict[str, dict]) -> list[dict]:
+def build_divergence_rows(match_probs: dict[str, dict], code_sha: str = "unknown") -> list[dict]:
     """Build synthetic divergence rows for first 16 group-stage matches."""
     rows = []
     overround = 1.06
@@ -324,7 +364,7 @@ def build_divergence_rows(match_probs: dict[str, dict]) -> list[dict]:
                 "snapshot_age_minutes": 0,
                 "source_book": "PINNACLE",
                 "pinnacle_bias_applied": {"draw_delta": 0.014, "host_delta": -0.006},
-                "model_version": "M_STAR@synthetic",
+                "model_version": f"M_STAR@{code_sha}",
             })
             row_counter += 1
 
@@ -355,9 +395,18 @@ def copy_snapshot_to_latest(snapshot_dir: Path, latest_dir: Path) -> None:
 
 def main() -> None:
     print("=" * 60)
-    print("WC 2026 Snapshot Generator")
-    print(f"Snapshot ID: {SNAPSHOT_ID}")
+    print("WC 2026 Snapshot Generator — Phase 7 Production")
+    print(f"Snapshot ID : {SNAPSHOT_ID}")
+    print(f"Generated at: {GENERATED_AT}")
+    print(f"MC runs     : {MC_RUNS}")
     print("=" * 60)
+
+    # 0. Compute real SHAs up-front
+    print("\n[0] Computing provenance hashes...")
+    code_sha = _real_code_sha()
+    data_sha = _real_data_sha()
+    print(f"  code_sha : {code_sha}")
+    print(f"  data_sha : {data_sha}")
 
     # 1. Load Elo ratings
     print("\n[1] Loading Elo ratings...")
@@ -365,7 +414,7 @@ def main() -> None:
     print(f"  Loaded ratings for {len(elo_ratings)} teams")
 
     # 2. Run Monte Carlo
-    all_runs = run_monte_carlo(elo_ratings)
+    all_runs = run_monte_carlo(elo_ratings, code_sha=code_sha, data_sha=data_sha)
     print(f"  Total team-run rows: {len(all_runs)}")
 
     # 3. Aggregate team stats
@@ -383,7 +432,7 @@ def main() -> None:
 
     # 5. Build divergence rows
     print("\n[5] Building divergence rows...")
-    divergence_rows = build_divergence_rows(match_probs)
+    divergence_rows = build_divergence_rows(match_probs, code_sha=code_sha)
     print(f"  Built {len(divergence_rows)} divergence rows")
 
     # ── Write bundle ──────────────────────────────────────────────────────────
@@ -395,8 +444,8 @@ def main() -> None:
         "schema_version": "9.0",
         "snapshot_id": SNAPSHOT_ID,
         "generated_at_utc": GENERATED_AT,
-        "code_sha": "synthetic",
-        "data_sha": "sha256:synthetic",
+        "code_sha": code_sha,
+        "data_sha": data_sha,
         "pre_reg_tag": "v1.0.0-mstar-lock",
         "champion_model": "M_STAR",
         "mc_runs": MC_RUNS,
@@ -404,7 +453,7 @@ def main() -> None:
         "matches_settled": 0,
         "matches_remaining": 104,
         "kill_criteria_active": False,
-        "notes": "Synthetic pre-tournament fixture for 2026-04-23T00:00Z",
+        "notes": f"Phase 7 production snapshot — {SNAPSHOT_ID}",
     })
 
     # freshness.json
@@ -607,13 +656,17 @@ def main() -> None:
     copy_snapshot_to_latest(SNAPSHOT_DIR, LATEST_DIR)
 
     # ── Write manifest.json ──────────────────────────────────────────────────
-    print("\n[8] Writing manifest.json...")
-    write_json(MANIFEST_PATH, [
-        {
-            "snapshot_id": SNAPSHOT_ID,
-            "generated_at_utc": GENERATED_AT,
-        }
-    ])
+    print("\n[8] Writing manifests...")
+    manifest_entry = {
+        "snapshot_id": SNAPSHOT_ID,
+        "generated_at_utc": GENERATED_AT,
+        "bundle_url": f"/data/snapshots/{SNAPSHOT_ID}/",
+        "meta_url": f"/data/snapshots/{SNAPSHOT_ID}/snapshot_meta.json",
+    }
+    write_json(MANIFEST_PATH, [manifest_entry])
+    write_json(API_MANIFEST_PATH, [manifest_entry])
+    print(f"  Written: {MANIFEST_PATH}")
+    print(f"  Written: {API_MANIFEST_PATH}")
 
     # ── Summary ──────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
