@@ -1,3 +1,7 @@
+"use client";
+// rev: bracket-path-trace-v1
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { TournamentSnapshot, TournamentTeam } from "@/lib/data/schemas";
 import { Flag } from "@/components/primitives/Flag";
@@ -119,10 +123,12 @@ function TeamRow({
   slot,
   advancing,
   dim,
+  onTeamHover,
 }: {
   slot: Slot;
   advancing: boolean;
   dim: boolean;
+  onTeamHover?: (code: string | null) => void;
 }) {
   return (
     <Link
@@ -131,6 +137,12 @@ function TeamRow({
       aria-label={`${slot.team.display_name} — team detail`}
       className="bracket-team-row flex items-center gap-2 px-[9px] py-[5px] no-underline transition-colors"
       style={{ opacity: dim ? 0.45 : 1, color: "inherit" }}
+      onMouseEnter={
+        onTeamHover ? () => onTeamHover(slot.team.fifa_code) : undefined
+      }
+      onFocus={
+        onTeamHover ? () => onTeamHover(slot.team.fifa_code) : undefined
+      }
     >
       <Flag code={slot.team.fifa_code} size={14} />
       <span
@@ -163,11 +175,21 @@ function TeamRow({
   );
 }
 
-function MatchCard({ match }: { match: Match }) {
+function MatchCard({
+  match,
+  inPath,
+  onTeamHover,
+}: {
+  match: Match;
+  inPath: boolean | null;
+  onTeamHover?: (code: string | null) => void;
+}) {
   const aWins = match.a.p >= match.b.p;
   return (
     <div
-      className="bracket-match-card overflow-hidden"
+      className="bracket-match-card bracket-fade overflow-hidden"
+      data-on-path={inPath === true ? "" : undefined}
+      data-off-path={inPath === false ? "" : undefined}
       style={{
         background: "var(--bg-panel-elev)",
         border: "1px solid var(--border-subtle)",
@@ -189,7 +211,12 @@ function MatchCard({ match }: { match: Match }) {
           {match.label}
         </div>
       ) : null}
-      <TeamRow slot={match.a} advancing={aWins} dim={!aWins} />
+      <TeamRow
+        slot={match.a}
+        advancing={aWins}
+        dim={!aWins}
+        onTeamHover={onTeamHover}
+      />
       <div
         style={{
           height: 1,
@@ -197,7 +224,12 @@ function MatchCard({ match }: { match: Match }) {
           margin: "0 9px",
         }}
       />
-      <TeamRow slot={match.b} advancing={!aWins} dim={aWins} />
+      <TeamRow
+        slot={match.b}
+        advancing={!aWins}
+        dim={aWins}
+        onTeamHover={onTeamHover}
+      />
     </div>
   );
 }
@@ -291,9 +323,13 @@ function RoundColumn({
 function ConnectorColumn({
   pairs,
   mirrored = false,
+  pathPair,
+  hasActiveTeam,
 }: {
   pairs: number;
   mirrored?: boolean;
+  pathPair?: number;
+  hasActiveTeam?: boolean;
 }) {
   const rows = Array.from({ length: pairs });
   return (
@@ -302,8 +338,14 @@ function ConnectorColumn({
       className="flex flex-col"
       style={{ paddingTop: STAGE_HEADER_H + 14 }}
     >
-      {rows.map((_, i) => (
-        <div key={i} className="flex-1 relative">
+      {rows.map((_, i) => {
+        const offPath = hasActiveTeam === true && pathPair !== i;
+        return (
+        <div
+          key={i}
+          className="flex-1 relative bracket-fade"
+          data-off-path={offPath ? "" : undefined}
+        >
           {/* top hook */}
           <div
             style={{
@@ -349,7 +391,8 @@ function ConnectorColumn({
             }}
           />
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -361,7 +404,10 @@ interface MostLikelyBracketProps {
 }
 
 export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
-  const { r16, qf, sf, final, champion } = buildBracket(tournament);
+  const { r16, qf, sf, final, champion } = useMemo(
+    () => buildBracket(tournament),
+    [tournament],
+  );
 
   const r16Left = r16.slice(0, 4);
   const r16Right = r16.slice(4, 8);
@@ -370,15 +416,51 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
   const sfLeft = sf[0];
   const sfRight = sf[1];
 
+  // ── Path tracing ──────────────────────────────────────────────────────────
+  // Hover any team chip to highlight the match cards (and feeder connectors)
+  // where that team appears in the modal bracket. Off-path nodes dim to 0.35.
+  // Hover-clear is at the section level so moving the cursor between cards
+  // (over whitespace within the bracket) does not flicker the highlight.
+  const [activeTeam, setActiveTeam] = useState<string | null>(null);
+  const teamInMatch = (m: Match): boolean =>
+    activeTeam !== null &&
+    (m.a.team.fifa_code === activeTeam || m.b.team.fifa_code === activeTeam);
+  const inPath = (m: Match): boolean | null =>
+    activeTeam === null ? null : teamInMatch(m);
+
+  const r16Idx = activeTeam === null ? -1 : r16.findIndex(teamInMatch);
+  const qfIdx = activeTeam === null ? -1 : qf.findIndex(teamInMatch);
+  const sfIdx = activeTeam === null ? -1 : sf.findIndex(teamInMatch);
+  const finalInPath = activeTeam !== null && teamInMatch(final);
+
+  // R16→QF connector pair indices (left side has indices 0..3, right side 4..7)
+  const r16LeftPair = r16Idx >= 0 && r16Idx < 4 ? Math.floor(r16Idx / 2) : -1;
+  const r16RightPair =
+    r16Idx >= 4 && r16Idx < 8 ? Math.floor((r16Idx - 4) / 2) : -1;
+  // QF→SF connector pair indices
+  const qfLeftPair = qfIdx >= 0 && qfIdx < 2 ? Math.floor(qfIdx / 2) : -1;
+  const qfRightPair =
+    qfIdx >= 2 && qfIdx < 4 ? Math.floor((qfIdx - 2) / 2) : -1;
+  // SF→Final connector pair: each side has 1 pair, only one side is active
+  const sfLeftPair = sfIdx === 0 ? 0 : -1;
+  const sfRightPair = sfIdx === 1 ? 0 : -1;
+
+  const hasActive = activeTeam !== null;
+  const finalCardOnPath: boolean | null = activeTeam === null
+    ? null
+    : finalInPath;
+
   return (
     <section
       aria-labelledby="most-likely-bracket-heading"
+      onMouseLeave={() => setActiveTeam(null)}
       style={{
         background: "var(--bg-root)",
         color: "var(--text-primary)",
         padding: "28px 0 8px",
       }}
     >
+      <style>{bracketStyles}</style>
       <p
         id="most-likely-bracket-heading"
         style={{
@@ -411,28 +493,54 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             align="left"
           >
             {r16Left.map((m) => (
-              <MatchCard key={m.id} match={m} />
+              <MatchCard
+                key={m.id}
+                match={m}
+                inPath={inPath(m)}
+                onTeamHover={setActiveTeam}
+              />
             ))}
           </RoundColumn>
-          <ConnectorColumn pairs={4} />
+          <ConnectorColumn
+            pairs={4}
+            pathPair={r16LeftPair}
+            hasActiveTeam={hasActive}
+          />
           <RoundColumn
             kicker="Stage 2 · 28 – 29 Jun"
             label="Quarterfinals"
             align="left"
           >
             {qfLeft.map((m) => (
-              <MatchCard key={m.id} match={m} />
+              <MatchCard
+                key={m.id}
+                match={m}
+                inPath={inPath(m)}
+                onTeamHover={setActiveTeam}
+              />
             ))}
           </RoundColumn>
-          <ConnectorColumn pairs={2} />
+          <ConnectorColumn
+            pairs={2}
+            pathPair={qfLeftPair}
+            hasActiveTeam={hasActive}
+          />
           <RoundColumn
             kicker="Stage 3 · 02 Jul"
             label="Semifinal"
             align="left"
           >
-            <MatchCard match={sfLeft} />
+            <MatchCard
+              match={sfLeft}
+              inPath={inPath(sfLeft)}
+              onTeamHover={setActiveTeam}
+            />
           </RoundColumn>
-          <ConnectorColumn pairs={1} />
+          <ConnectorColumn
+            pairs={1}
+            pathPair={sfLeftPair}
+            hasActiveTeam={hasActive}
+          />
 
           {/* Final column */}
           <div className="flex flex-col">
@@ -443,7 +551,9 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             />
             <div className="flex-1 flex flex-col justify-center">
               <div
-                className="bracket-match-card overflow-hidden"
+                className="bracket-match-card bracket-fade overflow-hidden"
+                data-on-path={finalCardOnPath === true ? "" : undefined}
+                data-off-path={finalCardOnPath === false ? "" : undefined}
                 style={{
                   background: "var(--bg-panel-elev)",
                   border: "1px solid var(--border-subtle)",
@@ -510,6 +620,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
                     slot={final.a}
                     advancing={final.a.p >= final.b.p}
                     dim={final.a.p < final.b.p}
+                    onTeamHover={setActiveTeam}
                   />
                   <div
                     style={{
@@ -522,38 +633,68 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
                     slot={final.b}
                     advancing={final.b.p > final.a.p}
                     dim={final.b.p <= final.a.p}
+                    onTeamHover={setActiveTeam}
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <ConnectorColumn pairs={1} mirrored />
+          <ConnectorColumn
+            pairs={1}
+            mirrored
+            pathPair={sfRightPair}
+            hasActiveTeam={hasActive}
+          />
           <RoundColumn
             kicker="Stage 3 · 02 Jul"
             label="Semifinal"
             align="right"
           >
-            <MatchCard match={sfRight} />
+            <MatchCard
+              match={sfRight}
+              inPath={inPath(sfRight)}
+              onTeamHover={setActiveTeam}
+            />
           </RoundColumn>
-          <ConnectorColumn pairs={2} mirrored />
+          <ConnectorColumn
+            pairs={2}
+            mirrored
+            pathPair={qfRightPair}
+            hasActiveTeam={hasActive}
+          />
           <RoundColumn
             kicker="Stage 2 · 28 – 29 Jun"
             label="Quarterfinals"
             align="right"
           >
             {qfRight.map((m) => (
-              <MatchCard key={m.id} match={m} />
+              <MatchCard
+                key={m.id}
+                match={m}
+                inPath={inPath(m)}
+                onTeamHover={setActiveTeam}
+              />
             ))}
           </RoundColumn>
-          <ConnectorColumn pairs={4} mirrored />
+          <ConnectorColumn
+            pairs={4}
+            mirrored
+            pathPair={r16RightPair}
+            hasActiveTeam={hasActive}
+          />
           <RoundColumn
             kicker="Stage 1 · 14 – 18 Jun"
             label="Round of 16"
             align="right"
           >
             {r16Right.map((m) => (
-              <MatchCard key={m.id} match={m} />
+              <MatchCard
+                key={m.id}
+                match={m}
+                inPath={inPath(m)}
+                onTeamHover={setActiveTeam}
+              />
             ))}
           </RoundColumn>
         </div>
@@ -561,3 +702,12 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
     </section>
   );
 }
+
+const bracketStyles = `
+.bracket-fade {
+  transition: opacity 150ms ease;
+}
+.bracket-fade[data-off-path] {
+  opacity: 0.35;
+}
+`;

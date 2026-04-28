@@ -1,6 +1,8 @@
 "use client";
-// rev: interactive-grid-v3
+// rev: interactive-grid-v4
 import { Fragment, useMemo, useState } from "react";
+
+type TriRegion = "home" | "draw" | "away";
 
 interface GoalMatrixHeatmapProps {
   grid: number[][];
@@ -162,6 +164,10 @@ export function GoalMatrixHeatmap({
   // pinned when nothing is hovered.
   const [hover, setHover] = useState<Hover>(null);
   const [pinned, setPinned] = useState<Pos | null>(null);
+  // Triangle hover is a separate axis: hovering a 1X2 row dims the cells that
+  // don't sum into that outcome. Independent of cell hover/pin so a pinned
+  // cell keeps its outline while the user explores the triangle.
+  const [triHover, setTriHover] = useState<TriRegion | null>(null);
   const active = hover ?? pinned;
 
   const togglePinned = (h: number, a: number) =>
@@ -304,6 +310,19 @@ export function GoalMatrixHeatmap({
                       const isPinned = pinned?.h === h && pinned?.a === a;
                       const inRow = active?.h === h && !isHover && !isPinned;
                       const inCol = active?.a === a && !isHover && !isPinned;
+                      // Triangle region this cell sums into.
+                      const triRegion: TriRegion =
+                        h > a ? "home" : h === a ? "draw" : "away";
+                      const triIn =
+                        triHover !== null &&
+                        triRegion === triHover &&
+                        !isHover &&
+                        !isPinned;
+                      const triOut =
+                        triHover !== null &&
+                        triRegion !== triHover &&
+                        !isHover &&
+                        !isPinned;
                       return (
                         <button
                           type="button"
@@ -313,6 +332,8 @@ export function GoalMatrixHeatmap({
                           data-pinned={isPinned ? "" : undefined}
                           data-row-active={inRow ? "" : undefined}
                           data-col-active={inCol ? "" : undefined}
+                          data-tri-in={triIn ? "" : undefined}
+                          data-tri-out={triOut ? "" : undefined}
                           data-rank={rank !== undefined ? rank : undefined}
                           style={
                             {
@@ -514,9 +535,29 @@ export function GoalMatrixHeatmap({
             >
               Triangle · 1X2 from matrix
             </div>
-            <TriRow label={`${homeCode} win`} value={pHome} />
-            <TriRow label="Draw" value={pDraw} />
-            <TriRow label={`${awayCode} win`} value={pAway} />
+            <div onMouseLeave={() => setTriHover(null)}>
+              <TriRow
+                label={`${homeCode} win`}
+                value={pHome}
+                region="home"
+                active={triHover === "home"}
+                onHover={setTriHover}
+              />
+              <TriRow
+                label="Draw"
+                value={pDraw}
+                region="draw"
+                active={triHover === "draw"}
+                onHover={setTriHover}
+              />
+              <TriRow
+                label={`${awayCode} win`}
+                value={pAway}
+                region="away"
+                active={triHover === "away"}
+                onHover={setTriHover}
+              />
+            </div>
           </div>
 
           <div>
@@ -545,15 +586,32 @@ export function GoalMatrixHeatmap({
   );
 }
 
-function TriRow({ label, value }: { label: string; value: number }) {
+function TriRow({
+  label,
+  value,
+  region,
+  active,
+  onHover,
+}: {
+  label: string;
+  value: number;
+  region: TriRegion;
+  active: boolean;
+  onHover: (region: TriRegion | null) => void;
+}) {
   return (
     <div
-      className="flex items-center gap-2.5 py-1.5"
+      className="gm-tri-row flex items-center gap-2.5 py-1.5"
       style={{ borderBottom: "1px solid var(--border-subtle)" }}
+      data-active={active ? "" : undefined}
+      onMouseEnter={() => onHover(region)}
     >
       <span
         className="mono text-[11px] flex-1"
-        style={{ color: "var(--text-tertiary)" }}
+        style={{
+          color: active ? "var(--text-primary)" : "var(--text-tertiary)",
+          transition: "color 150ms ease",
+        }}
       >
         {label}
       </span>
@@ -648,8 +706,15 @@ const styles = `
   transition:
     transform 150ms ease,
     box-shadow 180ms ease,
-    filter 150ms ease;
+    filter 150ms ease,
+    opacity 150ms ease;
   will-change: transform;
+}
+.gm-cell[data-tri-in] {
+  filter: brightness(1.1);
+}
+.gm-cell[data-tri-out] {
+  opacity: 0.45;
 }
 .gm-cell:focus-visible {
   outline: 2px solid var(--text-secondary);
@@ -738,5 +803,13 @@ const styles = `
 }
 .gm-readout-value {
   transition: color 150ms ease;
+}
+
+.gm-tri-row {
+  cursor: default;
+  transition: background 150ms ease;
+}
+.gm-tri-row[data-active] {
+  background: color-mix(in oklch, var(--text-secondary) 7%, transparent);
 }
 `;
