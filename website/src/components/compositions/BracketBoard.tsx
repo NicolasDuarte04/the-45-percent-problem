@@ -1,3 +1,7 @@
+"use client";
+// rev: bracket-matrix-crosshair-v1
+
+import { useState } from "react";
 import Link from "next/link";
 import type {
   BracketSnapshot,
@@ -57,6 +61,14 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   const sortedTeams: TournamentTeam[] = tournament.teams
     .slice()
     .sort((a, b) => b.p_champion - a.p_champion);
+
+  // Crosshair hover. Hovering a cell sets both row and col; hovering a team
+  // label sets only the row; hovering a round header sets only the col.
+  // Hover-clear is hoisted to the grid wrapper so the cursor moving across
+  // gridlines inside the matrix never flickers — the highlight stays lit
+  // until the cursor leaves the grid.
+  const [hoverRow, setHoverRow] = useState<string | null>(null);
+  const [hoverCol, setHoverCol] = useState<RoundKey | null>(null);
 
   return (
     <div
@@ -137,12 +149,20 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         </div>
       )}
 
+      <style>{crosshairStyles}</style>
+
       {/* Native CSS Grid — no external bracket library (§12.7) */}
       <div
         role="table"
         data-guide-id="bracket-matrix"
         aria-label="Bracket board: per-round marginal probabilities"
-        className="grid"
+        className="brk-grid grid"
+        data-hover-row={hoverRow !== null ? "" : undefined}
+        data-hover-col={hoverCol !== null ? "" : undefined}
+        onMouseLeave={() => {
+          setHoverRow(null);
+          setHoverCol(null);
+        }}
         style={{
           gridTemplateColumns: `minmax(180px, 1.4fr) repeat(${ROUNDS.length}, minmax(92px, 1fr))`,
           gap: 1,
@@ -160,7 +180,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               Weight semibold, tracking .14em, with a hairline bottom border
               so the header strip reads as its own register. */}
           <div
-            className="mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3"
+            className="brk-col-header brk-col-header--axis mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3"
             style={{
               background: "var(--bg-panel-elev)",
               color: "var(--text-primary)",
@@ -176,7 +196,12 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           {ROUNDS.map((r) => (
             <div
               key={r.key}
-              className="mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3 text-center"
+              className="brk-col-header mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3 text-center"
+              data-col-active={hoverCol === r.key ? "" : undefined}
+              onMouseEnter={() => {
+                setHoverRow(null);
+                setHoverCol(r.key);
+              }}
               style={{
                 background: "var(--bg-panel-elev)",
                 color: "var(--text-primary)",
@@ -193,11 +218,18 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           ))}
 
           {/* Team rows */}
-          {sortedTeams.map((team) => (
+          {sortedTeams.map((team) => {
+            const rowActive = hoverRow === team.fifa_code;
+            return (
             <div key={team.fifa_code} className="contents" role="row">
               <Link
                 href={`/team/${team.fifa_code}`}
-                className="px-3 py-2 flex items-center gap-2 transition-colors duration-[120ms]"
+                className="brk-team px-3 py-2 flex items-center gap-2 transition-colors duration-[120ms]"
+                data-row-active={rowActive ? "" : undefined}
+                onMouseEnter={() => {
+                  setHoverRow(team.fifa_code);
+                  setHoverCol(null);
+                }}
                 style={{
                   background: "var(--bg-panel)",
                   color: "var(--text-primary)",
@@ -239,12 +271,19 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 
               {ROUNDS.map((r) => {
                 const p = team[r.key] as number;
+                const colActive = hoverCol === r.key;
                 return (
                   <div
                     key={r.key}
                     role="cell"
                     aria-label={`${team.display_name} probability of reaching ${r.label}: ${(p * 100).toFixed(1)} percent`}
-                    className="flex items-center justify-center py-2"
+                    className="brk-cell flex items-center justify-center py-2"
+                    data-row-active={rowActive ? "" : undefined}
+                    data-col-active={colActive ? "" : undefined}
+                    onMouseEnter={() => {
+                      setHoverRow(team.fifa_code);
+                      setHoverCol(r.key);
+                    }}
                     style={{
                       background: cellBackground(p),
                       color: cellTextColor(p),
@@ -259,7 +298,8 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                 );
               })}
             </div>
-          ))}
+            );
+          })}
       </div>
 
       {/* Legend — Prism ramp strip */}
@@ -297,3 +337,31 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
     </div>
   );
 }
+
+// Crosshair: hovering any team-row label, round header, or probability cell
+// dims everything off the active axis. Three rules drive the effect:
+//   - data-hover-row on the grid + :not([data-row-active]) on team labels
+//   - data-hover-col on the grid + :not([data-col-active]) on round headers
+//   - data-hovering (either axis) on the grid + cells that match neither axis
+// The team-label header (.brk-col-header--axis) never dims; it's the matrix
+// origin, not a column.
+const crosshairStyles = `
+.brk-team,
+.brk-col-header,
+.brk-cell {
+  transition: opacity 150ms ease;
+}
+.brk-grid[data-hover-row] .brk-team:not([data-row-active]) {
+  opacity: 0.45;
+}
+.brk-grid[data-hover-col] .brk-col-header:not(.brk-col-header--axis):not([data-col-active]) {
+  opacity: 0.5;
+}
+.brk-grid[data-hover-row] .brk-cell:not([data-row-active]):not([data-col-active]),
+.brk-grid[data-hover-col] .brk-cell:not([data-row-active]):not([data-col-active]) {
+  opacity: 0.45;
+}
+.brk-col-header:not(.brk-col-header--axis) {
+  cursor: default;
+}
+`;
