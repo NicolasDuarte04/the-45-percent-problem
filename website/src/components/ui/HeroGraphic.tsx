@@ -17,7 +17,7 @@ export function HeroGraphic() {
     >
       <Image
         src="/assets/trophy_point_cloud.svg"
-        alt="Quantitative World Cup Trophy — 8240 Monte Carlo samples from the M★ posterior."
+        alt="Quantitative World Cup Trophy — 10,000 Monte Carlo samples from the M★ posterior."
         width={260}
         height={384}
         priority
@@ -28,4 +28,4 @@ export function HeroGraphic() {
 }
 
 export const HERO_TROPHY_CAPTION =
-  "A mathematical representation of 8,240 Monte Carlo samples from the M★ posterior, projected onto the FIFA World Cup trophy.";
+  "A mathematical representation of 10,000 Monte Carlo samples from the M★ posterior, projected onto the FIFA World Cup trophy.";
