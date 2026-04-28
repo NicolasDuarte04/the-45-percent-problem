@@ -183,7 +183,6 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             className="brk-col-header brk-col-header--axis mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3"
             style={{
               background: "var(--bg-panel-elev)",
-              color: "var(--text-primary)",
               position: "sticky",
               top: 0,
               zIndex: 2,
@@ -204,7 +203,6 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               }}
               style={{
                 background: "var(--bg-panel-elev)",
-                color: "var(--text-primary)",
                 position: "sticky",
                 top: 0,
                 zIndex: 2,
@@ -342,24 +340,42 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 // dims everything off the active axis. Three rules drive the effect:
 //   - data-hover-row on the grid + :not([data-row-active]) on team labels
 //   - data-hover-col on the grid + :not([data-col-active]) on round headers
-//   - data-hovering (either axis) on the grid + cells that match neither axis
+//   - either axis active + cells that match neither row nor col
 // The team-label header (.brk-col-header--axis) never dims; it's the matrix
 // origin, not a column.
+//
+// IMPORTANT: opacity is intentionally avoided on the sticky column headers —
+// a semi-transparent sticky strip lets scrolling cells leak through and
+// reads as broken UI. We dim text colour instead and keep bg-panel-elev
+// solid. Cells are dimmed via filter: saturate/brightness rather than
+// opacity for the same reason — opacity bleeds the dark gridline colour
+// through the heatmap fill and looks muddy. Filter mutes the colour while
+// preserving the cell's visual presence.
 const crosshairStyles = `
 .brk-team,
 .brk-col-header,
 .brk-cell {
-  transition: opacity 150ms ease;
+  transition: filter 150ms ease, color 150ms ease;
+}
+.brk-col-header {
+  color: var(--text-primary);
 }
 .brk-grid[data-hover-row] .brk-team:not([data-row-active]) {
-  opacity: 0.45;
+  filter: brightness(0.62);
 }
 .brk-grid[data-hover-col] .brk-col-header:not(.brk-col-header--axis):not([data-col-active]) {
-  opacity: 0.5;
+  color: var(--text-tertiary);
 }
 .brk-grid[data-hover-row] .brk-cell:not([data-row-active]):not([data-col-active]),
 .brk-grid[data-hover-col] .brk-cell:not([data-row-active]):not([data-col-active]) {
-  opacity: 0.45;
+  filter: saturate(0.35) brightness(0.82);
+}
+.brk-grid[data-hover-row] .brk-cell[data-row-active],
+.brk-grid[data-hover-col] .brk-cell[data-col-active] {
+  filter: brightness(1.06);
+}
+.brk-grid[data-hover-row][data-hover-col] .brk-cell[data-row-active][data-col-active] {
+  filter: brightness(1.14);
 }
 .brk-col-header:not(.brk-col-header--axis) {
   cursor: default;
