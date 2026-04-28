@@ -641,6 +641,7 @@ export function DivergenceTable({
 
   return (
     <div>
+      <style>{rowCrosshairStyles}</style>
       {/* ── Stale warning ───────────────────────────────────────────────── */}
       {isStale && (
         <div
@@ -821,7 +822,8 @@ export function DivergenceTable({
                     {/* ── Clickable data row ─────────────────────────────── */}
                     <div
                       role="presentation"
-                      className="transition-colors duration-[120ms] cursor-pointer text-[12.5px]"
+                      className="divergence-row transition-colors duration-[120ms] cursor-pointer text-[12.5px]"
+                      data-pinned={isExpanded ? "" : undefined}
                       style={{
                         display: "grid",
                         gridTemplateColumns: COL_GRID,
@@ -873,7 +875,7 @@ export function DivergenceTable({
                         </Link>
                       </div>
                       {/* Market */}
-                      <div role="gridcell" className="py-3.5 px-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                      <div role="gridcell" data-cell="market" className="py-3.5 px-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                         {MARKET_LABELS[row.market] ?? row.market}
                       </div>
                       {/* Outcome */}
@@ -901,8 +903,21 @@ export function DivergenceTable({
                         <DivergenceBar p_model={row.p_model} q_market={row.q_market_devigged} />
                       </div>
                       {/* Edge E */}
-                      <div role="gridcell" className="py-3.5 px-2 text-right">
+                      <div role="gridcell" data-cell="edge" className="py-3.5 px-2 text-right">
                         <EdgeBadge edge={row.edge_E} threshold={row.edge_threshold} />
+                        <div
+                          className="divergence-edge-bps mono"
+                          aria-label={`exact edge ${(row.edge_E * 10000).toFixed(0)} basis points, ${(row.edge_E * 100).toFixed(3)} percentage points`}
+                        >
+                          <span className="divergence-edge-bps-value">
+                            {row.edge_E >= 0 ? "+" : "−"}
+                            {Math.round(Math.abs(row.edge_E) * 10000)} bps
+                          </span>
+                          <span className="divergence-edge-bps-sep">·</span>
+                          <span className="divergence-edge-bps-pct">
+                            {(Math.abs(row.edge_E) * 100).toFixed(3)}%
+                          </span>
+                        </div>
                       </div>
                       {/* Threshold ε */}
                       <div role="gridcell" className="py-3.5 px-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
@@ -948,3 +963,52 @@ export function DivergenceTable({
     </div>
   );
 }
+
+// Row-level crosshair: hovering any data row lifts the row background and
+// emphasises the Market and Edge cells. Click-to-pin (= expand) reveals the
+// unrounded basis points beside the EdgeBadge so a researcher can cite the
+// exact figure without opening the disclosure panel.
+const rowCrosshairStyles = `
+.divergence-row {
+  transition: background-color 150ms ease;
+}
+.divergence-row:hover {
+  background-color: var(--bg-panel-elev);
+}
+.divergence-row [data-cell="market"],
+.divergence-row [data-cell="edge"] {
+  transition: background-color 150ms ease;
+}
+.divergence-row:hover [data-cell="market"],
+.divergence-row:hover [data-cell="edge"] {
+  background-color: color-mix(in oklch, var(--bg-panel-elev) 55%, var(--text-secondary) 8%);
+}
+.divergence-edge-bps {
+  font-size: 10px;
+  letter-spacing: -0.005em;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: baseline;
+  justify-content: flex-end;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 200ms ease,
+    opacity 150ms ease,
+    margin-top 200ms ease;
+  pointer-events: none;
+}
+.divergence-row[data-pinned] .divergence-edge-bps {
+  max-height: 16px;
+  opacity: 1;
+}
+.divergence-edge-bps-sep {
+  color: var(--text-quiet);
+}
+.divergence-edge-bps-pct {
+  color: var(--text-tertiary);
+}
+`;

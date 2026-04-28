@@ -594,12 +594,43 @@
     display: grid;
     gap: 8px;
   }
+  .vault-toc-item {
+    position: relative;
+  }
+  /* Reading-progress bar: a per-item overlay on the container's left rail.
+     Width and opacity reveal where the reader is in the document; future
+     items render no bar so vertical position reads at a glance. */
+  .vault-toc-item::before {
+    content: "";
+    position: absolute;
+    left: -17px;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--text-tertiary);
+    border-radius: 1px;
+    opacity: 0;
+    transition:
+      width 200ms ease,
+      opacity 200ms ease,
+      background-color 200ms ease;
+  }
+  .vault-toc-item--passed::before {
+    width: 1px;
+    opacity: 0.4;
+  }
+  .vault-toc-item--active::before {
+    width: 2px;
+    opacity: 1;
+    background: var(--text-primary);
+  }
   .vault-toc-item a {
     color: var(--text-tertiary);
     text-decoration: none;
     display: block;
     padding: 2px 0;
-    transition: color 120ms ease-out;
+    transition: color 120ms ease-out, background-color 200ms ease;
+    border-radius: 3px;
   }
   .vault-toc-item a:hover {
     color: var(--text-primary);
@@ -613,6 +644,18 @@
   .vault-toc-item--active > a {
     color: var(--text-primary);
     font-weight: 500;
+  }
+  /* Footnote-to-TOC pulse: a 600ms background flash on the item that owns
+     the section containing the hovered footnote ref. Mirrors the matrix
+     crosshair gesture in editorial form. */
+  .vault-toc-item--pulse > a {
+    background-color: color-mix(in oklch, var(--accent-focus) 14%, transparent);
+    color: var(--text-primary);
+  }
+  .vault-toc-item--pulse::before {
+    background: var(--accent-focus);
+    opacity: 1;
+    width: 2px;
   }
 
   /* ── Footnotes ───────────────────────────────────────────────────────── */
