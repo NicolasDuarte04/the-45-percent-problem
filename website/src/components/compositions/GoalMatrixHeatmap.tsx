@@ -1,7 +1,6 @@
 "use client";
-
-import { useEffect, useMemo, useRef } from "react";
-import * as Plot from "@observablehq/plot";
+// rev: interactive-grid-v3
+import { Fragment, useMemo, useState } from "react";
 
 interface GoalMatrixHeatmapProps {
   grid: number[][];
@@ -17,6 +16,71 @@ interface Cell {
   p: number;
 }
 
+type Pos = { h: number; a: number };
+type Hover = (Pos & { source: "cell" | "scoreline" }) | null;
+
+const RAMP_STOPS_PCT = [0, 25, 60, 100] as const;
+const RAMP_COLORS = ["#1C222B", "#4F8FA8", "#C99878", "#8E5A8A"] as const;
+
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+const RAMP_RGB = RAMP_COLORS.map(hexToRgb);
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+// D3's color interpolator can't read CSS custom properties, so the same 4-stop
+// ramp used by the legend is materialised here as sRGB. Keep these in lockstep
+// with the legend gradient below if either changes.
+function fillForP(p: number, modalMax: number): string {
+  if (modalMax <= 0) return RAMP_COLORS[0];
+  const norm = Math.max(0, Math.min(1, p / modalMax));
+  const stops = RAMP_STOPS_PCT.map((s) => s / 100);
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (norm <= stops[i + 1]) {
+      const span = stops[i + 1] - stops[i] || 1;
+      const t = (norm - stops[i]) / span;
+      const r = lerp(RAMP_RGB[i][0], RAMP_RGB[i + 1][0], t);
+      const g = lerp(RAMP_RGB[i][1], RAMP_RGB[i + 1][1], t);
+      const b = lerp(RAMP_RGB[i][2], RAMP_RGB[i + 1][2], t);
+      return `rgb(${r | 0}, ${g | 0}, ${b | 0})`;
+    }
+  }
+  return RAMP_COLORS[RAMP_COLORS.length - 1];
+}
+
+function textColorForP(p: number, modalMax: number): string {
+  if (modalMax <= 0) return "#A8AFBC";
+  const norm = p / modalMax;
+  if (norm > 0.5) return "#0F1216";
+  if (norm > 0.15) return "#EEE8DD";
+  return "#A8AFBC";
+}
+
+function niceStep(raw: number): number {
+  if (raw <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const r = raw / p;
+  const nice = r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10;
+  return nice * p;
+}
+
+function niceTicks(max: number, count = 5): number[] {
+  if (max <= 0) return [0];
+  const step = niceStep(max / (count - 1));
+  const ticks: number[] = [];
+  for (let v = 0; v <= max + step * 0.001; v += step) ticks.push(v);
+  return ticks;
+}
+
 export function GoalMatrixHeatmap({
   grid,
   homeCode,
@@ -24,9 +88,17 @@ export function GoalMatrixHeatmap({
   homeName,
   awayName,
 }: GoalMatrixHeatmapProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  const { clipped, cells, total, modalMax, maxRows, maxCols, rowSums, colSums, top3 } = useMemo(() => {
+  const {
+    clipped,
+    total,
+    modalMax,
+    maxRows,
+    maxCols,
+    rowSums,
+    colSums,
+    top3,
+    top3Rank,
+  } = useMemo(() => {
     const clipped = grid.slice(0, 7).map((row) => row.slice(0, 7));
     const maxRows = clipped.length;
     const maxCols = clipped[0]?.length ?? 0;
@@ -50,120 +122,28 @@ export function GoalMatrixHeatmap({
 
     const flat = cells.slice().sort((x, y) => y.p - x.p);
     const top3 = flat.slice(0, 3);
+    const top3Rank = new Map<string, number>();
+    top3.forEach((c, rank) => top3Rank.set(`${c.home}-${c.away}`, rank));
 
-    return { clipped, cells, total, modalMax, maxRows, maxCols, rowSums, colSums, top3 };
+    return {
+      clipped,
+      total,
+      modalMax,
+      maxRows,
+      maxCols,
+      rowSums,
+      colSums,
+      top3,
+      top3Rank,
+    };
   }, [grid]);
 
-  useEffect(() => {
-    if (!ref.current) return;
-    const node = ref.current;
-    node.innerHTML = "";
-
-    const plot = Plot.plot({
-      width: 520,
-      height: 420,
-      marginTop: 28,
-      marginLeft: 64,
-      marginBottom: 48,
-      marginRight: 24,
-      style: {
-        background: "transparent",
-        color: "var(--text-tertiary)",
-        fontFamily: "var(--font-mono)",
-        fontSize: "11px",
-        overflow: "visible",
-      },
-      x: {
-        domain: Array.from({ length: maxCols }, (_, i) => i),
-        label: `${awayName} goals →`,
-        labelAnchor: "center",
-        labelOffset: 36,
-        tickFormat: (d: number) => String(d),
-      },
-      y: {
-        domain: Array.from({ length: maxRows }, (_, i) => i),
-        label: `↑ ${homeName} goals`,
-        labelAnchor: "center",
-        labelOffset: 48,
-        reverse: true,
-        tickFormat: (d: number) => String(d),
-      },
-      color: {
-        type: "linear",
-        domain: [0, modalMax * 0.25, modalMax * 0.6, modalMax],
-        // Prism tokens materialized to sRGB — D3's color interpolator can't
-        // resolve CSS custom properties, so we hard-code here and the values
-        // stay in lockstep with globals.css by code review.
-        range: ["#1C222B", "#4F8FA8", "#C99878", "#8E5A8A"],
-        legend: true,
-        label: "P(h, a)",
-      },
-      marks: [
-        Plot.cell(cells, {
-          x: "away",
-          y: "home",
-          fill: "p",
-          stroke: "#262D37",
-          strokeWidth: 0.5,
-          inset: 1,
-          rx: 2,
-          ry: 2,
-          title: (d: Cell) =>
-            `${homeCode} ${d.home} – ${d.away} ${awayCode}\n${(d.p * 100).toFixed(2)}%`,
-        }),
-        Plot.text(cells, {
-          x: "away",
-          y: "home",
-          text: (d: Cell) => (d.p < 0.001 ? "·" : (d.p * 100).toFixed(1)),
-          fill: (d: Cell) =>
-            d.p / modalMax > 0.5
-              ? "#0F1216"
-              : d.p / modalMax > 0.15
-                ? "#EEE8DD"
-                : "#A8AFBC",
-          fontFamily: "var(--font-mono)",
-          fontSize: 11,
-          fontWeight: 500,
-        }),
-        Plot.cell(
-          top3.map((t, rank) => ({ ...t, rank })),
-          {
-            x: "away",
-            y: "home",
-            stroke: (d: Cell & { rank: number }) =>
-              d.rank === 0
-                ? "#F9B88A"
-                : d.rank === 1
-                  ? "#EC7C6A"
-                  : "#8E5A8A",
-            strokeWidth: 1.5,
-            fill: "none",
-            inset: 1,
-            rx: 2,
-            ry: 2,
-          },
-        ),
-      ],
-    });
-
-    // Plot's default stylesheet paints the figure white — force transparent so
-    // the warm-slate canvas shows through without a neutral patch.
-    plot.style.background = "transparent";
-    plot.style.color = "var(--text-tertiary)";
-    plot.style.margin = "0";
-    const swatches = plot.querySelectorAll("[class*='plot-'][class*='-swatches']");
-    swatches.forEach((s) => {
-      (s as HTMLElement).style.background = "transparent";
-      (s as HTMLElement).style.color = "var(--text-tertiary)";
-    });
-
-    node.appendChild(plot);
-    return () => {
-      plot.remove();
-    };
-  }, [cells, homeCode, awayCode, homeName, awayName, maxCols, maxRows, modalMax, top3]);
-
-  const topInk = ["var(--prism-peach)", "var(--prism-coral)", "var(--prism-plum)"];
+  // Top-3 fill colors: each rank inherits the heatmap fill of its cell so the
+  // badges and pinned outline read as the same hue as the underlying density.
+  const top3Fill = useMemo(
+    () => top3.map((c) => fillForP(c.p, modalMax)),
+    [top3, modalMax],
+  );
 
   let pHome = 0;
   let pDraw = 0;
@@ -177,6 +157,27 @@ export function GoalMatrixHeatmap({
     }
   }
 
+  // Hover and pinned are independent: a pinned cell keeps its outline while
+  // the user hovers other cells. Crosshair tracks hover, falling back to
+  // pinned when nothing is hovered.
+  const [hover, setHover] = useState<Hover>(null);
+  const [pinned, setPinned] = useState<Pos | null>(null);
+  const active = hover ?? pinned;
+
+  const togglePinned = (h: number, a: number) =>
+    setPinned((prev) => (prev?.h === h && prev?.a === a ? null : { h, a }));
+
+  const ticks = niceTicks(modalMax);
+  const tickMax = ticks[ticks.length - 1] || 1;
+
+  const focus = active;
+  const focusP = focus ? clipped[focus.h][focus.a] : null;
+  const focusIsPinned =
+    focus !== null &&
+    pinned !== null &&
+    pinned.h === focus.h &&
+    pinned.a === focus.a;
+
   return (
     <div
       className="rounded-lg"
@@ -187,11 +188,16 @@ export function GoalMatrixHeatmap({
       }}
       aria-label={`Goal matrix heatmap, ${homeName} versus ${awayName}`}
     >
+      <style>{styles}</style>
+
       <div className="flex items-baseline justify-between mb-4">
         <div>
           <h3
             className="text-[13px] font-medium"
-            style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}
+            style={{
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-sans)",
+            }}
           >
             Goal matrix · correct score
           </h3>
@@ -199,7 +205,8 @@ export function GoalMatrixHeatmap({
             className="mono text-[11px] mt-[3px]"
             style={{ color: "var(--text-tertiary)" }}
           >
-            bivariate Poisson (DC-corrected) · joint P(h, a) · Σ = {total.toFixed(3)}
+            bivariate Poisson (DC-corrected) · joint P(h, a) · Σ ={" "}
+            {total.toFixed(3)}
           </div>
         </div>
         <div
@@ -211,7 +218,136 @@ export function GoalMatrixHeatmap({
       </div>
 
       <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 220px" }}>
-        <div ref={ref} role="img" aria-label="Goal matrix density heatmap" />
+        <div>
+          <div className="mb-5">
+            <div
+              className="mono text-[10px] uppercase tracking-[.08em] mb-1.5"
+              style={{ color: "var(--text-quiet)" }}
+            >
+              P(h, a)
+            </div>
+            <div
+              style={{
+                width: 240,
+                height: 10,
+                borderRadius: 2,
+                background: `linear-gradient(to right, ${RAMP_COLORS[0]} ${RAMP_STOPS_PCT[0]}%, ${RAMP_COLORS[1]} ${RAMP_STOPS_PCT[1]}%, ${RAMP_COLORS[2]} ${RAMP_STOPS_PCT[2]}%, ${RAMP_COLORS[3]} ${RAMP_STOPS_PCT[3]}%)`,
+              }}
+            />
+            <div
+              className="mono text-[10px]"
+              style={{
+                width: 240,
+                marginTop: 4,
+                position: "relative",
+                height: 14,
+                color: "var(--text-secondary)",
+                fontWeight: 500,
+              }}
+            >
+              {ticks.map((t) => (
+                <span
+                  key={t}
+                  style={{
+                    position: "absolute",
+                    left: `${(t / tickMax) * 100}%`,
+                    transform: "translateX(-50%)",
+                  }}
+                >
+                  {t.toFixed(2)}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div
+            className="gm-wrap"
+            role="img"
+            aria-label="Goal matrix density heatmap"
+          >
+            <div className="gm-y-title mono">
+              ↑ {homeName} goals{" "}
+              <span style={{ color: "var(--text-quiet)" }}>(home)</span>
+            </div>
+            <div
+              className="gm-grid"
+              onMouseLeave={() =>
+                setHover((prev) => (prev?.source === "cell" ? null : prev))
+              }
+            >
+              <div />
+              {Array.from({ length: maxCols }, (_, j) => (
+                <div
+                  key={`x-${j}`}
+                  className="gm-tick gm-tick-x"
+                  data-axis-active={active?.a === j ? "" : undefined}
+                >
+                  <span>{j}</span>
+                </div>
+              ))}
+              {Array.from({ length: maxRows }, (_, idx) => {
+                const h = maxRows - 1 - idx;
+                return (
+                  <Fragment key={`row-${h}`}>
+                    <div
+                      className="gm-tick gm-tick-y"
+                      data-axis-active={active?.h === h ? "" : undefined}
+                    >
+                      <span>{h}</span>
+                    </div>
+                    {Array.from({ length: maxCols }, (_, a) => {
+                      const p = clipped[h][a];
+                      const fill = fillForP(p, modalMax);
+                      const text = textColorForP(p, modalMax);
+                      const rank = top3Rank.get(`${h}-${a}`);
+                      const isHover = hover?.h === h && hover?.a === a;
+                      const isPinned = pinned?.h === h && pinned?.a === a;
+                      const inRow = active?.h === h && !isHover && !isPinned;
+                      const inCol = active?.a === a && !isHover && !isPinned;
+                      return (
+                        <button
+                          type="button"
+                          key={`c-${h}-${a}`}
+                          className="gm-cell mono"
+                          data-hover={isHover ? "" : undefined}
+                          data-pinned={isPinned ? "" : undefined}
+                          data-row-active={inRow ? "" : undefined}
+                          data-col-active={inCol ? "" : undefined}
+                          data-rank={rank !== undefined ? rank : undefined}
+                          style={
+                            {
+                              background: fill,
+                              color: text,
+                              "--cell-fill": fill,
+                            } as React.CSSProperties
+                          }
+                          onMouseEnter={() =>
+                            setHover({ h, a, source: "cell" })
+                          }
+                          onFocus={() => setHover({ h, a, source: "cell" })}
+                          onBlur={() =>
+                            setHover((prev) =>
+                              prev?.source === "cell" ? null : prev,
+                            )
+                          }
+                          onClick={() => togglePinned(h, a)}
+                          aria-pressed={isPinned}
+                          aria-label={`${homeCode} ${h} – ${a} ${awayCode}, ${(p * 100).toFixed(2)}%`}
+                        >
+                          {p < 0.001 ? "·" : (p * 100).toFixed(1)}
+                        </button>
+                      );
+                    })}
+                  </Fragment>
+                );
+              })}
+            </div>
+            <div className="gm-x-title mono">
+              {awayName} goals →{" "}
+              <span style={{ color: "var(--text-quiet)" }}>(away)</span>
+            </div>
+          </div>
+        </div>
 
         <aside
           className="flex flex-col gap-5"
@@ -225,47 +361,150 @@ export function GoalMatrixHeatmap({
               className="mono text-[10px] uppercase tracking-[.08em] mb-2"
               style={{ color: "var(--text-quiet)" }}
             >
-              Modal scorelines
+              Selected cell
             </div>
-            {top3.map((s, i) => (
-              <div
-                key={`${s.home}-${s.away}`}
-                className="flex items-center gap-2.5 py-2"
-                style={{
-                  borderBottom:
-                    i < 2 ? "1px solid var(--border-subtle)" : "none",
-                }}
-              >
-                <span
-                  className="mono inline-flex items-center justify-center"
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 3,
-                    background: `color-mix(in oklch, ${topInk[i]} 30%, var(--bg-panel-elev))`,
-                    border: `1.5px solid ${topInk[i]}`,
-                    fontSize: 9,
-                    fontWeight: 600,
-                    color: topInk[i],
-                  }}
-                >
-                  #{i + 1}
-                </span>
-                <span
-                  className="mono text-[14px]"
-                  style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}
-                >
-                  {s.home}−{s.away}
-                </span>
-                <span className="flex-1" />
+            <div
+              className="gm-readout"
+              data-empty={focus === null || focusP === null ? "" : undefined}
+              style={
+                {
+                  "--cell-fill":
+                    focusP !== null ? fillForP(focusP, modalMax) : "transparent",
+                } as React.CSSProperties
+              }
+            >
+              <div className="gm-readout-line1">
                 <span
                   className="mono text-[12px]"
-                  style={{ color: "var(--text-secondary)" }}
+                  style={{
+                    color:
+                      focus !== null
+                        ? "var(--text-secondary)"
+                        : "var(--text-quiet)",
+                    letterSpacing: "-0.01em",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
                 >
-                  {(s.p * 100).toFixed(2)}%
+                  {focus !== null
+                    ? `${homeCode} ${focus.h} − ${focus.a} ${awayCode}`
+                    : `${homeCode} — − — ${awayCode}`}
+                </span>
+                <span
+                  className="mono text-[9px] uppercase tracking-[.08em]"
+                  style={{
+                    color: "var(--text-quiet)",
+                    visibility: focusIsPinned ? "visible" : "hidden",
+                  }}
+                >
+                  · pinned
                 </span>
               </div>
-            ))}
+              <div
+                className="mono text-[20px] gm-readout-value"
+                style={{
+                  color:
+                    focus !== null
+                      ? "var(--text-primary)"
+                      : "var(--text-quiet)",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.1,
+                  marginTop: 2,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {focusP !== null ? `${(focusP * 100).toFixed(3)}%` : "—.———%"}
+              </div>
+              <div
+                className="mono text-[10px] uppercase tracking-[.08em]"
+                style={{ color: "var(--text-quiet)", marginTop: 2 }}
+              >
+                {focus !== null
+                  ? `exact · joint P(h=${focus.h}, a=${focus.a})`
+                  : "hover or click to inspect"}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div
+              className="mono text-[10px] uppercase tracking-[.08em] mb-2"
+              style={{ color: "var(--text-quiet)" }}
+            >
+              Modal scorelines
+            </div>
+            <div
+              onMouseLeave={() =>
+                setHover((prev) =>
+                  prev?.source === "scoreline" ? null : prev,
+                )
+              }
+            >
+            {top3.map((s, i) => {
+              const isHover =
+                hover?.h === s.home &&
+                hover?.a === s.away &&
+                hover?.source === "scoreline";
+              const isPinned = pinned?.h === s.home && pinned?.a === s.away;
+              const fill = top3Fill[i];
+              return (
+                <button
+                  type="button"
+                  key={`${s.home}-${s.away}`}
+                  className="gm-scoreline mono"
+                  data-hover={isHover ? "" : undefined}
+                  data-pinned={isPinned ? "" : undefined}
+                  style={
+                    {
+                      borderBottom:
+                        i < 2 ? "1px solid var(--border-subtle)" : "none",
+                      "--cell-fill": fill,
+                    } as React.CSSProperties
+                  }
+                  onMouseEnter={() =>
+                    setHover({ h: s.home, a: s.away, source: "scoreline" })
+                  }
+                  onFocus={() =>
+                    setHover({ h: s.home, a: s.away, source: "scoreline" })
+                  }
+                  onBlur={() =>
+                    setHover((prev) =>
+                      prev?.source === "scoreline" ? null : prev,
+                    )
+                  }
+                  onClick={() => togglePinned(s.home, s.away)}
+                  aria-pressed={isPinned}
+                  aria-label={`Highlight scoreline ${s.home}–${s.away}, ${(s.p * 100).toFixed(2)} percent${isPinned ? ", pinned" : ""}`}
+                >
+                  <span
+                    className="gm-rank-badge mono"
+                    style={
+                      {
+                        "--cell-fill": fill,
+                      } as React.CSSProperties
+                    }
+                  >
+                    #{i + 1}
+                  </span>
+                  <span
+                    className="text-[14px]"
+                    style={{
+                      color: "var(--text-primary)",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {s.home}−{s.away}
+                  </span>
+                  <span className="flex-1" />
+                  <span
+                    className="text-[12px]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {(s.p * 100).toFixed(2)}%
+                  </span>
+                </button>
+              );
+            })}
+            </div>
           </div>
 
           <div>
@@ -287,10 +526,16 @@ export function GoalMatrixHeatmap({
             >
               Row / column sums
             </div>
-            <div className="mono text-[11px] leading-5" style={{ color: "var(--text-tertiary)" }}>
+            <div
+              className="mono text-[11px] leading-5"
+              style={{ color: "var(--text-tertiary)" }}
+            >
               Σ rows: {rowSums.map((s) => (s * 100).toFixed(1)).join(", ")}
             </div>
-            <div className="mono text-[11px] leading-5" style={{ color: "var(--text-tertiary)" }}>
+            <div
+              className="mono text-[11px] leading-5"
+              style={{ color: "var(--text-tertiary)" }}
+            >
               Σ cols: {colSums.map((s) => (s * 100).toFixed(1)).join(", ")}
             </div>
           </div>
@@ -321,3 +566,177 @@ function TriRow({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
+
+// All highlight colors derive from each cell's own --cell-fill, so the rank
+// badges, pinned outlines, and glow inherit the heatmap palette and stay in
+// visual harmony with the underlying density. Brightened variants
+// (color-mix toward white in oklch) keep outlines readable when the fill is
+// dark.
+const styles = `
+.gm-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.gm-y-title {
+  grid-row: 1;
+  grid-column: 1;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  padding-right: 4px;
+  letter-spacing: 0.01em;
+}
+.gm-x-title {
+  grid-row: 2;
+  grid-column: 2;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-top: 8px;
+  letter-spacing: 0.01em;
+}
+.gm-grid {
+  grid-row: 1;
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: 28px repeat(7, minmax(0, 1fr));
+  grid-auto-rows: 48px;
+  gap: 4px;
+}
+.gm-tick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.gm-tick-x { height: 22px; }
+.gm-tick > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  padding: 0 4px;
+  transition: background 150ms ease, color 150ms ease;
+}
+.gm-tick[data-axis-active] > span {
+  background: var(--bg-panel-elev);
+  color: var(--text-primary);
+}
+.gm-cell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid #262D37;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    box-shadow 180ms ease,
+    filter 150ms ease;
+  will-change: transform;
+}
+.gm-cell:focus-visible {
+  outline: 2px solid var(--text-secondary);
+  outline-offset: 2px;
+  z-index: 4;
+}
+.gm-cell[data-row-active],
+.gm-cell[data-col-active] {
+  filter: brightness(1.12);
+}
+.gm-cell[data-hover] {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 0 1px var(--cell-fill),
+    0 6px 18px -2px color-mix(in oklch, var(--cell-fill) 70%, transparent);
+  filter: brightness(1.18);
+  z-index: 2;
+}
+.gm-cell[data-pinned] {
+  outline: 2px solid color-mix(in oklch, var(--cell-fill) 55%, white 45%);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 1px var(--cell-fill),
+    0 0 24px -2px color-mix(in oklch, var(--cell-fill) 75%, transparent);
+  filter: brightness(1.1);
+  z-index: 3;
+}
+.gm-cell[data-pinned][data-hover] {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow:
+    0 0 0 1px var(--cell-fill),
+    0 0 24px -2px color-mix(in oklch, var(--cell-fill) 80%, transparent),
+    0 6px 18px -2px color-mix(in oklch, var(--cell-fill) 60%, transparent);
+}
+
+.gm-scoreline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+.gm-scoreline[data-hover] {
+  background: color-mix(in oklch, var(--cell-fill) 14%, transparent);
+}
+.gm-scoreline[data-pinned] {
+  background: color-mix(in oklch, var(--cell-fill) 22%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--cell-fill) 60%, white 40%);
+}
+.gm-scoreline:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--cell-fill) 60%, white 40%);
+  outline-offset: -2px;
+}
+
+.gm-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  background: color-mix(in oklch, var(--cell-fill) 35%, var(--bg-panel-elev));
+  border: 1.5px solid color-mix(in oklch, var(--cell-fill) 70%, white 30%);
+  color: color-mix(in oklch, var(--cell-fill) 35%, white 65%);
+}
+
+.gm-readout {
+  padding-top: 2px;
+  padding-bottom: 4px;
+  min-height: 64px;
+}
+.gm-readout-line1 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.gm-readout-value {
+  transition: color 150ms ease;
+}
+`;
