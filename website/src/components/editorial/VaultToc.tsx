@@ -36,7 +36,7 @@ export function VaultToc() {
 
     const headings = Array.from(
       prose.querySelectorAll<HTMLHeadingElement>("h2, h3"),
-    );
+    ).filter((h) => !h.closest(".vault-fns"));
 
     const next: TocItem[] = headings.map((h) => {
       if (!h.id) h.id = slugify(h.textContent ?? "");
@@ -50,17 +50,23 @@ export function VaultToc() {
 
     if (next.length === 0) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActiveId(visible[0].target.id);
-      },
-      { rootMargin: "-96px 0px -70% 0px", threshold: 0 },
-    );
-    headings.forEach((h) => observer.observe(h));
-    return () => observer.disconnect();
+    const compute = () => {
+      const offset = 120;
+      let current = headings[0]?.id ?? null;
+      for (const h of headings) {
+        if (h.getBoundingClientRect().top - offset <= 0) current = h.id;
+        else break;
+      }
+      setActiveId(current);
+    };
+
+    compute();
+    window.addEventListener("scroll", compute, { passive: true });
+    window.addEventListener("resize", compute);
+    return () => {
+      window.removeEventListener("scroll", compute);
+      window.removeEventListener("resize", compute);
+    };
   }, []);
 
   if (items.length === 0) return null;

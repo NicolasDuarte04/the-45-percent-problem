@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Info } from "lucide-react";
 import type { TourStep } from "./CanvasTour";
 
 type Variant = "masthead" | "inline";
@@ -39,21 +40,22 @@ export function TourTriggerButton({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-1.5">
       <Link
         href={href}
         scroll={false}
         aria-keyshortcuts="?"
-        className="px-2 py-1 text-[11px] transition-colors duration-[120ms]"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors duration-[120ms]"
         style={{
-          color: "var(--text-tertiary)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: 2,
+          color: "var(--text-secondary)",
+          border: "1px solid var(--border-default)",
+          borderRadius: "var(--radius)",
         }}
       >
+        <Info size={12} strokeWidth={2} aria-hidden />
         How to read this
       </Link>
-      <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+      <span className="mono text-[10px]" style={{ color: "var(--text-quiet)" }}>
         Guided tour &middot; {steps.length} steps &middot; ~{durationSeconds}s
       </span>
     </div>

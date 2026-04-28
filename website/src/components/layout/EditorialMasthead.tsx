@@ -43,8 +43,21 @@ const TABS: Tab[] = [
   },
 ];
 
+const TERMINAL_PREFIXES = [
+  "/terminal",
+  "/ledger",
+  "/bracket",
+  "/match",
+  "/team",
+];
+
+function isTerminalRoute(pathname: string): boolean {
+  return TERMINAL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 export function EditorialMasthead() {
   const pathname = usePathname() ?? "/";
+  const onTerminal = isTerminalRoute(pathname);
 
   return (
     <header
@@ -104,22 +117,24 @@ export function EditorialMasthead() {
           })}
         </nav>
 
-        <Link
-          href="/terminal"
-          className="no-underline inline-flex items-center gap-1.5"
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: 13,
-            fontWeight: 500,
-            background: "var(--text-primary)",
-            color: "var(--bg-root)",
-            padding: "0 14px",
-            height: 32,
-            borderRadius: 6,
-          }}
-        >
-          Open terminal <span style={{ opacity: 0.6 }}>→</span>
-        </Link>
+        {!onTerminal && (
+          <Link
+            href="/terminal"
+            className="no-underline inline-flex items-center gap-1.5"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              fontWeight: 500,
+              background: "var(--text-primary)",
+              color: "var(--bg-root)",
+              padding: "0 14px",
+              height: 32,
+              borderRadius: 6,
+            }}
+          >
+            Open terminal <span style={{ opacity: 0.6 }}>→</span>
+          </Link>
+        )}
       </div>
     </header>
   );

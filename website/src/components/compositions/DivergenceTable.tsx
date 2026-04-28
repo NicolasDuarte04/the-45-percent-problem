@@ -29,9 +29,10 @@ import { MARKET_LABELS } from "@/lib/markets";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 // CSS grid template columns — shared by header row and every data row so columns align.
-// Fixed columns are kept lean so the matchup 1fr column gets adequate space at 1080px+.
+// 95% CI and Age columns are omitted from the main view (available in row disclosure)
+// so the table fits the 1056px container without horizontal scroll.
 const COL_GRID =
-  "6rem 2.5rem minmax(0,1fr) 4.5rem 3rem 5rem 5rem 5rem 5.5rem 3rem 5rem 7rem 3.5rem";
+  "6rem 2.5rem minmax(0,1fr) 4.5rem 3rem 5rem 5rem 5rem 5.5rem 3rem 5rem";
 
 // ── Sort model ────────────────────────────────────────────────────────────────
 
@@ -739,7 +740,7 @@ export function DivergenceTable({
               style={{
                 display: "grid",
                 gridTemplateColumns: COL_GRID,
-                minWidth: "1080px",
+                minWidth: "920px",
                 alignItems: "center",
                 backgroundColor: "var(--bg-panel)",
                 borderColor: "var(--border-subtle)",
@@ -775,8 +776,6 @@ export function DivergenceTable({
               <div role="columnheader" data-guide-id="col-gate" className="py-3 px-2">
                 <SortHeader label="Gate" colId="gate_status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               </div>
-              <div role="columnheader" className="py-3 px-2 text-right">95% CI</div>
-              <div role="columnheader" className="py-3 pr-3 pl-2 text-right">Age (m)</div>
             </div>
 
             {/* ── Vertical scroll container — div height is respected, unlike tbody */}
@@ -785,7 +784,7 @@ export function DivergenceTable({
               style={{
                 maxHeight: "calc(100vh - 300px)",
                 overflowY: "auto",
-                minWidth: "1080px",
+                minWidth: "920px",
                 ...staleStyle,
               }}
             >
@@ -917,20 +916,6 @@ export function DivergenceTable({
                           status={row.gate_status}
                           rulesTripped={row.gate_rules_tripped}
                         />
-                      </div>
-                      {/* 95% CI */}
-                      <div role="gridcell" className="py-3.5 px-2 text-right">
-                        <NumericCell<[number, number]>
-                          value={row.confidence_band}
-                          formatter={([l, h]) => formatCI(l, h)}
-                          ariaLabel={`95 percent confidence interval, ${(row.confidence_band[0] * 100).toFixed(1)} to ${(row.confidence_band[1] * 100).toFixed(1)} percent`}
-                        />
-                      </div>
-                      {/* Age */}
-                      <div role="gridcell" className="py-3.5 pr-3 pl-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                        <span aria-label={`snapshot age ${row.snapshot_age_minutes} minutes`}>
-                          {row.snapshot_age_minutes}
-                        </span>
                       </div>
                     </div>
 
