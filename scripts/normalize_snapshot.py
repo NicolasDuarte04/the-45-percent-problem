@@ -97,6 +97,10 @@ def _normalize_tournament(fixtures: dict[str, dict]) -> None:
         data = json.load(f)
 
     teams = data["teams"]
+
+    # generate_snapshot.py writes tournament.json with flat top-level probability
+    # fields (no nested "progression" key). Re-compute within-group seeds here
+    # since generate_snapshot.py assigns global rank, not per-group rank.
     group_teams: dict[str, list] = {}
     for t in teams:
         g = t["group"]
@@ -104,27 +108,26 @@ def _normalize_tournament(fixtures: dict[str, dict]) -> None:
 
     team_seeds: dict[str, int] = {}
     for g, gteams in group_teams.items():
-        sorted_g = sorted(gteams, key=lambda t: t["progression"]["p_champion"], reverse=True)
+        sorted_g = sorted(gteams, key=lambda t: t["p_champion"], reverse=True)
         for rank, t in enumerate(sorted_g, start=1):
             team_seeds[t["fifa_code"]] = rank
 
     new_teams = []
-    for t in sorted(teams, key=lambda x: x["progression"]["p_champion"], reverse=True):
-        prog = t.pop("progression")
+    for t in sorted(teams, key=lambda x: x["p_champion"], reverse=True):
         new_teams.append({
             "fifa_code": t["fifa_code"],
             "display_name": t["display_name"],
             "confederation": t["confederation"],
             "seed": team_seeds[t["fifa_code"]],
-            "p_champion": prog["p_champion"],
-            "p_final": prog["p_final"],
-            "p_semifinal": prog["p_semifinal"],
-            "p_quarterfinal": prog["p_quarterfinal"],
-            "p_r16": prog["p_r16"],
-            "p_group_qualification": prog["p_group_qualification"],
-            "ci_95_champion": prog["ci_95_champion"],
-            "elo_current": t["elo_rating"],
-            "rank_change_7d": 0,
+            "p_champion": t["p_champion"],
+            "p_final": t["p_final"],
+            "p_semifinal": t["p_semifinal"],
+            "p_quarterfinal": t["p_quarterfinal"],
+            "p_r16": t["p_r16"],
+            "p_group_qualification": t["p_group_qualification"],
+            "ci_95_champion": t["ci_95_champion"],
+            "elo_current": t["elo_current"],
+            "rank_change_7d": t.get("rank_change_7d", 0),
         })
 
     data["teams"] = new_teams
@@ -193,8 +196,8 @@ def _normalize_teams() -> None:
             "progression": {
                 "p_group_qualification": prog["p_group_qualification"],
                 "p_r16": prog["p_r16"],
-                "p_qf": prog["p_quarterfinal"],
-                "p_sf": prog["p_semifinal"],
+                "p_qf": prog["p_qf"],
+                "p_sf": prog["p_sf"],
                 "p_final": prog["p_final"],
                 "p_champion": prog["p_champion"],
                 "ci_95_champion": prog["ci_95_champion"],
