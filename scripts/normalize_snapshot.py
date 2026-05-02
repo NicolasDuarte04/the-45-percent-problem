@@ -193,6 +193,8 @@ def _normalize_teams() -> None:
             "fifa_code": t["fifa_code"],
             "display_name": t["display_name"],
             "group": t["group"],
+            "confederation": t["confederation"],
+            "elo_rating": float(t["elo_rating"]),
             "progression": {
                 "p_group_qualification": prog["p_group_qualification"],
                 "p_r16": prog["p_r16"],

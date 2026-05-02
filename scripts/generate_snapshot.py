@@ -28,7 +28,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from utils.hasher import DataSnapshotHasher
+from utils.hasher import DataSnapshotHasher, SnapshotRegistry
 
 from simulation.match_model import MatchModel
 from simulation.shootout_model import ShootoutModel
@@ -36,8 +36,8 @@ from simulation.bracket_encoder import BracketEncoder
 from simulation.monte_carlo_runner import SimpleEloProvider, MonteCarloRunner
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-SNAPSHOT_ID = "2026-04-27T00:00Z"
 _NOW_UTC = datetime.now(tz=timezone.utc)
+SNAPSHOT_ID = _NOW_UTC.strftime("%Y-%m-%dT00:00Z")
 GENERATED_AT = _NOW_UTC.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 # Read MC_RUNS and seed from pre-registered constants (invariant: 10,000 for website)
@@ -687,6 +687,25 @@ def main() -> None:
     write_json(API_MANIFEST_PATH, [manifest_entry])
     print(f"  Written: {MANIFEST_PATH}")
     print(f"  Written: {API_MANIFEST_PATH}")
+
+    # ── Register snapshot in audit registry ──────────────────────────────────
+    print("\n[9] Registering snapshot in audit registry...")
+    registry_hasher = DataSnapshotHasher()
+    snapshot_files = sorted(p for p in SNAPSHOT_DIR.rglob("*") if p.is_file())
+    for fp in snapshot_files:
+        label = str(fp.relative_to(SNAPSHOT_DIR))
+        registry_hasher.add_file(fp, label=label)
+    registry_hasher.add_file(MANIFEST_PATH, label="manifest.json")
+    registry_hasher.add_file(API_MANIFEST_PATH, label="api/snapshot/manifest.json")
+    snapshot_sha = registry_hasher.finalise()
+    registry_path = PROJECT_ROOT / "data" / "snapshots" / "snapshot_registry.jsonl"
+    registry = SnapshotRegistry(registry_path)
+    registry.register(
+        snapshot_sha,
+        registry_hasher.manifest(),
+        notes=f"nightly_snapshot {SNAPSHOT_ID}",
+    )
+    print(f"  Registered snapshot_sha={snapshot_sha[:16]} in {registry_path}")
 
     # ── Summary ──────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
