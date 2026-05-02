@@ -2,18 +2,16 @@
   "fifa_code": "KOR",
   "display_name": "South Korea",
   "group": "A",
-  "confederation": "AFC",
-  "elo_rating": 1752.0,
   "progression": {
-    "p_champion": 0.0039,
-    "p_final": 0.0169,
-    "p_sf": 0.0627,
-    "p_qf": 0.2008,
-    "p_r16": 0.4447,
-    "p_group_qualification": 0.6018,
+    "p_group_qualification": 0.6024,
+    "p_r16": 0.4454,
+    "p_qf": 0.2022,
+    "p_sf": 0.0628,
+    "p_final": 0.0172,
+    "p_champion": 0.0042,
     "ci_95_champion": [
-      0.002854,
-      0.005327
+      0.003109,
+      0.005672
     ]
   },
   "history": [],

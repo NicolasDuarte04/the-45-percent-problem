@@ -2,18 +2,16 @@
   "fifa_code": "FRA",
   "display_name": "France",
   "group": "G",
-  "confederation": "UEFA",
-  "elo_rating": 2082.0,
   "progression": {
-    "p_champion": 0.123,
-    "p_final": 0.1762,
-    "p_sf": 0.2782,
-    "p_qf": 0.5039,
-    "p_r16": 0.7324,
     "p_group_qualification": 0.9853,
+    "p_r16": 0.7307,
+    "p_qf": 0.5019,
+    "p_sf": 0.2763,
+    "p_final": 0.1736,
+    "p_champion": 0.1213,
     "ci_95_champion": [
-      0.116707,
-      0.129583
+      0.115046,
+      0.127845
     ]
   },
   "history": [],

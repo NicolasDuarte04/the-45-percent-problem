@@ -2,18 +2,16 @@
   "fifa_code": "GER",
   "display_name": "Germany",
   "group": "I",
-  "confederation": "UEFA",
-  "elo_rating": 1923.0,
   "progression": {
-    "p_champion": 0.0269,
-    "p_final": 0.0803,
-    "p_sf": 0.1464,
-    "p_qf": 0.2477,
-    "p_r16": 0.4442,
-    "p_group_qualification": 0.8495,
+    "p_group_qualification": 0.8492,
+    "p_r16": 0.4447,
+    "p_qf": 0.2478,
+    "p_sf": 0.146,
+    "p_final": 0.0798,
+    "p_champion": 0.0275,
     "ci_95_champion": [
-      0.023906,
-      0.030257
+      0.024472,
+      0.030891
     ]
   },
   "history": [],

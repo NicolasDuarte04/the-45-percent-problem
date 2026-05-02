@@ -2,18 +2,16 @@
   "fifa_code": "USA",
   "display_name": "USA",
   "group": "B",
-  "confederation": "CONCACAF",
-  "elo_rating": 1721.0,
   "progression": {
-    "p_champion": 0.0012,
-    "p_final": 0.0056,
-    "p_sf": 0.0294,
-    "p_qf": 0.1342,
-    "p_r16": 0.3118,
-    "p_group_qualification": 0.7164,
+    "p_group_qualification": 0.7153,
+    "p_r16": 0.3106,
+    "p_qf": 0.1352,
+    "p_sf": 0.0301,
+    "p_final": 0.0061,
+    "p_champion": 0.0013,
     "ci_95_champion": [
-      0.000687,
-      0.002096
+      0.00076,
+      0.002223
     ]
   },
   "history": [],

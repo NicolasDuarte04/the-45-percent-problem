@@ -2,15 +2,13 @@
   "fifa_code": "KSA",
   "display_name": "Saudi Arabia",
   "group": "I",
-  "confederation": "AFC",
-  "elo_rating": 1568.0,
   "progression": {
-    "p_champion": 0.0,
-    "p_final": 0.0001,
+    "p_group_qualification": 0.1853,
+    "p_r16": 0.0296,
+    "p_qf": 0.0052,
     "p_sf": 0.0007,
-    "p_qf": 0.0053,
-    "p_r16": 0.0295,
-    "p_group_qualification": 0.1852,
+    "p_final": 0.0001,
+    "p_champion": 0.0,
     "ci_95_champion": [
       0.0,
       0.000384

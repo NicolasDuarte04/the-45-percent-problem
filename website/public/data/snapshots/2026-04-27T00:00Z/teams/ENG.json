@@ -2,18 +2,16 @@
   "fifa_code": "ENG",
   "display_name": "England",
   "group": "H",
-  "confederation": "UEFA",
-  "elo_rating": 2020.0,
   "progression": {
-    "p_champion": 0.0501,
-    "p_final": 0.085,
-    "p_sf": 0.1567,
-    "p_qf": 0.3288,
-    "p_r16": 0.5758,
-    "p_group_qualification": 0.8872,
+    "p_group_qualification": 0.8877,
+    "p_r16": 0.5756,
+    "p_qf": 0.3278,
+    "p_sf": 0.1527,
+    "p_final": 0.0824,
+    "p_champion": 0.0484,
     "ci_95_champion": [
-      0.045994,
-      0.054551
+      0.044364,
+      0.052783
     ]
   },
   "history": [],

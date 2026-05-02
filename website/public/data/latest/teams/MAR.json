@@ -2,18 +2,16 @@
   "fifa_code": "MAR",
   "display_name": "Morocco",
   "group": "C",
-  "confederation": "CAF",
-  "elo_rating": 1821.0,
   "progression": {
-    "p_champion": 0.0091,
-    "p_final": 0.031,
-    "p_sf": 0.093,
-    "p_qf": 0.192,
-    "p_r16": 0.4174,
-    "p_group_qualification": 0.8251,
+    "p_group_qualification": 0.825,
+    "p_r16": 0.417,
+    "p_qf": 0.1919,
+    "p_sf": 0.0919,
+    "p_final": 0.0316,
+    "p_champion": 0.0093,
     "ci_95_champion": [
-      0.007418,
-      0.011159
+      0.007598,
+      0.011379
     ]
   },
   "history": [],

@@ -2,18 +2,16 @@
   "fifa_code": "NZL",
   "display_name": "New Zealand",
   "group": "C",
-  "confederation": "OFC",
-  "elo_rating": 1585.0,
   "progression": {
-    "p_champion": 0.0002,
-    "p_final": 0.0015,
-    "p_sf": 0.0094,
-    "p_qf": 0.0525,
-    "p_r16": 0.1872,
-    "p_group_qualification": 0.316,
+    "p_group_qualification": 0.3151,
+    "p_r16": 0.1858,
+    "p_qf": 0.0527,
+    "p_sf": 0.0097,
+    "p_final": 0.0017,
+    "p_champion": 0.0003,
     "ci_95_champion": [
-      5.5e-05,
-      0.000729
+      0.000102,
+      0.000882
     ]
   },
   "history": [],

@@ -2,18 +2,16 @@
   "fifa_code": "ARG",
   "display_name": "Argentina",
   "group": "D",
-  "confederation": "CONMEBOL",
-  "elo_rating": 2113.0,
   "progression": {
-    "p_champion": 0.2046,
-    "p_final": 0.2785,
-    "p_sf": 0.4913,
-    "p_qf": 0.5978,
-    "p_r16": 0.7714,
-    "p_group_qualification": 0.9408,
+    "p_group_qualification": 0.9411,
+    "p_r16": 0.7723,
+    "p_qf": 0.6005,
+    "p_sf": 0.4942,
+    "p_final": 0.2801,
+    "p_champion": 0.2066,
     "ci_95_champion": [
-      0.196807,
-      0.21262
+      0.198778,
+      0.214647
     ]
   },
   "history": [],

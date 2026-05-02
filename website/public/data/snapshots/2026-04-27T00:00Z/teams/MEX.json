@@ -2,18 +2,16 @@
   "fifa_code": "MEX",
   "display_name": "Mexico",
   "group": "A",
-  "confederation": "CONCACAF",
-  "elo_rating": 1858.0,
   "progression": {
-    "p_champion": 0.0159,
-    "p_final": 0.0486,
-    "p_sf": 0.1363,
-    "p_qf": 0.3615,
-    "p_r16": 0.625,
-    "p_group_qualification": 0.8065,
+    "p_group_qualification": 0.807,
+    "p_r16": 0.6256,
+    "p_qf": 0.3605,
+    "p_sf": 0.1366,
+    "p_final": 0.049,
+    "p_champion": 0.016,
     "ci_95_champion": [
-      0.013628,
-      0.018544
+      0.01372,
+      0.018652
     ]
   },
   "history": [],

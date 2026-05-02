@@ -2,15 +2,13 @@
   "fifa_code": "UZB",
   "display_name": "Uzbekistan",
   "group": "A",
-  "confederation": "AFC",
-  "elo_rating": 1727.0,
   "progression": {
+    "p_group_qualification": 0.548,
+    "p_r16": 0.3945,
+    "p_qf": 0.1658,
+    "p_sf": 0.0466,
+    "p_final": 0.0123,
     "p_champion": 0.0023,
-    "p_final": 0.0122,
-    "p_sf": 0.0462,
-    "p_qf": 0.1668,
-    "p_r16": 0.3949,
-    "p_group_qualification": 0.5476,
     "ci_95_champion": [
       0.001533,
       0.003449

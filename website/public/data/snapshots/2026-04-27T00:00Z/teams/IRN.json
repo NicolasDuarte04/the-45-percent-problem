@@ -2,18 +2,16 @@
   "fifa_code": "IRN",
   "display_name": "Iran",
   "group": "L",
-  "confederation": "AFC",
-  "elo_rating": 1760.0,
   "progression": {
-    "p_champion": 0.0019,
-    "p_final": 0.0121,
-    "p_sf": 0.031,
-    "p_qf": 0.0973,
-    "p_r16": 0.2239,
-    "p_group_qualification": 0.5821,
+    "p_group_qualification": 0.5815,
+    "p_r16": 0.2222,
+    "p_qf": 0.0964,
+    "p_sf": 0.0298,
+    "p_final": 0.0115,
+    "p_champion": 0.0014,
     "ci_95_champion": [
-      0.001217,
-      0.002966
+      0.000834,
+      0.002349
     ]
   },
   "history": [],

@@ -2,15 +2,13 @@
   "fifa_code": "CRO",
   "display_name": "Croatia",
   "group": "J",
-  "confederation": "UEFA",
-  "elo_rating": 1930.0,
   "progression": {
-    "p_champion": 0.0255,
-    "p_final": 0.0729,
-    "p_sf": 0.1338,
-    "p_qf": 0.224,
-    "p_r16": 0.4247,
     "p_group_qualification": 0.6539,
+    "p_r16": 0.4239,
+    "p_qf": 0.2234,
+    "p_sf": 0.1347,
+    "p_final": 0.0724,
+    "p_champion": 0.0255,
     "ci_95_champion": [
       0.022588,
       0.028777

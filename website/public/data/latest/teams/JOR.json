@@ -2,18 +2,16 @@
   "fifa_code": "JOR",
   "display_name": "Jordan",
   "group": "L",
-  "confederation": "AFC",
-  "elo_rating": 1690.0,
   "progression": {
-    "p_champion": 0.0006,
-    "p_final": 0.0035,
-    "p_sf": 0.0087,
-    "p_qf": 0.0357,
-    "p_r16": 0.1208,
-    "p_group_qualification": 0.417,
+    "p_group_qualification": 0.4158,
+    "p_r16": 0.119,
+    "p_qf": 0.0352,
+    "p_sf": 0.0088,
+    "p_final": 0.0031,
+    "p_champion": 0.0005,
     "ci_95_champion": [
-      0.000275,
-      0.001309
+      0.000214,
+      0.00117
     ]
   },
   "history": [],

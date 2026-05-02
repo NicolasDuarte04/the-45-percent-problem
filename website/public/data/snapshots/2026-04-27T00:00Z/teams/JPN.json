@@ -2,18 +2,16 @@
   "fifa_code": "JPN",
   "display_name": "Japan",
   "group": "E",
-  "confederation": "AFC",
-  "elo_rating": 1904.0,
   "progression": {
-    "p_champion": 0.0215,
-    "p_final": 0.0594,
-    "p_sf": 0.1237,
-    "p_qf": 0.2222,
-    "p_r16": 0.4284,
-    "p_group_qualification": 0.7424,
+    "p_group_qualification": 0.7419,
+    "p_r16": 0.4274,
+    "p_qf": 0.2219,
+    "p_sf": 0.123,
+    "p_final": 0.0587,
+    "p_champion": 0.0213,
     "ci_95_champion": [
-      0.018836,
-      0.024532
+      0.018649,
+      0.024319
     ]
   },
   "history": [],

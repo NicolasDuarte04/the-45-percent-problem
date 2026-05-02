@@ -2,15 +2,13 @@
   "fifa_code": "GHA",
   "display_name": "Ghana",
   "group": "B",
-  "confederation": "CAF",
-  "elo_rating": 1505.0,
   "progression": {
-    "p_champion": 0.0,
-    "p_final": 0.0003,
-    "p_sf": 0.002,
-    "p_qf": 0.0181,
+    "p_group_qualification": 0.2723,
     "p_r16": 0.0885,
-    "p_group_qualification": 0.2721,
+    "p_qf": 0.0192,
+    "p_sf": 0.0021,
+    "p_final": 0.0003,
+    "p_champion": 0.0,
     "ci_95_champion": [
       0.0,
       0.000384

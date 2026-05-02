@@ -2,15 +2,13 @@
   "fifa_code": "PER",
   "display_name": "Peru",
   "group": "D",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1695.0,
   "progression": {
+    "p_group_qualification": 0.2263,
+    "p_r16": 0.1151,
+    "p_qf": 0.0339,
+    "p_sf": 0.0098,
+    "p_final": 0.0026,
     "p_champion": 0.0007,
-    "p_final": 0.0024,
-    "p_sf": 0.0096,
-    "p_qf": 0.0341,
-    "p_r16": 0.1148,
-    "p_group_qualification": 0.2259,
     "ci_95_champion": [
       0.000339,
       0.001444

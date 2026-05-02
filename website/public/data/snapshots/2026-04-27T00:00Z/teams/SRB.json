@@ -2,18 +2,16 @@
   "fifa_code": "SRB",
   "display_name": "Serbia",
   "group": "K",
-  "confederation": "UEFA",
-  "elo_rating": 1769.0,
   "progression": {
-    "p_champion": 0.0017,
-    "p_final": 0.01,
-    "p_sf": 0.0243,
-    "p_qf": 0.0722,
-    "p_r16": 0.1749,
-    "p_group_qualification": 0.321,
+    "p_group_qualification": 0.325,
+    "p_r16": 0.1777,
+    "p_qf": 0.074,
+    "p_sf": 0.0263,
+    "p_final": 0.0113,
+    "p_champion": 0.0018,
     "ci_95_champion": [
-      0.001062,
-      0.002721
+      0.001139,
+      0.002844
     ]
   },
   "history": [],

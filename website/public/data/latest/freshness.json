@@ -1,6 +1,6 @@
 {
-  "snapshot_id": "2026-04-22T00:00Z",
-  "generated_at_utc": "2026-04-22T00:00:00Z",
+  "snapshot_id": "2026-04-27T00:00Z",
+  "generated_at_utc": "2026-05-02T14:12:18Z",
   "max_expected_staleness_hours": 26,
   "current_staleness_hours": 0.0,
   "status": "FRESH"

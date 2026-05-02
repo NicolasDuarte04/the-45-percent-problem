@@ -2,15 +2,13 @@
   "fifa_code": "CIV",
   "display_name": "C\u00f4te d'Ivoire",
   "group": "I",
-  "confederation": "CAF",
-  "elo_rating": 1676.0,
   "progression": {
-    "p_champion": 0.0003,
+    "p_group_qualification": 0.3701,
+    "p_r16": 0.0868,
+    "p_qf": 0.0196,
+    "p_sf": 0.0059,
     "p_final": 0.0018,
-    "p_sf": 0.006,
-    "p_qf": 0.0199,
-    "p_r16": 0.0871,
-    "p_group_qualification": 0.3699,
+    "p_champion": 0.0003,
     "ci_95_champion": [
       0.000102,
       0.000882

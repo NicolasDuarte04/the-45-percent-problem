@@ -2,18 +2,16 @@
   "fifa_code": "BRA",
   "display_name": "Brazil",
   "group": "E",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1984.0,
   "progression": {
-    "p_champion": 0.0432,
-    "p_final": 0.0936,
-    "p_sf": 0.1604,
-    "p_qf": 0.2719,
-    "p_r16": 0.499,
-    "p_group_qualification": 0.8591,
+    "p_group_qualification": 0.8587,
+    "p_r16": 0.4987,
+    "p_qf": 0.2717,
+    "p_sf": 0.1617,
+    "p_final": 0.0941,
+    "p_champion": 0.0433,
     "ci_95_champion": [
-      0.039388,
-      0.047363
+      0.039483,
+      0.047468
     ]
   },
   "history": [],

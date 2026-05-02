@@ -2,15 +2,13 @@
   "fifa_code": "CAN",
   "display_name": "Canada",
   "group": "C",
-  "confederation": "CONCACAF",
-  "elo_rating": 1784.0,
   "progression": {
-    "p_champion": 0.0049,
-    "p_final": 0.0237,
-    "p_sf": 0.073,
-    "p_qf": 0.1793,
-    "p_r16": 0.402,
     "p_group_qualification": 0.7655,
+    "p_r16": 0.4019,
+    "p_qf": 0.1776,
+    "p_sf": 0.0719,
+    "p_final": 0.0242,
+    "p_champion": 0.0049,
     "ci_95_champion": [
       0.003709,
       0.006472
