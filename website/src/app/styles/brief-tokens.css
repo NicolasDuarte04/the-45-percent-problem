@@ -1,0 +1,65 @@
+/**
+ * Brief / email-system design tokens.
+ *
+ * Scope: surfaces S1–S7 from the design canvas (capture form, verify, confirmed,
+ * unsubscribe, daily brief web view, archive, team page). These run with their
+ * own palette distinct from the editorial / quant canvases in globals.css.
+ *
+ * Activation: any DOM subtree marked `data-surface="brief"` adopts these tokens.
+ * Theme: `prefers-color-scheme` auto-toggles light/dark. No JS toggle in v1.
+ *
+ * Token names mirror the design canvas (paper, ink, graphite, edge_*, etc.).
+ */
+
+[data-surface="brief"] {
+  /* Light theme — paper canvas */
+  --brief-bg:              #F4F1EA;
+  --brief-bg-elev:         #FCFAF4;
+  --brief-ink:             #0E0E0E;
+  --brief-graphite:        #5A5A5A;
+  --brief-graphite-quiet:  #9A968A;
+  --brief-hairline:        #C4BEB0;
+  --brief-edge-positive:   #2B8A5F;
+  --brief-edge-negative:   #C4435E;
+  --brief-suppression:     #B07A00;
+  --brief-accent-fan:      #3FBC8E;
+
+  /* Typography roles inherit the project-wide font CSS variables defined in
+     layout.tsx (--font-sans, --font-mono, --font-serif). */
+  --brief-font-mono:  var(--font-mono);
+  --brief-font-sans:  var(--font-sans);
+  --brief-font-serif: var(--font-serif);
+
+  background: var(--brief-bg);
+  color: var(--brief-ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-surface="brief"]:not([data-theme="light"]) {
+    --brief-bg:              #0E0E0E;
+    --brief-bg-elev:         #161616;
+    --brief-ink:             #E8E4D8;
+    --brief-graphite:        #C8C2B4;
+    --brief-graphite-quiet:  #6D7585;
+    --brief-hairline:        #3A3833;
+    --brief-edge-positive:   #88E0B6;
+    --brief-edge-negative:   #EF5A7D;
+    --brief-suppression:     #D4A845;
+    --brief-accent-fan:      #3FBC8E;
+  }
+}
+
+/* Forced light/dark variants (used inside email iframes / archive pages where
+   prefers-color-scheme cannot be relied on, e.g. the static web archive view). */
+[data-surface="brief"][data-theme="dark"] {
+  --brief-bg:              #0E0E0E;
+  --brief-bg-elev:         #161616;
+  --brief-ink:             #E8E4D8;
+  --brief-graphite:        #C8C2B4;
+  --brief-graphite-quiet:  #6D7585;
+  --brief-hairline:        #3A3833;
+  --brief-edge-positive:   #88E0B6;
+  --brief-edge-negative:   #EF5A7D;
+  --brief-suppression:     #D4A845;
+  --brief-accent-fan:      #3FBC8E;
+}
