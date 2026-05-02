@@ -5,15 +5,15 @@
   "confederation": "CONCACAF",
   "elo_rating": 1721.0,
   "progression": {
-    "p_group_qualification": 0.7165,
-    "p_r16": 0.3113,
-    "p_qf": 0.1348,
-    "p_sf": 0.0297,
-    "p_final": 0.0057,
-    "p_champion": 0.0012,
+    "p_group_qualification": 0.7158,
+    "p_r16": 0.3107,
+    "p_qf": 0.1343,
+    "p_sf": 0.0294,
+    "p_final": 0.006,
+    "p_champion": 0.0014,
     "ci_95_champion": [
-      0.000687,
-      0.002096
+      0.000834,
+      0.002349
     ]
   },
   "history": [],

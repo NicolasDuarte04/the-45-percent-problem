@@ -6,14 +6,14 @@
   "elo_rating": 1984.0,
   "progression": {
     "p_group_qualification": 0.755,
-    "p_r16": 0.5387,
-    "p_qf": 0.3405,
-    "p_sf": 0.2306,
-    "p_final": 0.1459,
-    "p_champion": 0.0593,
+    "p_r16": 0.5394,
+    "p_qf": 0.3396,
+    "p_sf": 0.2303,
+    "p_final": 0.1432,
+    "p_champion": 0.0582,
     "ci_95_champion": [
-      0.054838,
-      0.064101
+      0.053779,
+      0.062961
     ]
   },
   "history": [],

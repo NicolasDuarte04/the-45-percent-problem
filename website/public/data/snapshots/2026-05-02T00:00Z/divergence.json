@@ -1,6 +1,6 @@
 {
   "snapshot_id": "2026-05-02T00:00Z",
-  "generated_at_utc": "2026-05-02T16:06:17Z",
+  "generated_at_utc": "2026-05-02T18:44:10Z",
   "rows": [
     {
       "row_id": "ROW-00000",
@@ -34,7 +34,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00001",
@@ -68,7 +68,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00002",
@@ -102,7 +102,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00003",
@@ -136,7 +136,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00004",
@@ -170,7 +170,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00005",
@@ -204,7 +204,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00006",
@@ -221,24 +221,24 @@
       },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.545413,
-      "q_market_raw_decimal": 1.7297,
-      "q_market_devigged": 0.558816,
-      "edge_E": -0.013403,
+      "p_model": 0.544333,
+      "q_market_raw_decimal": 1.7331,
+      "q_market_devigged": 0.557661,
+      "edge_E": -0.013328,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.514551,
-        0.576275
+        0.513465,
+        0.575201
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00007",
@@ -255,24 +255,24 @@
       },
       "market": "1X2",
       "outcome": "DRAW",
-      "p_model": 0.215183,
-      "q_market_raw_decimal": 4.3841,
-      "q_market_devigged": 0.208111,
-      "edge_E": 0.007072,
+      "p_model": 0.215421,
+      "q_market_raw_decimal": 4.3793,
+      "q_market_devigged": 0.208375,
+      "edge_E": 0.007046,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.189712,
-        0.240654
+        0.18994,
+        0.240902
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00008",
@@ -289,24 +289,24 @@
       },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.239404,
-      "q_market_raw_decimal": 3.9406,
-      "q_market_devigged": 0.233073,
-      "edge_E": 0.006331,
+      "p_model": 0.240246,
+      "q_market_raw_decimal": 3.9268,
+      "q_market_devigged": 0.233964,
+      "edge_E": 0.006282,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.212956,
-        0.265852
+        0.213766,
+        0.266726
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00009",
@@ -340,7 +340,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00010",
@@ -374,7 +374,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00011",
@@ -408,7 +408,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00012",
@@ -442,7 +442,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00013",
@@ -476,7 +476,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00014",
@@ -510,7 +510,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00015",
@@ -544,7 +544,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00016",
@@ -578,7 +578,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00017",
@@ -612,7 +612,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00018",
@@ -646,7 +646,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00019",
@@ -680,7 +680,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00020",
@@ -714,7 +714,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00021",
@@ -748,7 +748,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00022",
@@ -782,7 +782,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00023",
@@ -816,7 +816,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00024",
@@ -850,7 +850,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00025",
@@ -884,7 +884,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00026",
@@ -918,7 +918,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00027",
@@ -952,7 +952,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00028",
@@ -986,7 +986,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00029",
@@ -1020,7 +1020,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00030",
@@ -1054,7 +1054,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00031",
@@ -1088,7 +1088,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00032",
@@ -1122,7 +1122,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00033",
@@ -1156,7 +1156,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00034",
@@ -1190,7 +1190,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00035",
@@ -1224,7 +1224,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00036",
@@ -1258,7 +1258,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00037",
@@ -1292,7 +1292,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00038",
@@ -1326,7 +1326,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00039",
@@ -1360,7 +1360,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00040",
@@ -1394,7 +1394,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00041",
@@ -1428,7 +1428,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00042",
@@ -1462,7 +1462,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00043",
@@ -1496,7 +1496,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00044",
@@ -1530,7 +1530,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00045",
@@ -1564,7 +1564,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00046",
@@ -1598,7 +1598,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     },
     {
       "row_id": "ROW-00047",
@@ -1632,7 +1632,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M_STAR@2fd875f6137daf22"
+      "model_version": "M_STAR@0b9db6a63e87909f"
     }
   ]
 }

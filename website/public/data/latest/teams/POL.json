@@ -5,15 +5,15 @@
   "confederation": "UEFA",
   "elo_rating": 1729.0,
   "progression": {
-    "p_group_qualification": 0.2785,
-    "p_r16": 0.1487,
-    "p_qf": 0.0429,
-    "p_sf": 0.0151,
+    "p_group_qualification": 0.2793,
+    "p_r16": 0.1489,
+    "p_qf": 0.0438,
+    "p_sf": 0.0153,
     "p_final": 0.0044,
-    "p_champion": 0.0009,
+    "p_champion": 0.0008,
     "ci_95_champion": [
-      0.000474,
-      0.00171
+      0.000405,
+      0.001578
     ]
   },
   "history": [],
