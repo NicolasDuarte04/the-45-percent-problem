@@ -123,6 +123,7 @@ const referenceRail: Pillar = {
   entries: [
     { href: "/vault/glossary", title: "Glossary A to Z", kind: "Reference" },
     { href: "/vault/notation", title: "Symbol table", kind: "Reference" },
+    { href: "/vault/references", title: "Bibliography", kind: "Reference" },
     { href: "/vault/citation", title: "BibTeX & APA", kind: "Reference" },
   ],
 };
