@@ -15,7 +15,7 @@ const ENTRIES: VaultEntry[] = [
   {
     kind: "Essay",
     title: "The 45% problem, in three figures",
-    authors: "J. Ribeiro · A. Lenehan",
+    authors: "Nicolás Duarte",
     kicker: "Phase 1 findings",
     date: "2026-05-20",
     href: "/vault",
@@ -23,7 +23,7 @@ const ENTRIES: VaultEntry[] = [
   {
     kind: "Protocol",
     title: "Pre-registration, amendments, and failure modes",
-    authors: "M. Osei",
+    authors: "Nicolás Duarte",
     kicker: "Methodology · v12.1",
     date: "2026-04-02",
     href: "/vault/preregistration",
@@ -31,7 +31,7 @@ const ENTRIES: VaultEntry[] = [
   {
     kind: "Note",
     title: "Why we publish a ledger, not a record",
-    authors: "J. Ribeiro",
+    authors: "Nicolás Duarte",
     kicker: "Editorial · short",
     date: "2026-03-15",
     href: "/ledger",
@@ -39,7 +39,7 @@ const ENTRIES: VaultEntry[] = [
   {
     kind: "Essay",
     title: "Calibration, sharpness, and the tyranny of accuracy",
-    authors: "A. Lenehan",
+    authors: "Nicolás Duarte",
     kicker: "Research · 18 min",
     date: "2026-02-28",
     href: "/vault/models",
