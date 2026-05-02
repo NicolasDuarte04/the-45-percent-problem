@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { KillCriteriaBanner } from "@/components/primitives/KillCriteriaBanner";
-import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,9 +38,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const metrics = loadEvaluationMetrics();
-  const killTripped = metrics.kill_criteria_check.triggered;
-
   return (
     <html
       lang="en"
@@ -58,10 +53,6 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <Script src="https://plausible.io/js/script.js" data-domain="45analytics.com" strategy="afterInteractive" />
         <TooltipProvider>
-          <KillCriteriaBanner
-            active={killTripped}
-            condition={metrics.kill_criteria_check.condition}
-          />
           {children}
         </TooltipProvider>
       </body>

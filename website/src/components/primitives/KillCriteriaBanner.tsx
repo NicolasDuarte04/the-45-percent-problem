@@ -26,9 +26,9 @@ export function KillCriteriaBanner({ active, condition, className }: KillCriteri
       <span className="mono text-[11px] font-medium" aria-hidden>◆</span>
       <span className="mono text-[11px]">
         KILL CRITERIA TRIPPED
-        {condition ? ` — ${condition}` : ""}
-        {" "}
-        — model framing has changed to null-result. See{" "}
+        {condition ? `: ${condition}` : ""}
+        {". "}
+        Model framing has changed to null-result. See{" "}
         <a
           href="/vault/kill-criteria"
           className="underline underline-offset-2"

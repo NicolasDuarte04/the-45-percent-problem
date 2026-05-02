@@ -10,6 +10,10 @@ interface Tab {
   match: (path: string) => boolean;
 }
 
+interface EditorialMastheadProps {
+  killTripped?: boolean;
+}
+
 const TABS: Tab[] = [
   {
     id: "overview",
@@ -55,7 +59,9 @@ function isTerminalRoute(pathname: string): boolean {
   return TERMINAL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-export function EditorialMasthead() {
+export function EditorialMasthead({
+  killTripped = false,
+}: EditorialMastheadProps = {}) {
   const pathname = usePathname() ?? "/";
   const onTerminal = isTerminalRoute(pathname);
 
@@ -116,6 +122,23 @@ export function EditorialMasthead() {
             );
           })}
         </nav>
+
+        {killTripped && (
+          <Link
+            href="/vault/kill-criteria"
+            className="no-underline mono hover:underline underline-offset-2"
+            style={{
+              fontSize: 11,
+              letterSpacing: "0.02em",
+              color: "var(--text-tertiary)",
+              whiteSpace: "nowrap",
+            }}
+            aria-label="Kill criterion has tripped. See the kill criteria page for details."
+          >
+            kill criteria:{" "}
+            <span style={{ color: "var(--edge-negative)" }}>tripped</span>
+          </Link>
+        )}
 
         {!onTerminal && (
           <Link
