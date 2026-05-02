@@ -49,7 +49,7 @@ function MetricRow({
 export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
   const clvSign = metrics.clv_cumulative_bps >= 0 ? "+" : "−";
   const clvAbs = Math.abs(metrics.clv_cumulative_bps);
-  const killTripped = metrics.kill_criteria_check.triggered;
+  const killTripped = metrics.kill_criteria_check.tripped;
 
   return (
     <section
@@ -102,7 +102,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
             className="text-[11px] mb-2 font-medium"
             style={{ color: "var(--text-secondary)" }}
           >
-            Proper Scoring Rules — lower is better
+            Proper Scoring Rules: lower is better
           </p>
           <div className="overflow-x-auto" data-guide-id="ledger-scoring-table">
             <table className="w-full text-[12px]" style={{ color: "var(--data-neutral)" }}>
@@ -217,12 +217,12 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
               <span>Pre-registered kill condition: </span>
               <span className="mono">{metrics.kill_criteria_check.condition}</span>
               <span>
-                {" "}· margin{" "}
+                {" "}· gap{" "}
                 <span
                   className="mono"
-                  aria-label={`margin ${metrics.kill_criteria_check.margin.toFixed(4)}`}
+                  aria-label={`gap ${metrics.kill_criteria_check.gap_se.toFixed(2)} SE of ${metrics.kill_criteria_check.threshold_se.toFixed(1)} SE`}
                 >
-                  {metrics.kill_criteria_check.margin.toFixed(4)}
+                  {metrics.kill_criteria_check.gap_se.toFixed(2)} SE / {metrics.kill_criteria_check.threshold_se.toFixed(1)} SE
                 </span>
               </span>
             </div>
@@ -235,7 +235,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
             className="text-[11px] mb-2 font-medium"
             style={{ color: "var(--text-secondary)" }}
           >
-            Calibration — Reliability Diagram
+            Calibration: Reliability Diagram
           </p>
           <ReliabilityDiagram bins={metrics.reliability_diagram} />
           <p

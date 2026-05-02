@@ -84,7 +84,7 @@ import {
 
 const LATEST = path.join(__dirname, "../../public/data/latest");
 const DATA_ROOT = path.join(__dirname, "../../public/data");
-const SNAPSHOT_ID = "2026-04-23T00:00Z";
+const SNAPSHOT_ID = "2026-04-22T00:00Z";
 
 function readJson(p: string): unknown {
   return JSON.parse(fs.readFileSync(p, "utf-8"));
@@ -129,9 +129,9 @@ describe("snapshot_meta.json", () => {
     const d = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     expect(d.matches_settled).toBe(0);
   });
-  it("kill_criteria_active is false", () => {
+  it("kill_criteria_active is true", () => {
     const d = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
-    expect(d.kill_criteria_active).toBe(false);
+    expect(d.kill_criteria_active).toBe(true);
   });
 });
 
@@ -290,9 +290,9 @@ describe("evaluation_metrics.json", () => {
     const d = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
     expect(d.matches_settled).toBe(0);
   });
-  it("kill_criteria_check.triggered is false", () => {
+  it("kill_criteria_check.tripped is true", () => {
     const d = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(d.kill_criteria_check.triggered).toBe(false);
+    expect(d.kill_criteria_check.tripped).toBe(true);
   });
 });
 
@@ -365,10 +365,10 @@ describe("cross-artifact consistency", () => {
     expect(meta.matches_settled).toBe(metrics.matches_settled);
   });
 
-  it("kill_criteria_active in meta matches evaluation_metrics.triggered", () => {
+  it("kill_criteria_active in meta matches evaluation_metrics.tripped", () => {
     const meta = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     const metrics = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(meta.kill_criteria_active).toBe(metrics.kill_criteria_check.triggered);
+    expect(meta.kill_criteria_active).toBe(metrics.kill_criteria_check.tripped);
   });
 });
 

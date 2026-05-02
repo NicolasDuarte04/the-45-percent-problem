@@ -1,18 +1,20 @@
 import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 
 /**
- * §8.9 — Live kill-criteria status block for the vault article.
+ * §8.9 Live kill-criteria status block for the vault article.
  * Server component: loads evaluation_metrics at build time, no client JS.
  */
 export function KillCriteriaStatusBlock() {
   const metrics = loadEvaluationMetrics();
   const { kill_criteria_check } = metrics;
-  const { triggered, margin, condition } = kill_criteria_check;
+  const { tripped, gap_se, threshold_se, condition, timestamp } =
+    kill_criteria_check;
 
-  const statusLabel = triggered ? "TRIPPED" : "NOT TRIPPED";
-  const accentColor = triggered
+  const statusLabel = tripped ? "FAILED" : "PASSED";
+  const accentColor = tripped
     ? "var(--color-prism-rose)"
     : "var(--color-prism-mint)";
+  const dateLabel = timestamp.slice(0, 10);
 
   return (
     <div
@@ -55,8 +57,19 @@ export function KillCriteriaStatusBlock() {
             color: accentColor,
             letterSpacing: "0.04em",
           }}
+          aria-label={`${statusLabel}: ${gap_se} SE of ${threshold_se} SE`}
         >
-          {statusLabel}
+          {statusLabel}: {gap_se.toFixed(2)} SE / {threshold_se.toFixed(1)} SE
+        </span>
+        <span
+          className="mono"
+          style={{
+            fontSize: 12,
+            color: "var(--text-tertiary)",
+            marginLeft: "auto",
+          }}
+        >
+          {dateLabel}
         </span>
       </div>
 
@@ -87,15 +100,11 @@ export function KillCriteriaStatusBlock() {
           margin: 0,
         }}
       >
-        Current margin:{" "}
-        <span
-          aria-label={`margin ${margin >= 0 ? "positive" : "negative"} ${Math.abs(margin).toFixed(4)}`}
-          style={{ color: accentColor }}
-        >
-          {margin >= 0 ? "+" : ""}
-          {margin.toFixed(4)}
+        Gap to M0:{" "}
+        <span style={{ color: accentColor }}>
+          {gap_se.toFixed(2)} SE
         </span>{" "}
-        · Evaluation point: Round of 16
+        vs threshold {threshold_se.toFixed(1)} SE. Evaluation point: Round of 16.
       </p>
     </div>
   );

@@ -21,7 +21,7 @@ import {
 
 const LATEST = path.join(process.cwd(), "public", "data", "latest");
 const DATA_ROOT = path.join(process.cwd(), "public", "data");
-const SNAPSHOT_ID = "2026-04-23T00:00Z";
+const SNAPSHOT_ID = "2026-04-22T00:00Z";
 
 function readJson(p: string): unknown {
   return JSON.parse(fs.readFileSync(p, "utf-8"));
@@ -85,9 +85,9 @@ describe("snapshot_meta.json schema", () => {
     expect(data.matches_settled).toBe(0);
   });
 
-  it("kill_criteria_active is false", () => {
+  it("kill_criteria_active is true", () => {
     const data = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
-    expect(data.kill_criteria_active).toBe(false);
+    expect(data.kill_criteria_active).toBe(true);
   });
 });
 
@@ -288,9 +288,9 @@ describe("evaluation_metrics.json schema", () => {
     expect(result.success, result.success ? "" : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it("kill_criteria_check.triggered is false (no data yet)", () => {
+  it("kill_criteria_check.tripped is true (Phase 8 firing)", () => {
     const data = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(data.kill_criteria_check.triggered).toBe(false);
+    expect(data.kill_criteria_check.tripped).toBe(true);
   });
 
   it("matches_settled is 0", () => {
@@ -376,9 +376,9 @@ describe("cross-artifact consistency", () => {
     expect(meta.matches_settled).toBe(metrics.matches_settled);
   });
 
-  it("kill_criteria_active in meta matches evaluation_metrics.kill_criteria_check.triggered", () => {
+  it("kill_criteria_active in meta matches evaluation_metrics.kill_criteria_check.tripped", () => {
     const meta = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     const metrics = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(meta.kill_criteria_active).toBe(metrics.kill_criteria_check.triggered);
+    expect(meta.kill_criteria_active).toBe(metrics.kill_criteria_check.tripped);
   });
 });

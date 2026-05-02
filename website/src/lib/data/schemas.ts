@@ -234,9 +234,12 @@ export const EvaluationMetricsSchema = z.object({
     pvalue: z.number().nullable(),
   }),
   kill_criteria_check: z.object({
+    tripped: z.boolean(),
+    gap_se: z.number(),
+    threshold_se: z.number(),
     condition: z.string(),
-    triggered: z.boolean(),
-    margin: z.number(),
+    timestamp: z.string(),
+    action_taken: z.string(),
   }),
 });
 export type EvaluationMetrics = z.infer<typeof EvaluationMetricsSchema>;

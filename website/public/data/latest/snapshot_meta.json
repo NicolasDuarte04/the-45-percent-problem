@@ -1,7 +1,7 @@
 {
   "schema_version": "9.0",
-  "snapshot_id": "2026-04-27T00:00Z",
-  "generated_at_utc": "2026-04-27T16:40:51Z",
+  "snapshot_id": "2026-04-22T00:00Z",
+  "generated_at_utc": "2026-04-22T00:00:00Z",
   "code_sha": "7ae81d62abb216ae",
   "data_sha": "sha256:2967ea285229d6c0bdad11e3eb65b0a1",
   "pre_reg_tag": "v1.0.0-mstar-lock",
@@ -10,6 +10,8 @@
   "tournament_phase": "pre_tournament",
   "matches_settled": 0,
   "matches_remaining": 104,
-  "kill_criteria_active": false,
-  "notes": "Phase 7 production snapshot \u2014 2026-04-27T00:00Z"
+  "kill_criteria_active": true,
+  "notes": "Phase 8 lockdown: kill criterion fired",
+  "label": "Phase 8 lockdown: kill criterion fired",
+  "phase": 8
 }

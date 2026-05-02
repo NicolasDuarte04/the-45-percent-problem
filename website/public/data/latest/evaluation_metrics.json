@@ -1,5 +1,5 @@
 {
-  "snapshot_id": "2026-04-27T00:00Z",
+  "snapshot_id": "2026-04-22T00:00Z",
   "matches_settled": 0,
   "brier": {
     "M0": null,
@@ -31,8 +31,11 @@
     "pvalue": null
   },
   "kill_criteria_check": {
-    "condition": "M_STAR.log_loss > M0.log_loss by R16",
-    "triggered": false,
-    "margin": 0.0
+    "tripped": true,
+    "gap_se": 1.75,
+    "threshold_se": 2.0,
+    "condition": "M2 vs M0 stratified CV log-loss",
+    "timestamp": "2026-04-22T00:00:00Z",
+    "action_taken": "pivot_paper_framing"
   }
 }

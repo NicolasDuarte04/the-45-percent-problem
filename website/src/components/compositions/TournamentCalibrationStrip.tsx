@@ -108,12 +108,12 @@ export function TournamentCalibrationStrip({
         <span
           className="mono"
           style={{
-            color: evaluation.kill_criteria_check.triggered
+            color: evaluation.kill_criteria_check.tripped
               ? "var(--edge-negative)"
               : "var(--text-primary)",
           }}
         >
-          {evaluation.kill_criteria_check.triggered ? "TRIGGERED" : "not tripped"}
+          {evaluation.kill_criteria_check.tripped ? "TRIGGERED" : "not tripped"}
         </span>
         .{" "}
         <Link
