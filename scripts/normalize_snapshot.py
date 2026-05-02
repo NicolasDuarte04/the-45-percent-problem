@@ -2,33 +2,78 @@
 scripts/normalize_snapshot.py
 ==============================
 Transforms the raw generated snapshot to exactly match the Phase 9 blueprint
-JSON Schema interfaces (§4 of Phase9_Website_Architecture.md).
+JSON Schema interfaces (section 4 of Phase9_Website_Architecture.md).
 
 Changes applied:
-  tournament.json  — flatten progression.*, rename elo_rating→elo_current, add seed/rank_change_7d
-  divergence.json  — add kickoff_utc, round, home, away, market, edge_threshold,
-                     gate_rules_tripped, confidence_band to each row
-  teams/*.json     — flatten progression.*, rename elo_rating→elo_current, add seed, rank_change_7d
+  tournament.json  -- flatten progression.*, rename elo_rating to elo_current,
+                      add seed/rank_change_7d
+  divergence.json  -- add kickoff_utc, round, home, away, market, edge_threshold,
+                      gate_rules_tripped, confidence_band to each row
+  teams/*.json     -- flatten progression.*, rename elo_rating to elo_current,
+                      add seed, rank_change_7d
+
+Usage:
+  python scripts/normalize_snapshot.py
+  python scripts/normalize_snapshot.py --snapshot-id 2026-05-01T00:00Z
+
+When no --snapshot-id is given the script reads
+website/public/data/manifest.json and normalizes the most recent entry.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import shutil
+import sys
 from pathlib import Path
 
-SNAPSHOT_ID = "2026-04-23T00:00Z"
-WEBSITE_ROOT = Path(__file__).resolve().parent.parent.parent / "website"
-SNAPSHOT_DIR = WEBSITE_ROOT / "public" / "data" / "snapshots" / SNAPSHOT_ID
-LATEST_DIR   = WEBSITE_ROOT / "public" / "data" / "latest"
-
-# ── Match fixtures (kickoff_utc + group round info) for divergence enrichment ──
-
-import sys
-import pandas as pd
+# Two levels up from scripts/ lands at the project root.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+WEBSITE_ROOT = PROJECT_ROOT / "website"
 sys.path.insert(0, str(PROJECT_ROOT))
+
+import pandas as pd
+
+# These are set at the start of main() once the snapshot ID is resolved.
+SNAPSHOT_DIR: Path
+LATEST_DIR: Path = WEBSITE_ROOT / "public" / "data" / "latest"
+
+FIFA_CODES = {
+    "Mexico": "MEX", "South Korea": "KOR", "Senegal": "SEN", "Uzbekistan": "UZB",
+    "USA": "USA", "Panama": "PAN", "Ghana": "GHA", "Costa Rica": "CRC",
+    "Canada": "CAN", "Uruguay": "URU", "Morocco": "MAR", "New Zealand": "NZL",
+    "Argentina": "ARG", "Peru": "PER", "Ecuador": "ECU", "Poland": "POL",
+    "Brazil": "BRA", "Japan": "JPN", "Algeria": "ALG", "Colombia": "COL",
+    "Spain": "ESP", "Netherlands": "NED", "Australia": "AUS", "Iraq": "IRQ",
+    "France": "FRA", "Denmark": "DEN", "Egypt": "EGY", "Cameroon": "CMR",
+    "England": "ENG", "Belgium": "BEL", "Nigeria": "NGA", "Venezuela": "VEN",
+    "Germany": "GER", "Cote d'Ivoire": "CIV", "Saudi Arabia": "KSA", "Scotland": "SCO",
+    "Portugal": "POR", "Croatia": "CRO", "Hungary": "HUN", "Austria": "AUT",
+    "Italy": "ITA", "Serbia": "SRB", "Switzerland": "SUI", "Turkey": "TUR",
+    "Iran": "IRN", "Ukraine": "UKR", "Slovakia": "SVK", "Jordan": "JOR",
+}
+CODE_TO_NAME = {v: k for k, v in FIFA_CODES.items()}
+
+
+def _resolve_snapshot_id(override: str | None) -> str:
+    """Return the snapshot ID to normalise.
+
+    Uses the override if provided. Otherwise reads the manifest written by
+    generate_snapshot.py and picks the most recent entry.
+    """
+    if override:
+        return override
+    manifest_path = WEBSITE_ROOT / "public" / "data" / "manifest.json"
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+    if not manifest:
+        raise RuntimeError(f"manifest.json at {manifest_path} is empty.")
+    snapshot_id = manifest[0]["snapshot_id"]
+    print(f"  Resolved snapshot_id from manifest: {snapshot_id}")
+    return snapshot_id
+
 
 def _load_fixtures() -> dict[str, dict]:
     parquet = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
@@ -46,30 +91,11 @@ def _load_fixtures() -> dict[str, dict]:
     return result
 
 
-FIFA_CODES = {
-    "Mexico": "MEX", "South Korea": "KOR", "Senegal": "SEN", "Uzbekistan": "UZB",
-    "USA": "USA", "Panama": "PAN", "Ghana": "GHA", "Costa Rica": "CRC",
-    "Canada": "CAN", "Uruguay": "URU", "Morocco": "MAR", "New Zealand": "NZL",
-    "Argentina": "ARG", "Peru": "PER", "Ecuador": "ECU", "Poland": "POL",
-    "Brazil": "BRA", "Japan": "JPN", "Algeria": "ALG", "Colombia": "COL",
-    "Spain": "ESP", "Netherlands": "NED", "Australia": "AUS", "Iraq": "IRQ",
-    "France": "FRA", "Denmark": "DEN", "Egypt": "EGY", "Cameroon": "CMR",
-    "England": "ENG", "Belgium": "BEL", "Nigeria": "NGA", "Venezuela": "VEN",
-    "Germany": "GER", "Côte d'Ivoire": "CIV", "Saudi Arabia": "KSA", "Scotland": "SCO",
-    "Portugal": "POR", "Croatia": "CRO", "Hungary": "HUN", "Austria": "AUT",
-    "Italy": "ITA", "Serbia": "SRB", "Switzerland": "SUI", "Turkey": "TUR",
-    "Iran": "IRN", "Ukraine": "UKR", "Slovakia": "SVK", "Jordan": "JOR",
-}
-CODE_TO_NAME = {v: k for k, v in FIFA_CODES.items()}
-
-
 def _normalize_tournament(fixtures: dict[str, dict]) -> None:
     path = SNAPSHOT_DIR / "tournament.json"
     with open(path) as f:
         data = json.load(f)
 
-    # Compute seeds (rank within group by p_champion)
-    from itertools import groupby
     teams = data["teams"]
     group_teams: dict[str, list] = {}
     for t in teams:
@@ -120,7 +146,7 @@ def _normalize_divergence(fixtures: dict[str, dict]) -> None:
         home_name = fix.get("home", "Unknown")
         away_name = fix.get("away", "Unknown")
         p = row["p_model"]
-        half_ci = 1.96 * math.sqrt(p * (1 - p) / 1000)  # ~95% CI on proportion
+        half_ci = 1.96 * math.sqrt(p * (1 - p) / 1000)
 
         new_row = {
             "row_id": row["row_id"],
@@ -186,11 +212,33 @@ def _sync_latest() -> None:
     if LATEST_DIR.exists():
         shutil.rmtree(LATEST_DIR)
     shutil.copytree(SNAPSHOT_DIR, LATEST_DIR)
-    print(f"  latest/ synced from {SNAPSHOT_ID}")
+    print(f"  latest/ synced from {SNAPSHOT_DIR.name}")
 
 
 def main() -> None:
-    print(f"Normalizing snapshot: {SNAPSHOT_ID}")
+    global SNAPSHOT_DIR
+
+    parser = argparse.ArgumentParser(
+        description="Normalize a generated snapshot to match the Phase 9 website schema."
+    )
+    parser.add_argument(
+        "--snapshot-id",
+        default=None,
+        help=(
+            "Snapshot ID to normalize (e.g. 2026-05-01T00:00Z). "
+            "Defaults to the most recent entry in website/public/data/manifest.json."
+        ),
+    )
+    args = parser.parse_args()
+
+    snapshot_id = _resolve_snapshot_id(args.snapshot_id)
+    SNAPSHOT_DIR = WEBSITE_ROOT / "public" / "data" / "snapshots" / snapshot_id
+
+    if not SNAPSHOT_DIR.exists():
+        print(f"ERROR: snapshot directory not found: {SNAPSHOT_DIR}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Normalizing snapshot: {snapshot_id}")
     fixtures = _load_fixtures()
     _normalize_tournament(fixtures)
     _normalize_divergence(fixtures)
