@@ -26,7 +26,7 @@ git verify-tag v1.0.0-mstar-lock
 ```
 
 The tagger identity, GPG fingerprint, and commit SHA must match the values
-published on the OSF record at `osf.io/8b5hd`. Any mismatch is a
+published on the OSF record at `osf.io/spmkg`. Any mismatch is a
 stop-the-line condition. Do not proceed.
 
 **Step 0.2.** Confirm the calibration corpus snapshot SHA matches the

@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| **OSF Persistent Identifier** | https://osf.io/8b5hd |
+| **OSF Persistent Identifier** | https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321 |
 | **Registration Status** | LOCKED |
 | **Registration Date (UTC)** | 2026-04-23 |
 
@@ -18,7 +18,7 @@
 |-------|-------|
 | **Git Tag** | `v1.0.0-MSTAR-LOCKED` |
 | **Tagged Commit SHA** | `2bdd5f7b7885d7b217110256bcbce9c3264b51c2` |
-| **Tag Message** | `Architecture locked at OSF: https://osf.io/8b5hd` |
+| **Tag Message** | `Architecture locked at OSF: https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321` |
 | **Repository** | https://github.com/NicolasDuarte04/the-45-percent-problem |
 
 ---
@@ -69,7 +69,7 @@ Per the pre-registered decision rule (Phase 8 §1.3.5):
 
 ## Author Statement
 
-*"To the best of my knowledge, the pre-registration is complete and no post-hoc modifications have been made to the model selection protocol, the hyperparameter values, or the evaluation criteria. The M★ champion was determined solely by the pre-committed CV log-loss battery, executed once on frozen code against a frozen data corpus. All parameters are sealed in `evaluation/pre_reg_constants.yaml` and immutably recorded on OSF at https://osf.io/8b5hd."*
+*"To the best of my knowledge, the pre-registration is complete and no post-hoc modifications have been made to the model selection protocol, the hyperparameter values, or the evaluation criteria. The M★ champion was determined solely by the pre-committed CV log-loss battery, executed once on frozen code against a frozen data corpus. All parameters are sealed in `evaluation/pre_reg_constants.yaml` and immutably recorded on OSF at https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321."*
 
 **Nicolás Duarte Jaraba**
 Date: 2026-04-23
@@ -78,7 +78,7 @@ Date: 2026-04-23
 
 ## Verification Checklist
 
-- [x] OSF Frozen Registration minted and resolvable: https://osf.io/8b5hd
+- [x] OSF Frozen Registration minted and resolvable: https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321
 - [x] `evaluation/pre_reg_constants.yaml` SHA matches `evaluation/constants.sha`
 - [x] `v1.0.0-MSTAR-LOCKED` tag created on `main` branch
 - [x] Tag message contains OSF persistent identifier

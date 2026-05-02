@@ -134,12 +134,12 @@ export default function AboutPage() {
             Nicolás Duarte Jaraba. Pre-registration and methodology sealed
             2026-04-22 under OSF registration{" "}
             <a
-              href="https://osf.io/8b5hd"
+              href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "var(--accent-focus)", textDecoration: "none" }}
             >
-              osf.io/8b5hd
+              osf.io/spmkg
             </a>{" "}
             and git tag{" "}
             <span className="mono">v1.0.0-mstar-lock</span>.
@@ -185,7 +185,7 @@ export default function AboutPage() {
               whiteSpace: "pre-wrap",
             }}
           >
-            {`Duarte Jaraba, N. (2026). The 45% Problem — Probabilistic Pricing for FIFA World Cup 2026. OSF. https://osf.io/8b5hd`}
+            {`Duarte Jaraba, N. (2026). The 45% Problem — Probabilistic Pricing for FIFA World Cup 2026. OSF. https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321`}
           </pre>
           <p
             style={{
@@ -215,7 +215,7 @@ export default function AboutPage() {
   title        = {The 45\\% Problem --- Probabilistic Pricing for {FIFA} {World Cup} 2026},
   author       = {Duarte Jaraba, Nicol\\'{a}s},
   year         = {2026},
-  howpublished = {\\url{https://osf.io/8b5hd}},
+  howpublished = {\\url{https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321}},
   note         = {Pre-registered, tag v1.0.0-mstar-lock},
 }`}
           </pre>

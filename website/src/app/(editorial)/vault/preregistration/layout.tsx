@@ -12,12 +12,12 @@ const bibtex = `@misc{forty_five_percent_prereg_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Open Science Framework},
-  url          = {https://osf.io/8b5hd},
+  url          = {https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321},
   note         = {DOI: 10.17605/OSF.IO/8B5HD},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Pre-registration: The 45% Problem. Open Science Framework. https://osf.io/8b5hd";
+  "The 45% Problem project (2026). Pre-registration: The 45% Problem. Open Science Framework. https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321";
 
 export default function PreregistrationLayout({
   children,

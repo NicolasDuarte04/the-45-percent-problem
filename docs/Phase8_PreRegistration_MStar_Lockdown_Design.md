@@ -3,7 +3,7 @@
 **Project:** The 45% Problem — Probabilistic Pricing for FIFA World Cup 2026
 **Author:** Nicolás Duarte Jaraba
 **Status:** DESIGN LOCKED — 2026-04-22
-**OSF Pre-registration:** [https://osf.io/8b5hd](https://osf.io/8b5hd) — REGISTERED & LOCKED 2026-04-23
+**OSF Pre-registration:** [https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321](https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321) — REGISTERED & LOCKED 2026-04-23
 **Upstream dependencies:** Phases 2–7 (full pipeline operational, Red-Team stress tests passed)
 **Downstream consumers:** Academic paper, live MVP website, OSF registration audit trail, all in-tournament forecasts
 

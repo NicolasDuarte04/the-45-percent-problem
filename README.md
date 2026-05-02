@@ -22,7 +22,7 @@ This project is formally pre-registered on the Open Science Framework. The regis
 
 | Field | Value |
 |-------|-------|
-| **OSF Persistent Identifier** | [https://osf.io/8b5hd](https://osf.io/8b5hd) |
+| **OSF Persistent Identifier** | [https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321](https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321) |
 | **Registration Status** | LOCKED — 2026-04-23 |
 | **M★ Champion** | M2 — Elo + FIFA Ranking Shrinkage Blend |
 | **Lockdown Tag** | `v1.0.0-MSTAR-LOCKED` |
@@ -108,4 +108,4 @@ Any modification to `src/`, `schema/`, or `evaluation/pre_reg_constants.yaml` co
 ## Author
 
 **Nicolás Duarte Jaraba**
-Pre-registration: [https://osf.io/8b5hd](https://osf.io/8b5hd)
+Pre-registration: [https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321](https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321)

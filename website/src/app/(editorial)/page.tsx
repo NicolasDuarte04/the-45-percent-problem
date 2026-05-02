@@ -75,12 +75,12 @@ export default function Home() {
           >
             Pre-registered at{" "}
             <a
-              href="https://osf.io/8b5hd"
+              href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "var(--accent-focus)", fontWeight: 500 }}
             >
-              osf.io/8b5hd
+              osf.io/spmkg
             </a>{" "}
             · tag{" "}
             <span className="mono" style={{ color: "var(--data-neutral)" }}>

@@ -68,12 +68,12 @@ export function SiteFooter() {
             </em>
             . OSF.{" "}
             <a
-              href="https://osf.io/8b5hd"
+              href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "var(--accent-focus)", textDecoration: "none" }}
             >
-              osf.io/8b5hd
+              osf.io/spmkg
             </a>
           </p>
         </div>
