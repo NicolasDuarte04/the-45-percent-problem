@@ -5,7 +5,7 @@ import { Eyebrow } from "@/components/editorial/Eyebrow";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Research Vault — The 45% Problem",
+  title: "Research Vault: The 45% Problem",
   description:
     "Long-form essays, the Phase 1 framework PDF, the pre-registration artifact, the kill-criteria statement, and the glossary.",
 };
@@ -22,7 +22,7 @@ interface Pillar {
   }>;
 }
 
-// §8.2 page system — three primary pillars read as equal-height columns,
+// §8.2 page system: three primary pillars read as equal-height columns,
 // the Reference rail anchors the bottom as a full-width horizontal bar.
 const primaryPillars: Pillar[] = [
   {
@@ -41,19 +41,19 @@ const primaryPillars: Pillar[] = [
         href: "/vault/the-45-percent",
         title: "The 45% Problem",
         kind: "Titular essay",
-        length: "10\u201312 min",
+        length: "10 to 12 min",
       },
       {
         href: "/vault/why-probabilities",
         title: "Why probabilities, not predictions",
         kind: "Long-form",
-        length: "8\u201310 min",
+        length: "5 to 6 min",
       },
       {
         href: "/vault/models",
         title: "Anatomy of M0 through M\u2605",
         kind: "Long-form",
-        length: "12\u201315 min",
+        length: "12 to 15 min",
       },
       {
         href: "/vault/simulation",
@@ -71,7 +71,7 @@ const primaryPillars: Pillar[] = [
         href: "/vault/volatility-gate",
         title: "The five gate rules",
         kind: "Long-form",
-        length: "6 min",
+        length: "10 to 12 min",
       },
       {
         href: "/vault/evaluation",
@@ -109,7 +109,7 @@ const primaryPillars: Pillar[] = [
         href: "/vault/kill-criteria",
         title: "Kill-criteria statement",
         kind: "Status",
-        length: "2 min",
+        length: "7 to 9 min",
       },
     ],
   },
@@ -121,7 +121,7 @@ const referenceRail: Pillar = {
   blurb:
     "Definitions, the symbol table mirroring the paper, and the canonical citation block.",
   entries: [
-    { href: "/vault/glossary", title: "Glossary A\u2013Z", kind: "Reference" },
+    { href: "/vault/glossary", title: "Glossary A to Z", kind: "Reference" },
     { href: "/vault/notation", title: "Symbol table", kind: "Reference" },
     { href: "/vault/citation", title: "BibTeX & APA", kind: "Reference" },
   ],
@@ -180,7 +180,7 @@ export default function VaultIndexPage() {
             <article
               key={pillar.title}
               className="vault-pillar"
-              // Background is deliberately *not* set inline — it lives on the
+              // Background is deliberately *not* set inline. It lives on the
               // .vault-pillar class in globals.css so the :hover rule can
               // override it. An inline `background` shorthand would trump
               // any background-color rule on any pseudo-class.

@@ -1,5 +1,347 @@
-# Volatility Gate
+## From flagged edge to recommended stake
 
-This article is in preparation. It will document the five pre-registered suppression rules — named-event, price-discovery, exchange-spread, liquidity, and sizing guardrails — with counterfactual analysis showing what would have happened without each rule.
+The market layer hands the volatility gate a flagged edge. The gate
+decides whether the surrounding microstructure is stable enough for that
+edge to mean anything. If the five suppression rules all pass, the Kelly
+sizer turns the edge into a recommended stake fraction. If any rule
+fires, the row is written to the log with a reason code and a zero
+stake.
 
-<SectionRule />
+Three architectural layers live on this page. The gate (five rules in
+`market/volatility_gate.py`) decides whether to act. The sizer (Kelly
+plus per-market caps in `market/kelly_sizer.py`) decides how much. The
+orchestrator (`market/market_pipeline.py`) enforces cross-market caps
+that no single gate or sizer call could see by itself. All three layers
+must clear before a non-zero stake fraction reaches `forecast_log.jsonl`.
+
+The page treats them as one guardrail because that is what the user
+actually experiences: a flagged edge from the [Market Layer](/vault/market-layer)
+either becomes a recommended stake or it does not, and the reason code
+explains why. Every threshold below is sealed in
+`evaluation/pre_reg_constants.yaml` and was registered on OSF before any
+2026 forecast was published.
+
+## The five suppression rules
+
+The five gate rules are applied in fixed order. The first rule to fire
+writes its reason code to the gate output and short-circuits the
+cascade; the remaining rules are not evaluated. The fixed order matters
+for auditability: a flag suppressed by Rule 1 (information event) is
+qualitatively different from one suppressed by Rule 5 (microstructure
+failure), and the cumulative tally of suppressions by reason is itself a
+research output for [Evaluation](/vault/evaluation).
+
+### Rule 1: named-event suppression
+
+The gate suppresses the flag if a gate-relevant news event involving
+either participating team occurred within six hours before the snapshot
+timestamp:
+
+<BlockMath math="\exists\, e \in \text{NewsWindow} : e.\text{entity} \in \{\text{team}_A, \text{team}_B\} \;\land\; t_{\text{snap}} - 6\,\text{h} \leq e.t \leq t_{\text{snap}}" />
+
+Reason code: `NAMED_EVENT_6H`. The window is sealed in
+`pre_reg_constants.yaml::gate.news_window_hours`. Events older than six
+hours are still logged for evaluation reconstruction but do not fire the
+rule.
+
+What counts as a gate-relevant event is a closed enum, sealed in the
+pre-registration. Six categories: `INJURY`, `SUSPENSION`,
+`MANAGER_CHANGE`, `SQUAD_CHANGE`, `VENUE_CHANGE`, `MATCH_RESCHEDULE`. A
+seventh category, `OTHER_MATERIAL`, is logged for analysis but does not
+fire Rule 1.
+
+The news monitor (`market/news_monitor.py`) consumes only structured
+federation feeds: FIFA's official feed, the 48 participating member
+federations' RSS feeds, and the six confederation feeds (UEFA, CONMEBOL,
+AFC, CAF, CONCACAF, OFC). Tier 1 sources are polled every 5 minutes;
+Tier 2 confederation feeds every 15 minutes for cross-confirmation. No
+social media, no headline scrapers, no aggregators. The trade-off is
+deliberate: federation feeds are slower than X or BBC Sport but
+structured, attestable, and free of adversarial noise. A single false
+NamedEvent that suppresses a flagged edge is more costly to the
+project's integrity than any number of missed real events.
+
+A circuit breaker isolates the news layer from upstream feed failures.
+Three consecutive fetch failures from a source open the breaker for 30
+minutes; during that window the source is skipped and logged. Other
+sources continue polling unaffected.
+
+### Rule 2: intra-book price discovery
+
+The gate suppresses the flag if the Pinnacle de-vigged probability on
+the flagged leg moved by more than three percentage points in the prior
+30 minutes:
+
+<BlockMath math="\big|\,q_{\text{Pinnacle}}(t_{\text{snap}}) - q_{\text{Pinnacle}}(t_{\text{snap}} - 30\,\text{min})\,\big| > 0.03" />
+
+Reason code: `PRICE_DISCOVERY_INTRA_BOOK`. The threshold lives in
+`pre_reg_constants.yaml::gate.price_discovery_pct`; the 30-minute window
+is `gate.price_discovery_window_min`.
+
+The intuition: a 3 pp move on Pinnacle in 30 minutes is the signature of
+sharp money entering the line. The "edge" the model thinks it found
+might just be the model running ahead of the market by a few minutes,
+which is not an exploitable advantage. By the time a bet would settle,
+the market will have absorbed whatever information moved it.
+
+### Rule 3: cross-book price discovery
+
+The gate suppresses the flag if the de-vigged probability on the flagged
+leg differs between Pinnacle and Betfair Exchange by more than 2.5
+percentage points:
+
+<BlockMath math="\big|\,q_{\text{Pinnacle}} - q_{\text{Betfair}}\,\big| > 0.025" />
+
+Reason code: `PRICE_DISCOVERY_CROSS_BOOK`. Threshold:
+`pre_reg_constants.yaml::gate.cross_book_spread_pp`.
+
+Pinnacle and Betfair Exchange are both sharp markets but they price
+slightly differently. A normal spread between them is well under 2.5 pp.
+A spread above 2.5 pp means at least one of them is mid-correction, and
+the model has no honest way to decide which side of the consensus is
+correct.
+
+This rule shares its reason-code naming convention with the upstream
+`Z_OUT_OF_BAND` bypass path: when the Power-method exponent on Pinnacle
+falls outside its calibrated band, the orchestrator emits SUPPRESSED
+with `reason_code=Z_OUT_OF_BAND` directly, without invoking the
+five-rule cascade. That bypass is described in §2.6.
+
+### Rule 4: Polymarket liquidity floor
+
+The gate suppresses the flag if Polymarket's 24-hour traded volume on
+the equivalent contract is below USD 50,000:
+
+<BlockMath math="V_{\text{Polymarket}}^{24\text{h}} < \$50{,}000" />
+
+Reason code: `LIQUIDITY_POLYMARKET_LOW`. Threshold:
+`pre_reg_constants.yaml::gate.liquidity_floor_usd`.
+
+Polymarket's price reflects the consensus of liquid prediction-market
+participants. Below USD 50,000 in 24-hour volume, the quoted price is a
+thin signal that any single mid-sized order could move several
+percentage points. A "model edge" against a thin Polymarket quote is a
+measurement artifact of the thinness, not a tradeable advantage.
+
+### Rule 5: Pinnacle staleness
+
+The gate suppresses the flag if Pinnacle's most recent quote update
+predates the snapshot timestamp by more than four hours:
+
+<BlockMath math="t_{\text{snap}} - t_{\text{Pinnacle, last update}} > 4\,\text{h}" />
+
+Reason code: `LIQUIDITY_PINNACLE_STALE`. Threshold:
+`pre_reg_constants.yaml::gate.pinnacle_staleness_hours`.
+
+A stale quote means Pinnacle has not updated its line in response to
+information that has likely arrived since. Comparing the model
+probability against a stale book is comparing today's information
+against yesterday's price; whatever divergence appears is not a
+mispricing because the price has not yet had a chance to converge.
+
+### First-rule-wins composition
+
+The five rules are applied in the order Rule 1 to Rule 5. The first rule
+to fire writes its reason code to the `GateDecision` and short-circuits
+the cascade; the remaining rules are not checked. This ordering is
+load-bearing for forensic reproducibility. Every gate decision in
+`gate_log.jsonl` carries the `reason_code` of the first rule that
+suppressed it, plus the `rule_inputs` object recording the actual
+numerical values that drove the decision (e.g. for Rule 2: the current
+de-vigged probability, the 30-minute-prior probability, the absolute
+delta in pp, and the threshold the delta was compared against).
+
+A flag that survives all five rules emits `gate_status=PASS` with
+`reason_code=NONE` and is forwarded to the Kelly sizer. A flag that is
+suppressed emits `gate_status=SUPPRESSED` with the firing rule's reason
+code, is logged, and contributes a recommended stake fraction of zero to
+`forecast_log.jsonl`.
+
+The exceptional bypass path: when the [Market Layer](/vault/market-layer)
+detects a `Z_OUT_OF_BAND` Power-method exponent on Pinnacle, the
+orchestrator emits SUPPRESSED with that reason code directly and
+bypasses the five-rule cascade. The decision is logged in the same
+format, but the `rule_inputs` object carries the out-of-band $z$ value
+rather than any of the five normal rule inputs. This is the only path
+in the pipeline that produces a SUPPRESSED decision without one of the
+five rules firing.
+
+## Fractional Kelly sizing
+
+If the gate clears, the Kelly sizer computes a recommended stake
+fraction. The math is fractional Kelly with hardcoded caps.
+
+### The full Kelly fraction
+
+For a bet at decimal odds $o$ with model probability $p$, the full-Kelly
+stake fraction is:
+
+<BlockMath math="f_{\text{full}} = \frac{p \cdot o - 1}{o - 1}" />
+
+$f_{\text{full}} > 0$ if and only if $p \cdot o > 1$, which is the
+positive-expected-value condition. Full Kelly maximizes the expected
+log-growth rate of bankroll under the strong assumption that $p$ is
+known exactly. We are not in that regime: $p_{\text{model}}$ carries
+non-trivial estimation error from a 347-match calibration corpus, and
+full Kelly is empirically catastrophic at our $\sigma_p$. It is
+mean-variance dominated by fractional Kelly for any realistic
+$\sigma_p > 0$.
+
+### Mainline vs longshot fractions
+
+The recommended stake fraction is full Kelly multiplied by a
+market-class fraction $\phi$ and clipped to a per-market hard cap:
+
+<BlockMath math="f_{\text{recommended}} = \mathrm{clip}\big(\phi_{\text{class}} \cdot f_{\text{full}},\ 0,\ f_{\text{cap, class}}\big)" />
+
+The class is determined by the de-vigged book probability on the flagged
+leg, not by the model probability:
+
+| Class | Trigger | $\phi$ | Per-market cap |
+|---|---|---|---|
+| **Mainline** | $q_{\text{devigged}} \geq 0.10$ | $1/4$ | $0.05$ |
+| **Longshot** | $q_{\text{devigged}} < 0.10$ | $1/8$ | $0.025$ |
+
+The $1/4$ fraction on mainline markets is the Thorp (1997) and
+MacLean, Thorp, and Ziemba (2010) recommendation for the regime where
+$p$ is known with non-trivial error. The $1/8$ fraction on longshot
+markets is half that, reflecting two facts. The Kelly variance scales as
+$1/p$ for fixed edge, so longshot variance is structurally larger. And
+the Monte Carlo standard error $\sigma_p$ on tail outcomes is itself
+larger because tail events are sampled fewer times in 10,000 runs.
+
+The classification is on $q_{\text{devigged}}$ for a specific reason.
+If the trigger were $p_{\text{model}}$, a model with high conviction on
+a tail outcome could re-classify its own bet out of the longshot bucket
+and then take quarter-Kelly on a high-variance 8% probability event.
+Anchoring the bucket to the de-vigged book probability prevents that
+self-promotion.
+
+### Per-market caps
+
+The per-market cap is a strict hard ceiling applied after the fractional
+multiplier. Even when the fractional-Kelly arithmetic returns a larger
+fraction (a very large edge can produce $f_{\text{full}} > 0.20$, and
+quarter-Kelly takes that to above $0.05$), the clip enforces the cap:
+
+<BlockMath math="f_{\text{capped}} = \min\big(f_{\text{fractional}},\ f_{\text{cap, class}}\big)" />
+
+The asymmetric cap (5% of bankroll on mainline, 2.5% on longshots) is
+deliberate. Even with the smaller $\phi$, longshots can produce extreme
+$f_{\text{fractional}}$ values when the model finds a large mispricing,
+and the second clip prevents a single 1%-probability bet from sitting at
+4% of bankroll on a few large draws.
+
+## Bankroll machinery
+
+The Kelly sizer's per-market caps are not the last word. Two more layers
+constrain the recommended stake before it reaches `forecast_log.jsonl`:
+a drawdown state machine on the bankroll itself, and per-event and
+per-day caps applied by the orchestrator.
+
+### The drawdown state machine
+
+The bankroll has three modes: `NORMAL`, `HALVED`, `STOPPED`. Transitions
+are mechanical and pre-registered:
+
+| Transition | Trigger |
+|---|---|
+| `NORMAL` to `HALVED` | $\text{bankroll} / \text{peak} < 0.80$ |
+| `HALVED` to `NORMAL` | $\text{bankroll} / \text{peak} \geq 0.90$ |
+| `HALVED` to `STOPPED` | a second distinct drawdown episode begins below 0.80 while still in `HALVED` mode |
+| `STOPPED` to `NORMAL` | $\text{bankroll} / \text{peak} \geq 0.90$ |
+
+Triggers are sealed in `pre_reg_constants.yaml::kelly.drawdown_halve_trigger`
+and `kelly.drawdown_recover_trigger`. In `HALVED` mode every recommended
+stake fraction is multiplied by $0.5$:
+
+<BlockMath math="f_{\text{final}} = 0.5 \cdot f_{\text{capped}}" />
+
+In `STOPPED` mode every recommended stake is zero.
+
+Crucially, `peak_bankroll` is not re-anchored on partial recovery. If
+the bankroll falls from peak $P_0$ to $0.7\,P_0$ then recovers to
+$0.85\,P_0$, the peak remains $P_0$ and the drawdown is still 15%. Only
+when the bankroll reaches $0.90\,P_0$ does the mode revert to `NORMAL`,
+and even then the peak stays at $P_0$. This prevents a bankroll that
+grinds sideways from quietly drifting peak downward and giving false
+confidence that drawdowns are shallower than they are.
+
+`STOPPED` rows are still logged to `forecast_log.jsonl`, with
+`recommended_stake_fraction=0` and `bankroll_mode=STOPPED`. The reason:
+the [Evaluation](/vault/evaluation) page's pseudo-CLV computation needs
+to compute hypothetical CLV on what would have been bet, which requires
+the row to exist even when the recommended stake was zero.
+
+### Per-event and per-day caps
+
+Two further caps are enforced at the orchestrator level (in
+`market/market_pipeline.py`), because they require state across markets
+that no single gate or sizer call can see:
+
+| Scope | Cap | YAML key |
+|---|---|---|
+| Per event (all legs of one match) | $0.08$ | `kelly.cap_per_event` |
+| Per day (all events on one calendar day, UTC) | $0.15$ | `kelly.cap_per_day` |
+
+When either cap fires, the orchestrator does not modify the original
+`forecast_log.jsonl` rows. The log is append-only: original rows are
+written first as provisional, and adjustment rows are then appended
+referencing the parent via `parent_decision_id`, with
+`cap_adjustment=True` and `applied_caps += [per_event_cap | per_day_cap]`.
+Each adjustment row carries the same fields as the original but with
+the recommended stake scaled to bring the total below the cap.
+
+This two-pass discipline preserves the audit trail. A reviewer scanning
+the log can see the original sized recommendation and the cap adjustment
+as separate rows, both timestamped, both linked, neither deleted.
+
+## Append-only logging and forensic reproducibility
+
+The `gate_log.jsonl` file is the canonical source of truth for gate
+behaviour. Three properties make it forensically defensible.
+
+First, it is opened in append mode (`"a"`) and never in write mode
+(`"w"`). Every gate decision is appended; nothing is ever overwritten or
+deleted. A row that turns out to be wrong stays in the log next to the
+adjustment row that corrects it, both visible.
+
+Second, every appended row carries the structured `rule_inputs` object
+with the actual numerical values that drove the decision. For a Rule 2
+suppression: the current Pinnacle de-vigged probability, the
+30-minute-prior probability, the absolute delta in pp, and the threshold
+the delta was compared against. A reviewer can reconstruct the rule
+firing without re-running the upstream pipeline.
+
+Third, after every flush, the SHA-256 of the entire log file is
+recomputed and written to `gate_log.jsonl.sha256` as a sidecar. A
+tampered or truncated log produces a SHA mismatch the next time the
+sidecar is recomputed, surfacing the corruption immediately.
+
+The same gate decisions are also written into the master
+`forecast_log.jsonl` that the evaluation layer consumes and that the
+live ledger reads. `gate_log.jsonl` is the authoritative gate-behaviour
+record; a divergence between the two files would indicate a pipeline
+bug, not a difference in semantics.
+
+## What this layer does not do
+
+The boundary statement.
+
+* No de-vigging or edge calculation. Both live in the [Market Layer](/vault/market-layer).
+* No Pinnacle bias correction ($\Delta_{\text{draw}}$, $\Delta_{\text{host}}$). Lives in the market layer.
+* No CLV or evaluation metrics. Lives in [Evaluation](/vault/evaluation).
+* No real bet execution, no broker integration. The recommended stake fraction is theoretical and feeds the pseudo-CLV metric, not a live account.
+* No social-media, headline-aggregator, or unstructured news consumption. Federation feeds only.
+* No live re-fitting of any threshold (six-hour news window, 3 pp / 30 min, 2.5 pp cross-book, USD 50,000 Polymarket floor, four-hour staleness, $\phi = 1/4$ and $1/8$ Kelly fractions, 5% and 2.5% per-market caps, 8% per-event, 15% per-day, 80% and 90% drawdown trigger and recovery). All values are sealed; modification requires an OSF amendment before next kickoff.
+* No mid-tournament addition of new gate rules. The cascade is fixed at five rules.
+* No ABBA shooter ordering, shooter skill, or other shootout-mechanism details. Shootouts are handled in [Simulation](/vault/simulation).
+* No nightly behavioural-bias testing. The seven pre-registered bias hypotheses live in `market/bias_tests.py` and run against `forecast_log.jsonl` as an evaluation activity. The [Evaluation](/vault/evaluation) page is their home.
+
+## Where to go next
+
+* **[Market Layer](/vault/market-layer)**: the de-vigging, edge metric, and flagging machinery that produces the `EdgeFlag` this page consumes.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, the Diebold-Mariano machinery, and the Closing Line Value tests that grade the outputs of this layer.
+* **[Kill criteria](/vault/kill-criteria)**: the formal mathematical statement of the kill criterion and the live status block.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed Git tag, and the sealed `pre_reg_constants.yaml` that locks every threshold on this page.
+* **[Notation](/vault/notation)**: the symbol table for $\phi$, $f_{\text{full}}$, $f_{\text{recommended}}$, $q_{\text{devigged}}$, and related quantities.

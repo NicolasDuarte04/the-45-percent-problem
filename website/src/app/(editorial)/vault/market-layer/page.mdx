@@ -1,7 +1,318 @@
-# Market Layer
+## From odds to a fair probability
 
-This article is in preparation. It will explain how raw bookmaker decimal odds are converted into de-vigged implied probabilities using the power method, why the simpler proportional method introduces a systematic bias, and how the edge metric E is computed and interpreted.
+Bookmaker decimal odds are not directly probabilities. The implied
+probability of an outcome quoted at decimal odds $o_i$ is the inverse,
+$r_i = 1/o_i$, but for any commercial book the implied probabilities
+across mutually exclusive outcomes do not satisfy $\sum_i r_i = 1$. The
+overround $\pi = \sum_i r_i - 1$ is the bookmaker's gross margin: positive
+for a sportsbook like Pinnacle (overround), negative for an exchange like
+Betfair or a prediction market like Polymarket (underround once
+commission is netted).
 
-An interactive figure illustrating the divergence between the two de-vigging methods will be embedded here.
+De-vigging is the math that strips out the margin and recovers an
+estimator $q_i$ of the true risk-neutral probability the book actually
+believes. Without de-vigging, any model-vs-market comparison is contaminated
+by margin and the result is not a probability statement at all.
 
-<SectionRule />
+Pinnacle is the canonical book in this project. Its de-vigged probability
+vector is what the model is compared against. Betfair Exchange and
+Polymarket are also de-vigged, but only as cross-references for the
+[Volatility Gate](/vault/volatility-gate) and the price-discovery rules
+that live there; they are never used as $q$ in the edge calculation. This
+is a deliberate scope choice: book-specific bias corrections are calibrated
+only on Pinnacle, and applying $q$ from a non-calibrated book would
+introduce uncontrolled error into the edge metric.
+
+The implementation lives in `market/devig.py`, `market/edge_calculator.py`,
+and `market/market_pipeline.py`. Every constant on this page is read from
+`evaluation/pre_reg_constants.yaml` and was sealed in the OSF
+pre-registration before any 2026 forecast was published.
+
+## The Power method
+
+The de-vigging machinery follows Shin (1993) and Štrumbelj (2014).
+
+### Why not proportional de-vigging
+
+The naive estimator $q_i = r_i / \sum_j r_j$ distributes the overround
+uniformly across outcomes. This is provably wrong on every sportsbook
+studied since Shin (1993): the longshot side of any market carries a
+disproportionate share of the overround, because books charge more vig
+where adverse selection from informed bettors is highest, and because
+retail bettors systematically over-pay for tail outcomes (the
+favorite-longshot bias). Proportional de-vigging therefore inflates $q$ on
+longshots and deflates it on favorites, exactly the wrong direction
+relative to the empirical bias the model is trying to surface.
+
+Štrumbelj (2014) compares the Power method against Shin's original
+quadratic-surplus method and against proportional de-vigging on a corpus
+of more than 100,000 two-way and three-way markets. The Power method
+dominates Shin in out-of-sample log-loss and dominates the proportional
+estimator by a wide margin on three-way markets like 1X2.
+
+### The root-finding equation
+
+The Power method posits that there exists a single market exponent $z$
+such that the de-vigged probabilities are obtained by raising raw
+probabilities to that exponent and the result sums to one by construction:
+
+<BlockMath math="\sum_{i=1}^{n} r_i^{\,z} = 1, \qquad q_i = r_i^{\,z}" />
+
+Equivalently, $z$ is the unique root of
+
+<BlockMath math="F(z) = \sum_{i=1}^{n} r_i^{\,z} - 1 = 0" />
+
+For an overround book like Pinnacle, $\sum_i r_i > 1$ at $z = 1$, so the
+root sits at $z > 1$ (raising $r_i < 1$ to a higher power decreases the
+sum). For an underround exchange, the root sits at $z < 1$. The
+implementation brackets accordingly: $z \in (1, 20)$ for overround,
+$z \in (10^{-9}, 1)$ for underround. Brent's method converges in six to
+eight iterations with $\mathrm{xtol} = 10^{-8}$ and a hard cap of 100
+iterations.
+
+If Brent's method fails to bracket the root, the function raises
+`DeviggingNotConverged` rather than silently coercing to a fallback. This
+is intentional: failure to converge on well-formed odds indicates upstream
+data corruption, and a silent fallback would mask the upstream bug.
+
+### The de-vigged probabilities
+
+Once $z$ is found, $q_i = r_i^{z}$ is the de-vigged probability for
+outcome $i$, and the vector sums to $1$ by construction (that is what we
+solved for). The Power method implicitly corrects the favorite-longshot
+bias through $z$ alone; we do not stack a separate FLB adjustment on top,
+which would double-count.
+
+### Anomaly bands and out-of-band routing
+
+The fitted $z$ is monitored against pre-registered acceptance bands.
+For Pinnacle, $z$ values outside $[1.00, 1.20]$ are anomalous: a typical
+Pinnacle overround between two and twelve percent produces $z \in [1.02,
+1.12]$, and values outside that range with margin usually indicate either
+a misparsed book or a market in the middle of price discovery. For
+exchanges, the symmetric band is $z \in [0.80, 1.00]$.
+
+A market with out-of-band $z$ is not de-vigged at all. The pipeline emits
+a `Z_OUT_OF_BAND` warning, and the orchestrator routes the market to the
+[Volatility Gate](/vault/volatility-gate) with the same reason code,
+where it is suppressed before reaching the sizer. This is a deliberate
+escalation: a book whose Power-method exponent does not sit inside its
+calibrated band is one we cannot trust to compare the model against.
+
+## Pinnacle bias corrections
+
+The 2010 to 2022 World Cup calibration corpus (the same 347 major-tournament
+matches that constrain every other calibrated component in the project)
+surfaced two systematic Pinnacle distortions on top of the Power-method
+de-vigging. Both are applied as fixed additive corrections to specific
+legs of specific market classes, with proportional renormalization of the
+remaining legs so the vector still sums to one. Both magnitudes are
+sealed in `pre_reg_constants.yaml::market.pinnacle_bias` and cannot be
+re-fit on 2026 data. Re-fitting would constitute look-ahead bias and
+would invalidate the entire evaluation chain. The small corpus also
+means the bias-correction magnitudes carry meaningful estimation error
+of their own; we treat them as point values after pre-registration
+rather than re-estimating.
+
+### The knockout draw under-pricing
+
+Pinnacle systematically under-prices the draw by approximately 1.4
+probability points on neutral-venue knockout matches that go to ninety
+minutes. The likely structural cause is that the draw on a knockout
+market is a near-pure ninety-minute construct that does not carry
+tournament-progression information once shootouts are factored in, and
+Pinnacle's quote concentrates on the progression price rather than the
+ninety-minute price.
+
+The correction is
+
+<BlockMath math="\Delta_{\text{draw}} = +0.014" />
+
+added to $q_{\text{draw}}$ on any knockout-stage market, with the win and
+loss legs renormalized proportionally to keep $\sum_i q_i = 1$. The
+correction applies to all knockout stages: round of 32, round of 16,
+quarterfinal, semifinal, third-place playoff, and final.
+
+### The group-stage host premium
+
+In group-stage markets where one of the two teams is a tournament host,
+Pinnacle exhibits a small "host-nation premium" of roughly 0.6
+probability points on the host's win line. This is most plausibly
+recreational money rather than information: home crowds attract retail
+bets at the closing line, and Pinnacle's quote drifts up just enough that
+the host's de-vigged probability is consistently above the structural
+fair value the model identifies.
+
+The correction is
+
+<BlockMath math="\Delta_{\text{host}} = -0.006" />
+
+subtracted from $q_{\text{host\_win}}$ on group-stage markets where the
+host is identified as one of the listed teams. The remaining legs
+renormalize proportionally.
+
+### Why these corrections are pre-registered constants
+
+A 1.4 pp adjustment on draws and a 0.6 pp adjustment on host wins are not
+large fixes, and we are not claiming to repair Pinnacle. We are
+correcting two specific, consistent biases that the calibration corpus
+identified, and we sealed the magnitudes before the tournament so the
+corrections cannot be tuned post hoc on 2026 data. The pre-registration is
+the credibility move; the magnitudes themselves are secondary.
+
+For Betfair Exchange and Polymarket, no book-specific correction is
+applied. Both are de-vigged with the Power method only and used only as
+cross-references for the price-discovery rules in the
+[Volatility Gate](/vault/volatility-gate). They are never the $q$ in the
+edge metric, so applying a non-calibrated correction to them would have
+no downstream consumer in any case.
+
+## The edge metric
+
+After de-vigging and bias correction, the edge is computed.
+
+### The additive edge
+
+For each outcome $i$ in a given market, the edge is the additive
+difference between the model probability and the de-vigged
+bias-corrected Pinnacle probability:
+
+<BlockMath math="E_i = p_{\text{model},i} - q_{\text{devigged},i}" />
+
+Reported in probability points. $E_i > 0$ means the model thinks the
+outcome is more likely than Pinnacle does; $E_i < 0$ means the book is
+higher.
+
+The choice of additive edge over multiplicative or log-odds edge is
+deliberate. The additive form is the quantity that is statistically
+tractable for the Diebold-Mariano and Nyberg tests on the
+[Evaluation](/vault/evaluation) page, and it has a stable interpretation
+across markets of different favorite strength. The Kelly transformation
+$f_{\text{full}} = (p \cdot o - 1)/(o - 1)$ is applied later, downstream
+of the gate, on the same $E_i$ value.
+
+### The variance-adjusted standardized edge
+
+Raw $E_i$ is a point estimate. The Phase 5 Monte Carlo engine produces
+ten thousand runs per match, so we have a sampling distribution over
+$p_{\text{model},i}$ with empirical standard error
+$\sigma_p = \sqrt{p(1 - p)/N_{\text{MC}}}$. The de-vigging step has its
+own uncertainty $\sigma_q$ from the bootstrap below. The standardized
+edge combines them:
+
+<BlockMath math="E^{*}_i = \frac{E_i}{\sqrt{\sigma_p^{\,2} + \sigma_q^{\,2}}}" />
+
+$E^{*}$ is logged as a sidecar column in `forecast_log.jsonl` and is the
+quantity used for two downstream purposes: sorting flagged outcomes by
+statistical strength when displaying the divergence terminal, and Phase 7
+Z-score aggregation against historical baselines. The flagging decision,
+however, uses raw $|E|$ against the pre-registered threshold; $E^{*}$ is
+informational, not gating.
+
+### The σ\_q bootstrap
+
+The de-vigging uncertainty $\sigma_q$ is estimated by parametric
+bootstrap. Fifty resamples are drawn from a tick-noise model on the
+decimal odds: each $o_i$ is perturbed by a uniform draw on
+$[-0.005, +0.005]$ (half a probability point at fifty-percent implied
+probability is the calibrated Pinnacle minimum tick). For each resample
+the Power method is re-solved on the noisy odds, and $\sigma_q$ is the
+empirical standard deviation of the resulting $q_i$ across the fifty
+resamples.
+
+The bootstrap captures rounding and tick-level uncertainty in the
+closing line, not the deeper uncertainty in whether the bias-corrected
+probability is the right one. The bias-correction constants
+$\Delta_{\text{draw}}$ and $\Delta_{\text{host}}$ are themselves
+estimated from the 2010 to 2022 corpus and carry their own calibration
+error, but the project treats them as known after pre-registration.
+Adding the bias-correction uncertainty to $\sigma_q$ would couple
+$E^{*}$ to a quantity we have already committed to as fixed.
+
+## Edge thresholds and market classes
+
+After computation, edges are flagged for downstream sizing only when they
+exceed a market-class threshold.
+
+### The two-threshold structure
+
+The pre-registered thresholds are asymmetric across market classes:
+
+| Market class | Threshold $\varepsilon$ |
+|---|---|
+| **Mainline** (1X2, match winner, group winner, tournament winner) | 0.030 (3.0 pp) |
+| **Derivative** (over/under 2.5, BTTS, correct score, stage of elimination, both teams to score) | 0.050 (5.0 pp) |
+
+The asymmetry reflects two facts. Derivative markets carry higher
+de-vigging uncertainty because their lower liquidity produces a wider
+effective tick and a larger $\sigma_q$. The model probability for
+derivative markets is also a downstream functional of the bivariate
+Poisson surface and inherits more model error than the 1X2 marginal. A
+larger $\varepsilon$ on derivatives is the protection against flagging
+on noise that a thinner market generates by construction.
+
+The values 3.0 pp and 5.0 pp are sealed in
+`pre_reg_constants.yaml::market.edge_threshold_*` and cannot be tuned on
+2026 data.
+
+### Market class assignment
+
+The mainline classes are: `1x2`, `match_winner`, `group_winner`,
+`tournament_winner`. The derivative classes are: `over_under`, `btts`,
+`correct_score`, `stage_of_elimination`, `both_teams_score`. New market
+classes are not added during the tournament. A market with an
+unrecognized class falls back to the conservative derivative threshold;
+an unrecognized class also produces a warning that the market schema
+needs updating, but the fallback prevents a parse error from blocking the
+pipeline.
+
+### The flagging rule
+
+A leg is flagged when
+
+<BlockMath math="|E_i| > \varepsilon" />
+
+Flagged legs surface as `EdgeFlag(flagged=True, reason_code="ABOVE_THRESHOLD")`
+on the divergence terminal as candidates for hypothetical bets. The flag
+status alone does not size a stake. The Volatility Gate consumes the flag
+next, decides whether the surrounding microstructure is quiet enough to
+act on it, and only then does the Kelly sizer compute a recommended
+fraction. All three layers (this page, the gate, and the sizer) must
+agree before any non-zero stake fraction is recommended in
+`forecast_log.jsonl`.
+
+### Two-sided flags as a misspecification signal
+
+A market in which two opposing legs are simultaneously flagged is not
+two opportunities. It is a warning. If the model thinks the home win is
+under-priced and also thinks the away win is under-priced,
+$p_{\text{model}}$ is inconsistent with the de-vigged Pinnacle vector in
+a way that no honest reading of the math can resolve. The pipeline
+detects this via sign analysis on the flagged legs of the same market
+and sets `is_two_sided_flag=True` on those flags. The Volatility Gate's
+Rule 3 (price-discovery cross-book) also tends to fire on these markets,
+which catches them as suppressions before the sizer sees them. We surface
+the boolean explicitly because the underlying pattern is rare and worth
+auditing in Phase 7 review.
+
+## What this layer does not do
+
+The market layer ends at flagged edges. Things that are deliberately out
+of scope here:
+
+* No Kelly sizing, no per-market caps, no per-event or per-day caps. All sizing logic and bankroll management live in [Volatility Gate](/vault/volatility-gate) (where the fifth suppression rule is sizing).
+* No suppression of flagged edges based on news, price-discovery, or liquidity. The five suppression rules also live in [Volatility Gate](/vault/volatility-gate).
+* No CLV computation. CLV is the [Evaluation](/vault/evaluation) page's metric. The market layer logs the open and close de-vigged probabilities for every match; the inferential procedure runs in `evaluation/clv_tracker.py`.
+* No proportional fallback if the Power method fails to converge. The pipeline raises `DeviggingNotConverged` on bad odds rather than silently using a less accurate estimator.
+* No book-specific bias correction beyond Pinnacle. Betfair Exchange and Polymarket get Power-method de-vigging only and are used only as cross-references for the gate's price-discovery rules.
+* No live re-fitting of $\Delta_{\text{draw}}$ or $\Delta_{\text{host}}$ during the tournament. Both are pre-registered constants from the 2010 to 2022 calibration corpus and changing them requires an OSF amendment.
+* No book-specific edge thresholds. $\varepsilon$ is set by market class, not by book.
+* No nightly behavioural-bias testing. The seven pre-registered bias hypotheses (favorite-longshot, sentiment, recency, anchoring, late-money, stage-of-elimination, manager-sacking) live in `market/bias_tests.py` and run against the cumulative `forecast_log.jsonl`. They are an evaluation activity that consumes the artifact this layer produces; the [Evaluation](/vault/evaluation) page is the right home for them.
+
+## Where to go next
+
+* **[Volatility Gate](/vault/volatility-gate)**: the five suppression rules that decide which flagged edges are quiet enough to act on, plus the Kelly sizer and bankroll machinery.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, the Diebold-Mariano machinery, and the Closing Line Value tests that grade the edges this layer produces.
+* **[Models](/vault/models)**: where $p_{\text{model}}$ comes from, including the four shadow models (M0 to M3) and the cross-validation battery that decided M★.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed Git tag, and the sealed `pre_reg_constants.yaml` that locks every threshold and bias correction on this page.
+* **[Notation](/vault/notation)**: the symbol table for $r_i$, $q_i$, $z$, $E_i$, $E^{*}_i$, $\varepsilon$, $\sigma_p$, $\sigma_q$, and related quantities.

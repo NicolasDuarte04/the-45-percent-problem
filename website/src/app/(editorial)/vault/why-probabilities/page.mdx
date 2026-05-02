@@ -1,7 +1,132 @@
-# Why Probabilities
+## 1. The point-prediction trap
 
-This article is in preparation. It will set out the case for publishing full probability distributions rather than point predictions — and explain why calibration, not accuracy, is the correct evaluation metric for a model of this kind.
+The sports world suffers from what we might call point prediction
+blindness. Social media and sports broadcasting are saturated with
+pundits picking outright winners, often confusing subjective intuition
+with statistical reality. Even experts with deep tactical knowledge of
+the game routinely fall into this trap, overestimating their ability to
+predict a binary outcome. Because human intuition struggles with
+gradients of uncertainty, a 51% favorite is frequently treated with the
+exact same absolute confidence as a 90% favorite.
 
-Check back closer to the tournament opening match.
+Consider the inherent bias of fandom. As a proud Colombian, it is
+natural to want to predict a national team victory. Even when the
+underlying numbers suggest a legitimate but slight advantage, emotion
+easily steps in and inflates that narrow edge into a perceived certainty.
+We fall into traps of overestimation, guided by hunches and gut feelings.
+This is precisely why the house wins. The bookmaker does not win because
+they possess a crystal ball that perfectly knows match outcomes; they win
+because they operate strictly on mathematical distributions, while the
+public operates on emotion.
 
-<SectionRule />
+This same blindness infects how we evaluate mathematical models. Any
+model that simply picks the favorite in a World Cup match will clear a
+high baseline of accuracy, as roughly 60% of international matches are
+won by the higher-Elo side. But a high hit rate tells you nothing about
+a model's actual intelligence. When a 51% advantage and a 95% advantage
+are both collapsed into the exact same "Team X wins" output, all the
+underlying structural information is destroyed. Point predictions are
+fine for casual conversation, bracket pools, and headlines. They are
+mathematically useless for measuring a model.
+
+## 2. Probabilities as the unit of analysis
+
+Our commitment to the principle of honest uncertainty over false
+precision was born from a recurring frustration. In many instances,
+quantitative models do not follow a realistic scientific framework. They
+are often corrected, and their parameters are adjusted, when the initial
+model does not perform well. This creates what is referred to as
+hindsight bias: the illusion that an event was perfectly predictable
+only after it has already occurred. By tweaking weights after the fact
+to make the model successfully predict the past, researchers
+fundamentally tarnish its forward-looking validity.
+
+Furthermore, while some of the papers we read were fascinating and their
+models successful, we noticed distinct redundancies in the variables
+analyzed. For instance, the inclusion of a specific performance gap or
+macroeconomic indicators might be entirely redundant if those factors
+are already accounted for by a team's overall baseline strength and
+historical performance. This artificial complexity generates false
+precision. It makes a model look smarter without actually making it more
+accurate.
+
+Moving to a full probability distribution changes everything. It forces
+honesty. Probabilities preserve uncertainty rather than collapsing it to
+hide flaws. Furthermore, probabilities are the only object that can be
+priced. You cannot price a name, but you can price a probability.
+Because the betting market itself is a probability distribution once
+de-vigged, any honest evaluation of a model must be a comparison between
+two probability distributions, not between a model's pick and the
+market's pick.
+
+## 3. Calibration: what 70% really means
+
+### The formal definition
+
+Calibration means that in a perfect, closed system, if the model
+specifies that a team is 70% likely to win, the long-run outcome of that
+match will tend exactly toward that 70% win rate if isolated and
+repeated in a recurring multiverse. It is similar to a perfect coin
+flip. If thrown only a couple of times, the short-term results could
+easily contradict the 50/50 prediction; a coin could land heads ten
+times out of ten. However, if we throw that coin an infinite amount of
+times, the distribution will converge to an exact even split. This
+principle is governed by the Law of Large Numbers.
+
+In formal terms, <InlineMath math="P(Y = 1 \mid \hat{p} = p) = p" />.
+When the model outputs a 70% probability, the event should occur 70% of
+the time over a large sample of such forecasts. Calibration is a
+property of a forecaster, not of a single prediction.
+
+### The reliability diagram
+
+To visualize this, we bin predictions into deciles and plot the observed
+frequency against the predicted probability. A perfectly calibrated
+model traces a perfect diagonal line. We publish these reliability
+diagrams as the visual proof of our model's honesty.
+
+### Calibration vs. sharpness
+
+A model that predicts a flat 50% for every match might be perfectly
+calibrated over time, but it is entirely useless. A model that predicts
+90% and turns out to be right 90% of the time is both calibrated and
+sharp. We want both, and we measure them separately.
+
+## 4. Scoring rules that do not lie
+
+To enforce calibration, we must use proper scoring rules. A scoring rule
+is "proper" if its expected value is minimized only when the forecaster
+reports their true, honest belief. You cannot game a proper scoring rule
+by hedging or shifting probabilities to look artificially confident.
+
+The evaluation of this project rests entirely on three metrics: the
+Brier score, logarithmic loss (log-loss), and the Ranked Probability
+Score (RPS). Each penalizes the model differently for being confidently
+wrong, but all of them share one crucial trait: they cannot be moved by
+what we want to be true. They only measure what the distribution
+mathematically claims.
+
+## 5. Why the kill criterion required this frame
+
+The Phase 8 kill criterion compared **M★**'s log-loss to **M0**'s
+log-loss on a held-out sample, requiring a 2.0 standard-error gap to
+justify the complexity. That comparison is only definable under a
+probabilistic, proper-scoring frame.
+
+Under a point-prediction frame, comparing **M★** to **M0** reduces to
+noting they got the same number of matches right, give or take a few.
+On a sample of just 64 World Cup matches plus a small hold-out, that
+comparison has absolutely no statistical leverage. The pre-registered
+protocol fired precisely because we built it on a metric that could
+carry weight. Pure-prediction framing would have produced a kill
+criterion no one could have ever caused to fire: a kill criterion in
+name only. Without probabilities, the rest of this project is
+decoration.
+
+## 6. What this means in practice
+
+The translation back into the visible product is straightforward:
+
+* **We publish probabilities, not picks.** The site never says "Argentina will win." It says "Argentina has a 14.2% chance of winning the tournament after the group stage, conditional on **M0**."
+* **We display divergences, not edges.** The word edge implies a certain actionability we are not claiming. Divergence simply highlights where the model and the market disagree.
+* **CLV is the running honesty test.** Closing Line Value dictates that if the market's closing line moves toward our model's probability, the model led the market. We log this for every match, win or lose.

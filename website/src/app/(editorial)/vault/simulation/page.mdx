@@ -1,7 +1,330 @@
-# Simulation
+## From strength matrix to goal rates
 
-This article is in preparation. It will walk through the bivariate Poisson match model, the Dixon-Coles low-score correction, and the structure of the 10,000-run Monte Carlo engine that generates every probability on this site.
+The simulation engine is strength-agnostic by design. It does not know
+which model produced the inputs it receives: M0, M1, M2, or M3. It
+receives a <InlineMath math="(\lambda_{\text{home}}, \lambda_{\text{away}})" />
+pair per match and converts that pair into a sampled scoreline. Every
+claim the engine makes about the World Cup, and every probability the
+public site displays, descends from how those two numbers get used.
 
-Interactive figures showing the goal-score probability matrix for a featured match will be embedded here once the tournament begins.
+For each match between teams with Elo ratings
+<InlineMath math="R_{\text{home}}" /> and
+<InlineMath math="R_{\text{away}}" />, the engine maps the Elo difference
+to expected goals via the calibration
 
-<SectionRule />
+<BlockMath math="\Delta = \frac{R_{\text{home}} + H - R_{\text{away}}}{400}" />
+
+<BlockMath math="\lambda_{\text{home}} = \mu^{*} \cdot e^{\,c^{*} \Delta} \qquad \lambda_{\text{away}} = \mu^{*} \cdot e^{-c^{*} \Delta}" />
+
+with the calibration constants <InlineMath math="c^{*} = 0.580386" />
+and <InlineMath math="\mu^{*} = 1.715874" />, fit during Phase 3 against
+2010 to 2022 international match results and stored in
+`evaluation/pre_reg_constants.yaml`. The home advantage term
+<InlineMath math="H" /> is set to zero throughout the 2026 simulation:
+the FIFA 2026 final is played in a single host complex and no genuine
+venue-level home advantage applies for most of the tournament. The full
+calibration write-up lives in [Methodology](/vault/methodology).
+
+The asymmetry between <InlineMath math="\lambda_{\text{home}}" /> and
+<InlineMath math="\lambda_{\text{away}}" /> is the only place team
+strength enters the engine. Everything that follows treats
+<InlineMath math="(\lambda_{\text{home}}, \lambda_{\text{away}})" /> as
+a sufficient statistic for the match.
+
+## The Bivariate Poisson match model
+
+Goals scored by the two teams in a match show a small positive
+correlation, partly explained by shared match conditions (weather,
+refereeing tempo, pitch state) and partly by the way teams react to the
+score state of the match itself. To capture that correlation while
+keeping the model tractable, we use the Bivariate Poisson with a
+common-shock decomposition (Karlis and Ntzoufras, 2003):
+
+<BlockMath math="X = W_1 + W_3, \qquad Y = W_2 + W_3" />
+
+where <InlineMath math="W_1 \sim \mathrm{Poi}(\lambda_1)" />,
+<InlineMath math="W_2 \sim \mathrm{Poi}(\lambda_2)" />, and
+<InlineMath math="W_3 \sim \mathrm{Poi}(\lambda_3)" /> are independent.
+<InlineMath math="X" /> is the home goal count,
+<InlineMath math="Y" /> is the away goal count, and
+<InlineMath math="W_3" /> is the shared component that induces the
+positive correlation. Setting <InlineMath math="\lambda_3 = 0" />
+recovers the independent Poisson case (Maher, 1982). Setting
+<InlineMath math="\lambda_3 > 0" /> shifts probability mass into states
+where both teams score in the same match.
+
+The joint probability mass function is
+
+<BlockMath math="P(X = x,\, Y = y) = e^{-(\lambda_1 + \lambda_2 + \lambda_3)} \cdot \frac{\lambda_1^{x}}{x!} \cdot \frac{\lambda_2^{y}}{y!} \cdot \sum_{k=0}^{\min(x,\, y)} \binom{x}{k}\binom{y}{k} k!\, \left(\frac{\lambda_3}{\lambda_1 \lambda_2}\right)^{k}" />
+
+The shared-shock parameter is locked at
+<InlineMath math="\lambda_3 = 0.10" /> throughout the 2026 tournament.
+The value sits inside the recommended range
+<InlineMath math="[0.05, 0.20]" /> from Karlis and Ntzoufras's empirical
+work on European football and is consistent with the small positive
+cross-team correlation observed in the project's own 347-match corpus.
+We did not refit <InlineMath math="\lambda_3" /> during Phase 5: the
+data is too sparse to identify the parameter precisely against an
+already-narrow Poisson likelihood, and any post-pre-registration refit
+would require an OSF amendment.
+
+The PMF is computed once per quantized
+<InlineMath math="(\lambda_1, \lambda_2)" /> pair (rounded to four
+decimal places) and cached, so re-evaluations across thousands of
+simulations are essentially free. The grid is truncated at ten goals
+per side; <InlineMath math="P(X \geq 10)" /> is below
+<InlineMath math="10^{-6}" /> for any realistic
+<InlineMath math="\lambda" /> value the engine encounters. The inner
+<InlineMath math="k" />-sum is computed in log-sum-exp form for
+numerical stability.
+
+## The Dixon-Coles low-score correction
+
+The independent-component Bivariate Poisson under-predicts the empirical
+frequency of <InlineMath math="0\text{-}0" />,
+<InlineMath math="1\text{-}0" />, <InlineMath math="0\text{-}1" />, and
+<InlineMath math="1\text{-}1" /> scorelines in international football.
+Dixon and Coles (1997) addressed this with a multiplicative correction
+<InlineMath math="\tau(x, y)" /> that adjusts the joint PMF only at
+those four low-score cells:
+
+<BlockMath math="\tau(x, y;\, \lambda_1, \lambda_2, \rho) = \begin{cases} 1 - \lambda_1 \lambda_2 \rho & (x, y) = (0, 0) \\ 1 + \lambda_1 \rho & (x, y) = (0, 1) \\ 1 + \lambda_2 \rho & (x, y) = (1, 0) \\ 1 - \rho & (x, y) = (1, 1) \\ 1 & \text{otherwise} \end{cases}" />
+
+The corrected joint PMF is
+
+<BlockMath math="P_{\mathrm{DC}}(X = x,\, Y = y) = \tau(x, y;\, \lambda_1, \lambda_2, \rho) \cdot P(X = x,\, Y = y)" />
+
+The correction parameter is locked at
+<InlineMath math="\rho = -0.05" />. The negative sign shifts probability
+mass *into* the four low-score cells the independent model
+under-counts, and *out of* nearby cells like
+<InlineMath math="(2, 0)" /> and <InlineMath math="(1, 2)" />. The
+magnitude is the small adjustment standard in Dixon-Coles applications
+across European leagues.
+
+We did not jointly refit <InlineMath math="\rho" /> and
+<InlineMath math="\lambda_3" /> on the 2010 to 2022 corpus during Phase 5
+because the joint Poisson NLL surface is poorly identified at this
+sample size; a deferred Phase 6 calibration would optimize them jointly
+on a richer corpus, under an OSF amendment.
+
+The engine renormalizes the PMF after applying the correction so the
+cells sum to <InlineMath math="1.0" /> within
+<InlineMath math="10^{-9}" />. Sampling uses Walker's alias method on
+the flattened 121-cell PMF vector for <InlineMath math="O(1)" /> draws
+per match. Match outcome probabilities are read off the corrected PMF
+directly: <InlineMath math="P(\text{home win})" /> is the sum below the
+diagonal, <InlineMath math="P(\text{draw})" /> is the diagonal trace,
+and <InlineMath math="P(\text{away win})" /> is the sum above the
+diagonal.
+
+## Extra time and penalty shootouts
+
+These mechanisms are invoked only in knockout matches when regulation
+ends level. Group-stage matches that end in a draw simply terminate as
+draws; nothing further is sampled.
+
+### The 30-minute extra period
+
+Extra time is sampled by re-running the same Bivariate Poisson +
+Dixon-Coles match model with damped goal rates. Each team's 90-minute
+<InlineMath math="\lambda" /> is multiplied by a factor of
+<InlineMath math="0.6" /> and the result is used as the Poisson mean
+for the 30-minute extra-time period:
+
+<BlockMath math="\lambda^{\mathrm{ET}}_{\text{home}} = 0.6 \cdot \lambda^{90}_{\text{home}}, \qquad \lambda^{\mathrm{ET}}_{\text{away}} = 0.6 \cdot \lambda^{90}_{\text{away}}" />
+
+The shared-shock <InlineMath math="\lambda_3" /> is also multiplied by
+<InlineMath math="0.6" /> for coherence, and the Dixon-Coles correction
+remains active. The factor <InlineMath math="0.6" /> was chosen
+empirically from a blend of historical World Cup extra-time data and
+the Dixon-Robinson (1998) calibration, and it is locked in
+`pre_reg_constants.yaml`. If extra time ends level, the match advances
+to a penalty shootout.
+
+### The shootout model
+
+The shootout is a sequence of independent Bernoulli kicks with a small
+Elo-derived skew. The conversion probability for team
+<InlineMath math="A" /> kicking against team <InlineMath math="B" /> is
+
+<BlockMath math="p^{\text{kick}}_{A} = \mathrm{clip}\!\left( p_{\text{base}} + \kappa \cdot \frac{R_A - R_B}{400},\ p_{\min},\ p_{\max} \right)" />
+
+with <InlineMath math="p_{\text{base}} = 0.75" /> (the historical World
+Cup penalty conversion rate, 1982 to 2022),
+<InlineMath math="\kappa = 0.02" /> as a deliberately small Elo skew,
+and clipping bounds <InlineMath math="p_{\min} = 0.60" /> and
+<InlineMath math="p_{\max} = 0.90" /> to prevent extreme Elo gaps from
+producing non-physical conversion rates. The corresponding
+<InlineMath math="p^{\text{kick}}_{B}" /> uses the negated Elo
+difference.
+
+The protocol matches FIFA-compliant shootout rules:
+
+1. Five kicks per side, strictly alternating, with team A kicking first in each round.
+2. After every kick in rounds 1 through 5, a short-circuit check runs: if the running lead is mathematically insurmountable given the kicks remaining, the shootout ends immediately.
+3. If still tied after five kicks each, the shootout enters sudden death: one kick per side per round, continuing until one team is ahead after equal kicks.
+
+The engine does not model ABBA shooter ordering, shooter-specific
+skill, or goalkeeper-specific save rates. Shootouts in international
+football are well-documented as near-random; the small
+<InlineMath math="\kappa = 0.02" /> skew is a deliberate choice not to
+claim more predictive power than the data supports.
+
+## The Monte Carlo bracket walker
+
+A single tournament run progresses through three stages. Each run uses
+a fresh seeded RNG (`numpy.random.default_rng(seed)`), and the same
+`(model_id, data_hash, seed)` triple reproduces an identical run
+byte-for-byte.
+
+### The group stage
+
+Forty-eight teams are split into twelve groups of four (Groups A
+through L), each playing six round-robin matches for 72 group-stage
+matches in total. Each match is sampled from the Bivariate Poisson +
+Dixon-Coles model using the strength provider's
+<InlineMath math="(\lambda_{\text{home}}, \lambda_{\text{away}})" />
+for that fixture in `context="group"`.
+
+Team rankings within a group are determined by the FIFA tiebreaker
+order, applied recursively when three or more teams remain tied:
+
+1. Points (Win = 3, Draw = 1, Loss = 0).
+2. Goal difference across all group matches.
+3. Goals scored across all group matches.
+4. Head-to-head points among the still-tied subset.
+5. Head-to-head goal difference among the still-tied subset.
+6. Fair Play points (yellow- and red-card tally). The Phase 5 engine treats this as <InlineMath math="0" /> for all teams; live tracking is wired in Phase 7.
+7. Drawing of lots, deterministic from the run seed and logged in the output.
+
+When three or more teams are tied on points, criteria 4 and 5 re-scope
+to the still-tied subset. If the head-to-head pass breaks one team
+free, the remaining tied teams re-run criteria 4 and 5 among
+themselves. The implementation is recursive, not single-pass.
+
+### The knockout bracket
+
+The 2026 format expands the knockout phase from the historical 16-team
+Round of 16 to a 32-team Round of 32. Twenty-four of those slots come
+from the top two finishers in each of the twelve groups; the remaining
+eight come from the best third-place finishers across the twelve
+groups, ranked by the same tiebreaker order applied across all twelve
+third-place teams.
+
+The Round of 32 cross-group pairings are not procedurally generated.
+They are fixed by FIFA before the tournament and encoded in the engine
+as a hardcoded tuple of sixteen `R32Slot` records, organized into six
+zone pairs (AB, CD, EF, GH, IJ, KL). Each zone pair contributes two
+1st-vs-2nd matches and may contribute up to one intra-zone third-place
+match, depending on which four of the six zones supply both their
+third-place finishers to the best-8. The fifteen possible combinatorial
+configurations of which four zones qualify are encoded as a separate
+fifteen-entry lookup table.
+
+From the Round of 32, the bracket proceeds R16 → QF → SF → Final, with
+a separate third-place playoff between the two semifinal losers. Every
+knockout match begins with a regulation-time sample from the Bivariate
+Poisson + Dixon-Coles model. If the regulation score is level, the
+match advances to extra time using the damped-<InlineMath math="\lambda" />
+procedure described above. If extra time is also level, the match
+advances to a penalty shootout. Knockout matches cannot end in a draw.
+
+### Aggregation across runs
+
+A single run produces 48 team-result rows and 104 match-result rows.
+Across <InlineMath math="N" /> runs (10,000 for the website cadence,
+100,000 for the academic-paper cadence), the per-team marginals are
+computed as simple frequencies:
+
+<BlockMath math="\hat{P}(\text{team } i \text{ champion}) = \frac{1}{N} \sum_{r=1}^{N} \mathbb{1}\{\text{champion}_{r} = i\}" />
+
+with analogous formulas for
+<InlineMath math="\hat{P}(\text{reaches final})" />,
+<InlineMath math="\hat{P}(\text{reaches QF})" />, and similar
+round-reached probabilities. Confidence intervals follow from the
+Beta-Binomial conjugate posterior under a flat prior; the live site
+reports the 90% credible interval alongside each marginal.
+
+## Output, performance, reproducibility
+
+A single 48-team tournament simulation completes in approximately 3.5
+milliseconds on a single core. The Phase 5 acceptance criterion was 50
+ms per simulation; the implementation comes in well under that bound.
+A full batch of 10,000 runs across all five model variants (M0, M1,
+M2, M3, M★) takes under 15 minutes wall-clock with `joblib`
+parallelism (`n_jobs=-2`).
+
+Every batch produces two Parquet tables per variant, sharing a
+primary-key prefix of
+`(run_idx, model_id, data_hash, seed, code_sha, timestamp_utc)`:
+
+**`team_runs`**: 48 rows per run.
+
+| Column | Type | Description |
+|---|---|---|
+| `team_id` | string | FIFA 3-letter code |
+| `group_letter` | string | A to L |
+| `group_finish` | int8 | 1 to 4 |
+| `group_points` | int8 | |
+| `group_gd` | int16 | Goal differential |
+| `group_gs` | int16 | Goals scored |
+| `qualified_r32` | bool | |
+| `exit_round` | string | Group, R32, R16, QF, SF, 3rd, Runner-up, Champion |
+| `reached_final` | bool | |
+| `champion` | bool | |
+
+**`match_runs`**: 104 rows per run (72 group + 31 knockout + 1 third-place).
+
+| Column | Type | Description |
+|---|---|---|
+| `match_id` | string | e.g. `G-A-1`, `KO-R32-1` |
+| `phase` | string | group, R32, R16, QF, SF, 3rd-place, Final |
+| `team_home`, `team_away` | string | |
+| `lambda_home`, `lambda_away` | float32 | Input <InlineMath math="\lambda" /> used (audit) |
+| `reg_home_goals`, `reg_away_goals` | int8 | |
+| `went_to_ET` | bool | |
+| `et_home_goals`, `et_away_goals` | int8 \| null | |
+| `went_to_pens` | bool | |
+| `pen_home_score`, `pen_away_score` | int8 \| null | |
+| `winner` | string \| null | Null only for group draws |
+
+The batch manifest (`manifest.json`) records `code_sha`, per-variant
+`data_hash`, `seed_base`, `run_count`, batch start and end times, and
+any `failed_runs`. The seed-derivation rule
+
+<BlockMath math="\text{seed\_base} = \mathrm{sha256}(\text{model\_id} \,\|\, \text{data\_hash} \,\|\, \text{batch\_timestamp}) \bmod 2^{32}" />
+
+ensures that any reviewer with the same code SHA, data SHA, and batch
+timestamp can reproduce the entire batch byte-for-byte. Per-variant
+seeds are simply <InlineMath math="\text{seed\_base} + r" /> for
+<InlineMath math="r = 0, 1, \ldots, 9999" />. Within each Parquet file,
+partitioning by `run_idx // 1000` produces ten partitions per file for
+cheap incremental reads downstream. Failed runs are logged in the
+manifest rather than aborting the batch; the acceptance criterion is
+that fewer than <InlineMath math="0.1\%" /> of runs may fail.
+
+## What the engine does not do
+
+The engine produces final scorelines from goal-rate inputs. It does not
+produce, by deliberate scope choice:
+
+* In-match dynamics. The engine samples a final score; it does not simulate the 90 minutes minute by minute (no Dixon-Robinson 1998 style time-varying <InlineMath math="\lambda" />).
+* Injury, red-card, or in-game suspension simulation during a match.
+* Referee effects on goal rates.
+* Day-of-match weather adjustments to <InlineMath math="\lambda" />.
+* Travel, rest, or fatigue accumulation between matches.
+* Home advantage beyond the explicit <InlineMath math="H = 0" /> choice for the FIFA 2026 single-host-complex tournament.
+* Correlation between matches in a single run beyond what the bracket structure already enforces. Two matches in the same group share strength inputs but draw their scores independently.
+* ABBA shooter ordering, shooter-specific skill, or goalkeeper-specific save rates in shootouts.
+* Real-time bracket updates mid-tournament. The engine produces forecasts; the live site re-runs the engine when new data arrives.
+
+Each of these is a deliberate omission, listed honestly so a reader can
+see the simplifications without reverse-engineering the code.
+
+## Where to go next
+
+* **[Models](/vault/models)**: the four strength-matrix providers that feed the engine.
+* **[Methodology](/vault/methodology)**: the Phase 3 calibration that locked <InlineMath math="c^{*}" /> and <InlineMath math="\mu^{*}" />, and the protocol that locked <InlineMath math="\rho" /> and <InlineMath math="\lambda_3" /> before any 2026 forecast was published.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, CLV, and the Diebold-Mariano machinery that grades the engine's output.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed Git tag, and the sealed `pre_reg_constants.yaml`.

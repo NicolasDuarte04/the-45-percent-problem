@@ -28,7 +28,7 @@ export default function WhyProbabilitiesLayout({
       eyebrow="§ II · Long-form"
       title="Why Probabilities"
       deck="The case for distributions over predictions. A probability is more informative and more honest than a point forecast — and harder to fake."
-      readingTimeMinutes={9}
+      readingTimeMinutes={5}
       lastRevised="2026-04-22"
       citation={{ apa, bibtex }}
       readNext={[

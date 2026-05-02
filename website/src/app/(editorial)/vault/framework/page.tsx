@@ -7,7 +7,7 @@ import { loadSnapshotMeta } from "@/lib/data/loadSnapshot";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Phase 1 framework (PDF) — Research Vault",
+  title: "Phase 1 framework (PDF): Research Vault",
   description:
     "The Phase 1 framework paper, embedded and downloadable. Remains the artifact of record; the web Vault is the primary reading surface.",
 };
@@ -20,7 +20,7 @@ interface TocEntry {
   webTitle?: string;
 }
 
-// §8.7 — TOC maps paper sections to the web-native equivalent where one exists.
+// §8.7. TOC maps paper sections to the web-native equivalent where one exists.
 const toc: TocEntry[] = [
   {
     section: "\u00A7 1",
@@ -38,7 +38,7 @@ const toc: TocEntry[] = [
     section: "\u00A7 3",
     title: "Model lineage: M0 through M\u2605",
     webHref: "/vault/models",
-    webTitle: "Anatomy of M0\u2013M\u2605",
+    webTitle: "Anatomy of M0 to M\u2605",
   },
   {
     section: "\u00A7 3.2",
@@ -48,19 +48,19 @@ const toc: TocEntry[] = [
   },
   {
     section: "\u00A7 4",
-    title: "Market layer \u2014 de-vigging and the power method",
+    title: "Market layer: de-vigging and the power method",
     webHref: "/vault/market-layer",
     webTitle: "Market layer",
   },
   {
     section: "\u00A7 5",
-    title: "Volatility gate \u2014 the five rules",
+    title: "Volatility gate: the five rules",
     webHref: "/vault/volatility-gate",
     webTitle: "Volatility gate",
   },
   {
     section: "\u00A7 6",
-    title: "Evaluation \u2014 Brier, log-loss, CLV",
+    title: "Evaluation: Brier, log-loss, CLV",
     webHref: "/vault/evaluation",
     webTitle: "Evaluation",
   },

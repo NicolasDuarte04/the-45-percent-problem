@@ -1,222 +1,293 @@
-<Dropcap>
-  Five models compete on the same problem. One of them — the one selected
-  before the tournament began — is M★. The others are shadow models: they
-  run in parallel, they appear in the ledger, and they exist to make failure
-  visible. If M★ is worse than M0 by the Round of 16, we know.
-</Dropcap>
+## The shared engine
 
-The architecture is deliberate. A single model without comparators is hard
-to evaluate honestly. A suite of models with a pre-registered champion, a
-null baseline, and explicit calibration metrics makes the honest evaluation
-the default.
+Every model in this project consumes the same simulation engine: a
+Bivariate Poisson match model with the Dixon-Coles low-score correction,
+configured for the FIFA 2026 bracket and run as 10,000 Monte Carlo
+simulations per snapshot. What differs between M0, M1, M2, and M3 is not
+how the engine simulates a match. It is the *strength matrix* the engine
+receives. Each model implements its own `get_strength_matrix()` function,
+and that function is the only place the four models part ways.
 
-<MarginNote>
-  M★ (M-star) is pronounced "M star." The notation borrows from the
-  statistical convention for a selected or optimal estimator. The ★ symbol
-  appears in every data cell in the terminal and ledger that refers to the
-  champion model.
-</MarginNote>
+The engine itself (the Bivariate Poisson form, the Dixon-Coles parameter
+<InlineMath math="\rho" />, the extra-time scaling, the shootout model)
+is described in [Simulation](/vault/simulation). This page is about the
+four strength matrices that fed it.
 
-<SectionRule />
+## M0: pure Elo
 
-## M0 — the null baseline
+**The foundational control group.**
 
-M0 assigns a constant probability to each of the three 1X2 outcomes. It is
-not a model of football. It is a lower bound: any model that cannot outperform
-M0 on calibration has added no information relative to an uninformed prior.
+M0 is Elo. Specifically, it is Elo on this project's own walk-forward
+calibration of international match results: the scale that runs from
+roughly 1344 to 1730 across the 48 World Cup teams, with engine
+parameters <InlineMath math="c^* = 0.580" /> and
+<InlineMath math="\mu^* = 1.716" /> calibrated against the 2010 to 2021
+corpus. Nothing else. No form decay, no FIFA correction, no macro prior.
 
-For the group stage, where draws are possible, M0 uses an equal-weight prior:
+The instinct, when reading "the null baseline," is to picture something
+obviously crippled: the kind of straw man that sophisticated models
+routinely embarrass. Elo is not that. Elo at the right scale already
+absorbs strength-of-schedule, recency (slowly), and most of the
+structural information any model in this space has access to. Beating it
+requires capturing some signal Elo does not, with enough power to clear
+a confidence interval the data cannot make narrow.
 
-<BlockMath math="P_{M_0}(H) = P_{M_0}(D) = P_{M_0}(A) = \tfrac{1}{3}" />
+M0 is the floor every richer model has to clear to earn its complexity.
+Phase 8 turned out to be a reminder that the floor is higher than it
+looks.
 
-For knockout rounds, where draws result in extra time and a potential
-shootout, M0 collapses to:
+## M1: Elo + decayed form
 
-<BlockMath math="P_{M_0}(H) = P_{M_0}(A) = \tfrac{1}{2}" />
+**Does recency bias provide a mathematical edge?**
 
-<MarginNote>
-  In knockout rounds the "draw at 90 minutes" outcome is not the terminal
-  outcome; it triggers further play. M0 treats the final result (home/away
-  advance) as binary. All higher models do the same.
-</MarginNote>
+The hypothesis: long-run Elo is too slow to reflect short-run shocks
+like injuries, manager changes, lineup rotations, and the difference
+between a team in February and the same team in June. An exponentially
+decayed form term over the last 8 matches should, in principle, capture
+some of that residual signal.
 
-M0 carries no information about team quality, form, or recent results. Its
-Brier score, log-loss, and RPS represent the floor of what a calibrated model
-must beat. The kill criterion is defined against M0 specifically because it
-is the hardest to cheat: if M★ cannot outperform a coin flip, the project
-publishes a null result.
+The implementation: an exponential weight on each of the last 8 matches
+with decay constant <InlineMath math="\tau" />, applied as a recent-form
+Elo adjustment, capped at ±15% of the long-run Elo to prevent the form
+term from dominating the strength matrix. The half-life
+<InlineMath math="\tau" /> was treated as a tunable hyperparameter, fit
+on the calibration window via grid search.
 
-<SectionRule />
+The optimizer pinned <InlineMath math="\tau" /> at the grid boundary:
+**180 days**. That is a diagnostic, not a setting. It says the optimizer
+wanted an even longer half-life than the search space allowed, which
+means the form term was already trying to decay so slowly that it was
+indistinguishable from the long-run Elo it was meant to refine. The
+"recent" in "recent form" had no leverage to provide.
 
-## M1 — Elo-based Poisson
+The cross-validation result was unambiguous. M1's mean CV log-loss came
+in at 1.06444, against M0's 1.03184. This is an absolute increase of
++0.033 in a metric where lower is better. M1 was disqualified for being
+actively worse than baseline. The eight-match form window, in this
+corpus, is the better part of a decade of high-stakes football per team.
+Most of the recency signal it was designed to capture has decayed beyond
+reach by the time the next World Cup arrives.
 
-M1 introduces team-specific strength by mapping current Elo ratings to
-expected goal rates (<InlineMath math="\lambda" />). The Elo expected score
-for team A against team B is:
+## M2: Elo + FIFA blend
 
-<BlockMath math="E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}" />
+**It is widely assumed FIFA rankings are flawed; this model exists to
+prove or disprove that assumption.**
 
-where <InlineMath math="R_A" /> and <InlineMath math="R_B" /> are current
-Elo ratings.
+The hypothesis: FIFA's official ranking, despite well-known weaknesses
+in its weighting scheme, is computed against a much larger global match
+dataset than this project's Elo can ever see directly. If our 347-match
+corpus is the constraint, FIFA's broader denominator might patch the
+sparsity at the cost of some methodological coarseness.
 
-<MarginNote>
-  The Elo system was developed by Arpad Elo for chess rating and later
-  adapted for football. The divisor 400 is a conventional constant: a
-  400-point Elo gap corresponds to a 90.9% win probability.
-</MarginNote>
+The implementation: a convex blend
+<InlineMath math="\hat{S}_i = (1 - w) \cdot \text{Elo}_i + w \cdot \text{FIFA}_i" />,
+with the blend weight <InlineMath math="w" /> optimized via
+cross-validation on the calibration window. The optimizer's answer was
+as extreme as the search space permitted:
+<InlineMath math="w^* = 1.0" />. M2 dropped the project's own Elo
+entirely and ran on the FIFA signal alone.
 
-M1 uses <InlineMath math="E_A" /> to parameterize expected goals via a
-log-linear form:
+That outcome is itself the most informative result of the four models.
+The cross-validation procedure had access to our walk-forward Elo,
+calibrated on a corpus we trust, and chose not to use it. The signal in
+our 347-match Elo, at this corpus size, was less useful for predicting
+World Cup outcomes than FIFA's broad global ranking.
 
-<BlockMath math="\log \lambda_h = \mu + \alpha_h - \beta_a + \delta_\text{HFA}" />
+M2's mean CV log-loss was 1.00016, against M0's 1.03184. This is an
+absolute improvement of 0.032, the largest of the four candidates. By
+log-loss alone, M2 was the champion.
 
-<BlockMath math="\log \lambda_a = \mu + \alpha_a - \beta_h" />
+Log-loss alone, however, was not the protocol. The pre-registered kill
+criterion required M★ to beat M0 not only by point estimate but by at
+least 2.0 standard errors of the difference. M2's stratified-CV gap to
+M0 was 1.75 SE, falling short of the pre-registered 2.0 bar by 0.25.
 
-where <InlineMath math="\mu" /> is the mean log-goals across the calibration
-corpus, <InlineMath math="\alpha" /> and <InlineMath math="\beta" /> are
-attack and defence strength parameters derived from Elo, and
-<InlineMath math="\delta_\text{HFA}" /> is a home-field advantage offset
-estimated on historical data.
+## M3: Elo + macro prior
 
-The joint score probability uses the independent Poisson assumption:
+**A direct response to Klement and Hoffmann.**
 
-<BlockMath math="P(X = x,\, Y = y) = \frac{e^{-\lambda_h}\,\lambda_h^x}{x!} \cdot \frac{e^{-\lambda_a}\,\lambda_a^y}{y!}" />
+The hypothesis: Klement and Hoffmann (and the broader macroeconomic
+forecasting literature) argue that structural national variables, such
+as GDP, population, and climate, explain a non-trivial fraction of
+tournament success. M3 tests that claim by encoding those variables as a
+weak Bayesian prior on team strength, with confederation-level hierarchy
+on the prior parameters.
 
-<MarginNote>
-  The independent Poisson assumption is known to underestimate the frequency
-  of 0-0, 1-0, and 0-1 scorelines. M2 and M3 correct for this; M1 does not,
-  by design, so that the correction's effect on calibration is isolatable.
-</MarginNote>
+The implementation: a Bayesian shrinkage prior on Elo, parameterized by
+macro covariates with confederation-level hyperparameters
+<InlineMath math="(\mu_c, \sigma_c)" /> that allow UEFA, CONMEBOL, and
+AFC-specific behavior. The macro coefficient was locked at
+<InlineMath math="\beta = 4.0" /> after a sanity check confirmed that
+the macro signal explained roughly 40% of Elo variance
+(<InlineMath math="R^2 = 0.404" />), comfortably above the
+<InlineMath math="\geq 0.30" /> threshold the project required to take
+the prior seriously at all.
 
-The 1X2 probabilities are obtained by summing across all score combinations:
+The result: M3 beat M0 in point estimate, with a CV log-loss of 1.02709
+against M0's 1.03184, representing an improvement of 0.005. The gap is
+real but small, and the standard error swallowed it. M3 did not survive
+the 2.0-SE bar.
 
-<BlockMath math="P(H) = \sum_{x > y} P(X=x, Y=y), \quad P(D) = \sum_{x=y} P(X=x, Y=y), \quad P(A) = \sum_{x < y} P(X=x, Y=y)" />
+The replication note matters here. Klement and Hoffmann's macro thesis
+was a non-trivial claim in the literature, and it is the closest thing
+this project has to a pre-existing hypothesis we set out to test. M3 is
+not a refutation of their work. The corpus is too small to refute
+anything definitively, and the macro signal does, in fact, explain a
+substantial share of Elo variance
+(<InlineMath math="R^2 = 0.404" />). What we can say is narrower: at our
+corpus size, with our pre-registered metric, the macro prior did not
+statistically beat a simpler Elo baseline. That is a result worth
+publishing because it survives in the same direction as theirs without
+surviving the bar we committed to.
 
-The sum is truncated at ten goals per side, capturing more than 99.99% of
-the probability mass at realistic <InlineMath math="\lambda" /> values for
-international football.
+## The cross-validation battery
 
-<SectionRule />
+### Before the battery: catching a scale bug
 
-## M2 — Dixon-Coles Poisson with FIFA ranking blend
+Before the formal cross-validation ran, we ran a smoke test: 1,000 Monte
+Carlo simulations on the 2022 World Cup bracket, asking the engine to
+estimate Argentina's tournament win probability. The realistic
+acceptance band for a top-tier favorite at a World Cup is somewhere
+between 5% and 15%. The first run produced 25.7%.
 
-M2 extends M1 in two ways. First, it blends Elo with FIFA world rankings to
-produce the strength parameters. Second, it applies the **Dixon-Coles
-correction**, which adjusts the joint probability for low-scoring outcomes
-where the independence assumption fails most visibly.
+The cause turned out to be a scale mismatch. The pipeline had been fed
+raw Elo ratings from a public source, with values in the 1600 to 2163
+range, instead of the project's own walk-forward Elo, calibrated on the
+1344 to 1730 range. The engine parameters
+<InlineMath math="c^* = 0.580" /> and
+<InlineMath math="\mu^* = 1.716" /> had been tuned against the narrower
+internal scale. Against the wider external scale, the math interpreted
+top teams as far more dominant than they actually were. Argentina became
+unstoppable.
 
-The blended strength for team <InlineMath math="i" /> is:
+The fix was a one-line data substitution. On the corrected input,
+Argentina settled at 10.6%, landing comfortably in the middle of the
+acceptance band.
 
-<BlockMath math="s_i = w_\text{Elo} \cdot \tilde{R}^\text{Elo}_i + (1 - w_\text{Elo}) \cdot \tilde{R}^\text{FIFA}_i" />
+The bug never reached the cross-validation battery and never reached
+production. The reason it is included in this page at all is not as a
+war story but as a piece of the methodology: every model's strength
+matrix is checked against an output sanity band before the formal
+protocol runs against it. The protocol does not protect a model whose
+inputs are silently wrong.
 
-where <InlineMath math="\tilde{R}" /> denotes a normalized and log-scaled
-rank score, and <InlineMath math="w_\text{Elo}" /> is a pre-registered blend
-weight estimated on historical data.
+### The pre-registered protocol
 
-<MarginNote>
-  The optimal blend weight <InlineMath math="w_\text{Elo}" /> was estimated
-  on international matches from 2018–2022, held out from the M★ selection
-  corpus. Its value is stored in `pre_reg_constants.yaml`.
-</MarginNote>
+The cross-validation scheme was a stratified k-fold over the 2010 to 2021
+calibration window, with 2022 World Cup matches held out as the final
+exam. The metric was per-match log-loss, averaged across folds, with the
+standard error of the cross-fold mean reported alongside.
 
-The Dixon-Coles correction factor <InlineMath math="\tau" /> modifies the
-independent Poisson joint probability for the four low-score cells:
+The pre-registered decision rule was a two-condition gate, not a
+single-criterion ranking:
+1. M★ is the candidate with the lowest mean CV log-loss.
+2. M★'s log-loss must beat M0's by at least 2.0 standard errors of the difference.
 
-<BlockMath math="\tau(x,y) = \begin{cases} 1 - \lambda_h\,\lambda_a\,\rho & x=0,\; y=0 \\ 1 + \lambda_h\,\rho & x=0,\; y=1 \\ 1 + \lambda_a\,\rho & x=1,\; y=0 \\ 1 - \rho & x=1,\; y=1 \\ 1 & \text{otherwise} \end{cases}" />
+Both conditions had to hold. Failure on either condition fired the kill
+criterion. The 2.0-SE bar was sealed in the OSF registration before any
+2026 prediction was made.
 
-where <InlineMath math="\rho" /> is a small negative parameter that reduces
-the probability of 0-1 and 1-0 draws while raising 0-0 and 1-1 to their
-empirically observed frequency. The corrected joint probability is:
+### The result
 
-<BlockMath math="P_{M_2}(X=x, Y=y) = \tau(x,y) \cdot \frac{e^{-\lambda_h}\,\lambda_h^x}{x!} \cdot \frac{e^{-\lambda_a}\,\lambda_a^y}{y!}" />
+| Model | Mean CV LL | SE | Δ vs M0 | Status |
+|---|---|---|---|---|
+| **M2_fifa** | 1.00016 | 0.01809 | −0.03168 | Log-loss champion; failed 2.0-SE gate (1.75 SE) |
+| **M3_macro** | 1.02709 | 0.02062 | −0.00475 | Eligible; below M0 in point estimate, did not survive SE bar |
+| **M0_elo** | 1.03184 | 0.02362 | 0.000 | Baseline |
+| **M1_form** | 1.06444 | 0.03293 | +0.03260 | Disqualified (worse than M0) |
 
-<PullQuote cite="Dixon and Coles (1997)">
-  The low-score correction is not decorative. In international football,
-  0-0 draws occur at roughly 1.8× the frequency the independent Poisson
-  model predicts. The correction is where the model earns its keep.
-</PullQuote>
+Lower mean CV log-loss is better. Δ vs M0 is the absolute log-loss
+improvement against baseline; negative is better. Standard errors are
+calculated over the cross-fold means.
 
-<SectionRule />
+M2 cleared condition 1 by having the lowest log-loss of the four
+candidates. M2 did not clear condition 2. The stratified-CV
+standard-error gap to M0 was 1.75, short of the pre-registered 2.0 bar
+by 0.25.
 
-## M3 — macro-prior with confederation hierarchy
+### The kill criterion firing
 
-M3 retains the Dixon-Coles Poisson from M2 and adds a **hierarchical
-confederation prior**. Teams from the same confederation share a partial-
-pooling prior on their strength parameters, reflecting the observation that
-intra-confederation calibration data is richer than cross-confederation data
-during the group stage.
+The kill criterion is binary. M2 failed it by 0.25 SE. The
+pre-registered consequence took effect:
+* The paper's framing pivots from a purely predictive angle to the kill-criterion narrative described in [The 45% Problem](/vault/the-45-percent).
+* M★ is provisionally M0 for trading policy. No Kelly stakes are placed against M2's edges, even where M2's point estimates suggest divergence from market prices.
+* The pipeline does not abort. Forecasts continue to be logged, evaluated, and published.
 
-The hierarchical prior on team <InlineMath math="i" />'s attack strength
-<InlineMath math="\alpha_i" /> is:
+What changes is not the system's operation but the claims the project is
+willing to make.
 
-<BlockMath math="\alpha_i \sim \mathcal{N}(\mu_c,\; \sigma_c^2), \quad c = \text{confederation}(i)" />
+There is one further methodological finding worth surfacing. The Phase 4
+walk-forward preview (an earlier development CV scheme) had given M2 a
+6.2 SE gap over M0. The Phase 8 stratified scheme gave 1.75. The two
+schemes mix tournaments differently across folds. Walk-forward keeps
+matches grouped by chronological tournament block, so each fold contains
+relatively similar match composition and fold-level log-loss values
+cluster tightly. The stratified scheme distributes tournaments across
+folds, exposing each fold to between-tournament variance.
 
-The confederation-level hyper-parameters <InlineMath math="\mu_c" /> and
-<InlineMath math="\sigma_c" /> are estimated jointly with team-level
-parameters. For confederations with fewer teams in the calibration corpus,
-this pooling prevents extreme strength estimates.
+The walk-forward homogeneity inflated the apparent SE gap; the
+stratified scheme reflected the wider variability that any genuine
+cross-tournament prediction is exposed to. M2's true generalization
+quality is somewhere between the two, but only the stratified result is
+what the pre-registered protocol committed to. We surface this not as an
+excuse but as a piece of the protocol that did exactly what it was
+supposed to do. Different CV schemes can produce dramatically different
+SE gaps on the same models and the same data. Pre-registering the
+scheme is what makes the answer adjudicable. The 1.75 figure is the
+answer that counts.
 
-<MarginNote>
-  The six FIFA confederations are: CONMEBOL, UEFA, CONCACAF, AFC, CAF, OFC.
-  UEFA and CONMEBOL together account for more than half the 48-team field.
-</MarginNote>
+## M★: the pre-registered champion
 
-M3 also includes a **recency-weighted form factor** <InlineMath math="f" />,
-a rolling measure of recent results that decays exponentially:
+M2 was the log-loss champion. M2 failed the kill criterion.
 
-<BlockMath math="f_{i,t} = \sum_{k=0}^{K} e^{-\gamma k} \cdot r_{i,t-k}" />
+Per the pre-registered protocol, M★ is **provisionally M0** for trading
+policy. No Kelly stakes are placed, no edge claims are published, and no
+betting recommendations follow from M2's point estimates.
 
-where <InlineMath math="r_{i,t-k}" /> is the Elo-points change from the
-match <InlineMath math="k" /> slots before the current fixture, and
-<InlineMath math="\gamma" /> is the decay constant (pre-registered at
-<InlineMath math="\gamma = 0.30" />).
+During the tournament, M★'s strength matrix continues to update. Elo
+drifts as group-stage matches finish, with <InlineMath math="K = 20" />
+for group play and <InlineMath math="K = 32" /> for knockouts, applied
+through the same walk-forward update rule used during calibration.
 
-<SectionRule />
-
-## M★ — the pre-registered champion
-
-M★ is whichever of M1, M2, and M3 achieved the best out-of-sample log-loss
-on the 2018–2022 international match corpus, evaluated in Phase 8 before the
-2026 tournament began. The identity of M★ is sealed in the pre-registration.
-
-<MarginNote>
-  You can read which model was selected as M★ in
-  [`pre_reg_constants.yaml`](/vault/preregistration) under the
-  `champion_model` key. The selection was locked on 2026-04-22.
-</MarginNote>
-
-The champion is not necessarily the most complex model. If M1's simpler
-specification achieved better calibration on the hold-out corpus, M1 becomes
-M★. Complexity is not rewarded; calibration is.
-
-All four candidate models continue to run in parallel through the tournament.
-Their forecasts appear in the ledger alongside M★. This parallel tracking
-serves two purposes: it makes the evaluation of M★ relative to alternatives
-transparent, and it provides the Diebold-Mariano test a richer comparison set
-than the M0 baseline alone.
-
-## Elo drift during the tournament
-
-The figure below shows how Elo ratings for four featured teams evolve across
-the snapshots taken so far. Ratings update after each settled match using the
-standard Elo formula with <InlineMath math="K = 20" /> for group matches and
-<InlineMath math="K = 32" /> for knockout rounds.
-
-<EloDriftFigure mode="interactive" />
-
-<SectionRule />
+M★ is a live model, not a frozen prediction. What is frozen is its
+identity: the assignment of M★ to M0, sealed in the OSF pre-registration
+and locked by the signed git tag `v1.0.0-mstar-lock`. The only path to
+changing M★'s identity during the tournament is an OSF amendment with a
+corresponding registry record. That record is public. There is no quiet
+substitution available, and no version of the live site where the
+displayed model can shift between M0, M2, or any other candidate
+without leaving an audit trail.
 
 ## What the models do not do
 
-None of the five models:
+The strength matrices in M0 through M3 capture team-level structural
+information. They do not capture, by deliberate scope choice:
+* Player-level injury or suspension data.
+* In-match Bayesian updates as a match unfolds.
+* Manager-effect or tactical-system terms.
+* Draw-specific factors in knockout matches beyond what the Bivariate Poisson engine produces from the strength matrix.
+* Home-advantage adjustments beyond what Elo already absorbs.
+* Day-of-match weather data.
+* Travel and rest-fatigue metrics across the bracket.
 
-- incorporate player-level injury data (not pre-registered, not available at
-  scale from public sources without introducing lookahead bias)
-- update intra-match (all predictions are pre-match, using the prior night's
-  snapshot)
-- model draw-specific factors in knockout rounds beyond the Poisson extension
-  described in M2
+Every one of these is a plausible axis along which a richer model could
+close some of the gap to the market. Each was excluded for a defensible
+reason: data availability, scope discipline, or the corpus-size argument
+that adding parameters in a sparse-data regime spends degrees of freedom
+we cannot afford to spend. We name the omissions here so a reader who
+asks "did you try X?" can see the answer is "no, and here is why" rather
+than encountering silence.
 
-These omissions are deliberate. A model with more levers is harder to
-calibrate and easier to overfit. The pre-registration commits us to these
-boundaries; adding them mid-tournament would invalidate the evaluation.
+The honest read is that some of these (particularly player-level injury
+data and travel fatigue) are the axes where future work could most
+plausibly find signal that the four models in this project's ablation
+could not. We did not test them. We are not claiming there is nothing
+there.
+
+## Where to go next
+
+* **[Simulation](/vault/simulation)**: the Bivariate Poisson + Dixon-Coles engine that consumes each model's strength matrix.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, the Diebold-Mariano machinery, and the metrics the kill criterion was built on.
+* **[Kill criteria](/vault/kill-criteria)**: the formal mathematical statement and the live status block.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed git tag, and the sealed constants file.
+* **[Why probabilities](/vault/why-probabilities)**: why the kill criterion is even definable in the first place.

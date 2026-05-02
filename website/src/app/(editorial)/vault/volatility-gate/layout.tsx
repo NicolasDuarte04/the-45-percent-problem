@@ -28,7 +28,7 @@ export default function VolatilityGateLayout({
       eyebrow="§ VII · Long-form"
       title="Volatility Gate"
       deck="Five pre-registered suppression rules: news events, price discovery, exchange spread, liquidity floor, and sizing guardrails. Each rule has a counterfactual."
-      readingTimeMinutes={6}
+      readingTimeMinutes={11}
       lastRevised="2026-04-22"
       citation={{ apa, bibtex }}
       readNext={[

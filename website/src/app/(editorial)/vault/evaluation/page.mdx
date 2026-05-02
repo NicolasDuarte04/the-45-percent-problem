@@ -1,7 +1,374 @@
-# Evaluation
+## Graded fairly: the proper-scoring frame
 
-This article is in preparation. It will explain the Brier score, log-loss, Ranked Probability Score, and closing-line value (CLV) in plain language — what each metric measures, how it is computed from the Ledger data, and what constitutes a meaningful difference between models.
+Calibration is the property we care about. Proper scoring rules are the
+math that makes calibration enforceable. Everything below is one of those
+rules, or a hypothesis test built on top of one.
 
-Interactive figures including the reliability diagram and CLV tile plot will be embedded here.
+The implementation lives in `evaluation/accuracy_metrics.py` and
+`evaluation/clv_tracker.py`; every threshold, every bootstrap parameter,
+and every $\alpha$ level on this page is read from
+`evaluation/pre_reg_constants.yaml`, which was sealed and signed before
+any 2026 forecast was published.
 
-<SectionRule />
+The epistemic argument for why this frame is the only honest way to
+grade a probabilistic model lives at
+[Why probabilities](/vault/why-probabilities).
+
+## The three scoring rules
+
+### Brier score
+
+The multiclass Brier score, summed over $K = 3$ outcomes:
+
+<BlockMath math="\mathrm{BS}_i = \sum_{k=1}^{K}\big(p_{i,k} - y_{i,k}\big)^{2}" />
+
+where $p_{i,k}$ is the model's predicted probability for outcome $k$ on
+match $i$ and $y_{i,k}$ is the one-hot indicator of the realized outcome.
+The score is non-negative and bounded above by $2$ for $K = 3$. Lower is
+better.
+
+What the Brier score penalizes most heavily is large probability errors
+on the realized outcome: assigning $0.95$ to the outcome that did not
+happen costs more than assigning $0.55$. The geometric reading is the
+squared distance between the forecast simplex point and the realized
+one-hot vector.
+
+We report the unnormalized form. Some references divide by $K$ (or
+further normalize to $[0, 1]$). The unnormalized form is what the code
+returns and what the cross-validation battery output encodes.
+
+### Ranked Probability Score
+
+The Ranked Probability Score (Epstein 1969) generalizes the Brier score
+to ordered categorical outcomes by squaring the cumulative distribution
+errors instead of the per-outcome errors:
+
+<BlockMath math="\mathrm{RPS}_i = \frac{1}{K - 1}\sum_{j=1}^{K-1}\Big(\sum_{l=1}^{j} p_{i,l} - \sum_{l=1}^{j} y_{i,l}\Big)^{2}" />
+
+The implementation uses the natural ordering H ≻ D ≻ A. The
+normalization by $1/(K - 1)$ puts the score in $[0, 1]$ for $K = 3$.
+
+What RPS gets right that Brier does not: ordered miss-distance.
+Misclassifying a Home win as an Away win is more wrong than
+misclassifying it as a Draw, because the categories have a natural rank.
+Brier treats both mistakes equivalently. RPS rewards distributional
+sharpness on the ordered 1X2 outcome.
+
+### Log-loss
+
+The cross-entropy loss with a clipping floor:
+
+<BlockMath math="\mathcal{L}_i = -\sum_{k=1}^{K} y_{i,k} \, \log\!\big(\max(p_{i,k}, \, \varepsilon)\big)" />
+
+with $\varepsilon = 10^{-6}$ sealed in `pre_reg_constants.yaml` under
+`scoring_rules.log_loss_eps_min`. Without the clipping floor a
+probability of exactly $0$ on the realized outcome would produce an
+infinite loss; the clip preserves a finite penalty for confidently wrong
+predictions while keeping the metric well-defined.
+
+Log-loss is the steepest of the three rules at high-confidence wrong
+predictions. Saying $90\%$ for the realized outcome incurs $-\log(0.9)
+\approx 0.11$. Saying $90\%$ for the wrong outcome incurs $-\log(0.1)
+\approx 2.30$. This is the metric the kill criterion is built on,
+because it is the most discriminating of the three at the
+model-comparison stage.
+
+### Why three rules, not one
+
+Different rules disagree usefully when models trade off calibration in
+different ways. Brier is the general-purpose calibration measure, RPS
+rewards distributional sharpness on ordered outcomes, and log-loss is
+the most punishing of confident wrong predictions.
+
+Reporting all three is the pre-registered commitment; reporting only one
+would leave the project free to pick the rule that flatters the result.
+The reliability diagram (a visual calibration check) is published on the
+[Transparency Ledger](/ledger) alongside the per-rule metric values.
+
+### Bootstrap confidence intervals
+
+The percentile bootstrap with $B = 10{,}000$ resamples, sealed under
+`accuracy_bootstrap.n_bootstrap`. For any per-match loss array we report
+the empirical mean and the bootstrap 95% CI on that mean
+(`evaluation/accuracy_metrics.py::_bootstrap_ci`).
+
+Resampling is from the match-level loss series (one observation per
+settled match), so the CI reflects the genuine sampling variability we
+have at our small sample size.
+
+## Pairwise model comparison: Diebold-Mariano
+
+### The test statistic
+
+Given two models with per-match losses $\ell^{A}_i$ and $\ell^{B}_i$,
+define the difference series $d_i = \ell^{A}_i - \ell^{B}_i$. The
+Diebold-Mariano (1995) test statistic is the standardized mean of that
+series:
+
+<BlockMath math="\mathrm{DM} = \frac{\bar{d}}{\sqrt{V_{\mathrm{HAC}}(\bar{d})}}" />
+
+where $\bar{d}$ is the sample mean and $V_{\mathrm{HAC}}$ is the
+long-run heteroskedasticity- and autocorrelation-consistent variance
+estimator. The null is $H_0: \mathbb{E}[d_i] = 0$, that the two models
+have equal expected loss.
+
+### Newey-West HAC variance and Harvey-Leybourne-Newbold correction
+
+The HAC variance uses the Newey and West (1987) Bartlett kernel:
+
+<BlockMath math="\hat{\sigma}_{\mathrm{LR}}^{2} = \hat{\gamma}_0 + 2 \sum_{j=1}^{h} \!\Big(1 - \frac{j}{h+1}\Big)\, \hat{\gamma}_{j}" />
+
+where $\hat{\gamma}_j$ is the j-th sample autocovariance of $d$ and $h$
+is the bandwidth. The bandwidth follows the standard rule of thumb,
+$h = \max(1, \lfloor N^{1/3}\rfloor)$. The variance of the mean is then
+$V_{\mathrm{HAC}}(\bar{d}) = \hat{\sigma}_{\mathrm{LR}}^{2} / N$.
+
+At our sample size the asymptotic normal approximation is unreliable, so
+we apply the Harvey, Leybourne, and Newbold (1997) small-sample
+correction:
+
+<BlockMath math="\mathrm{DM}^{*} = \mathrm{DM} \cdot \sqrt{\frac{N + 1 - 2h + h(h-1)/N}{N}}" />
+
+The corrected statistic $\mathrm{DM}^{*}$ is compared to a Student
+$t$-distribution with $N - 1$ degrees of freedom rather than to a
+standard normal. With $N$ in the dozens of matches plus a small
+hold-out, the correction matters: it widens the rejection thresholds
+appropriately for the sample size we actually have.
+
+### Pre-registered rejection thresholds
+
+Three locked $\alpha$ levels live in
+`pre_reg_constants.yaml::diebold_mariano.comparisons`:
+
+| Comparison | $\alpha$ | Notes |
+|---|---|---|
+| **M★ vs M0** | 0.05 | Primary test of model-vs-baseline |
+| **M★ vs Market** | 0.05 | Primary test of model-vs-de-vigged-market |
+| **All other pairwise** | 0.005 | Bonferroni-corrected for the four shadow comparisons |
+
+The Bonferroni correction on the shadow comparisons keeps the
+family-wise error rate at $0.05$ across the four shadow-vs-baseline
+tests. The slightly stricter $0.005$ accounts for the fact that some
+shadow comparisons appear under multiple loss types (Brier and
+log-loss), which inflates the effective number of tests beyond a naive
+count.
+
+## The kill criterion as a Diebold-Mariano application
+
+The pre-registered kill criterion is the same DM-style comparison
+applied between M★'s log-loss and M0's log-loss on the cross-validation
+hold-out. The decision rule is:
+
+<BlockMath math="\mathrm{trip} \iff \overline{\mathcal{L}_{M^{\star}} - \mathcal{L}_{M_0}} \;>\; 2 \cdot \mathrm{SE}\!\big(\mathcal{L}_{M^{\star}} - \mathcal{L}_{M_0}\big)" />
+
+Locked at 2.0 standard errors in
+`pre_reg_constants.yaml::kill_criterion.threshold_standard_errors`.
+Phase 8 returned 1.75 SE, falling 0.25 short of the bar.
+
+The mathematical statement, the live status block, and the operational
+consequence live at [Kill criteria](/vault/kill-criteria). What this
+page contributes is the metric the criterion is built on: log-loss as a
+proper scoring rule with a Bonferroni-aware rejection threshold and an
+honest small-sample correction.
+
+## Market efficiency: the Nyberg test
+
+### The hypothesis
+
+The Nyberg (2014) test asks whether the market closing line incorporates
+all information in $p_{\mathrm{model}}$. If the closing line already
+absorbs the model's signal, then conditional on the closing line the
+model probabilities should add no further explanatory power for realized
+outcomes. Rejection means the model contains information beyond what the
+closing line reflects.
+
+### The multinomial logit specification
+
+For each match $i$ and outcome $k \in \{H, A\}$ (with Draw as the
+reference category), fit:
+
+<BlockMath math="\log \frac{P(Y_i = k)}{P(Y_i = D)} = \beta_{0k} + \beta_{1k}\,\mathrm{logit}\big(q_{\mathrm{close},i,k}\big) + \beta_{2k}\,\mathrm{logit}\big(p_{i,k}\big)" />
+
+where $q_{\mathrm{close}}$ is the de-vigged closing probability and $p$
+is the model probability. Logits are clipped at $\varepsilon = 10^{-6}$
+(`nyberg.logit_clip`).
+
+### The likelihood ratio test
+
+The null is $H_0: \beta_{2H} = \beta_{2A} = 0$ (the model coefficients
+contribute nothing once the closing line is conditioned on). The
+likelihood ratio statistic is:
+
+<BlockMath math="\mathrm{LR} = 2\,\big(\ell_{\mathrm{full}} - \ell_{\mathrm{restricted}}\big) \;\sim\; \chi^{2}_{2}" />
+
+Pre-registered critical values from `nyberg.comparisons`:
+
+| Comparison | $\alpha$ | $\chi^{2}_{2}$ critical value |
+|---|---|---|
+| **M★ primary** | 0.05 | 5.991 |
+| **Shadow models (Bonferroni)** | 0.0125 | 8.668 |
+
+Rejection at the M★ level says $p_{\mathrm{model}}$ contains information
+the market closing line did not absorb. Failure to reject says the
+closing line already does the same work the model does.
+
+### Wald HC3 robustness and opening-line re-fit
+
+A Wald test on the same null hypothesis, using the HC3 sandwich variance
+estimator, is reported as a robustness panel alongside the LR test.
+Empirically the two should agree; persistent disagreement signals a
+mis-specified covariance structure that the LR test alone would not
+catch.
+
+The same multinomial logit is re-fit using opening-line de-vigged
+probabilities rather than closing-line. The opening-line re-fit asks:
+does the model contain information that the *opening* line did not have?
+
+This catches a subtle robustness concern that the closing-line
+specification cannot. If the closing line moves in response to the
+model's published edges, the closing line will partially absorb the
+model's information by construction, even when the model genuinely was
+first to it. The opening-line re-fit isolates the model's information
+advantage at the moment the line opens, before any market adjustment to
+the model could have happened.
+
+## Closing Line Value (CLV)
+
+### Why CLV at small N
+
+CLV is the trading community's gold standard for edge detection at small
+sample size. For a 64-match World Cup with M★'s edges flagged on perhaps
+30 to 40 matches, win-rate analysis is dominated by sampling variance: a
+few unlucky bounces and the win rate looks bad even when the underlying
+probabilities were correct. CLV is dominated by signal as long as the
+model's edges actually move the market, because every match contributes
+a CLV observation regardless of whether the bet won or lost.
+
+### Two CLV definitions
+
+The implementation logs both forms
+(`clv_tracker.py::compute_clv_series`). The probability-space form is
+the primary metric:
+
+<BlockMath math="\mathrm{CLV}_i = \frac{q^{*}_{\mathrm{close},i}}{q^{*}_{\mathrm{open},i}} - 1" />
+
+The log-odds form is logged as a secondary, for cross-checking against
+trading-desk conventions:
+
+<BlockMath math="\mathrm{CLV}^{\log}_i = \ln d_{\mathrm{open},i} - \ln d_{\mathrm{close},i}" />
+
+where $q^{*}$ is the de-vigged probability (power method) on the chosen
+outcome and $d$ is the decimal odds. Both forms are computed for every
+paired open/close observation. Inferential procedures use the
+probability-space form.
+
+### The naive Z-test
+
+A naive i.i.d. Z-test for $H_0: \mathbb{E}[\mathrm{CLV}] = 0$:
+
+<BlockMath math="Z = \frac{\bar{x}}{s / \sqrt{N}}" />
+
+Pre-specified rejection: one-sided at $\alpha = 0.05$,
+$z_{\mathrm{crit}} = 1.6449$ (`clv.z_test.critical_value`). Reported as
+a floor, not as the primary inferential procedure. CLV time series have
+non-trivial autocorrelation across consecutive matches in the same
+market regime, and the i.i.d. assumption is too strong. The Hall and
+Mueller bootstrap below handles the dependence honestly.
+
+### The Hall-Mueller bootstrap Sharpe (primary)
+
+The primary inferential procedure for genuine edge detection. Five
+steps:
+
+1. Compute the realized Sharpe ratio of the CLV series, $\widehat{\mathrm{SR}} = \bar{x} / s$.
+2. Choose the block length $\bar{L} = \mathrm{clamp}\!\big(\lfloor 1.75 \cdot N^{1/3} \rfloor,\, [4, 20]\big)$, with bounds in `clv.bootstrap`.
+3. Generate $B = 10{,}000$ stationary block bootstrap (Politis and Romano 1994) resamples of the CLV series.
+4. Compute the bootstrap Sharpe for each resample.
+5. Apply the Hall and Mueller (1997) bias correction to each bootstrap Sharpe: $\mathrm{SR}_{\mathrm{HM},b} = 2 \cdot \widehat{\mathrm{SR}} - \mathrm{SR}_{\mathrm{boot},b}$.
+
+The 90% and 95% percentile CIs of the corrected distribution
+$\{\mathrm{SR}_{\mathrm{HM},b}\}$ are reported.
+
+Bootstrap reproducibility is governed by a deterministic seed derivation
+from the frozen code SHA:
+
+<BlockMath math="\text{seed} = \mathrm{int.from\_bytes}\!\big(\text{code\_sha}.\text{encode}(\text{ascii})[:8],\,\text{big}\big)" />
+
+Anyone with access to the same code SHA can reproduce the full bootstrap
+distribution byte-for-byte.
+
+### The three-state decision rule
+
+The bootstrap output decides between three labels
+(`clv.edge_decision.labels`):
+
+| Label | Condition |
+|---|---|
+| **GENUINE_EDGE** | 95% CI lower bound $> 0$ |
+| **WEAK_EDGE** | 95% CI lower bound $\leq 0$, but 90% CI lower bound $> 0$ |
+| **NO_EDGE** | otherwise |
+
+The three-state structure is itself a pre-registered choice. We could
+have used a binary cutoff at $\alpha = 0.05$. We chose three states
+because the boundary case (the 95% bound just barely failing) is
+genuinely ambiguous; labelling it WEAK_EDGE rather than forcing it into
+either bucket is more honest about what we know.
+
+## Pseudo-CLV: shadow models in M★'s clothes
+
+The "Champion's Clothes" principle. Each shadow model M0 through M3 is
+hypothetically dressed in M★'s exact market-facing machinery:
+
+* the same edge thresholds, 3% on mainline markets and 5% on derivatives, from `market.edge_threshold_*`,
+* the same Volatility Gate state from the live snapshot, so shadow bets are also suppressed when news shocks fire,
+* the same Kelly fractions, $\phi = 1/4$ for mainlines and $\phi = 1/8$ for longshots ($p < 0.10$), from `kelly.fraction_*`,
+* the same opening and closing lines from `forecast_log`.
+
+The only thing that varies across shadow books is the probability vector
+$p_{\mathrm{model}}$. The same CLV math runs against each. The
+implementation lives in `evaluation/pseudo_clv.py`; the CLV math is
+delegated to `clv_tracker` and never re-implemented.
+
+What pseudo-CLV answers: had M0, M1, M2, or M3 been the Champion instead
+of M★, would it also have generated edges that the market subsequently
+moved toward? The counterfactual is constrained, not unconstrained. We
+are not asking what M★ would look like as a different model entirely.
+We are asking how each shadow model's probabilities would have priced
+under M★'s exact market layer, edge thresholds, gate, and Kelly sizer.
+That constraint is what makes the comparison interpretable.
+
+What pseudo-CLV does not answer. It is still bound to the small sample
+size that makes CLV inference noisy in the first place. A WEAK_EDGE
+label on a shadow book at the kill-criterion-fired tournament does not
+mean that shadow book would have survived the kill criterion's
+structural bar; the kill criterion is a log-loss-based two-condition
+gate, and pseudo-CLV is a market-edge-based bootstrap. They answer
+different questions.
+
+A note on the current state. With M★ provisionally demoted to M0 for
+trading policy, no real Kelly stakes are placed against any model's
+edges. Pseudo-CLV continues to grade us anyway, because it is the same
+math run on hypothetical bets logged in `forecast_log`: a paper
+portfolio that the metric tracks even when no real money is at risk. M0
+in pseudo-CLV is identical to M★ in CLV by construction; pseudo-CLV for
+M1, M2, and M3 remains an interesting counterfactual.
+
+## What the metrics do not do
+
+The boundary list. Things this evaluation framework deliberately does
+not capture:
+
+* **No win/loss accounting.** We do not grade by wins. Sampling variance on a 64-match tournament is too high to learn from win counts alone.
+* **No expected-value framing against a bankroll.** The project does not place real bets, so EV-against-bankroll is not a metric we report.
+* **No backtest of an alternate betting strategy** beyond what pseudo-CLV captures. Hypothetical strategies that change the edge threshold, the Kelly fraction, or the gate rules would be post-hoc by definition, and reporting them would compromise the pre-registration.
+* **No matchup-level or team-level calibration drift tests.** With a 64-match tournament, any per-team binning would have single-digit observation counts. The reliability diagram on the [Transparency Ledger](/ledger) reports stage-level breakdowns (Group, R32, R16, QF, SF, Final) at most.
+* **No latency analysis.** The simulation engine is fast enough that sub-second forecasting is not a constraint we model or report.
+* **No comparison against forecasting services that do not publish their probabilities.** We compare against bookmaker-implied closing lines because those are the only well-defined external probabilities we can match the engine against. Comparisons against undisclosed models would require trusting unverifiable claims.
+
+## Where to go next
+
+* **[Kill criteria](/vault/kill-criteria)**: the formal mathematical statement of the kill criterion, the live status block, and the operational consequence of firing.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed Git tag, and the sealed `pre_reg_constants.yaml` that locked every $\alpha$ level on this page.
+* **[Models](/vault/models)**: the cross-validation battery that fired the kill criterion using the metrics described here.
+* **[Why probabilities](/vault/why-probabilities)**: the epistemic argument for why proper scoring rules are the only honest grading frame.
+* **[Transparency Ledger](/ledger)**: the live ablation surface, with the reliability diagram, the CLV tile plot, and the rolling per-stage metric values.

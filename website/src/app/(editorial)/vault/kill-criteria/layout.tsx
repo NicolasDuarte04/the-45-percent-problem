@@ -28,7 +28,7 @@ export default function KillCriteriaLayout({
       eyebrow="§ V · Status page"
       title="Kill criteria"
       deck="If M★ performs worse than the null baseline by the Round of 16, this project publishes a null result."
-      readingTimeMinutes={3}
+      readingTimeMinutes={8}
       lastRevised="2026-04-22"
       citation={{ bibtex, apa }}
       readNext={[

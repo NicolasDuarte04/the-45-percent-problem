@@ -123,7 +123,7 @@ observed over-frequency of low-scoring draws. See [notation](/vault/notation)
 for the full definition.
 
 **Plain English.** The independent Poisson model underestimates 0-0 and 1-1
-draws in football by roughly 20–30%. The Dixon-Coles correction adds back the
+draws in football by roughly 20 to 30%. The Dixon-Coles correction adds back the
 missing probability mass for those four low-score cells. Introduced by Dixon
 and Coles (1997).
 
@@ -153,7 +153,7 @@ what the market says it is.
 **Plain English.** Positive edge means the model thinks the outcome is more
 likely than the market does. Negative edge means the model thinks it is less
 likely. Neither positive nor negative edge is described as "good" on this
-site — the terminal shows the gap, not a recommendation.
+site. The terminal shows the gap, not a recommendation.
 
 **Where it matters.** Every row in the [divergence terminal](/terminal).
 
@@ -229,11 +229,11 @@ just the modal prediction.
 ### M★ (M-star)
 
 **Formal.** The pre-registered champion model, selected from candidates
-M1, M2, M3 based on out-of-sample log-loss on 2018–2022 international
+M1, M2, M3 based on out-of-sample log-loss on 2018 to 2022 international
 match data, before the 2026 World Cup.
 
 **Plain English.** The model this project committed to before the tournament
-started. M★ is identified in the OSF pre-registration and is sealed — it
+started. M★ is identified in the OSF pre-registration and is sealed; it
 cannot be swapped mid-tournament.
 
 **Where it matters.** Every probability on this site.
@@ -265,7 +265,7 @@ and <InlineMath math="\lambda_a" />:
 <BlockMath math="P(X=x,\, Y=y) = \frac{e^{-\lambda_h}\lambda_h^x}{x!} \cdot \frac{e^{-\lambda_a}\lambda_a^y}{y!}" />
 
 **Plain English.** A mathematical model that says goals arrive randomly at
-a steady rate — as if each second of a match has a tiny probability of
+a steady rate, as if each second of a match has a tiny probability of
 producing a goal, and that probability does not change during the match.
 
 **Where it matters.** [Model anatomy](/vault/models)
@@ -333,7 +333,7 @@ gate status is `FIRED` if any rule is triggered; `OPEN` otherwise. Rules:
 threshold (12%), (5) settlement proximity (2 h before kick-off).
 
 **Plain English.** Five conditions under which the model's pre-match
-probability is considered unreliable due to market conditions — not because
+probability is considered unreliable due to market conditions, not because
 the math is wrong, but because the market price it is being compared to is
 noisy. Gate-fired rows remain in the terminal, annotated with the triggered
 rule.

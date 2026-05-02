@@ -1,110 +1,246 @@
 <Dropcap>
-  If M★ performs worse than the null baseline by the Round of 16, this
-  project publishes a null result, the terminal is frozen, and no further
-  forecasts are issued. This is not a contingency plan. It is the pre-
-  registered design.
+  In Phase 8, the kill criterion's pre-flight sanity gate fired. M2, the
+  candidate that won the cross-validation log-loss battery, beat M0 by
+  1.75 standard errors, falling short of the pre-registered 2.0 SE bar
+  by 0.25 SE. The pre-registered consequence took effect: the paper's
+  framing pivoted to the kill-criterion narrative, and M★ was
+  provisionally demoted to M0 for trading policy. The live R16
+  checkpoint, on cumulative tournament forecasts, is still ahead.
 </Dropcap>
 
-The kill criterion exists because a project that can run indefinitely without
-consequence is not falsifiable. Pre-registering a stopping rule before the
-tournament makes the negative result legible — not as a failure, but as the
-correct outcome of an honest test.
+This page describes the criterion that fired, the inequality it encodes,
+the two stages at which it is evaluated, and what the firing has and has
+not changed about the project's operations. The procedural argument for
+why a pre-registered stopping rule is necessary at all sits at the
+bottom; the substantive event the rule produced sits at the top.
 
 <SectionRule />
 
 ## The mathematical statement
 
-The kill condition is a one-sided log-loss comparison evaluated at a single
-pre-specified checkpoint: the end of the Round of 16 (R16), when at least 16
-group-stage matches and the first four R16 matches have settled.
+The kill criterion is a two-condition gate. Both conditions must hold
+for M★ to remain the live trading model. Failure on either condition
+fires the criterion.
 
-Let <InlineMath math="\mathcal{L}_{M^\star}" /> and <InlineMath math="\mathcal{L}_{M_0}" /> denote the cumulative
-mean log-loss of M★ and the null baseline M0 respectively, computed over all
-settled matches up to and including R16:
+### The two-condition gate
 
-<BlockMath math="\mathcal{L} = -\frac{1}{N} \sum_{i=1}^{N} \log p_i" />
+The first condition is that M★ has the lowest mean cross-validation
+log-loss across the candidate set <InlineMath math="\{M_0, M_1, M_2, M_3\}" />.
+The second condition is that M★'s log-loss must beat M0's by at least
+2 standard errors of the difference.
 
-where <InlineMath math="p_i" /> is the model's assigned probability to the realized outcome of
-match <InlineMath math="i" />, and <InlineMath math="N" /> is the count of settled matches.
+The two-condition structure is load-bearing. Without the first
+condition, the project could re-label any model as M★ retroactively.
+Without the second condition, the project could promote a model that
+beats M0 by a hair on sampling variance and call the result an edge.
+The pre-registration sealed both conditions before the tournament
+began.
+
+### The decision inequality
+
+Let <InlineMath math="d_i = \mathcal{L}^{M_0}_i - \mathcal{L}^{M^{\star}}_i" />
+be the per-match log-loss difference (positive <InlineMath math="d" />
+means M★ is better than M0). The criterion requires:
+
+<BlockMath math="\overline{d} \;\geq\; 2 \cdot \mathrm{SE}\!\big(\overline{d}\big)" />
+
+The criterion fires when this inequality fails:
+
+<BlockMath math="\overline{d} \;<\; 2 \cdot \mathrm{SE}\!\big(\overline{d}\big)" />
+
+The firing condition is "M★ does not beat M0 by 2 SE." This can happen
+in two ways. M★ might beat M0 by less than 2 SE, which is what happened
+in Phase 8: the gap was 1.75 SE, falling 0.25 SE short of the bar.
+M★ might also fail to beat M0 at all, which would be a stronger
+failure mode. Both fail the criterion; both trigger the same
+pre-registered consequence.
+
+The threshold value is 2.0 standard errors, sealed in
+`pre_reg_constants.yaml::kill_criterion.threshold_standard_errors` and
+mirrored at `kill.ll_gap_se`. The threshold cannot be modified during
+the tournament without an OSF amendment, which is itself a public
+artifact.
+
+### Why two standard errors
+
+The choice of 2 SE rather than zero is a deliberate buffer at our
+sample size. With 64 World Cup matches plus a small calibration
+hold-out, a 1-SE rule fires on roughly 16% of repeated draws of an
+honest null hypothesis. The 2-SE bar moves the false-positive rate to
+roughly 2.5% one-sided, while still being permissive enough that any
+genuine model improvement should clear it.
+
+The 2-SE choice also accounts for the multiple-comparison structure
+across the four shadow models. A 1-SE rule applied independently to
+each shadow candidate would inflate the family-wise false-positive rate
+above 50%; the 2-SE rule, combined with the Bonferroni correction on
+the Diebold-Mariano comparisons described in
+[Evaluation](/vault/evaluation), keeps the family-wise rate below 5%.
 
 <MarginNote>
-  Log-loss (also called log-likelihood loss or cross-entropy) penalizes
-  confident wrong predictions more heavily than uncertain ones. A model that
-  assigns 0.90 probability to the losing outcome receives a loss of
-  <InlineMath math="-\log(0.10) \approx 2.30" /> for that match — far higher than the 0.69
-  penalty for an equal-probability guess.
+  An earlier draft of this page used a no-margin rule (any positive
+  improvement over M0 was deemed sufficient). That draft predated
+  Phase 8 and did not match the actual locked criterion in
+  `pre_reg_constants.yaml`. The 2-SE rule is the rule that fired.
 </MarginNote>
 
-The kill criterion fires if and only if:
+<SectionRule />
 
-<BlockMath math="\mathcal{L}_{M^\star}(R16) > \mathcal{L}_{M_0}(R16)" />
+## The two checkpoints
 
-That is: M★'s average surprise per match exceeds the null model's. The null
-model assigns <InlineMath math="\tfrac{1}{3}" /> to every outcome in the group stage; its
-log-loss is a constant <InlineMath math="\log 3 \approx 1.099" /> nats. M★ must beat this number
-to remain active.
+The same 2-SE rule is applied at two stages of the project. The Phase 8
+sanity gate runs on cross-validation hold-out data before the
+tournament begins. The R16 live checkpoint runs on cumulative
+tournament forecasts once the Round of 16 settles. Both stages use the
+same machinery; they differ only in which sample of log-losses they
+evaluate.
 
-No margin is required. A single nat of improvement over M0 is sufficient.
-The criterion is strict in the statistical sense — it requires *any* positive
-improvement — but generous in the practical sense, because the bar is a
-deliberately naive comparator.
+### The Phase 8 sanity gate
+
+The Phase 8 sanity gate ran the kill criterion as a pre-flight check on
+the cross-validation hold-out (calibration 2010 to 2021, hold-out 2022
+World Cup), before the 2026 tournament started. The full adjudication
+table:
+
+| Model | Mean CV LL | SE | Status |
+|---|---|---|---|
+| **M2_fifa** | 1.00016 | 0.01809 | Log-loss champion; failed 2-SE gate (1.75 SE) |
+| **M3_macro** | 1.02709 | 0.02062 | Eligible; below M0 in point estimate, did not survive SE bar |
+| **M0_elo** | 1.03184 | 0.02362 | Baseline |
+| **M1_form** | 1.06444 | 0.03293 | Disqualified (worse than M0) |
+
+M2_fifa cleared condition 1 by having the lowest mean log-loss across
+the candidate set. M2_fifa did not clear condition 2: the stratified-CV
+gap to M0 was 1.75 SE, short of the pre-registered 2.0 bar by 0.25 SE.
+
+The pre-registered consequence (`kill.action: pivot_paper_framing`)
+took effect immediately. The paper's framing pivoted to the
+kill-criterion narrative, and M★ was provisionally demoted to M0 for
+trading policy. The pipeline did not abort; the engine continues to
+run, and the forecast log continues to record every model's
+probabilities and edges.
+
+### The R16 live checkpoint
+
+The same 2-SE rule will be re-evaluated once the Round of 16 settles,
+on cumulative match-level log-losses from the start of the tournament
+through the end of R16. The check fires once, after all eight R16
+matches are settled; it is not re-run weekly thereafter.
+
+With M★ provisionally set to M0 by the Phase 8 firing, the R16 live
+comparison reduces to M0 versus M0 by construction, and the inequality
+cannot fire while the demotion stands. The check remains wired in the
+pipeline because the pre-registration committed to it; it becomes
+meaningful again only if an OSF amendment restores a non-baseline
+candidate as M★ before R16 settles.
+
+The formal null-result publication track is reserved for the R16
+checkpoint. If an amendment-restored M★ is 2 SE worse than M0 on
+cumulative live log-losses at R16, the project publishes a null-result
+report within 72 hours of the firing, following the template committed
+in the pre-registration. The Phase 8 sanity gate firing caused the
+framing pivot only; the formal null-result track did not trigger and
+remains dormant.
+
+<SectionRule />
+
+## Operational response
+
+The Phase 8 sanity gate firing triggered a specific, pre-registered set
+of changes. The changes are operational rather than computational. The
+engine still runs the same way; the claims the project is willing to
+make from its outputs have changed.
+
+**What changed:**
+
+1. The paper's framing pivoted from "we built a model that finds market mispricings" to the kill-criterion narrative described in [The 45% Problem](/vault/the-45-percent).
+2. M★ was provisionally demoted to M0 for trading policy. No Kelly stakes are placed against M2's edges, even where M2's point estimates suggest divergence from market prices.
+3. The recommended stake fraction in `forecast_log.jsonl` for the M★ row is forced to zero. Trading is suspended for the duration of the demotion.
+
+**What did not change:**
+
+1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, edges, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
+2. The de-vigging machinery, edge calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged edges and gate decisions; only the M★ row's recommended stake fraction is forced to zero.
+3. CLV continues to be tracked on the M★ row as a hypothetical metric. With trading suspended, CLV measures whether M0's probabilities lead the market over time, even though no real money is at risk. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
+4. The R16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, even though the M★-versus-M0 comparison is currently degenerate.
+
+<MarginNote>
+  An OSF amendment is the only path to changing M★'s identity during
+  the tournament. The amendment, if filed, would be a public artifact
+  with its own time-stamped registry record. There is no quiet
+  substitution available, and no version of the live site where the
+  displayed model can shift between M0, M2, or any other candidate
+  without leaving an audit trail.
+</MarginNote>
+
+The signed Git tag `v1.0.0-mstar-lock` and the OSF pre-registration
+both record the state of the project at the moment of the Phase 8
+firing. The signed tag cannot be moved or backdated without
+invalidating its cryptographic signature; the OSF record cannot be
+amended without producing a visible fork in the audit trail. Together
+they make the firing, and the operational response that followed it,
+permanently verifiable.
+
+<SectionRule />
+
+## Live status
+
+The block below reflects the current state of the kill criterion as of
+the most recent snapshot. It updates nightly with each build.
+
+<KillCriteriaStatusBlock />
+
+The status block reads a boolean from the snapshot and renders the
+firing state as a red `FAILED: 1.75 SE / 2.0 SE` badge alongside the
+Phase 8 timestamp. The badge will remain in this state until the R16
+live checkpoint resolves (which can change the state through the formal
+null-result track, only under an amendment that restores a non-baseline
+M★) or until an OSF amendment formally records a different M★ identity.
+
+The [Transparency Ledger](/ledger) shows the full kill-criteria check
+panel alongside the rolling calibration metrics (Brier, log-loss, RPS)
+and the per-team probability cards. The ledger and this page read from
+the same snapshot, so they cannot disagree about the criterion's state.
 
 <SectionRule />
 
 ## Why pre-registering the stopping rule matters
 
-Pre-registering the kill condition prevents the worst form of result-chasing:
-keeping a model alive indefinitely because no one has formally decided when
-to stop.
+Pre-registering the kill criterion before the tournament prevents the
+worst form of result-chasing: keeping a model alive indefinitely
+because no one has formally decided when to stop. The same logic
+applies to post-hoc threshold tuning. With the 2 SE bar sealed before
+the cross-validation battery ran, there was no path to retroactively
+soften the bar to 1.75 SE in order to keep M2 as M★.
 
-Without a kill condition, a project that goes negative after 20 matches can
-explain away the result ("small sample"), continue to 40 matches, explain
-it again, and eventually either find a positive run or simply never publish
-the full record. Pre-registration removes that option.
-
-If the criterion fires, we must publish the null result. The ledger remains
-visible. The model cards are updated with the outcome. The terminal displays
-a permanent banner. There is no path to quietly removing the project from
-public record.
+Pre-registration also removes the option to quietly remove the project
+from public record if the criterion fires. The OSF DOI
+`10.17605/OSF.IO/8B5HD` and the signed Git tag `v1.0.0-mstar-lock` are
+public, time-stamped, and cryptographically verifiable. The Phase 8
+firing is now part of that permanent record. The model cards have been
+updated with the outcome; the terminal displays the firing badge; the
+forecast log carries the demotion in every row.
 
 <PullQuote cite="this project's pre-registration, OSF 2026-04-22">
   Publishing a null result under a pre-registered stopping rule is not
   failure. It is the project working as designed.
 </PullQuote>
 
-<SectionRule />
-
-## Operational response if the criterion fires
-
-If <InlineMath math="\mathcal{L}_{M^\star}(R16) > \mathcal{L}_{M_0}(R16)" />:
-
-1. The site displays a global banner on every page identifying the null
-   result and the matched condition.
-2. The divergence terminal is frozen: no new divergence rows are added, and
-   the gate status on all existing rows is marked `SUSPENDED`.
-3. The ledger continues to accept settled matches for the remainder of the
-   tournament — the forecast record remains public — but no new forecasts
-   are issued after R16.
-4. A null-result report is published under `/vault/null-result` within
-   72 hours of the criterion firing, following the template committed in the
-   pre-registration.
-5. The OSF record is updated with a link to the null-result report.
-
-<MarginNote>
-  Steps 2 and 3 are not equivalent. The terminal shows predictive output;
-  freezing it is the honest response to a model that has failed its
-  pre-registered performance test. The ledger shows historical facts;
-  those remain visible regardless of model performance.
-</MarginNote>
+The Phase 8 firing is the strongest available vindication of the
+pre-registration discipline. Without the 2-SE bar, the project would
+have launched a public website with M2 as M★, written a paper around
+its 1.75-SE advantage, and slowly discovered over the course of the
+tournament whether the advantage replicated. With it, the project
+reached a clean result on day one and a clear plan for the R16
+checkpoint that follows. The criterion was not theatre; it bound on
+the very first run.
 
 <SectionRule />
 
-## Live status
+## Where to go next
 
-The block below reflects the current state of the kill criterion as of the
-most recent snapshot. It updates nightly with each build.
-
-<KillCriteriaStatusBlock />
-
-The [Transparency Ledger](/ledger) shows the full kill-criteria check panel
-alongside the rolling calibration metrics.
+* **[The 45% Problem](/vault/the-45-percent)**: the lead essay that frames the project's purpose and reads the Phase 8 firing as the project's central finding.
+* **[Models](/vault/models)**: the four-candidate ablation, the cross-validation battery, and the table that adjudicated the firing.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, and the Diebold-Mariano machinery the kill criterion is built on.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed Git tag, the sealed `pre_reg_constants.yaml`, and the procedural commitments the criterion enforces.
+* **[Notation](/vault/notation)**: the symbol table for <InlineMath math="\mathcal{L}" />, <InlineMath math="d_i" />, <InlineMath math="\overline{d}" />, <InlineMath math="\mathrm{SE}" />, and related quantities.

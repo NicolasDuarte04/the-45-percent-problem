@@ -1,65 +1,201 @@
-<Dropcap>
-  Bookmakers are good at their job. Across thousands of World Cup matches,
-  the markets they set resolve, on average, close to the probabilities those
-  markets imply. That is the headline. Read it carefully; it is less
-  reassuring than it sounds.
-</Dropcap>
+## The 45% question
 
-The residual — the part of outcome variance the market does **not** explain
-— is the subject of this essay. About 45% of it, we will argue, is neither
-predictable market edge nor pure randomness. It is something else: a
-structural gap between the way tournament markets are priced and the way
-tournament outcomes actually fall.
+Roughly half of World Cup outcomes resist explanation. Most rigorous papers
+in the forecasting literature (Klement and Hoffmann's macroeconomic
+regressions, Dixon and Coles' bivariate Poisson treatments, and the Elo
+extensions that came after) all run into the same problem. Even with
+decades of structural variables, ranking adjustments, and form corrections,
+somewhere near 45% of the tournament variance is left to chance.
 
-<MarginNote>
-  Residual here means variance left over after accounting for market-implied
-  probabilities. The 45% figure is not a point estimate of edge; see
-  [§ Evaluation](/vault/evaluation) for how it is decomposed.
-</MarginNote>
+This comes as no surprise, as mathematical models fail when isolated from a
+near-perfect environment. We define chance, or "luck" as those papers say,
+as unforeseen exogenous variables that act upon a model and throw off its
+predictive capability. In more football-like terms, it could be an unfair
+referee, a sudden injury, or a bad bounce.
 
-<SectionRule />
+The purpose of this project is not beating that 45% target. It is the
+constraint we take seriously. We wanted to live in this corner of football
+forecasting on purpose: not the hunt for a 95%-accurate oracle, but a
+careful, investigative look at what the remaining fifty-five percent
+actually lets us claim.
 
-## Why residuals matter more than point predictions
+The premise of this research began with a simple comparison. While
+reviewing Klement and Hoffmann's literature, we began mapping theoretical
+probabilities against the actual implied probabilities set by bookmakers.
+A structural gap emerged. This project is built on the assumption that
+there is no perfect system. Bookmakers are incredibly efficient, but they
+are not omniscient; they can overvalue public sentiment or undervalue
+structural data, just as academic models can miss on-the-ground realities.
 
-A point prediction says *Brazil wins*. A distribution says *Brazil wins with
-probability 0.24, draws 0.28, loses 0.48*. The second statement is harder to
-be wrong about, and harder to be right about by accident. It is the only
-statement that can be calibrated.
+Therefore, if models genuinely capture some real signal in international
+tournament outcomes, their probability estimates should systematically
+diverge from bookmaker-implied probabilities in ways that survive honest
+evaluation. If they don't, the markets are doing better than the models,
+and that in itself is a finding. The project's name is a permanent reminder
+that we are working under that constraint, not pretending to dissolve it.
 
-<PullQuote cite="this project, stated plainly">
-  The question is not whether a model beats the bookmaker on any single
-  match. The question is whether the residuals, aggregated across hundreds
-  of matches, are where the model says they will be.
-</PullQuote>
+## What we built
 
-## What this project is doing about it
+We built a pre-registered framework around a single shared simulation
+engine. This complex Monte Carlo simulation will be referred to as "the
+engine" or "the factory" throughout this work. The engine is a Bivariate
+Poisson model with the Dixon-Coles low score correction, configured for
+the new FIFA 2026 bracket: 48 teams, 12 groups, knockouts to final.
 
-M★ is a bivariate Poisson model with a Dixon-Coles correction, calibrated
-on recent international match data and compared nightly to bookmaker-implied
-probabilities. Its output is a distribution, not a tip. Its evaluation
-metric is calibration, not accuracy.
+It runs 10,000 Monte Carlo simulations per probability snapshot, generates
+a full distribution over tournament outcomes, and logs every forecast to
+an append-only JSONL store with code and data hashes. Average runtime per
+full-tournament simulation is 3.5 milliseconds, and the full 10,000-run
+battery completes in roughly 35 seconds.
 
-The project publishes a [Transparency Ledger](/ledger) of every M★
-forecast, settled and unsettled, with realized outcomes and the calibration
-metrics the pre-registration commits us to.
+What varies across models is not the engine. It is the strength matrix
+the engine consumes. Consider the simulation as the engine, and the
+following shadow models as the fuel it will ingest, each of them built
+around key variable changes that demonstrate completely different
+outcomes.
 
-## What this project is not doing
+* **M0:** Pure Elo, calibrated on our own walk-forward Elo scale. The null baseline.
+* **M1:** Elo with decayed form weighting over a team's last 8 matches.
+* **M2:** Elo blended with FIFA rankings via a cross-validated weight <InlineMath math="w" />.
+* **M3:** Elo with a Bayesian macro prior on GDP, population, and temperature, replicating the Klement and Hoffmann thesis.
 
-This is not a tipping service. It does not recommend positions. It does
-not claim edge on any single match. It is a public, pre-registered test of
-a specific hypothesis about tournament-market residuals — and it has a
-[kill-criterion](/vault/kill-criteria) that forces publication of a null
-result if the hypothesis fails.
+## Model Evaluation
 
-<SectionRule />
+Each model trains on calibration data from 2010 through 2021, with the
+2022 World Cup as the final exam. The model that most closely and more
+often predicts the outcome of the tournament will be the winner. **M★**
+denotes whichever model wins the cross-validation log-loss battery. M★
+was selected once, before the opening match of the 2026 tournament, and
+frozen.
 
-## Champion evolution across the tournament
+The pre-registration matters. The full set of constants was sealed in a
+YAML file, hashed, and registered with the Open Science Framework before
+any 2026 prediction was made. This includes edge thresholds (3% on
+mainline markets, 5% on derivatives), Kelly fractions
+(<InlineMath math="f = 1/4" /> on mainlines, <InlineMath math="f = 1/8" />
+on longshots under 10% implied probability), the Volatility Gate's five
+suppression rules, the evaluation metrics, and the kill criterion itself.
+A signed Git tag (`v1.0.0-mstar-lock`) locks the code. Anything that
+changes after lockdown is either a data ingestion (new matches as they
+happen) or an OSF-amended hotfix with a corresponding registry record.
 
-<ChampionEvolution snapshotId="latest" mode="interactive" topN={8} />
+That commitment includes an exit clause. The kill criterion was registered
+alongside everything else: if M★ does not beat **M0** in cross-validated
+log-loss by at least 2.0 standard errors, M★ is demoted to M0 and the
+project's framing changes. We wrote it down before we ran the battery so
+we could not move the goalposts after seeing the result.
+
+## What this project is not
+
+It is not a tipping service. It will not tell you which team to back. It is
+not a claim that we have built an edge-generating engine. The forecasts
+we publish are model probabilities, displayed alongside bookmaker-implied
+probabilities. Where they diverge, the divergence is visible, not
+actionable. We do not endorse it as an opportunity.
+
+It is not specification search. We did not tune **M2**'s blend weight
+after seeing the 2022 hold-out, run a second pass with a different
+distance metric, or quietly substitute **M3**'s prior. The model that won
+the pre-registered battery is the model the public sees, full stop.
+
+And it is not, by any stretch, a finished claim about market efficiency.
+The corpus we used is small: 347 major-tournament matches, well below the
+~12,000 international matches a fuller corpus would contain. Confidence
+intervals on every ranking signal are wider than we wished.
+
+## What happened
+
+When we ran the final cross-validation battery in Phase 8, the kill
+criterion fired. The two-sentence version: M1 collapsed and was
+disqualified, and M2 (the FIFA-blend model that had been the leading
+candidate through Phase 4's preview battery) beat the M0 baseline by 1.75
+standard errors, falling short of the 2.0 the protocol required. M★ was
+provisionally demoted to M0.
+
+A few things to make explicit about that result. M1's collapse is not
+surprising in retrospect, even if it was a surprise to us at the start.
+Decayed form over a team's last 8 matches is a sensible idea in a league
+context where teams play 38 matches a season. In the corpus this project
+actually has (347 high-stakes matches spread across roughly four years of
+major tournaments per team) eight games is the better part of a decade
+of football. Most of the signal the form-decay term was designed to
+capture has already washed out by the time the next World Cup arrives.
+
+M2's near-miss is the more interesting result. The FIFA blend was the
+model the Phase 4 preview leaned hardest on. The cross-validation
+optimizer in that earlier pass had assigned a weight
+<InlineMath math="w = 1.0" /> to the FIFA component, essentially
+borrowing FIFA's much larger global dataset to patch our own Elo
+sparsity. M2 beat baseline. It just did not beat baseline by enough. It
+was 0.25 standard errors short on a hold-out that already has wide
+intervals because the corpus is small.
+
+We expected the protocol to be theatre. It turned out not to be.
+
+## What it means
+
+**Markets price near-efficiently for the variables we tested.**
+International football betting markets (the Pinnacle and Betfair lines we
+use as benchmarks) already absorb the structural information that Elo,
+FIFA rankings, and Klement-Hoffmann-style macro priors provide. There may
+well be edge to be found in player-level injury data, in-match Bayesian
+updates, or other axes we did not test. We did not find edge in the axes
+we did test at the threshold we pre-committed to.
+
+**Complexity exacts a tax.** Each parameter we add to the strength matrix
+burns degrees of freedom in confidence intervals that were already wide
+because of the corpus size. M2 and M3 both beat M0 in point estimates.
+Neither survived the standard-error bar. The simplest model, pure Elo on
+our walk-forward calibration, won by being modest enough to fit inside
+the data we had.
+
+**Pre-registration earned its keep.** This is the reading we are most
+certain about. Without the kill criterion, we would have launched a
+public website with M2 as M★, written a paper around its 1.75-SE
+advantage, and slowly discovered over the course of the tournament
+whether the advantage replicated. With the kill criterion, we have a
+clean result on day one. We are publishing what we found, not what we
+hoped.
+
+A note we owe the reader. The Phase 8 outcome does not prove markets are
+efficient. It says, narrowly, that on a corpus of 347 matches, with a
+2.0-SE threshold, on the four ranking signals we tested, complexity did
+not beat simplicity. A larger corpus might tell a different story. A
+different threshold might tell a different story. A different metric,
+such as calibration on knockout-only matches, might tell a different
+story.
+
+The honest claim is: under our protocol, on our data, with the constants
+we sealed in April, M★ is M0.
+
+## What you'll see during the tournament
+
+The site stays live through the World Cup. Every day, the orchestrator
+pulls the latest Pinnacle and Betfair lines, generates M★'s probabilities
+for every upcoming match, and updates the public ledger. You will see:
+
+* The model probability for each match, alongside the de-vigged market probability.
+* The visible divergence (model − market). We do not call these edges. We do call them divergences.
+* The Volatility Gate's running judgment on whether the market is in price discovery, in news shock, or quiet enough to be measured.
+* Closing Line Value, computed when each match closes, as the running test of whether M★'s probabilities led the market in either direction.
+
+Brier score, log-loss, and ranked probability score are computed on every
+completed match. Once the Round of 16 is done, we re-run the kill check.
+If M★ (currently M0) is still failing to beat itself, the situation is
+what it is. We publish that too.
+
+There is no place on the site where the displayed model can quietly
+change between M0, M2, or anything else without an OSF amendment record.
+The signed Git tag prevents it.
 
 ## Where to go next
 
-If you want to see the pre-registration commitments that govern this
-project, read [Pre-registration](/vault/preregistration). If you want to
-watch the calibration unfold live, open the
-[Transparency Ledger](/ledger).
+* **[Models](/vault/models)**: The full M0 to M3 ablation, including the cross-validation tables and the M1 collapse.
+* **[Kill criteria](/vault/kill-criteria)**: The formal statement and the live status block. Yes, it has fired.
+* **[Pre-registration](/vault/preregistration)**: The OSF DOI, the signed Git tag, the sealed constants file.
+* **[Why probabilities](/vault/why-probabilities)**: Why we built around a probability distribution rather than a point prediction, and why that decision is the reason the kill criterion was even possible to define.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, CLV, and the Diebold-Mariano and Nyberg tests we use to grade ourselves.
+
+The project's motto, lifted from the margin of an early notebook page:
+*honest uncertainty > false precision*. We meant it then. The Phase 8
+outcome makes us mean it harder.
