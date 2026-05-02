@@ -565,10 +565,11 @@ def main() -> None:
         "rows": divergence_rows,
     })
 
-    # matches/ — first 10 group-stage matches
+    # matches/ — all group-stage matches (one JSON per fixture so /match/[id]
+    # resolves for every link surfaced from the bracket and divergence terminal)
     matches_dir = SNAPSHOT_DIR / "matches"
     matches_dir.mkdir(parents=True, exist_ok=True)
-    sorted_match_ids = sorted(match_probs.keys())[:10]
+    sorted_match_ids = sorted(match_probs.keys())
     for match_id in sorted_match_ids:
         mp = match_probs[match_id]
         home_name = mp["home"]
