@@ -68,8 +68,12 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(data): nightly snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
           # Defensive rebase in case a code change landed on main during
-          # this run. Data files don't conflict with code, so this is safe.
-          git pull --rebase origin main
+          # this run. --autostash handles any untracked-but-modified files
+          # the Python scripts may have left behind (logs, caches, raw
+          # parquet outputs). The runner is ephemeral, so we don't care
+          # about restoring the stash post-push — only the committed data
+          # files matter.
+          git pull --rebase --autostash origin main
           git push origin main
 
       - name: Trigger Vercel deploy hook (belt-and-braces)
