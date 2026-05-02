@@ -31,6 +31,12 @@ jobs:
       - name: Install project dependencies
         run: pip install -e ".[dev]"
 
+      - name: Build WC 2026 fixture table (hardcoded, no network required)
+        run: python ingestion/fetch_wc2026_fixtures.py --force
+
+      - name: Fetch fresh Elo ratings from eloratings.net
+        run: python ingestion/fetch_elo_ratings.py --force
+
       - name: Run snapshot generator
         run: python scripts/generate_snapshot.py
 
