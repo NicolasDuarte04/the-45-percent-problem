@@ -2,18 +2,16 @@
   "fifa_code": "NGA",
   "display_name": "Nigeria",
   "group": "H",
-  "confederation": "CAF",
-  "elo_rating": 1752.0,
   "progression": {
-    "p_champion": 0.0011,
-    "p_final": 0.0055,
-    "p_sf": 0.0185,
-    "p_qf": 0.0509,
-    "p_r16": 0.1698,
-    "p_group_qualification": 0.3944,
+    "p_group_qualification": 0.3946,
+    "p_r16": 0.17,
+    "p_qf": 0.0499,
+    "p_sf": 0.0184,
+    "p_final": 0.0056,
+    "p_champion": 0.0012,
     "ci_95_champion": [
-      0.000614,
-      0.001969
+      0.000687,
+      0.002096
     ]
   },
   "history": [],

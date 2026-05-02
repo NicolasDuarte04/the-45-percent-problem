@@ -2,18 +2,16 @@
   "fifa_code": "BEL",
   "display_name": "Belgium",
   "group": "H",
-  "confederation": "UEFA",
-  "elo_rating": 1866.0,
   "progression": {
-    "p_champion": 0.007,
-    "p_final": 0.0197,
-    "p_sf": 0.0484,
-    "p_qf": 0.1231,
+    "p_group_qualification": 0.6678,
     "p_r16": 0.3298,
-    "p_group_qualification": 0.6676,
+    "p_qf": 0.1241,
+    "p_sf": 0.0483,
+    "p_final": 0.0197,
+    "p_champion": 0.0075,
     "ci_95_champion": [
-      0.005545,
-      0.008834
+      0.005988,
+      0.00939
     ]
   },
   "history": [],

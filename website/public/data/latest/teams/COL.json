@@ -2,15 +2,13 @@
   "fifa_code": "COL",
   "display_name": "Colombia",
   "group": "E",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1975.0,
   "progression": {
+    "p_group_qualification": 0.8484,
+    "p_r16": 0.4933,
+    "p_qf": 0.2685,
+    "p_sf": 0.1592,
+    "p_final": 0.0834,
     "p_champion": 0.0385,
-    "p_final": 0.0826,
-    "p_sf": 0.1599,
-    "p_qf": 0.2694,
-    "p_r16": 0.4944,
-    "p_group_qualification": 0.8483,
     "ci_95_champion": [
       0.034903,
       0.042452

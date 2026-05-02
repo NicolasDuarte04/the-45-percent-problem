@@ -2,18 +2,16 @@
   "fifa_code": "TUR",
   "display_name": "Turkey",
   "group": "K",
-  "confederation": "UEFA",
-  "elo_rating": 1902.0,
   "progression": {
-    "p_champion": 0.0204,
-    "p_final": 0.0653,
-    "p_sf": 0.1233,
-    "p_qf": 0.2589,
-    "p_r16": 0.4287,
-    "p_group_qualification": 0.6136,
+    "p_group_qualification": 0.6112,
+    "p_r16": 0.4261,
+    "p_qf": 0.2561,
+    "p_sf": 0.1208,
+    "p_final": 0.0635,
+    "p_champion": 0.0194,
     "ci_95_champion": [
-      0.017808,
-      0.02336
+      0.016875,
+      0.022294
     ]
   },
   "history": [],

@@ -2,18 +2,16 @@
   "fifa_code": "AUT",
   "display_name": "Austria",
   "group": "J",
-  "confederation": "UEFA",
-  "elo_rating": 1827.0,
   "progression": {
-    "p_champion": 0.0042,
-    "p_final": 0.0189,
-    "p_sf": 0.0403,
-    "p_qf": 0.0808,
-    "p_r16": 0.2092,
     "p_group_qualification": 0.4066,
+    "p_r16": 0.2103,
+    "p_qf": 0.0818,
+    "p_sf": 0.0404,
+    "p_final": 0.0183,
+    "p_champion": 0.004,
     "ci_95_champion": [
-      0.003109,
-      0.005672
+      0.002939,
+      0.005442
     ]
   },
   "history": [],

@@ -2,18 +2,16 @@
   "fifa_code": "POR",
   "display_name": "Portugal",
   "group": "J",
-  "confederation": "UEFA",
-  "elo_rating": 1984.0,
   "progression": {
-    "p_champion": 0.0587,
-    "p_final": 0.1448,
-    "p_sf": 0.2301,
-    "p_qf": 0.3399,
-    "p_r16": 0.5387,
     "p_group_qualification": 0.7548,
+    "p_r16": 0.5392,
+    "p_qf": 0.3399,
+    "p_sf": 0.2309,
+    "p_final": 0.1438,
+    "p_champion": 0.0572,
     "ci_95_champion": [
-      0.05426,
-      0.063479
+      0.052816,
+      0.061924
     ]
   },
   "history": [],

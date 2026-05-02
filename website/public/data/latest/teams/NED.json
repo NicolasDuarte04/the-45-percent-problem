@@ -2,18 +2,16 @@
   "fifa_code": "NED",
   "display_name": "Netherlands",
   "group": "F",
-  "confederation": "UEFA",
-  "elo_rating": 1961.0,
   "progression": {
-    "p_champion": 0.0223,
-    "p_final": 0.0416,
-    "p_sf": 0.079,
-    "p_qf": 0.1686,
-    "p_r16": 0.4191,
-    "p_group_qualification": 0.7662,
+    "p_group_qualification": 0.7665,
+    "p_r16": 0.4197,
+    "p_qf": 0.1679,
+    "p_sf": 0.0797,
+    "p_final": 0.0429,
+    "p_champion": 0.0228,
     "ci_95_champion": [
-      0.019584,
-      0.025383
+      0.020052,
+      0.025914
     ]
   },
   "history": [],

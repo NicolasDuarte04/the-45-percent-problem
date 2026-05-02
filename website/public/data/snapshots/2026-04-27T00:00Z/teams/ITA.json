@@ -2,18 +2,16 @@
   "fifa_code": "ITA",
   "display_name": "Italy",
   "group": "K",
-  "confederation": "UEFA",
-  "elo_rating": 1856.0,
   "progression": {
-    "p_champion": 0.0121,
-    "p_final": 0.037,
-    "p_sf": 0.0725,
-    "p_qf": 0.1686,
-    "p_r16": 0.3226,
-    "p_group_qualification": 0.4999,
+    "p_group_qualification": 0.4994,
+    "p_r16": 0.3238,
+    "p_qf": 0.1696,
+    "p_sf": 0.0718,
+    "p_final": 0.0366,
+    "p_champion": 0.0113,
     "ci_95_champion": [
-      0.010137,
-      0.014438
+      0.009408,
+      0.013567
     ]
   },
   "history": [],

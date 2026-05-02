@@ -2,18 +2,16 @@
   "fifa_code": "SVK",
   "display_name": "Slovakia",
   "group": "L",
-  "confederation": "UEFA",
-  "elo_rating": 1673.0,
   "progression": {
-    "p_champion": 0.0004,
-    "p_final": 0.0027,
-    "p_sf": 0.0089,
-    "p_qf": 0.0344,
-    "p_r16": 0.1073,
-    "p_group_qualification": 0.3919,
+    "p_group_qualification": 0.3925,
+    "p_r16": 0.109,
+    "p_qf": 0.0346,
+    "p_sf": 0.0087,
+    "p_final": 0.0028,
+    "p_champion": 0.0006,
     "ci_95_champion": [
-      0.000156,
-      0.001028
+      0.000275,
+      0.001309
     ]
   },
   "history": [],

@@ -2,18 +2,16 @@
   "fifa_code": "ESP",
   "display_name": "Spain",
   "group": "F",
-  "confederation": "UEFA",
-  "elo_rating": 2165.0,
   "progression": {
-    "p_champion": 0.1931,
-    "p_final": 0.2531,
-    "p_sf": 0.3621,
-    "p_qf": 0.541,
-    "p_r16": 0.7237,
     "p_group_qualification": 0.9536,
+    "p_r16": 0.7235,
+    "p_qf": 0.5431,
+    "p_sf": 0.3657,
+    "p_final": 0.2563,
+    "p_champion": 0.1971,
     "ci_95_champion": [
-      0.185482,
-      0.200954
+      0.18942,
+      0.205013
     ]
   },
   "history": [],

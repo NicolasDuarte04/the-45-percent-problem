@@ -2,15 +2,13 @@
   "fifa_code": "UKR",
   "display_name": "Ukraine",
   "group": "L",
-  "confederation": "UEFA",
-  "elo_rating": 1767.0,
   "progression": {
+    "p_group_qualification": 0.6091,
+    "p_r16": 0.2334,
+    "p_qf": 0.1008,
+    "p_sf": 0.0332,
+    "p_final": 0.0119,
     "p_champion": 0.0017,
-    "p_final": 0.0114,
-    "p_sf": 0.0327,
-    "p_qf": 0.1002,
-    "p_r16": 0.2345,
-    "p_group_qualification": 0.609,
     "ci_95_champion": [
       0.001062,
       0.002721

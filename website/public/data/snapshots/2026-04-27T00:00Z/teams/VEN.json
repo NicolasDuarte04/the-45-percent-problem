@@ -2,18 +2,16 @@
   "fifa_code": "VEN",
   "display_name": "Venezuela",
   "group": "H",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1727.0,
   "progression": {
-    "p_champion": 0.0006,
-    "p_final": 0.0039,
-    "p_sf": 0.0138,
-    "p_qf": 0.0392,
-    "p_r16": 0.1506,
-    "p_group_qualification": 0.3512,
+    "p_group_qualification": 0.3506,
+    "p_r16": 0.1497,
+    "p_qf": 0.0391,
+    "p_sf": 0.0137,
+    "p_final": 0.0041,
+    "p_champion": 0.0008,
     "ci_95_champion": [
-      0.000275,
-      0.001309
+      0.000405,
+      0.001578
     ]
   },
   "history": [],

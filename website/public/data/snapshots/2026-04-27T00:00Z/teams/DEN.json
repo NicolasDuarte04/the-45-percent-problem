@@ -2,18 +2,16 @@
   "fifa_code": "DEN",
   "display_name": "Denmark",
   "group": "G",
-  "confederation": "UEFA",
-  "elo_rating": 1870.0,
   "progression": {
-    "p_champion": 0.0097,
-    "p_final": 0.0338,
-    "p_sf": 0.075,
-    "p_qf": 0.1838,
-    "p_r16": 0.482,
     "p_group_qualification": 0.8564,
+    "p_r16": 0.4832,
+    "p_qf": 0.1864,
+    "p_sf": 0.0766,
+    "p_final": 0.033,
+    "p_champion": 0.0101,
     "ci_95_champion": [
-      0.007958,
-      0.011818
+      0.00832,
+      0.012257
     ]
   },
   "history": [],

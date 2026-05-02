@@ -2,15 +2,13 @@
   "fifa_code": "POL",
   "display_name": "Poland",
   "group": "D",
-  "confederation": "UEFA",
-  "elo_rating": 1729.0,
   "progression": {
+    "p_group_qualification": 0.2791,
+    "p_r16": 0.1487,
+    "p_qf": 0.0438,
+    "p_sf": 0.0154,
+    "p_final": 0.0044,
     "p_champion": 0.0009,
-    "p_final": 0.0045,
-    "p_sf": 0.0152,
-    "p_qf": 0.0429,
-    "p_r16": 0.1485,
-    "p_group_qualification": 0.2786,
     "ci_95_champion": [
       0.000474,
       0.00171

@@ -2,18 +2,16 @@
   "fifa_code": "SUI",
   "display_name": "Switzerland",
   "group": "K",
-  "confederation": "UEFA",
-  "elo_rating": 1889.0,
   "progression": {
-    "p_champion": 0.0147,
-    "p_final": 0.0544,
-    "p_sf": 0.1088,
-    "p_qf": 0.2327,
-    "p_r16": 0.3873,
-    "p_group_qualification": 0.5655,
+    "p_group_qualification": 0.5643,
+    "p_r16": 0.3882,
+    "p_qf": 0.2332,
+    "p_sf": 0.1096,
+    "p_final": 0.0548,
+    "p_champion": 0.0152,
     "ci_95_champion": [
-      0.012521,
-      0.017252
+      0.012981,
+      0.017791
     ]
   },
   "history": [],

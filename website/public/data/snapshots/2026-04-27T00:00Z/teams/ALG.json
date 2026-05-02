@@ -2,18 +2,16 @@
   "fifa_code": "ALG",
   "display_name": "Algeria",
   "group": "E",
-  "confederation": "CAF",
-  "elo_rating": 1743.0,
   "progression": {
-    "p_champion": 0.002,
-    "p_final": 0.0113,
-    "p_sf": 0.0397,
-    "p_qf": 0.0961,
-    "p_r16": 0.2273,
-    "p_group_qualification": 0.3764,
+    "p_group_qualification": 0.3766,
+    "p_r16": 0.2279,
+    "p_qf": 0.0976,
+    "p_sf": 0.0416,
+    "p_final": 0.012,
+    "p_champion": 0.0023,
     "ci_95_champion": [
-      0.001295,
-      0.003087
+      0.001533,
+      0.003449
     ]
   },
   "history": [],

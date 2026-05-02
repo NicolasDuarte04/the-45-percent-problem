@@ -2,18 +2,16 @@
   "fifa_code": "SEN",
   "display_name": "Senegal",
   "group": "A",
-  "confederation": "CAF",
-  "elo_rating": 1879.0,
   "progression": {
-    "p_champion": 0.0209,
-    "p_final": 0.0515,
-    "p_sf": 0.1459,
-    "p_qf": 0.3933,
-    "p_r16": 0.6406,
-    "p_group_qualification": 0.8262,
+    "p_group_qualification": 0.8263,
+    "p_r16": 0.6401,
+    "p_qf": 0.3917,
+    "p_sf": 0.1444,
+    "p_final": 0.0518,
+    "p_champion": 0.02,
     "ci_95_champion": [
-      0.018275,
-      0.023893
+      0.017435,
+      0.022934
     ]
   },
   "history": [],
