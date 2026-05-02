@@ -469,7 +469,7 @@ def main() -> None:
         "tournament_phase": "pre_tournament",
         "matches_settled": 0,
         "matches_remaining": 104,
-        "kill_criteria_active": False,
+        "kill_criteria_active": True,
         "notes": f"Phase 7 production snapshot — {SNAPSHOT_ID}",
     })
 
@@ -495,9 +495,12 @@ def main() -> None:
         "nyberg_test_pvalue": None,
         "diebold_mariano_vs_M0": {"stat": None, "pvalue": None},
         "kill_criteria_check": {
-            "condition": "M_STAR.log_loss > M0.log_loss by R16",
-            "triggered": False,
-            "margin": 0.0,
+            "tripped": True,
+            "gap_se": 1.75,
+            "threshold_se": 2.0,
+            "condition": "M2 vs M0 stratified CV log-loss",
+            "timestamp": "2026-04-23T00:00:00Z",
+            "action_taken": "M_STAR_LOCKED",
         },
     })
 
