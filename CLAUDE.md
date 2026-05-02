@@ -324,8 +324,77 @@ The 2022 World Cup (`is_holdout=True` rows in `historical_matches.parquet`) must
 ### Append-only logs
 `data/snapshots/forecast_log.jsonl` and `data/snapshots/event_log.jsonl` are append-only. No script may delete rows from or overwrite these files. Updates = new rows.
 
+**Local invocation guard.** Any script that writes to either file must accept a `--dev-sandbox` flag that redirects writes to `tmp/` (gitignored). Production writes happen only from CI, against the real `data/snapshots/` paths. A local invocation without `--dev-sandbox` is an error: a partial run, a debug execution, or a stray test would otherwise corrupt the pre-registered append-only stream and require a deviation report to OSF. Convention:
+
+```python
+parser.add_argument(
+    "--dev-sandbox",
+    action="store_true",
+    help="Redirect writes to tmp/ instead of data/snapshots/. "
+         "Required for any local invocation; CI omits this flag.",
+)
+# ...
+if args.dev_sandbox:
+    output_path = PROJECT_ROOT / "tmp" / "snapshots" / output_path.name
+elif os.environ.get("CI") != "true":
+    raise RuntimeError(
+        "Refusing to write to data/snapshots/ outside CI. "
+        "Pass --dev-sandbox for local runs."
+    )
+```
+
+This applies to `evaluation/forecast_log.py`, the event-log writer, and any future script that appends to a pre-registered log. Implement the guard before wiring the script into a pipeline, not after.
+
 ### Team name standardisation
 Use the same `TEAM_NAME_MAP` dict established in `fetch_historical_matches.py`. When adding new team names, update that dict in place and import it in other scripts that need it. Do not maintain separate name maps.
+
+---
+
+## Workflow Conventions
+
+These rules govern how changes land in this repo. They exist because the repo backs a pre-registered academic claim: a corrupted or unreviewed commit on `main` is harder to undo here than in a typical product codebase.
+
+### Required first-time setup
+
+After cloning, run `scripts/install-hooks.sh` once. This wires up the repo-managed git hooks (currently: `pre-push` conflict-marker check). Re-run after any change to `scripts/git-hooks/*`. The hook is required, not optional — see "Pre-push hook" below.
+
+### PR discipline
+
+Any change beyond a single-file lint fix or a tightly-confined hotfix goes through a feature branch + pull request + maintainer review, regardless of size. **"Small enough to skip" is not a category.** The failure mode the rule prevents is bundling unrelated changes into one push, which makes blame and rollback harder later.
+
+Direct pushes to `main` are reserved for:
+- Single-file typo, lint, or unescaped-character fixes
+- A tightly-confined hotfix to a specific known-broken commit, with the fix and nothing else in the diff
+- Bot pushes (e.g. the nightly snapshot pipeline)
+
+Anything else — new dependencies, schema changes, multi-file refactors, new features, test infrastructure changes, hook scripts, workflow rule changes — requires a PR.
+
+### Git hygiene
+
+When the rebase target is known to also touch generated files (data snapshots, build artifacts, lockfiles), prefer:
+
+```bash
+git fetch origin
+git reset --hard origin/main
+# then re-apply your committed work, e.g. by re-running the change against
+# the fresh tree, or by cherry-picking the relevant commit
+```
+
+over:
+
+```bash
+git stash -u && git pull --rebase origin main && git stash pop
+```
+
+The stash-pop pattern silently writes git conflict markers into the working tree when the stashed changes touch the same files as the rebased commits. The push succeeds because the markers are unstaged, but the working tree (and any process that reads from disk without going through git — dev server, test runner, build) sees broken JSON / broken source. The `pre-push` hook catches markers that reach the index, but unstaged-only corruption escapes it.
+
+**Always run `git status` after `git stash pop`.** If it reports unmerged paths, resolve them before doing anything else.
+
+### Pre-push hook
+
+`scripts/git-hooks/pre-push` greps every commit being pushed for git conflict markers (`<{7} `, `={7}$`, `>{7} `) and aborts the push if any are found. Bypass only when intentional: `git push --no-verify`. The hook lives at `scripts/git-hooks/pre-push` and is symlinked into `.git/hooks/` by `scripts/install-hooks.sh`.
+
+If you find yourself wanting to bypass it, the answer is almost always to fix the diff, not the hook.
 
 ---
 
