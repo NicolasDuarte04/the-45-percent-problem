@@ -84,7 +84,14 @@ import {
 
 const LATEST = path.join(__dirname, "../../public/data/latest");
 const DATA_ROOT = path.join(__dirname, "../../public/data");
-const SNAPSHOT_ID = "2026-04-22T00:00Z";
+// Source the snapshot id from the live data so nightly snapshots stay green;
+// cross-artifact consistency below still ensures every file agrees on it.
+const SNAPSHOT_ID: string = (() => {
+  const meta = JSON.parse(
+    fs.readFileSync(path.join(LATEST, "snapshot_meta.json"), "utf-8"),
+  ) as { snapshot_id: string };
+  return meta.snapshot_id;
+})();
 
 function readJson(p: string): unknown {
   return JSON.parse(fs.readFileSync(p, "utf-8"));
@@ -369,6 +376,29 @@ describe("cross-artifact consistency", () => {
     const meta = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     const metrics = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
     expect(meta.kill_criteria_active).toBe(metrics.kill_criteria_check.tripped);
+  });
+
+  // Referential integrity for /match/[id] static generation. The match detail
+  // route is force-static + generateStaticParams from this matches/ folder,
+  // so every match_id surfaced anywhere in the snapshot must have a JSON
+  // file or the link 404s in production. Catches the [:10] slice regression
+  // (commit 0b9db6a) and any future omissions.
+  it("every divergence.json match_id has a matches/{id}.json file", () => {
+    const matchesDir = path.join(LATEST, "matches");
+    const matchFiles = new Set(
+      fs.readdirSync(matchesDir).filter(f => f.endsWith(".json")).map(f => f.replace(".json", "")),
+    );
+    const d = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
+    const missing = d.rows.map(r => r.match_id).filter(id => !matchFiles.has(id));
+    if (missing.length > 0)
+      throw new Error(`matches/ missing JSON for: ${missing.join(", ")}`);
+  });
+
+  it("matches/ contains every group-stage fixture (≥72 files)", () => {
+    const matchesDir = path.join(LATEST, "matches");
+    const count = fs.readdirSync(matchesDir).filter(f => f.endsWith(".json")).length;
+    if (count < 72)
+      throw new Error(`expected ≥72 group-stage match files, got ${count}. Snapshot generator may be slicing matches.`);
   });
 });
 

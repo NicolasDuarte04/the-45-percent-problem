@@ -67,14 +67,16 @@ class TestBlockLength:
         assert _block_length(1) == 4
 
     def test_clamped_to_max(self):
-        # N=10000: raw = floor(1.75*21.5) = 37, clamped to 12
-        assert _block_length(10000) == 12
+        # N=10000: raw = floor(1.75 * 10000^(1/3)) = floor(37.7) = 37,
+        # clamped to BLOCK_MAX (pre_reg_constants.yaml: block_length_max=20)
+        assert _block_length(10000) == 20
 
     def test_in_range_for_wc_bets(self):
-        # N=150..220: pre-registered says lands in [9,10]
+        # N=150..220: pre-registered says lands within [BLOCK_MIN, BLOCK_MAX]
+        # = [4, 20] per pre_reg_constants.yaml
         for n in range(150, 221):
             bl = _block_length(n)
-            assert 4 <= bl <= 12
+            assert 4 <= bl <= 20
 
     def test_monotone_in_n(self):
         for n1, n2 in [(10, 20), (50, 100), (100, 200)]:

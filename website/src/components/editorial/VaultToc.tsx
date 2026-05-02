@@ -60,6 +60,10 @@ export function VaultToc() {
         level: h.tagName === "H2" ? 2 : 3,
       };
     });
+    // Reading TOC entries from the DOM is a one-time external sync; the
+    // ESLint rule's "derive from props/state" suggestion does not apply
+    // because the source of truth is the rendered prose tree.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems(next);
 
     if (next.length === 0) return;

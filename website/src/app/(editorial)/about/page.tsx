@@ -104,7 +104,7 @@ export default function AboutPage() {
           </p>
           <p style={{ fontSize: 16, lineHeight: "26px", color: "var(--text-secondary)" }}>
             This is not a prediction product. It does not give gambling advice.
-            The word "bet" does not appear in the product UI — a pre-registration
+            The word &ldquo;bet&rdquo; does not appear in the product UI — a pre-registration
             commitment and a design invariant. See the{" "}
             <Link
               href="/vault/preregistration"

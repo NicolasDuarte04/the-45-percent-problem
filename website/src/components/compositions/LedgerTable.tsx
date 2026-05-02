@@ -402,7 +402,7 @@ export function LedgerTable({ records }: LedgerTableProps) {
         style={{ color: "var(--text-tertiary)" }}
       >
         Default sort: reverse-chronological. HIT / MISS / NEUTRAL rows share identical grid, padding, and type size — §7.2 invariant.
-        No "win rate" or ROI sorting is exposed.{" "}
+        No &ldquo;win rate&rdquo; or ROI sorting is exposed.{" "}
         <Link
           href="/vault/glossary"
           className="underline underline-offset-2 transition-colors duration-[120ms]"

@@ -21,7 +21,15 @@ import {
 
 const LATEST = path.join(process.cwd(), "public", "data", "latest");
 const DATA_ROOT = path.join(process.cwd(), "public", "data");
-const SNAPSHOT_ID = "2026-04-22T00:00Z";
+// Snapshot ID is sourced from the live data being tested, not hard-coded,
+// so the contract suite stays green across nightly snapshots. Cross-artifact
+// consistency is still enforced below — every file must agree on the same id.
+const SNAPSHOT_ID: string = (() => {
+  const meta = JSON.parse(
+    fs.readFileSync(path.join(LATEST, "snapshot_meta.json"), "utf-8"),
+  ) as { snapshot_id: string };
+  return meta.snapshot_id;
+})();
 
 function readJson(p: string): unknown {
   return JSON.parse(fs.readFileSync(p, "utf-8"));
@@ -380,5 +388,33 @@ describe("cross-artifact consistency", () => {
     const meta = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     const metrics = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
     expect(meta.kill_criteria_active).toBe(metrics.kill_criteria_check.tripped);
+  });
+
+  // Referential integrity for /match/[id] static generation. Every match_id
+  // surfaced in the divergence terminal (and any future referrer like the
+  // bracket bracket-slot pages) must have a corresponding matches/{id}.json
+  // file, or the static page 404s at runtime. This test exists because a
+  // [:10] slice in scripts/generate_snapshot.py once shipped to production
+  // and broke 62 of 72 group-stage match links — see commit 0b9db6a.
+  it("every match_id referenced in divergence.json has a matches/{id}.json file", () => {
+    const matchesDir = path.join(LATEST, "matches");
+    const matchFiles = new Set(
+      fs.readdirSync(matchesDir).filter((f) => f.endsWith(".json")).map((f) => f.replace(".json", "")),
+    );
+    const divergence = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
+    const referenced = new Set(divergence.rows.map((r) => r.match_id));
+    const missing = [...referenced].filter((id) => !matchFiles.has(id));
+    expect(missing, `matches/ missing JSON for: ${missing.join(", ")}`).toEqual([]);
+  });
+
+  it("matches/ contains every group-stage fixture (72 files for the round-robin)", () => {
+    const matchesDir = path.join(LATEST, "matches");
+    const matchFiles = fs.readdirSync(matchesDir).filter((f) => f.endsWith(".json"));
+    // 12 groups × 6 matches = 72 group-stage fixtures. Anything fewer means
+    // the snapshot generator is dropping fixtures that the bracket links to.
+    expect(
+      matchFiles.length,
+      `expected ≥72 group-stage match files, got ${matchFiles.length}. Snapshot generator may be slicing matches.`,
+    ).toBeGreaterThanOrEqual(72);
   });
 });

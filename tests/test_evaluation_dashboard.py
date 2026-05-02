@@ -197,7 +197,9 @@ class TestAblationTex:
         mstar = _dummy_clv_report()
         shadows = {mid: _dummy_shadow(mid) for mid in ("M0", "M1", "M2", "M3")}
         compile_ablation(metrics, mstar, shadows, output_dir=tmp_path)
-        self.tex_path = tmp_path / "ablation.tex"
+        # Filenames are sourced from pre_reg_constants.yaml dashboard.output_files;
+        # the .tex artifact is named ablation_table.tex (frozen pre-registration).
+        self.tex_path = tmp_path / "ablation_table.tex"
         self.caption_path = tmp_path / "ablation_caption.tex"
         self.tex = self.tex_path.read_text()
 
