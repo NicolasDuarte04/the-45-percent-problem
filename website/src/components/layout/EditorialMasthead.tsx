@@ -74,7 +74,7 @@ export function EditorialMasthead({
       }}
     >
       <div
-        className="mx-auto flex items-baseline gap-9 px-12 py-[22px]"
+        className="mx-auto flex items-baseline gap-4 md:gap-9 px-4 md:px-12 py-[18px] md:py-[22px] overflow-x-auto no-scrollbar"
         style={{ maxWidth: 1152 }}
       >
         <Link
@@ -93,7 +93,7 @@ export function EditorialMasthead({
         </Link>
 
         <nav
-          className="flex items-baseline gap-6 flex-1"
+          className="flex items-baseline gap-4 md:gap-6 flex-1 whitespace-nowrap"
           aria-label="Primary"
         >
           {TABS.map((tab) => {
@@ -143,7 +143,7 @@ export function EditorialMasthead({
         {!onTerminal && (
           <Link
             href="/terminal"
-            className="no-underline inline-flex items-center gap-1.5"
+            className="no-underline inline-flex items-center gap-1.5 shrink-0"
             style={{
               fontFamily: "var(--font-sans)",
               fontSize: 13,

@@ -41,11 +41,12 @@ export function TournamentLeaderboard({
           boxShadow: "0 1px 3px rgb(0 0 0 / 0.04), 0 6px 24px rgb(0 0 0 / 0.05)",
         }}
       >
-        <table
-          className="w-full border-collapse"
-          style={{ fontSize: 13 }}
-          aria-labelledby="leaderboard-heading"
-        >
+        <div className="overflow-x-auto no-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
+          <table
+            className="w-full border-collapse"
+            style={{ fontSize: 13, minWidth: 640 }}
+            aria-labelledby="leaderboard-heading"
+          >
           <thead>
             <tr>
               <HeadCell align="left">#</HeadCell>
@@ -183,7 +184,8 @@ export function TournamentLeaderboard({
               );
             })}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </section>
   );

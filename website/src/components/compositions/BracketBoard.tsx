@@ -156,7 +156,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         role="table"
         data-guide-id="bracket-matrix"
         aria-label="Bracket board: per-round marginal probabilities"
-        className="brk-grid grid"
+        className="brk-grid grid no-scrollbar"
         data-hover-row={hoverRow !== null ? "" : undefined}
         data-hover-col={hoverCol !== null ? "" : undefined}
         onMouseLeave={() => {

@@ -60,7 +60,7 @@ export function VaultArticle({
         className="mx-auto"
         style={{
           maxWidth: 1152,
-          padding: "64px 48px 48px",
+          padding: "clamp(40px, 6vw, 64px) clamp(16px, 4vw, 48px) clamp(32px, 5vw, 48px)",
         }}
       >
         <div style={{ maxWidth: "68ch" }}>
@@ -111,7 +111,7 @@ export function VaultArticle({
 
           <Byline author={author} codeSha={meta.code_sha} doi={doi} />
         </div>
-        <div style={{ marginTop: 48, borderTop: "1px solid var(--rule)" }} />
+        <div style={{ marginTop: "clamp(32px, 5vw, 48px)", borderTop: "1px solid var(--rule)" }} />
       </header>
 
       {/* ── Body grid ────────────────────────────────────────────────────── */}
@@ -119,9 +119,27 @@ export function VaultArticle({
         className="mx-auto vault-article-grid"
         style={{
           maxWidth: 1152,
-          padding: "16px 48px 96px",
+          padding: "16px clamp(16px, 4vw, 48px) clamp(64px, 10vw, 96px)",
         }}
       >
+        {/* Mobile / tablet TOC: collapsible <details> shown only below 1280px,
+            hidden when the side-rail kicks in. Same VaultToc internals so the
+            scroll-tracking and footnote-pulse behaviours stay consistent. */}
+        <div className="vault-toc-mobile">
+          <details>
+            <summary className="vault-toc-mobile-summary">
+              <span className="vault-toc-eyebrow" style={{ marginBottom: 0 }}>
+                Contents
+              </span>
+              <span className="vault-toc-mobile-chevron" aria-hidden>
+                ▾
+              </span>
+            </summary>
+            <div className="vault-toc-mobile-body">
+              <VaultToc />
+            </div>
+          </details>
+        </div>
         <div className="vault-prose" style={{ maxWidth: "68ch", minWidth: 0 }}>
           {children}
         </div>
@@ -135,7 +153,7 @@ export function VaultArticle({
         className="mx-auto"
         style={{
           maxWidth: 1152,
-          padding: "48px 48px 96px",
+          padding: "clamp(32px, 5vw, 48px) clamp(16px, 4vw, 48px) clamp(64px, 10vw, 96px)",
           borderTop: "1px solid var(--rule)",
         }}
       >

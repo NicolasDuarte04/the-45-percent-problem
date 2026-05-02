@@ -358,6 +358,61 @@
     }
   }
 
+  /* Mobile / tablet TOC: collapsible <details> shown above the prose when
+     the side-rail is hidden (<1280px). Folded by default so the reading
+     surface starts clean. Hidden on desktop where the sticky side-rail
+     does the work. The inner VaultToc instance keeps its scroll-tracking
+     and footnote-pulse behaviours since the same component is reused. */
+  .vault-toc-mobile {
+    grid-column: 1;
+    margin: 0 0 24px;
+  }
+  @media (min-width: 1280px) {
+    .vault-toc-mobile { display: none; }
+  }
+  .vault-toc-mobile > details {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-panel);
+  }
+  .vault-toc-mobile-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    user-select: none;
+  }
+  .vault-toc-mobile-summary::-webkit-details-marker {
+    display: none;
+  }
+  .vault-toc-mobile-chevron {
+    color: var(--text-tertiary);
+    transition: transform 160ms ease;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .vault-toc-mobile > details[open] .vault-toc-mobile-chevron {
+    transform: rotate(180deg);
+  }
+  .vault-toc-mobile-body {
+    padding: 4px 16px 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  /* Inside the mobile TOC the inner .vault-toc must NOT be sticky (it lives
+     inside a folded disclosure, not in a fixed side rail). Override the
+     sticky positioning and the rail's left border so the markup reads as a
+     plain inline list of links. */
+  .vault-toc-mobile-body .vault-toc {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    border-left: none;
+    padding-left: 0;
+  }
+
   /* Inline/narrow margin-note fallback: shown below 1280px, hidden on wide */
   .vault-margin-inline {
     display: block;
@@ -567,6 +622,33 @@
   /* KaTeX output size tune for body readability */
   .vault-prose .katex { font-size: 1.05em; }
 
+  /* Mobile prose tighten. At <640px the 18px serif at 30px line-height is
+     a touch generous on a 375px viewport. Drop to 17 / 28 for body and
+     30 / 38 for h2 so the line measure lands around 38ch, the well-trodden
+     phone reading sweet spot. Desktop values remain pristine. */
+  @media (max-width: 640px) {
+    .vault-prose p,
+    .vault-prose ul,
+    .vault-prose ol {
+      font-size: 17px;
+      line-height: 28px;
+    }
+    .vault-prose h2 {
+      font-size: 30px;
+      line-height: 38px;
+      margin-block-start: 56px;
+    }
+    .vault-prose h3 {
+      font-size: 22px;
+      line-height: 30px;
+      margin-block-start: 32px;
+    }
+    .vault-dropcap p:first-child::first-letter,
+    .vault-dropcap::first-letter {
+      font-size: 56px;
+    }
+  }
+
   /* ── Sticky table of contents (side rail, ≥1280px) ───────────────────── */
   .vault-toc {
     position: sticky;
@@ -757,6 +839,20 @@
       transform: none;
       transition: background-color 140ms ease-out, border-color 140ms ease-out;
     }
+  }
+
+  /* Hidden scrollbar utility for mobile-overflow surfaces (masthead nav,
+     table wrappers, bracket grids), so the horizontal scroll affordance
+     does not contaminate the editorial chrome. The scroll still works via
+     touch-drag on phones and trackpad on desktop. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   /* Most-likely bracket — interactive states.

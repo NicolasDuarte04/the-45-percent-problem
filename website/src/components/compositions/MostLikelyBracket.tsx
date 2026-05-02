@@ -477,7 +477,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
         likelihood is much lower than any leg alone.
       </p>
 
-      <div>
+      <div className="overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
         <div
           className="grid items-stretch mx-auto"
           style={{
@@ -485,6 +485,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
               "minmax(120px,1.2fr) 14px minmax(110px,1fr) 14px minmax(110px,1fr) 16px minmax(150px,1.25fr) 16px minmax(110px,1fr) 14px minmax(110px,1fr) 14px minmax(120px,1.2fr)",
             gap: 0,
             width: "100%",
+            minWidth: 1100,
           }}
         >
           <RoundColumn

@@ -176,10 +176,10 @@ export default function LedgerPage() {
     >
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div
-        className="px-6 pt-6 pb-4 border-b"
+        className="px-4 md:px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1152px] mx-auto px-12 flex flex-wrap items-baseline justify-between gap-3">
+        <div className="max-w-[1152px] mx-auto px-0 md:px-12 flex flex-wrap items-baseline justify-between gap-3">
           <div>
           <h1
             data-guide-id="ledger-masthead-title"
@@ -225,7 +225,7 @@ export default function LedgerPage() {
           color: "var(--text-tertiary)",
         }}
       >
-        <div className="max-w-[1152px] mx-auto px-12">
+        <div className="max-w-[1152px] mx-auto px-0 md:px-12">
           Pre-registration invariant §7.2: hits and misses are rendered with identical
           visual weight. No forecast is ever deleted. Calibration, not accuracy, is the
           evaluation metric. Methodology pre-registered at{" "}
@@ -242,7 +242,7 @@ export default function LedgerPage() {
         </div>
       </div>
 
-      <div className="max-w-[1152px] mx-auto px-12 py-6 space-y-8">
+      <div className="max-w-[1152px] mx-auto px-4 md:px-12 py-6 space-y-8">
         {/* ── §7.3 Summary panel ────────────────────────────────────────── */}
         <LedgerSummaryPanel metrics={metrics} />
 

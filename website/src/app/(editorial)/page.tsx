@@ -6,7 +6,10 @@ import { TerminalDashboard } from "@/components/compositions/TerminalDashboard";
 import { TournamentCalibrationStrip } from "@/components/compositions/TournamentCalibrationStrip";
 import { RecentWritingList } from "@/components/compositions/RecentWritingList";
 import { TerminalCTA } from "@/components/compositions/TerminalCTA";
-import { TrailerTrigger } from "@/components/compositions/TrailerTrigger";
+import {
+  TrailerSection,
+  WatchTrailerButton,
+} from "@/components/compositions/TrailerSection";
 import { HeroGraphic, HERO_TROPHY_CAPTION } from "@/components/ui/HeroGraphic";
 import {
   SectionHead,
@@ -23,14 +26,14 @@ export default function Home() {
       className="mx-auto"
       style={{
         maxWidth: 1152,
-        padding: "64px 48px",
+        padding: "clamp(40px, 6vw, 64px) clamp(16px, 4vw, 48px)",
         color: "var(--text-primary)",
       }}
     >
       {/* ── Project intro header ───────────────────────────────────────────── */}
       <header
         className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-8 md:items-start"
-        style={{ marginBottom: 72 }}
+        style={{ marginBottom: "clamp(48px, 8vw, 72px)" }}
       >
         <div style={{ maxWidth: 640 }}>
           <h1
@@ -87,15 +90,6 @@ export default function Home() {
             <span className="mono">{meta.matches_remaining}</span> matches
             remaining
           </p>
-          <div style={{ marginTop: 28 }}>
-            <TrailerTrigger
-              src="/assets/trailer.mp4"
-              poster="/assets/trailer-poster.jpg"
-              runtime="00:45"
-              format="4K"
-              filename="trailer.mov"
-            />
-          </div>
         </div>
         <HeroGraphic />
         <p
@@ -112,6 +106,9 @@ export default function Home() {
         >
           {HERO_TROPHY_CAPTION}
         </p>
+        <div className="md:col-span-2" style={{ marginTop: -32 }}>
+          <WatchTrailerButton />
+        </div>
         <div
           className="md:col-span-2"
           style={{ marginTop: 32, borderTop: "1px solid var(--rule)" }}
@@ -137,6 +134,9 @@ export default function Home() {
         />
         <MostLikelyBracket tournament={tournament} />
       </section>
+
+      {/* ── § 1.7 · Trailer ────────────────────────────────────────────────── */}
+      <TrailerSection src="/assets/trailer.mp4" />
 
       {/* ── § 1.6 · Terminal dashboard ─────────────────────────────────────── */}
       <section style={{ marginBottom: 56 }}>

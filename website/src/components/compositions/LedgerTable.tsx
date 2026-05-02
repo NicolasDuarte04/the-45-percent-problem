@@ -183,9 +183,9 @@ export function LedgerTable({ records }: LedgerTableProps) {
       </div>
 
       {/* ── Table ───────────────────────────────────────────────────────── */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto no-scrollbar">
         <table
-          className="w-full text-[12px]"
+          className="w-full text-[12px] min-w-[1100px]"
           style={{ color: "var(--data-neutral)", borderCollapse: "collapse" }}
         >
           <thead>
