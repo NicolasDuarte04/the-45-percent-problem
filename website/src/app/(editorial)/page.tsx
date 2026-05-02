@@ -6,6 +6,7 @@ import { TerminalDashboard } from "@/components/compositions/TerminalDashboard";
 import { TournamentCalibrationStrip } from "@/components/compositions/TournamentCalibrationStrip";
 import { RecentWritingList } from "@/components/compositions/RecentWritingList";
 import { TerminalCTA } from "@/components/compositions/TerminalCTA";
+import { TrailerTrigger } from "@/components/compositions/TrailerTrigger";
 import { HeroGraphic, HERO_TROPHY_CAPTION } from "@/components/ui/HeroGraphic";
 import {
   SectionHead,
@@ -86,6 +87,15 @@ export default function Home() {
             <span className="mono">{meta.matches_remaining}</span> matches
             remaining
           </p>
+          <div style={{ marginTop: 28 }}>
+            <TrailerTrigger
+              src="/assets/trailer.mp4"
+              poster="/assets/trailer-poster.jpg"
+              runtime="00:45"
+              format="4K"
+              filename="trailer.mov"
+            />
+          </div>
         </div>
         <HeroGraphic />
         <p
