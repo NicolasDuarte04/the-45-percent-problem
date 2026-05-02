@@ -345,11 +345,8 @@ export default function VaultIndexPage() {
                     href={entry.href}
                     className="group block"
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr auto",
-                      alignItems: "baseline",
-                      columnGap: 12,
-                      padding: "16px 20px 16px 0",
+                      display: "block",
+                      padding: "16px 20px",
                       color: "var(--text-primary)",
                     }}
                   >
@@ -362,21 +359,6 @@ export default function VaultIndexPage() {
                       }}
                     >
                       {entry.title}
-                    </span>
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: 11,
-                        lineHeight: "22px",
-                        fontWeight: 500,
-                        letterSpacing: "0.04em",
-                        color: "var(--text-quiet)",
-                        whiteSpace: "nowrap",
-                        textAlign: "right",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {entry.kind}
                     </span>
                   </Link>
                 </li>
