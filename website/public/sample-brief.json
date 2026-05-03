@@ -1,0 +1,21 @@
+{
+  "brief_date": "2026-06-12",
+  "issue_number": 14,
+  "next_brief_utc": "2026-06-13T12:00:00Z",
+  "latest_archive_url": "/briefs/2026-06-12",
+  "lead_in": {
+    "tournament_sentence": "Brazil is still the title favorite at 14.2%, down 240 bps overnight after Argentina's win.",
+    "match_sentence": "Today's largest match-day gap is USA vs Mexico, where the model gives the US a 6.3-point edge over bookmaker odds.",
+    "fallback_used": false
+  },
+  "teaser": {
+    "has_divergence": true,
+    "match_label": "United States vs Mexico",
+    "side": "HOME",
+    "model_prob": 0.423,
+    "market_prob": 0.360,
+    "edge_bps": 630,
+    "edge_direction": "positive"
+  },
+  "featured_teams": ["BRAZIL", "ARGENTINA", "USA", "GERMANY", "SPAIN"]
+}

@@ -6,13 +6,22 @@
  * own palette distinct from the editorial / quant canvases in globals.css.
  *
  * Activation: any DOM subtree marked `data-surface="brief"` adopts these tokens.
- * Theme: `prefers-color-scheme` auto-toggles light/dark. No JS toggle in v1.
  *
- * Token names mirror the design canvas (paper, ink, graphite, edge_*, etc.).
+ * Theme inheritance: the brief surface follows its enclosing canvas, not
+ * `prefers-color-scheme`. The editorial canvas is always cream (light); the
+ * quant canvas is always slate (dark). Mirroring the canvas keeps the brief
+ * panel from clashing with the page it sits on. The original brief specifies
+ * `prefers-color-scheme`, but in this app the canvases are themselves not
+ * preference-aware — so following them is the only way to honor the spirit of
+ * "respect the page's theme context."
+ *
+ * Forced overrides: `[data-theme="light"]` and `[data-theme="dark"]` pin the
+ * surface to one palette regardless of canvas (used by the static web archive
+ * view and email-iframe contexts where canvas cues are unavailable).
  */
 
 [data-surface="brief"] {
-  /* Light theme — paper canvas */
+  /* Light theme — paper canvas (default) */
   --brief-bg:              #F4F1EA;
   --brief-bg-elev:         #FCFAF4;
   --brief-ink:             #0E0E0E;
@@ -34,23 +43,24 @@
   color: var(--brief-ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  [data-surface="brief"]:not([data-theme="light"]) {
-    --brief-bg:              #0E0E0E;
-    --brief-bg-elev:         #161616;
-    --brief-ink:             #E8E4D8;
-    --brief-graphite:        #C8C2B4;
-    --brief-graphite-quiet:  #6D7585;
-    --brief-hairline:        #3A3833;
-    --brief-edge-positive:   #88E0B6;
-    --brief-edge-negative:   #EF5A7D;
-    --brief-suppression:     #D4A845;
-    --brief-accent-fan:      #3FBC8E;
-  }
+/* Inherit dark palette when the surface is nested inside a quant canvas, so
+   the brief panel reads as a continuation of the dark page rather than as a
+   contrasting island. */
+[data-canvas="quant"] [data-surface="brief"]:not([data-theme="light"]) {
+  --brief-bg:              #0E0E0E;
+  --brief-bg-elev:         #161616;
+  --brief-ink:             #E8E4D8;
+  --brief-graphite:        #C8C2B4;
+  --brief-graphite-quiet:  #6D7585;
+  --brief-hairline:        #3A3833;
+  --brief-edge-positive:   #88E0B6;
+  --brief-edge-negative:   #EF5A7D;
+  --brief-suppression:     #D4A845;
+  --brief-accent-fan:      #3FBC8E;
 }
 
 /* Forced light/dark variants (used inside email iframes / archive pages where
-   prefers-color-scheme cannot be relied on, e.g. the static web archive view). */
+   canvas cues are unavailable, e.g. the static web archive view). */
 [data-surface="brief"][data-theme="dark"] {
   --brief-bg:              #0E0E0E;
   --brief-bg-elev:         #161616;
