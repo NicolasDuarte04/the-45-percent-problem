@@ -142,17 +142,17 @@ export function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
             {formatNextBrief(brief.next_brief_utc)}
           </span>
         </span>
-        <a
-          href={brief.latest_archive_url}
+        <span
+          aria-disabled="true"
+          title="Coming soon"
           style={{
-            color: t.ink,
-            textDecoration: "underline",
-            textUnderlineOffset: 3,
-            textDecorationColor: t.hairline,
+            color: t.graphite,
+            textDecoration: "none",
+            cursor: "not-allowed",
           }}
         >
           [VIEW LATEST BRIEF →]
-        </a>
+        </span>
       </div>
     </section>
   );

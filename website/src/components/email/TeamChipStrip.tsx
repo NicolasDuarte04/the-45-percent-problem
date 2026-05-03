@@ -9,6 +9,12 @@ export function TeamChipStrip({ data }: TeamChipStripProps = {}) {
   const brief = data ?? loadSampleBrief();
   const teams = brief.featured_teams.slice(0, 5);
 
+  // Phase 2: chips render disabled because /teams/[country] and /teams index
+  // are Phase 3 wiring. Phase 3 swaps the <span> back to <Link> and drops the
+  // chipDisabled class.
+  const disabledClass = `${styles.chip} ${styles.chipDisabled}`;
+  const tooltip = "Coming soon";
+
   return (
     <div
       className={styles.strip}
@@ -16,17 +22,22 @@ export function TeamChipStrip({ data }: TeamChipStripProps = {}) {
     >
       <span className={styles.prompt}>Following a specific team?</span>
       {teams.map((team) => (
-        <a
+        <span
           key={team}
-          href={`/teams/${team.toLowerCase()}`}
-          className={styles.chip}
+          className={disabledClass}
+          aria-disabled="true"
+          title={tooltip}
         >
           {team}
-        </a>
+        </span>
       ))}
-      <a href="/teams" className={styles.chip}>
+      <span
+        className={disabledClass}
+        aria-disabled="true"
+        title={tooltip}
+      >
         SHOW ALL →
-      </a>
+      </span>
     </div>
   );
 }
