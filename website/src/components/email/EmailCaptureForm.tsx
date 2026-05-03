@@ -135,7 +135,7 @@ export function EmailCaptureForm({
             setEmail(e.target.value);
             if (state === "error") setState("idle");
           }}
-          placeholder="you@firm.com"
+          placeholder="your@email.com"
           aria-invalid={isError}
           aria-describedby={isError ? errorId : undefined}
           disabled={isBusy}
