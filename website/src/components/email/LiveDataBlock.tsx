@@ -32,11 +32,23 @@ function edgeText(bps: number, direction: "positive" | "negative"): string {
 
 export interface LiveDataBlockProps {
   data?: BriefSample;
+  /**
+   * When true, render a small `◆ FALLBACK` chip in the masthead row. Only
+   * shows when this prop is true AND the brief's `lead_in.fallback_used`
+   * is also true — pages should derive this from a `?debug=fallback`
+   * query param so it stays hidden from general readers.
+   */
+  showFallbackMarker?: boolean;
 }
 
-export async function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
+export async function LiveDataBlock({
+  data,
+  showFallbackMarker = false,
+}: LiveDataBlockProps = {}) {
   const brief = data ?? (await loadLatestBrief());
   const hasDivergence = brief.teaser.has_divergence;
+  const renderFallbackMarker =
+    showFallbackMarker && brief.lead_in.fallback_used;
 
   return (
     <section
@@ -72,6 +84,21 @@ export async function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
         <span>
           ISSUE {String(brief.issue_number).padStart(3, "0")}
         </span>
+        {renderFallbackMarker && (
+          <span
+            title="lead_in.fallback_used = true (debug only — gated behind ?debug=fallback)"
+            style={{
+              marginLeft: "auto",
+              padding: "2px 8px",
+              border: `1px solid ${t.hairline}`,
+              borderRadius: 2,
+              color: t.graphiteQuiet,
+              letterSpacing: "0.10em",
+            }}
+          >
+            ◆ FALLBACK
+          </span>
+        )}
       </div>
 
       {/* Serif lead-in panel (Addendum v2, Addition 2) */}
