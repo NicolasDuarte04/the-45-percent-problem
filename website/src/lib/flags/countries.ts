@@ -1,57 +1,69 @@
 // Country names for the 48 FIFA World Cup 2026 qualifiers, keyed by FIFA
-// 3-letter code. Used by <Flag /> for accessible labels. Keep in sync with
-// scripts/fetch-flags.mjs — adding a code here without an SVG (or vice versa)
-// is the only way <Flag /> breaks at runtime.
+// 3-letter code. Used by <Flag /> for accessible labels. Display names are
+// mirrored from src/lib/data/wc2026-official-draw.ts; scripts/fetch-flags.mjs
+// asserts that the dictionary keys match the canonical roster at fetch time.
 
 export const COUNTRY_NAMES = {
-  ARG: "Argentina",
-  ESP: "Spain",
-  FRA: "France",
-  POR: "Portugal",
-  ENG: "England",
+  // Group A
+  MEX: "Mexico",
+  RSA: "South Africa",
+  KOR: "Korea Republic",
+  CZE: "Czechia",
+  // Group B
+  CAN: "Canada",
+  BIH: "Bosnia & Herzegovina",
+  QAT: "Qatar",
+  SUI: "Switzerland",
+  // Group C
   BRA: "Brazil",
-  COL: "Colombia",
+  MAR: "Morocco",
+  HAI: "Haiti",
+  SCO: "Scotland",
+  // Group D
+  USA: "United States",
+  PAR: "Paraguay",
+  AUS: "Australia",
+  TUR: "Türkiye",
+  // Group E
   GER: "Germany",
-  CRO: "Croatia",
+  CUW: "Curaçao",
+  CIV: "Côte d'Ivoire",
   ECU: "Ecuador",
+  // Group F
   NED: "Netherlands",
   JPN: "Japan",
-  SEN: "Senegal",
-  URU: "Uruguay",
-  TUR: "Türkiye",
-  MEX: "Mexico",
-  SUI: "Switzerland",
-  ITA: "Italy",
-  DEN: "Denmark",
-  MAR: "Morocco",
+  SWE: "Sweden",
+  TUN: "Tunisia",
+  // Group G
   BEL: "Belgium",
-  CAN: "Canada",
-  AUT: "Austria",
-  KOR: "South Korea",
-  AUS: "Australia",
-  UZB: "Uzbekistan",
-  ALG: "Algeria",
-  PAN: "Panama",
-  IRN: "Iran",
-  UKR: "Ukraine",
-  SRB: "Serbia",
-  SCO: "Scotland",
-  USA: "United States",
-  NGA: "Nigeria",
   EGY: "Egypt",
-  POL: "Poland",
-  HUN: "Hungary",
-  PER: "Peru",
-  JOR: "Jordan",
-  VEN: "Venezuela",
-  SVK: "Slovakia",
-  CIV: "Côte d'Ivoire",
-  CRC: "Costa Rica",
+  IRN: "IR Iran",
   NZL: "New Zealand",
-  CMR: "Cameroon",
-  IRQ: "Iraq",
+  // Group H
+  ESP: "Spain",
+  CPV: "Cabo Verde",
   KSA: "Saudi Arabia",
+  URU: "Uruguay",
+  // Group I
+  FRA: "France",
+  SEN: "Senegal",
+  IRQ: "Iraq",
+  NOR: "Norway",
+  // Group J
+  ARG: "Argentina",
+  ALG: "Algeria",
+  AUT: "Austria",
+  JOR: "Jordan",
+  // Group K
+  POR: "Portugal",
+  UZB: "Uzbekistan",
+  COL: "Colombia",
+  COD: "Congo DR",
+  // Group L
+  ENG: "England",
+  CRO: "Croatia",
   GHA: "Ghana",
+  PAN: "Panama",
 } as const;
 
 export type FifaCode = keyof typeof COUNTRY_NAMES;
