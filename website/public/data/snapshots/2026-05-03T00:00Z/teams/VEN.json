@@ -1,0 +1,28 @@
+{
+  "fifa_code": "VEN",
+  "display_name": "Venezuela",
+  "group": "H",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1727.0,
+  "progression": {
+    "p_group_qualification": 0.3506,
+    "p_r16": 0.1496,
+    "p_qf": 0.0389,
+    "p_sf": 0.0135,
+    "p_final": 0.0041,
+    "p_champion": 0.0009,
+    "ci_95_champion": [
+      0.000474,
+      0.00171
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-14_Nigeria_Venezuela",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "opponent": "Nigeria",
+      "is_home": false
+    }
+  ]
+}

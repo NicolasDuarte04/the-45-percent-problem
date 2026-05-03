@@ -1,0 +1,28 @@
+{
+  "fifa_code": "SRB",
+  "display_name": "Serbia",
+  "group": "K",
+  "confederation": "UEFA",
+  "elo_rating": 1770.0,
+  "progression": {
+    "p_group_qualification": 0.3251,
+    "p_r16": 0.1778,
+    "p_qf": 0.0735,
+    "p_sf": 0.0257,
+    "p_final": 0.0111,
+    "p_champion": 0.0018,
+    "ci_95_champion": [
+      0.001139,
+      0.002844
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-16_Italy_Serbia",
+      "kickoff_utc": "2026-06-16T18:00:00+00:00",
+      "opponent": "Italy",
+      "is_home": false
+    }
+  ]
+}

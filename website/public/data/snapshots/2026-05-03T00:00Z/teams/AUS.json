@@ -1,0 +1,28 @@
+{
+  "fifa_code": "AUS",
+  "display_name": "Australia",
+  "group": "F",
+  "confederation": "AFC",
+  "elo_rating": 1783.0,
+  "progression": {
+    "p_group_qualification": 0.3543,
+    "p_r16": 0.1675,
+    "p_qf": 0.0624,
+    "p_sf": 0.023,
+    "p_final": 0.0101,
+    "p_champion": 0.0027,
+    "ci_95_champion": [
+      0.001856,
+      0.003926
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-13_Australia_Iraq",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "opponent": "Iraq",
+      "is_home": true
+    }
+  ]
+}

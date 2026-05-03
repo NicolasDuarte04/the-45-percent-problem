@@ -24,18 +24,18 @@
   },
   "reliability_diagram": [],
   "clv_cumulative_bps": 0,
-  "clv_z_score": 0,
+  "clv_z_score": 0.0,
   "nyberg_test_pvalue": null,
   "diebold_mariano_vs_M0": {
     "stat": null,
     "pvalue": null
   },
   "kill_criteria_check": {
-    "tripped": false,
-    "gap_se": 0,
-    "threshold_se": 1,
-    "condition": "pre_tournament",
-    "timestamp": "2026-05-02T20:00:00Z",
-    "action_taken": "none"
+    "tripped": true,
+    "gap_se": 1.75,
+    "threshold_se": 2.0,
+    "condition": "M2 vs M0 stratified CV log-loss",
+    "timestamp": "2026-04-23T00:00:00Z",
+    "action_taken": "M_STAR_LOCKED"
   }
 }

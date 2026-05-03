@@ -1,0 +1,15 @@
+{
+  "schema_version": "9.0",
+  "snapshot_id": "2026-05-03T00:00Z",
+  "generated_at_utc": "2026-05-03T01:47:18Z",
+  "code_sha": "f1ddf4564cfc0407",
+  "data_sha": "sha256:a0228516eb0b999f2f31ddb3d4f86b2a",
+  "pre_reg_tag": "v1.0.0-mstar-lock",
+  "champion_model": "M_STAR",
+  "mc_runs": 10000,
+  "tournament_phase": "pre_tournament",
+  "matches_settled": 0,
+  "matches_remaining": 104,
+  "kill_criteria_active": true,
+  "notes": "Phase 7 production snapshot \u2014 2026-05-03T00:00Z"
+}

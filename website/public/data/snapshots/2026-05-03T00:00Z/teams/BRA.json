@@ -1,0 +1,28 @@
+{
+  "fifa_code": "BRA",
+  "display_name": "Brazil",
+  "group": "E",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1984.0,
+  "progression": {
+    "p_group_qualification": 0.8585,
+    "p_r16": 0.4986,
+    "p_qf": 0.2712,
+    "p_sf": 0.1622,
+    "p_final": 0.0951,
+    "p_champion": 0.0438,
+    "ci_95_champion": [
+      0.039961,
+      0.047989
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-13_Brazil_Japan",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "opponent": "Japan",
+      "is_home": true
+    }
+  ]
+}
