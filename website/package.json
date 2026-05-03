@@ -16,6 +16,7 @@
     "flags:fetch": "node scripts/fetch-flags.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed:fixtures": "tsx scripts/seed-fixtures.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
