@@ -2,26 +2,36 @@
   "fifa_code": "AUT",
   "display_name": "Austria",
   "group": "J",
-  "confederation": "UEFA",
-  "elo_rating": 1827.0,
   "progression": {
-    "p_group_qualification": 0.4066,
-    "p_r16": 0.2098,
-    "p_qf": 0.0813,
-    "p_sf": 0.0401,
-    "p_final": 0.0179,
-    "p_champion": 0.0037,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.002686,
-      0.005096
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-15_Hungary_Austria",
-      "kickoff_utc": "2026-06-15T21:00:00+00:00",
-      "opponent": "Hungary",
+      "match_id": "M20",
+      "kickoff_utc": "2026-06-17T04:00:00Z",
+      "opponent": "Jordan",
+      "is_home": true
+    },
+    {
+      "match_id": "M43",
+      "kickoff_utc": "2026-06-22T01:00:00Z",
+      "opponent": "Argentina",
+      "is_home": false
+    },
+    {
+      "match_id": "M68",
+      "kickoff_utc": "2026-06-27T04:00:00Z",
+      "opponent": "Algeria",
       "is_home": false
     }
   ]

@@ -2,26 +2,36 @@
   "fifa_code": "MAR",
   "display_name": "Morocco",
   "group": "C",
-  "confederation": "CAF",
-  "elo_rating": 1821.0,
   "progression": {
-    "p_group_qualification": 0.8251,
-    "p_r16": 0.417,
-    "p_qf": 0.192,
-    "p_sf": 0.0922,
-    "p_final": 0.0313,
-    "p_champion": 0.0093,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.007598,
-      0.011379
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-12_Morocco_New_Zealand",
-      "kickoff_utc": "2026-06-12T18:00:00+00:00",
-      "opponent": "New Zealand",
+      "match_id": "M05",
+      "kickoff_utc": "2026-06-13T22:00:00Z",
+      "opponent": "Brazil",
+      "is_home": false
+    },
+    {
+      "match_id": "M30",
+      "kickoff_utc": "2026-06-19T00:00:00Z",
+      "opponent": "Scotland",
+      "is_home": false
+    },
+    {
+      "match_id": "M54",
+      "kickoff_utc": "2026-06-24T00:00:00Z",
+      "opponent": "Haiti",
       "is_home": true
     }
   ]

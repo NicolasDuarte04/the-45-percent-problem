@@ -1,0 +1,38 @@
+{
+  "fifa_code": "PAR",
+  "display_name": "Paraguay",
+  "group": "D",
+  "progression": {
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
+    "ci_95_champion": [
+      0.00085,
+      0.00115
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M07",
+      "kickoff_utc": "2026-06-13T01:00:00Z",
+      "opponent": "United States",
+      "is_home": false
+    },
+    {
+      "match_id": "M32",
+      "kickoff_utc": "2026-06-19T04:00:00Z",
+      "opponent": "Türkiye",
+      "is_home": false
+    },
+    {
+      "match_id": "M56",
+      "kickoff_utc": "2026-06-24T04:00:00Z",
+      "opponent": "Australia",
+      "is_home": true
+    }
+  ]
+}

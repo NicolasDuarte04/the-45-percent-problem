@@ -1,28 +1,38 @@
 {
   "fifa_code": "ENG",
   "display_name": "England",
-  "group": "H",
-  "confederation": "UEFA",
-  "elo_rating": 2020.0,
+  "group": "L",
   "progression": {
-    "p_group_qualification": 0.8876,
-    "p_r16": 0.5759,
-    "p_qf": 0.328,
-    "p_sf": 0.1526,
-    "p_final": 0.0822,
-    "p_champion": 0.0482,
+    "p_group_qualification": 0.84,
+    "p_r16": 0.66,
+    "p_qf": 0.36,
+    "p_sf": 0.18,
+    "p_final": 0.09,
+    "p_champion": 0.04,
     "ci_95_champion": [
-      0.044173,
-      0.052574
+      0.034,
+      0.046
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-14_England_Belgium",
-      "kickoff_utc": "2026-06-14T21:00:00+00:00",
-      "opponent": "Belgium",
+      "match_id": "M23",
+      "kickoff_utc": "2026-06-17T20:00:00Z",
+      "opponent": "Croatia",
       "is_home": true
+    },
+    {
+      "match_id": "M47",
+      "kickoff_utc": "2026-06-22T20:00:00Z",
+      "opponent": "Ghana",
+      "is_home": true
+    },
+    {
+      "match_id": "M71",
+      "kickoff_utc": "2026-06-27T20:00:00Z",
+      "opponent": "Panama",
+      "is_home": false
     }
   ]
 }

@@ -1,0 +1,38 @@
+{
+  "fifa_code": "CPV",
+  "display_name": "Cabo Verde",
+  "group": "H",
+  "progression": {
+    "p_group_qualification": 0.22,
+    "p_r16": 0.1,
+    "p_qf": 0.018,
+    "p_sf": 0.004,
+    "p_final": 0.0008,
+    "p_champion": 0.0001,
+    "ci_95_champion": [
+      0.000085,
+      0.000115
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M15",
+      "kickoff_utc": "2026-06-15T16:00:00Z",
+      "opponent": "Spain",
+      "is_home": false
+    },
+    {
+      "match_id": "M40",
+      "kickoff_utc": "2026-06-20T22:00:00Z",
+      "opponent": "Uruguay",
+      "is_home": false
+    },
+    {
+      "match_id": "M64",
+      "kickoff_utc": "2026-06-25T22:00:00Z",
+      "opponent": "Saudi Arabia",
+      "is_home": true
+    }
+  ]
+}

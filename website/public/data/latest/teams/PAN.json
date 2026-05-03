@@ -1,28 +1,38 @@
 {
   "fifa_code": "PAN",
   "display_name": "Panama",
-  "group": "B",
-  "confederation": "CONCACAF",
-  "elo_rating": 1737.0,
+  "group": "L",
   "progression": {
-    "p_group_qualification": 0.7443,
-    "p_r16": 0.3207,
-    "p_qf": 0.1452,
-    "p_sf": 0.0345,
-    "p_final": 0.0067,
-    "p_champion": 0.0019,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.001217,
-      0.002966
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-11_USA_Panama",
-      "kickoff_utc": "2026-06-11T21:00:00+00:00",
-      "opponent": "USA",
+      "match_id": "M24",
+      "kickoff_utc": "2026-06-18T02:00:00Z",
+      "opponent": "Ghana",
       "is_home": false
+    },
+    {
+      "match_id": "M48",
+      "kickoff_utc": "2026-06-23T02:00:00Z",
+      "opponent": "Croatia",
+      "is_home": true
+    },
+    {
+      "match_id": "M71",
+      "kickoff_utc": "2026-06-27T20:00:00Z",
+      "opponent": "England",
+      "is_home": true
     }
   ]
 }

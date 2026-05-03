@@ -1,28 +1,38 @@
 {
   "fifa_code": "AUS",
   "display_name": "Australia",
-  "group": "F",
-  "confederation": "AFC",
-  "elo_rating": 1783.0,
+  "group": "D",
   "progression": {
-    "p_group_qualification": 0.3549,
-    "p_r16": 0.1672,
-    "p_qf": 0.0621,
-    "p_sf": 0.0233,
-    "p_final": 0.0101,
-    "p_champion": 0.0026,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.001775,
-      0.003807
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-13_Australia_Iraq",
-      "kickoff_utc": "2026-06-13T21:00:00+00:00",
-      "opponent": "Iraq",
+      "match_id": "M08",
+      "kickoff_utc": "2026-06-14T04:00:00Z",
+      "opponent": "Türkiye",
       "is_home": true
+    },
+    {
+      "match_id": "M31",
+      "kickoff_utc": "2026-06-18T01:00:00Z",
+      "opponent": "United States",
+      "is_home": false
+    },
+    {
+      "match_id": "M56",
+      "kickoff_utc": "2026-06-24T04:00:00Z",
+      "opponent": "Paraguay",
+      "is_home": false
     }
   ]
 }

@@ -1,28 +1,38 @@
 {
   "fifa_code": "ARG",
   "display_name": "Argentina",
-  "group": "D",
-  "confederation": "CONMEBOL",
-  "elo_rating": 2113.0,
+  "group": "J",
   "progression": {
-    "p_group_qualification": 0.9412,
-    "p_r16": 0.7723,
-    "p_qf": 0.5994,
-    "p_sf": 0.4934,
-    "p_final": 0.2786,
-    "p_champion": 0.2051,
+    "p_group_qualification": 0.94,
+    "p_r16": 0.86,
+    "p_qf": 0.62,
+    "p_sf": 0.4,
+    "p_final": 0.24,
+    "p_champion": 0.13,
     "ci_95_champion": [
-      0.1973,
-      0.213127
+      0.1105,
+      0.1495
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-12_Argentina_Peru",
-      "kickoff_utc": "2026-06-12T21:00:00+00:00",
-      "opponent": "Peru",
+      "match_id": "M19",
+      "kickoff_utc": "2026-06-17T01:00:00Z",
+      "opponent": "Algeria",
       "is_home": true
+    },
+    {
+      "match_id": "M43",
+      "kickoff_utc": "2026-06-22T01:00:00Z",
+      "opponent": "Austria",
+      "is_home": true
+    },
+    {
+      "match_id": "M67",
+      "kickoff_utc": "2026-06-27T01:00:00Z",
+      "opponent": "Jordan",
+      "is_home": false
     }
   ]
 }

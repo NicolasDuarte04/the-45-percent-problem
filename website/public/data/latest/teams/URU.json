@@ -1,28 +1,38 @@
 {
   "fifa_code": "URU",
   "display_name": "Uruguay",
-  "group": "C",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1892.0,
+  "group": "H",
   "progression": {
-    "p_group_qualification": 0.9059,
-    "p_r16": 0.4705,
-    "p_qf": 0.2239,
-    "p_sf": 0.1293,
-    "p_final": 0.0522,
-    "p_champion": 0.0202,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.017621,
-      0.023147
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-12_Canada_Uruguay",
-      "kickoff_utc": "2026-06-12T18:00:00+00:00",
-      "opponent": "Canada",
+      "match_id": "M16",
+      "kickoff_utc": "2026-06-15T22:00:00Z",
+      "opponent": "Saudi Arabia",
       "is_home": false
+    },
+    {
+      "match_id": "M40",
+      "kickoff_utc": "2026-06-20T22:00:00Z",
+      "opponent": "Cabo Verde",
+      "is_home": true
+    },
+    {
+      "match_id": "M63",
+      "kickoff_utc": "2026-06-25T16:00:00Z",
+      "opponent": "Spain",
+      "is_home": true
     }
   ]
 }

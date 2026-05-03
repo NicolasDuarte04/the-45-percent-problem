@@ -1,27 +1,37 @@
 {
   "fifa_code": "CIV",
-  "display_name": "C\u00f4te d'Ivoire",
-  "group": "I",
-  "confederation": "CAF",
-  "elo_rating": 1676.0,
+  "display_name": "Côte d'Ivoire",
+  "group": "E",
   "progression": {
-    "p_group_qualification": 0.3696,
-    "p_r16": 0.0869,
-    "p_qf": 0.0195,
-    "p_sf": 0.0058,
-    "p_final": 0.0018,
-    "p_champion": 0.0003,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.000102,
-      0.000882
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-15_Germany_Cote_dIvoire",
-      "kickoff_utc": "2026-06-15T18:00:00+00:00",
+      "match_id": "M10",
+      "kickoff_utc": "2026-06-14T23:00:00Z",
+      "opponent": "Ecuador",
+      "is_home": true
+    },
+    {
+      "match_id": "M33",
+      "kickoff_utc": "2026-06-19T17:00:00Z",
       "opponent": "Germany",
+      "is_home": false
+    },
+    {
+      "match_id": "M58",
+      "kickoff_utc": "2026-06-24T23:00:00Z",
+      "opponent": "Curaçao",
       "is_home": false
     }
   ]

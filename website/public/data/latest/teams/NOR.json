@@ -1,0 +1,38 @@
+{
+  "fifa_code": "NOR",
+  "display_name": "Norway",
+  "group": "I",
+  "progression": {
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
+    "ci_95_champion": [
+      0.0068,
+      0.0092
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M18",
+      "kickoff_utc": "2026-06-16T22:00:00Z",
+      "opponent": "Iraq",
+      "is_home": false
+    },
+    {
+      "match_id": "M42",
+      "kickoff_utc": "2026-06-21T22:00:00Z",
+      "opponent": "Senegal",
+      "is_home": true
+    },
+    {
+      "match_id": "M65",
+      "kickoff_utc": "2026-06-26T19:00:00Z",
+      "opponent": "France",
+      "is_home": true
+    }
+  ]
+}

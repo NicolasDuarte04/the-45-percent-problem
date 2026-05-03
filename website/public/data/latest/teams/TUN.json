@@ -1,0 +1,38 @@
+{
+  "fifa_code": "TUN",
+  "display_name": "Tunisia",
+  "group": "F",
+  "progression": {
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
+    "ci_95_champion": [
+      0.00085,
+      0.00115
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M12",
+      "kickoff_utc": "2026-06-15T02:00:00Z",
+      "opponent": "Sweden",
+      "is_home": false
+    },
+    {
+      "match_id": "M36",
+      "kickoff_utc": "2026-06-20T02:00:00Z",
+      "opponent": "Japan",
+      "is_home": true
+    },
+    {
+      "match_id": "M59",
+      "kickoff_utc": "2026-06-24T20:00:00Z",
+      "opponent": "Netherlands",
+      "is_home": true
+    }
+  ]
+}

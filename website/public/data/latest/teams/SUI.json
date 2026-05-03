@@ -1,27 +1,37 @@
 {
   "fifa_code": "SUI",
   "display_name": "Switzerland",
-  "group": "K",
-  "confederation": "UEFA",
-  "elo_rating": 1889.0,
+  "group": "B",
   "progression": {
-    "p_group_qualification": 0.5642,
-    "p_r16": 0.3891,
-    "p_qf": 0.2332,
-    "p_sf": 0.1099,
-    "p_final": 0.0549,
-    "p_champion": 0.0154,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.013166,
-      0.018006
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-16_Switzerland_Turkey",
-      "kickoff_utc": "2026-06-16T18:00:00+00:00",
-      "opponent": "Turkey",
+      "match_id": "M04",
+      "kickoff_utc": "2026-06-13T19:00:00Z",
+      "opponent": "Qatar",
+      "is_home": false
+    },
+    {
+      "match_id": "M28",
+      "kickoff_utc": "2026-06-18T19:00:00Z",
+      "opponent": "Bosnia & Herzegovina",
+      "is_home": true
+    },
+    {
+      "match_id": "M51",
+      "kickoff_utc": "2026-06-22T19:00:00Z",
+      "opponent": "Canada",
       "is_home": true
     }
   ]

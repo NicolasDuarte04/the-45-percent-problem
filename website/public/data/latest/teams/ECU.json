@@ -1,27 +1,37 @@
 {
   "fifa_code": "ECU",
   "display_name": "Ecuador",
-  "group": "D",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1933.0,
+  "group": "E",
   "progression": {
-    "p_group_qualification": 0.7416,
-    "p_r16": 0.4879,
-    "p_qf": 0.1991,
-    "p_sf": 0.1281,
-    "p_final": 0.0509,
-    "p_champion": 0.0245,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.021648,
-      0.027718
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-12_Ecuador_Poland",
-      "kickoff_utc": "2026-06-12T21:00:00+00:00",
-      "opponent": "Poland",
+      "match_id": "M10",
+      "kickoff_utc": "2026-06-14T23:00:00Z",
+      "opponent": "Côte d'Ivoire",
+      "is_home": false
+    },
+    {
+      "match_id": "M34",
+      "kickoff_utc": "2026-06-19T23:00:00Z",
+      "opponent": "Curaçao",
+      "is_home": true
+    },
+    {
+      "match_id": "M57",
+      "kickoff_utc": "2026-06-24T17:00:00Z",
+      "opponent": "Germany",
       "is_home": true
     }
   ]

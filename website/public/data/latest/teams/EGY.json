@@ -2,26 +2,36 @@
   "fifa_code": "EGY",
   "display_name": "Egypt",
   "group": "G",
-  "confederation": "CAF",
-  "elo_rating": 1689.0,
   "progression": {
-    "p_group_qualification": 0.5241,
-    "p_r16": 0.3423,
-    "p_qf": 0.0867,
-    "p_sf": 0.0305,
-    "p_final": 0.0079,
-    "p_champion": 0.0012,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.000687,
-      0.002096
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-14_Egypt_Cameroon",
-      "kickoff_utc": "2026-06-14T18:00:00+00:00",
-      "opponent": "Cameroon",
+      "match_id": "M13",
+      "kickoff_utc": "2026-06-15T19:00:00Z",
+      "opponent": "Belgium",
+      "is_home": false
+    },
+    {
+      "match_id": "M38",
+      "kickoff_utc": "2026-06-21T01:00:00Z",
+      "opponent": "New Zealand",
+      "is_home": false
+    },
+    {
+      "match_id": "M62",
+      "kickoff_utc": "2026-06-26T01:00:00Z",
+      "opponent": "IR Iran",
       "is_home": true
     }
   ]

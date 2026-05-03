@@ -1,27 +1,37 @@
 {
   "fifa_code": "IRQ",
   "display_name": "Iraq",
-  "group": "F",
-  "confederation": "AFC",
-  "elo_rating": 1607.0,
+  "group": "I",
   "progression": {
-    "p_group_qualification": 0.1001,
-    "p_r16": 0.0413,
-    "p_qf": 0.0099,
-    "p_sf": 0.0021,
-    "p_final": 0.0004,
+    "p_group_qualification": 0.22,
+    "p_r16": 0.1,
+    "p_qf": 0.018,
+    "p_sf": 0.004,
+    "p_final": 0.0008,
     "p_champion": 0.0001,
     "ci_95_champion": [
-      1.8e-05,
-      0.000566
+      0.000085,
+      0.000115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-13_Australia_Iraq",
-      "kickoff_utc": "2026-06-13T21:00:00+00:00",
-      "opponent": "Australia",
+      "match_id": "M18",
+      "kickoff_utc": "2026-06-16T22:00:00Z",
+      "opponent": "Norway",
+      "is_home": true
+    },
+    {
+      "match_id": "M41",
+      "kickoff_utc": "2026-06-21T19:00:00Z",
+      "opponent": "France",
+      "is_home": false
+    },
+    {
+      "match_id": "M66",
+      "kickoff_utc": "2026-06-26T22:00:00Z",
+      "opponent": "Senegal",
       "is_home": false
     }
   ]

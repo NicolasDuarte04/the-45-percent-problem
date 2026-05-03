@@ -1,27 +1,37 @@
 {
   "fifa_code": "SEN",
   "display_name": "Senegal",
-  "group": "A",
-  "confederation": "CAF",
-  "elo_rating": 1878.0,
+  "group": "I",
   "progression": {
-    "p_group_qualification": 0.8262,
-    "p_r16": 0.6397,
-    "p_qf": 0.3928,
-    "p_sf": 0.146,
-    "p_final": 0.0526,
-    "p_champion": 0.0203,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.017715,
-      0.023254
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-11_Senegal_Uzbekistan",
-      "kickoff_utc": "2026-06-11T18:00:00+00:00",
-      "opponent": "Uzbekistan",
+      "match_id": "M17",
+      "kickoff_utc": "2026-06-16T19:00:00Z",
+      "opponent": "France",
+      "is_home": false
+    },
+    {
+      "match_id": "M42",
+      "kickoff_utc": "2026-06-21T22:00:00Z",
+      "opponent": "Norway",
+      "is_home": false
+    },
+    {
+      "match_id": "M66",
+      "kickoff_utc": "2026-06-26T22:00:00Z",
+      "opponent": "Iraq",
       "is_home": true
     }
   ]
