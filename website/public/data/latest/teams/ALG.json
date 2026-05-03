@@ -1,27 +1,37 @@
 {
   "fifa_code": "ALG",
   "display_name": "Algeria",
-  "group": "E",
-  "confederation": "CAF",
-  "elo_rating": 1743.0,
+  "group": "J",
   "progression": {
-    "p_group_qualification": 0.3765,
-    "p_r16": 0.228,
-    "p_qf": 0.0974,
-    "p_sf": 0.041,
-    "p_final": 0.0121,
-    "p_champion": 0.0023,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.001533,
-      0.003449
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-13_Algeria_Colombia",
-      "kickoff_utc": "2026-06-13T18:00:00+00:00",
-      "opponent": "Colombia",
+      "match_id": "M19",
+      "kickoff_utc": "2026-06-17T01:00:00Z",
+      "opponent": "Argentina",
+      "is_home": false
+    },
+    {
+      "match_id": "M44",
+      "kickoff_utc": "2026-06-22T04:00:00Z",
+      "opponent": "Jordan",
+      "is_home": false
+    },
+    {
+      "match_id": "M68",
+      "kickoff_utc": "2026-06-27T04:00:00Z",
+      "opponent": "Austria",
       "is_home": true
     }
   ]

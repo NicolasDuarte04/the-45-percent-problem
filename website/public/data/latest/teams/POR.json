@@ -1,28 +1,38 @@
 {
   "fifa_code": "POR",
   "display_name": "Portugal",
-  "group": "J",
-  "confederation": "UEFA",
-  "elo_rating": 1984.0,
+  "group": "K",
   "progression": {
-    "p_group_qualification": 0.7548,
-    "p_r16": 0.5381,
-    "p_qf": 0.3393,
-    "p_sf": 0.2304,
-    "p_final": 0.1433,
-    "p_champion": 0.0576,
+    "p_group_qualification": 0.84,
+    "p_r16": 0.66,
+    "p_qf": 0.36,
+    "p_sf": 0.18,
+    "p_final": 0.09,
+    "p_champion": 0.04,
     "ci_95_champion": [
-      0.053201,
-      0.062339
+      0.034,
+      0.046
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-15_Portugal_Croatia",
-      "kickoff_utc": "2026-06-15T21:00:00+00:00",
-      "opponent": "Croatia",
+      "match_id": "M21",
+      "kickoff_utc": "2026-06-17T17:00:00Z",
+      "opponent": "Uzbekistan",
       "is_home": true
+    },
+    {
+      "match_id": "M45",
+      "kickoff_utc": "2026-06-22T17:00:00Z",
+      "opponent": "Colombia",
+      "is_home": true
+    },
+    {
+      "match_id": "M69",
+      "kickoff_utc": "2026-06-27T17:00:00Z",
+      "opponent": "Congo DR",
+      "is_home": false
     }
   ]
 }

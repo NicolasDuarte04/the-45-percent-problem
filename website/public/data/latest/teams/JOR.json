@@ -1,28 +1,38 @@
 {
   "fifa_code": "JOR",
   "display_name": "Jordan",
-  "group": "L",
-  "confederation": "AFC",
-  "elo_rating": 1690.0,
+  "group": "J",
   "progression": {
-    "p_group_qualification": 0.417,
-    "p_r16": 0.1196,
-    "p_qf": 0.0359,
-    "p_sf": 0.0091,
-    "p_final": 0.0032,
-    "p_champion": 0.0005,
+    "p_group_qualification": 0.22,
+    "p_r16": 0.1,
+    "p_qf": 0.018,
+    "p_sf": 0.004,
+    "p_final": 0.0008,
+    "p_champion": 0.0001,
     "ci_95_champion": [
-      0.000214,
-      0.00117
+      0.000085,
+      0.000115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-16_Slovakia_Jordan",
-      "kickoff_utc": "2026-06-16T21:00:00+00:00",
-      "opponent": "Slovakia",
+      "match_id": "M20",
+      "kickoff_utc": "2026-06-17T04:00:00Z",
+      "opponent": "Austria",
       "is_home": false
+    },
+    {
+      "match_id": "M44",
+      "kickoff_utc": "2026-06-22T04:00:00Z",
+      "opponent": "Algeria",
+      "is_home": true
+    },
+    {
+      "match_id": "M67",
+      "kickoff_utc": "2026-06-27T01:00:00Z",
+      "opponent": "Argentina",
+      "is_home": true
     }
   ]
 }

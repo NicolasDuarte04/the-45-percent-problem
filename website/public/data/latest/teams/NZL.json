@@ -1,28 +1,38 @@
 {
   "fifa_code": "NZL",
   "display_name": "New Zealand",
-  "group": "C",
-  "confederation": "OFC",
-  "elo_rating": 1585.0,
+  "group": "G",
   "progression": {
-    "p_group_qualification": 0.3152,
-    "p_r16": 0.186,
-    "p_qf": 0.0526,
-    "p_sf": 0.0098,
-    "p_final": 0.0017,
-    "p_champion": 0.0003,
+    "p_group_qualification": 0.22,
+    "p_r16": 0.1,
+    "p_qf": 0.018,
+    "p_sf": 0.004,
+    "p_final": 0.0008,
+    "p_champion": 0.0001,
     "ci_95_champion": [
-      0.000102,
-      0.000882
+      0.000085,
+      0.000115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-12_Morocco_New_Zealand",
-      "kickoff_utc": "2026-06-12T18:00:00+00:00",
-      "opponent": "Morocco",
+      "match_id": "M14",
+      "kickoff_utc": "2026-06-16T01:00:00Z",
+      "opponent": "IR Iran",
       "is_home": false
+    },
+    {
+      "match_id": "M38",
+      "kickoff_utc": "2026-06-21T01:00:00Z",
+      "opponent": "Egypt",
+      "is_home": true
+    },
+    {
+      "match_id": "M61",
+      "kickoff_utc": "2026-06-25T19:00:00Z",
+      "opponent": "Belgium",
+      "is_home": true
     }
   ]
 }

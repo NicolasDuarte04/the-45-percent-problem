@@ -1,28 +1,38 @@
 {
   "fifa_code": "CRO",
   "display_name": "Croatia",
-  "group": "J",
-  "confederation": "UEFA",
-  "elo_rating": 1930.0,
+  "group": "L",
   "progression": {
-    "p_group_qualification": 0.6539,
-    "p_r16": 0.4239,
-    "p_qf": 0.224,
-    "p_sf": 0.1347,
-    "p_final": 0.0733,
-    "p_champion": 0.0258,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.02287,
-      0.029094
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-15_Portugal_Croatia",
-      "kickoff_utc": "2026-06-15T21:00:00+00:00",
-      "opponent": "Portugal",
+      "match_id": "M23",
+      "kickoff_utc": "2026-06-17T20:00:00Z",
+      "opponent": "England",
       "is_home": false
+    },
+    {
+      "match_id": "M48",
+      "kickoff_utc": "2026-06-23T02:00:00Z",
+      "opponent": "Panama",
+      "is_home": false
+    },
+    {
+      "match_id": "M72",
+      "kickoff_utc": "2026-06-28T02:00:00Z",
+      "opponent": "Ghana",
+      "is_home": true
     }
   ]
 }

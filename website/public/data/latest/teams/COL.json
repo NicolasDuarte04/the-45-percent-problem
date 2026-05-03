@@ -1,27 +1,37 @@
 {
   "fifa_code": "COL",
   "display_name": "Colombia",
-  "group": "E",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1975.0,
+  "group": "K",
   "progression": {
-    "p_group_qualification": 0.8484,
-    "p_r16": 0.4942,
-    "p_qf": 0.2684,
-    "p_sf": 0.1588,
-    "p_final": 0.0833,
-    "p_champion": 0.0382,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.034617,
-      0.042138
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-13_Algeria_Colombia",
-      "kickoff_utc": "2026-06-13T18:00:00+00:00",
-      "opponent": "Algeria",
+      "match_id": "M22",
+      "kickoff_utc": "2026-06-17T23:00:00Z",
+      "opponent": "Congo DR",
+      "is_home": true
+    },
+    {
+      "match_id": "M45",
+      "kickoff_utc": "2026-06-22T17:00:00Z",
+      "opponent": "Portugal",
+      "is_home": false
+    },
+    {
+      "match_id": "M70",
+      "kickoff_utc": "2026-06-27T23:00:00Z",
+      "opponent": "Uzbekistan",
       "is_home": false
     }
   ]

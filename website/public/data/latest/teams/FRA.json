@@ -1,28 +1,38 @@
 {
   "fifa_code": "FRA",
   "display_name": "France",
-  "group": "G",
-  "confederation": "UEFA",
-  "elo_rating": 2082.0,
+  "group": "I",
   "progression": {
-    "p_group_qualification": 0.9852,
-    "p_r16": 0.7316,
-    "p_qf": 0.5021,
-    "p_sf": 0.2761,
-    "p_final": 0.1734,
-    "p_champion": 0.1206,
+    "p_group_qualification": 0.94,
+    "p_r16": 0.86,
+    "p_qf": 0.62,
+    "p_sf": 0.4,
+    "p_final": 0.24,
+    "p_champion": 0.13,
     "ci_95_champion": [
-      0.114362,
-      0.127129
+      0.1105,
+      0.1495
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-14_France_Denmark",
-      "kickoff_utc": "2026-06-14T18:00:00+00:00",
-      "opponent": "Denmark",
+      "match_id": "M17",
+      "kickoff_utc": "2026-06-16T19:00:00Z",
+      "opponent": "Senegal",
       "is_home": true
+    },
+    {
+      "match_id": "M41",
+      "kickoff_utc": "2026-06-21T19:00:00Z",
+      "opponent": "Iraq",
+      "is_home": true
+    },
+    {
+      "match_id": "M65",
+      "kickoff_utc": "2026-06-26T19:00:00Z",
+      "opponent": "Norway",
+      "is_home": false
     }
   ]
 }

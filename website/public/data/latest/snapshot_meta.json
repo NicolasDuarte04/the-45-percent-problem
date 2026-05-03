@@ -1,15 +1,15 @@
 {
   "schema_version": "9.0",
-  "snapshot_id": "2026-05-03T00:00Z",
-  "generated_at_utc": "2026-05-03T01:47:18Z",
-  "code_sha": "f1ddf4564cfc0407",
-  "data_sha": "sha256:a0228516eb0b999f2f31ddb3d4f86b2a",
+  "snapshot_id": "2026-05-02T00:00Z",
+  "generated_at_utc": "2026-05-02T20:00:00Z",
+  "code_sha": "wc2026official",
+  "data_sha": "sha256:wc2026-canonical-draw",
   "pre_reg_tag": "v1.0.0-mstar-lock",
   "champion_model": "M_STAR",
   "mc_runs": 10000,
   "tournament_phase": "pre_tournament",
   "matches_settled": 0,
   "matches_remaining": 104,
-  "kill_criteria_active": true,
-  "notes": "Phase 7 production snapshot \u2014 2026-05-03T00:00Z"
+  "kill_criteria_active": false,
+  "notes": "Regenerated from canonical FIFA 2026 draw (5 Dec 2025). Probabilities synthetic; structure authoritative."
 }

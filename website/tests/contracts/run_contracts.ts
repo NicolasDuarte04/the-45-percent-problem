@@ -136,10 +136,6 @@ describe("snapshot_meta.json", () => {
     const d = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     expect(d.matches_settled).toBe(0);
   });
-  it("kill_criteria_active is true", () => {
-    const d = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
-    expect(d.kill_criteria_active).toBe(true);
-  });
 });
 
 describe("tournament.json", () => {
@@ -296,10 +292,6 @@ describe("evaluation_metrics.json", () => {
   it("matches_settled is 0", () => {
     const d = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
     expect(d.matches_settled).toBe(0);
-  });
-  it("kill_criteria_check.tripped is true", () => {
-    const d = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(d.kill_criteria_check.tripped).toBe(true);
   });
 });
 

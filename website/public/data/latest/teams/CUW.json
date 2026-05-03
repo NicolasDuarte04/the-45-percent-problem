@@ -1,0 +1,38 @@
+{
+  "fifa_code": "CUW",
+  "display_name": "Curaçao",
+  "group": "E",
+  "progression": {
+    "p_group_qualification": 0.22,
+    "p_r16": 0.1,
+    "p_qf": 0.018,
+    "p_sf": 0.004,
+    "p_final": 0.0008,
+    "p_champion": 0.0001,
+    "ci_95_champion": [
+      0.000085,
+      0.000115
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M09",
+      "kickoff_utc": "2026-06-14T17:00:00Z",
+      "opponent": "Germany",
+      "is_home": false
+    },
+    {
+      "match_id": "M34",
+      "kickoff_utc": "2026-06-19T23:00:00Z",
+      "opponent": "Ecuador",
+      "is_home": false
+    },
+    {
+      "match_id": "M58",
+      "kickoff_utc": "2026-06-24T23:00:00Z",
+      "opponent": "Côte d'Ivoire",
+      "is_home": true
+    }
+  ]
+}

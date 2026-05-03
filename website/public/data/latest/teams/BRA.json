@@ -1,28 +1,38 @@
 {
   "fifa_code": "BRA",
   "display_name": "Brazil",
-  "group": "E",
-  "confederation": "CONMEBOL",
-  "elo_rating": 1984.0,
+  "group": "C",
   "progression": {
-    "p_group_qualification": 0.8585,
-    "p_r16": 0.4986,
-    "p_qf": 0.2712,
-    "p_sf": 0.1622,
-    "p_final": 0.0951,
-    "p_champion": 0.0438,
+    "p_group_qualification": 0.94,
+    "p_r16": 0.86,
+    "p_qf": 0.62,
+    "p_sf": 0.4,
+    "p_final": 0.24,
+    "p_champion": 0.13,
     "ci_95_champion": [
-      0.039961,
-      0.047989
+      0.1105,
+      0.1495
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-13_Brazil_Japan",
-      "kickoff_utc": "2026-06-13T18:00:00+00:00",
-      "opponent": "Japan",
+      "match_id": "M05",
+      "kickoff_utc": "2026-06-13T22:00:00Z",
+      "opponent": "Morocco",
       "is_home": true
+    },
+    {
+      "match_id": "M29",
+      "kickoff_utc": "2026-06-18T22:00:00Z",
+      "opponent": "Haiti",
+      "is_home": true
+    },
+    {
+      "match_id": "M53",
+      "kickoff_utc": "2026-06-23T22:00:00Z",
+      "opponent": "Scotland",
+      "is_home": false
     }
   ]
 }

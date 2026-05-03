@@ -1,28 +1,38 @@
 {
   "fifa_code": "IRN",
-  "display_name": "Iran",
-  "group": "L",
-  "confederation": "AFC",
-  "elo_rating": 1760.0,
+  "display_name": "IR Iran",
+  "group": "G",
   "progression": {
-    "p_group_qualification": 0.582,
-    "p_r16": 0.222,
-    "p_qf": 0.0975,
-    "p_sf": 0.0303,
-    "p_final": 0.0117,
-    "p_champion": 0.0015,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.000909,
-      0.002474
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-16_Iran_Ukraine",
-      "kickoff_utc": "2026-06-16T21:00:00+00:00",
-      "opponent": "Ukraine",
+      "match_id": "M14",
+      "kickoff_utc": "2026-06-16T01:00:00Z",
+      "opponent": "New Zealand",
       "is_home": true
+    },
+    {
+      "match_id": "M37",
+      "kickoff_utc": "2026-06-20T19:00:00Z",
+      "opponent": "Belgium",
+      "is_home": false
+    },
+    {
+      "match_id": "M62",
+      "kickoff_utc": "2026-06-26T01:00:00Z",
+      "opponent": "Egypt",
+      "is_home": false
     }
   ]
 }

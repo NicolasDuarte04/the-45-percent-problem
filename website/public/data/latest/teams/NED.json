@@ -2,26 +2,36 @@
   "fifa_code": "NED",
   "display_name": "Netherlands",
   "group": "F",
-  "confederation": "UEFA",
-  "elo_rating": 1961.0,
   "progression": {
-    "p_group_qualification": 0.7665,
-    "p_r16": 0.4193,
-    "p_qf": 0.1676,
-    "p_sf": 0.0801,
-    "p_final": 0.0427,
-    "p_champion": 0.0225,
+    "p_group_qualification": 0.84,
+    "p_r16": 0.66,
+    "p_qf": 0.36,
+    "p_sf": 0.18,
+    "p_final": 0.09,
+    "p_champion": 0.04,
     "ci_95_champion": [
-      0.019771,
-      0.025595
+      0.034,
+      0.046
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-13_Spain_Netherlands",
-      "kickoff_utc": "2026-06-13T21:00:00+00:00",
-      "opponent": "Spain",
+      "match_id": "M11",
+      "kickoff_utc": "2026-06-14T20:00:00Z",
+      "opponent": "Japan",
+      "is_home": true
+    },
+    {
+      "match_id": "M35",
+      "kickoff_utc": "2026-06-19T20:00:00Z",
+      "opponent": "Sweden",
+      "is_home": true
+    },
+    {
+      "match_id": "M59",
+      "kickoff_utc": "2026-06-24T20:00:00Z",
+      "opponent": "Tunisia",
       "is_home": false
     }
   ]

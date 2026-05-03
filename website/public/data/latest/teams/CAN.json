@@ -1,28 +1,38 @@
 {
   "fifa_code": "CAN",
   "display_name": "Canada",
-  "group": "C",
-  "confederation": "CONCACAF",
-  "elo_rating": 1784.0,
+  "group": "B",
   "progression": {
-    "p_group_qualification": 0.7655,
-    "p_r16": 0.4018,
-    "p_qf": 0.1784,
-    "p_sf": 0.0719,
-    "p_final": 0.0241,
-    "p_champion": 0.0053,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.004055,
-      0.006925
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-12_Canada_Uruguay",
-      "kickoff_utc": "2026-06-12T18:00:00+00:00",
-      "opponent": "Uruguay",
+      "match_id": "M03",
+      "kickoff_utc": "2026-06-12T19:00:00Z",
+      "opponent": "Bosnia & Herzegovina",
       "is_home": true
+    },
+    {
+      "match_id": "M27",
+      "kickoff_utc": "2026-06-17T19:00:00Z",
+      "opponent": "Qatar",
+      "is_home": true
+    },
+    {
+      "match_id": "M51",
+      "kickoff_utc": "2026-06-22T19:00:00Z",
+      "opponent": "Switzerland",
+      "is_home": false
     }
   ]
 }

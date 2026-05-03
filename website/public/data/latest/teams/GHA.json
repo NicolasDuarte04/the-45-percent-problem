@@ -1,28 +1,38 @@
 {
   "fifa_code": "GHA",
   "display_name": "Ghana",
-  "group": "B",
-  "confederation": "CAF",
-  "elo_rating": 1505.0,
+  "group": "L",
   "progression": {
-    "p_group_qualification": 0.2715,
-    "p_r16": 0.0886,
-    "p_qf": 0.0188,
-    "p_sf": 0.002,
-    "p_final": 0.0003,
-    "p_champion": 0.0,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.0,
-      0.000384
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-11_Ghana_Costa_Rica",
-      "kickoff_utc": "2026-06-11T21:00:00+00:00",
-      "opponent": "Costa Rica",
+      "match_id": "M24",
+      "kickoff_utc": "2026-06-18T02:00:00Z",
+      "opponent": "Panama",
       "is_home": true
+    },
+    {
+      "match_id": "M47",
+      "kickoff_utc": "2026-06-22T20:00:00Z",
+      "opponent": "England",
+      "is_home": false
+    },
+    {
+      "match_id": "M72",
+      "kickoff_utc": "2026-06-28T02:00:00Z",
+      "opponent": "Croatia",
+      "is_home": false
     }
   ]
 }

@@ -4,29 +4,47 @@
 // website/public/assets/flags/. Idempotent: existing files are skipped unless
 // --force is passed. Source-of-truth FIFA->ISO map lives here; the runtime
 // component never has to do this lookup.
+//
+// Asserts the FIFA-code keys match src/lib/data/wc2026-official-draw.ts before
+// fetching, so a draw change can't silently leave the dictionary out of sync.
 
-import { mkdir, writeFile, access } from "node:fs/promises";
+import { mkdir, writeFile, access, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const OUT_DIR = join(ROOT, "public", "assets", "flags");
+const CANONICAL_DRAW = join(ROOT, "src", "lib", "data", "wc2026-official-draw.ts");
 
 // FIFA 3-letter code -> lipis/flag-icons slug (ISO 3166-1 alpha-2 lowercase,
 // or gb-eng / gb-sct for the home-nation overrides that lipis publishes).
-// Verified against the 48-team list in public/data/latest/tournament.json.
+// Verified against the 48-team list in src/lib/data/wc2026-official-draw.ts.
 const FIFA_TO_ISO = {
-  ARG: "ar", ESP: "es", FRA: "fr", POR: "pt", ENG: "gb-eng",
-  BRA: "br", COL: "co", GER: "de", CRO: "hr", ECU: "ec",
-  NED: "nl", JPN: "jp", SEN: "sn", URU: "uy", TUR: "tr",
-  MEX: "mx", SUI: "ch", ITA: "it", DEN: "dk", MAR: "ma",
-  BEL: "be", CAN: "ca", AUT: "at", KOR: "kr", AUS: "au",
-  UZB: "uz", ALG: "dz", PAN: "pa", IRN: "ir", UKR: "ua",
-  SRB: "rs", SCO: "gb-sct", USA: "us", NGA: "ng", EGY: "eg",
-  POL: "pl", HUN: "hu", PER: "pe", JOR: "jo", VEN: "ve",
-  SVK: "sk", CIV: "ci", CRC: "cr", NZL: "nz", CMR: "cm",
-  IRQ: "iq", KSA: "sa", GHA: "gh",
+  // Group A
+  MEX: "mx", RSA: "za", KOR: "kr", CZE: "cz",
+  // Group B
+  CAN: "ca", BIH: "ba", QAT: "qa", SUI: "ch",
+  // Group C
+  BRA: "br", MAR: "ma", HAI: "ht", SCO: "gb-sct",
+  // Group D
+  USA: "us", PAR: "py", AUS: "au", TUR: "tr",
+  // Group E
+  GER: "de", CUW: "cw", CIV: "ci", ECU: "ec",
+  // Group F
+  NED: "nl", JPN: "jp", SWE: "se", TUN: "tn",
+  // Group G
+  BEL: "be", EGY: "eg", IRN: "ir", NZL: "nz",
+  // Group H
+  ESP: "es", CPV: "cv", KSA: "sa", URU: "uy",
+  // Group I
+  FRA: "fr", SEN: "sn", IRQ: "iq", NOR: "no",
+  // Group J
+  ARG: "ar", ALG: "dz", AUT: "at", JOR: "jo",
+  // Group K
+  POR: "pt", UZB: "uz", COL: "co", COD: "cd",
+  // Group L
+  ENG: "gb-eng", CRO: "hr", GHA: "gh", PAN: "pa",
 };
 
 const FORCE = process.argv.includes("--force");
@@ -70,7 +88,39 @@ async function runPool(items, worker, size) {
   return results;
 }
 
+// Parse fifa_code values out of the canonical draw module without compiling
+// TypeScript. The TEAMS array entries follow the literal pattern
+//   { fifa_code: "ABC", display_name: "...", ...}
+// and that pattern is the only place fifa_code appears as an object key, so a
+// simple regex is enough.
+async function readCanonicalCodes() {
+  const src = await readFile(CANONICAL_DRAW, "utf8");
+  const codes = new Set();
+  const re = /fifa_code:\s*"([A-Z]{3})"/g;
+  let m;
+  while ((m = re.exec(src)) !== null) codes.add(m[1]);
+  return codes;
+}
+
+function diff(setA, setB) {
+  return [...setA].filter((x) => !setB.has(x)).sort();
+}
+
+async function assertCodesMatchCanonical() {
+  const canonical = await readCanonicalCodes();
+  const dict = new Set(Object.keys(FIFA_TO_ISO));
+  const missing = diff(canonical, dict);   // in canonical, not in dict
+  const extra = diff(dict, canonical);     // in dict, not in canonical
+  if (missing.length === 0 && extra.length === 0) return;
+  console.error("FIFA_TO_ISO is out of sync with src/lib/data/wc2026-official-draw.ts:");
+  if (missing.length) console.error(`  missing from FIFA_TO_ISO: ${missing.join(", ")}`);
+  if (extra.length) console.error(`  extra in FIFA_TO_ISO:       ${extra.join(", ")}`);
+  console.error("Update FIFA_TO_ISO and src/lib/flags/countries.ts in lockstep with the draw module.");
+  process.exit(1);
+}
+
 async function main() {
+  await assertCodesMatchCanonical();
   await mkdir(OUT_DIR, { recursive: true });
   const entries = Object.entries(FIFA_TO_ISO);
   console.log(`Fetching ${entries.length} flags -> ${OUT_DIR}`);

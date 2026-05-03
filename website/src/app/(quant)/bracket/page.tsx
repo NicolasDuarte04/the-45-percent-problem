@@ -4,6 +4,7 @@ import {
   loadSnapshotMeta,
   loadTournament,
 } from "@/lib/data/loadSnapshot";
+import { loadStructuralMaps, mergeTournament } from "@/lib/db/structuralMerge";
 import { BracketBoard } from "@/components/compositions/BracketBoard";
 import { RoundProbabilityLegend } from "@/components/compositions/RoundProbabilityLegend";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
@@ -19,9 +20,10 @@ export const metadata = {
     "Single-page bracket with per-round marginal probabilities drawn from the Monte Carlo ensemble.",
 };
 
-export default function BracketPage() {
+export default async function BracketPage() {
+  const maps = await loadStructuralMaps();
   const bracket = loadBracket();
-  const tournament = loadTournament();
+  const tournament = mergeTournament(loadTournament(), maps);
   const meta = loadSnapshotMeta();
 
   return (

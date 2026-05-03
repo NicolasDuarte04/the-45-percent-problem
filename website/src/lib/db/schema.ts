@@ -6,6 +6,8 @@ import {
   date,
   jsonb,
   index,
+  varchar,
+  smallint,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -83,3 +85,92 @@ export type Subscriber = typeof subscribers.$inferSelect;
 export type NewSubscriber = typeof subscribers.$inferInsert;
 export type SendLogEntry = typeof sendLog.$inferSelect;
 export type NewSendLogEntry = typeof sendLog.$inferInsert;
+
+// ─── Tournament structure (FIFA World Cup 2026) ───────────────────────────────
+//
+// These three tables are the SINGLE SOURCE OF TRUTH for the tournament's
+// static structure: who is in it, where they play, and the bracket pathway.
+//
+// Probabilities and other model output continue to live in the JSON snapshot
+// pipeline (public/data/latest/*.json). Frontend joins by `match_id` and
+// `fifa_code` at render time.
+//
+// Per project mandate (May 2026): NO frontend component is permitted to
+// hardcode team pairings. All structural reads go through these tables.
+
+export const venues = pgTable("venues", {
+  /** Stable short key, e.g. "MetLife", "Azteca". */
+  key: text("key").primaryKey(),
+  /** Official FIFA stadium name. */
+  stadium: text("stadium").notNull(),
+  city: text("city").notNull(),
+  /** Host country: "USA" | "CAN" | "MEX". */
+  country: varchar("country", { length: 3 }).notNull(),
+});
+
+export const teams = pgTable(
+  "teams",
+  {
+    /** FIFA 3-letter code. e.g. "MEX", "ARG". */
+    fifaCode: varchar("fifa_code", { length: 3 }).primaryKey(),
+    displayName: text("display_name").notNull(),
+    confederation: text("confederation", {
+      enum: ["CONMEBOL", "UEFA", "CONCACAF", "AFC", "CAF", "OFC"],
+    }).notNull(),
+    /** Group letter A..L. */
+    group: varchar("group", { length: 1 }).notNull(),
+    /** Pot index in the final draw (1-4). */
+    drawPot: smallint("draw_pot").notNull(),
+  },
+  (t) => [index("idx_teams_group").on(t.group)],
+);
+
+export const matches = pgTable(
+  "matches",
+  {
+    /** "M01".."M104". Stable across the tournament. */
+    matchId: varchar("match_id", { length: 8 }).primaryKey(),
+    round: text("round", {
+      enum: ["GRP", "R32", "R16", "QF", "SF", "3P", "FIN"],
+    }).notNull(),
+    /** 1, 2, or 3 for group stage; null for knockout. */
+    matchday: smallint("matchday"),
+    /** Group letter A..L for group stage; null for knockout. */
+    group: varchar("group", { length: 1 }),
+    /**
+     * Resolved home team's FIFA code. Null for knockout matches whose home
+     * team is determined by group results or earlier KO match outcomes
+     * (use `homeSlot` instead).
+     */
+    homeTeam: varchar("home_team", { length: 3 }).references(
+      () => teams.fifaCode,
+    ),
+    awayTeam: varchar("away_team", { length: 3 }).references(
+      () => teams.fifaCode,
+    ),
+    /**
+     * Slot descriptor when the team is TBD: e.g. "1A" (winner of A),
+     * "2C" (runner-up of C), "BEST3-CDEFI" (best 3rd-placed from those
+     * groups), "WM73" (winner of match 73), "LM101" (loser of match 101).
+     * Always populated for KO matches; null for resolved group fixtures.
+     */
+    homeSlot: text("home_slot"),
+    awaySlot: text("away_slot"),
+    kickoffUtc: timestamp("kickoff_utc", { withTimezone: true }).notNull(),
+    venueKey: text("venue_key")
+      .notNull()
+      .references(() => venues.key),
+  },
+  (t) => [
+    index("idx_matches_round").on(t.round),
+    index("idx_matches_group").on(t.group),
+    index("idx_matches_kickoff").on(t.kickoffUtc),
+  ],
+);
+
+export type Team = typeof teams.$inferSelect;
+export type NewTeam = typeof teams.$inferInsert;
+export type Venue = typeof venues.$inferSelect;
+export type NewVenue = typeof venues.$inferInsert;
+export type Match = typeof matches.$inferSelect;
+export type NewMatch = typeof matches.$inferInsert;

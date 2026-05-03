@@ -17,6 +17,11 @@ function getConnectionString(): string {
   return url;
 }
 
+// Cache the postgres client on globalThis in every environment, including
+// production builds. Without this, each Next.js worker that re-evaluates
+// this module ends up opening a fresh pooler connection per page render —
+// fine for ~5 routes, devastating for ~150 static-export routes (the
+// pooler queues, then we hit the 60s per-page build timeout).
 const client =
   global.__briefPgClient ??
   postgres(getConnectionString(), {
@@ -24,9 +29,7 @@ const client =
     max: 1,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  global.__briefPgClient = client;
-}
+global.__briefPgClient = client;
 
 export const db = drizzle(client, { schema });
 export { schema };

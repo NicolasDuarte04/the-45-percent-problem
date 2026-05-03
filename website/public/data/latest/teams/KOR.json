@@ -1,27 +1,37 @@
 {
   "fifa_code": "KOR",
-  "display_name": "South Korea",
+  "display_name": "Korea Republic",
   "group": "A",
-  "confederation": "AFC",
-  "elo_rating": 1752.0,
   "progression": {
-    "p_group_qualification": 0.6024,
-    "p_r16": 0.4456,
-    "p_qf": 0.2025,
-    "p_sf": 0.0625,
-    "p_final": 0.0172,
-    "p_champion": 0.004,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.002939,
-      0.005442
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-11_Mexico_South_Korea",
-      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "match_id": "M02",
+      "kickoff_utc": "2026-06-12T02:00:00Z",
+      "opponent": "Czechia",
+      "is_home": true
+    },
+    {
+      "match_id": "M25",
+      "kickoff_utc": "2026-06-16T19:00:00Z",
       "opponent": "Mexico",
+      "is_home": false
+    },
+    {
+      "match_id": "M50",
+      "kickoff_utc": "2026-06-22T02:00:00Z",
+      "opponent": "South Africa",
       "is_home": false
     }
   ]

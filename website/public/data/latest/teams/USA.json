@@ -1,28 +1,38 @@
 {
   "fifa_code": "USA",
-  "display_name": "USA",
-  "group": "B",
-  "confederation": "CONCACAF",
-  "elo_rating": 1721.0,
+  "display_name": "United States",
+  "group": "D",
   "progression": {
-    "p_group_qualification": 0.7151,
-    "p_r16": 0.3107,
-    "p_qf": 0.1339,
-    "p_sf": 0.0295,
-    "p_final": 0.0059,
-    "p_champion": 0.0013,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.00076,
-      0.002223
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-11_USA_Panama",
-      "kickoff_utc": "2026-06-11T21:00:00+00:00",
-      "opponent": "Panama",
+      "match_id": "M07",
+      "kickoff_utc": "2026-06-13T01:00:00Z",
+      "opponent": "Paraguay",
       "is_home": true
+    },
+    {
+      "match_id": "M31",
+      "kickoff_utc": "2026-06-18T01:00:00Z",
+      "opponent": "Australia",
+      "is_home": true
+    },
+    {
+      "match_id": "M55",
+      "kickoff_utc": "2026-06-23T01:00:00Z",
+      "opponent": "Türkiye",
+      "is_home": false
     }
   ]
 }

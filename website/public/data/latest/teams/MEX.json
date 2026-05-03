@@ -2,27 +2,37 @@
   "fifa_code": "MEX",
   "display_name": "Mexico",
   "group": "A",
-  "confederation": "CONCACAF",
-  "elo_rating": 1858.0,
   "progression": {
-    "p_group_qualification": 0.8071,
-    "p_r16": 0.6257,
-    "p_qf": 0.3598,
-    "p_sf": 0.1364,
-    "p_final": 0.0487,
-    "p_champion": 0.016,
+    "p_group_qualification": 0.66,
+    "p_r16": 0.45,
+    "p_qf": 0.18,
+    "p_sf": 0.07,
+    "p_final": 0.025,
+    "p_champion": 0.008,
     "ci_95_champion": [
-      0.01372,
-      0.018652
+      0.0068,
+      0.0092
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-11_Mexico_South_Korea",
-      "kickoff_utc": "2026-06-11T18:00:00+00:00",
-      "opponent": "South Korea",
+      "match_id": "M01",
+      "kickoff_utc": "2026-06-11T19:00:00Z",
+      "opponent": "South Africa",
       "is_home": true
+    },
+    {
+      "match_id": "M25",
+      "kickoff_utc": "2026-06-16T19:00:00Z",
+      "opponent": "Korea Republic",
+      "is_home": true
+    },
+    {
+      "match_id": "M49",
+      "kickoff_utc": "2026-06-21T19:00:00Z",
+      "opponent": "Czechia",
+      "is_home": false
     }
   ]
 }

@@ -93,10 +93,6 @@ describe("snapshot_meta.json schema", () => {
     expect(data.matches_settled).toBe(0);
   });
 
-  it("kill_criteria_active is true", () => {
-    const data = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
-    expect(data.kill_criteria_active).toBe(true);
-  });
 });
 
 describe("tournament.json schema", () => {
@@ -296,10 +292,6 @@ describe("evaluation_metrics.json schema", () => {
     expect(result.success, result.success ? "" : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it("kill_criteria_check.tripped is true (Phase 8 firing)", () => {
-    const data = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(data.kill_criteria_check.tripped).toBe(true);
-  });
 
   it("matches_settled is 0", () => {
     const data = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));

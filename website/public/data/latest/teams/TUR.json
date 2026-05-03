@@ -1,28 +1,38 @@
 {
   "fifa_code": "TUR",
-  "display_name": "Turkey",
-  "group": "K",
-  "confederation": "UEFA",
-  "elo_rating": 1902.0,
+  "display_name": "Türkiye",
+  "group": "D",
   "progression": {
-    "p_group_qualification": 0.6112,
-    "p_r16": 0.4261,
-    "p_qf": 0.2564,
-    "p_sf": 0.1215,
-    "p_final": 0.0639,
-    "p_champion": 0.0196,
+    "p_group_qualification": 0.42,
+    "p_r16": 0.24,
+    "p_qf": 0.06,
+    "p_sf": 0.018,
+    "p_final": 0.005,
+    "p_champion": 0.001,
     "ci_95_champion": [
-      0.017062,
-      0.022507
+      0.00085,
+      0.00115
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-16_Switzerland_Turkey",
-      "kickoff_utc": "2026-06-16T18:00:00+00:00",
-      "opponent": "Switzerland",
+      "match_id": "M08",
+      "kickoff_utc": "2026-06-14T04:00:00Z",
+      "opponent": "Australia",
       "is_home": false
+    },
+    {
+      "match_id": "M32",
+      "kickoff_utc": "2026-06-19T04:00:00Z",
+      "opponent": "Paraguay",
+      "is_home": true
+    },
+    {
+      "match_id": "M55",
+      "kickoff_utc": "2026-06-23T01:00:00Z",
+      "opponent": "United States",
+      "is_home": true
     }
   ]
 }

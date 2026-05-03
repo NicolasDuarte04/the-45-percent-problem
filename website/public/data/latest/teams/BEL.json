@@ -1,27 +1,37 @@
 {
   "fifa_code": "BEL",
   "display_name": "Belgium",
-  "group": "H",
-  "confederation": "UEFA",
-  "elo_rating": 1866.0,
+  "group": "G",
   "progression": {
-    "p_group_qualification": 0.6685,
-    "p_r16": 0.3302,
-    "p_qf": 0.1244,
-    "p_sf": 0.0483,
-    "p_final": 0.0197,
-    "p_champion": 0.0075,
+    "p_group_qualification": 0.84,
+    "p_r16": 0.66,
+    "p_qf": 0.36,
+    "p_sf": 0.18,
+    "p_final": 0.09,
+    "p_champion": 0.04,
     "ci_95_champion": [
-      0.005988,
-      0.00939
+      0.034,
+      0.046
     ]
   },
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "2026-06-14_England_Belgium",
-      "kickoff_utc": "2026-06-14T21:00:00+00:00",
-      "opponent": "England",
+      "match_id": "M13",
+      "kickoff_utc": "2026-06-15T19:00:00Z",
+      "opponent": "Egypt",
+      "is_home": true
+    },
+    {
+      "match_id": "M37",
+      "kickoff_utc": "2026-06-20T19:00:00Z",
+      "opponent": "IR Iran",
+      "is_home": true
+    },
+    {
+      "match_id": "M61",
+      "kickoff_utc": "2026-06-25T19:00:00Z",
+      "opponent": "New Zealand",
       "is_home": false
     }
   ]

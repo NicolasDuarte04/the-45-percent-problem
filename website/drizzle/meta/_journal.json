@@ -8,6 +8,13 @@
       "when": 1777757008514,
       "tag": "0000_third_hemingway",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777767512797,
+      "tag": "0001_daily_black_queen",
+      "breakpoints": true
     }
   ]
 }
