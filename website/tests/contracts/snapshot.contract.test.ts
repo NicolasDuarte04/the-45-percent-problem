@@ -93,9 +93,9 @@ describe("snapshot_meta.json schema", () => {
     expect(data.matches_settled).toBe(0);
   });
 
-  it("kill_criteria_active is true", () => {
+  it("kill_criteria_active is false (pre-tournament: no matches settled, can't trip)", () => {
     const data = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
-    expect(data.kill_criteria_active).toBe(true);
+    expect(data.kill_criteria_active).toBe(false);
   });
 });
 
@@ -296,9 +296,9 @@ describe("evaluation_metrics.json schema", () => {
     expect(result.success, result.success ? "" : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it("kill_criteria_check.tripped is true (Phase 8 firing)", () => {
+  it("kill_criteria_check.tripped is false (pre-tournament: no settled matches)", () => {
     const data = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(data.kill_criteria_check.tripped).toBe(true);
+    expect(data.kill_criteria_check.tripped).toBe(false);
   });
 
   it("matches_settled is 0", () => {
