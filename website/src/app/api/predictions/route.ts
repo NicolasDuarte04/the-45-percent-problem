@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { predictions } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/ratelimit";
@@ -9,7 +9,15 @@ import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { computeRealityScoreMock } from "@/lib/sim/computeRealityScoreMock";
 import { generateUniquePredictionId } from "@/lib/sim/generatePredictionId";
 import { renderStoryLine } from "@/lib/sim/renderStoryLine";
-import { toPublicPredictionView } from "@/lib/sim/predictionViews";
+import {
+  toOwnerPredictionView,
+  toPublicPredictionView,
+} from "@/lib/sim/predictionViews";
+import {
+  COOKIE_NAME as OWNER_COOKIE_NAME,
+  slidingRenewHeader,
+  verifyOwnerCookie,
+} from "@/lib/sim/ownerCookie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -124,4 +132,61 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     { ok: true, prediction: toPublicPredictionView(inserted) },
     { status: 201 },
   );
+}
+
+const EmailQuery = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+});
+
+/**
+ * Owner-scoped dashboard list per IMPL_PROMPT §10.3.
+ *
+ * Authentication is the signed `45a:sim:owner` cookie set by /api/verify
+ * after a simulator subscriber confirms their address. The query
+ * `?email=` must equal the cookie's email exactly (case-insensitive
+ * after lowercasing) — this prevents cookie holders from enumerating
+ * other users' predictions.
+ *
+ * Behavior:
+ *   - No cookie / invalid cookie / email mismatch → 200 with empty list.
+ *     Per the spec ("If no signed cookie is present, return an empty
+ *     list"), no auth signal leaks: callers can't distinguish missing-
+ *     cookie from email-mismatch from no-predictions.
+ *   - Valid cookie + matching email → 200 with the user's predictions,
+ *     newest first. Cookie is sliding-renewed on the response so a
+ *     returning user keeps their session.
+ *
+ * No rate limit in Phase A (read-only, scoped to one user, low cost).
+ */
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const parsed = EmailQuery.safeParse({
+    email: req.nextUrl.searchParams.get("email") ?? "",
+  });
+  if (!parsed.success) {
+    return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
+  }
+  const { email } = parsed.data;
+
+  const cookieValue = req.cookies.get(OWNER_COOKIE_NAME)?.value;
+  const owner = verifyOwnerCookie(cookieValue);
+
+  // Empty-list response shape, used for every "not authorized to see"
+  // outcome so the endpoint reveals no discriminating signal.
+  const empty = NextResponse.json({ ok: true, predictions: [] });
+
+  if (!owner) return empty;
+  if (owner.email.toLowerCase() !== email) return empty;
+
+  const rows = await db
+    .select()
+    .from(predictions)
+    .where(eq(sql`lower(${predictions.email})`, email))
+    .orderBy(desc(predictions.submittedAt));
+
+  const response = NextResponse.json({
+    ok: true,
+    predictions: rows.map(toOwnerPredictionView),
+  });
+  response.headers.set("Set-Cookie", slidingRenewHeader(owner));
+  return response;
 }
