@@ -1,4 +1,4 @@
-import { loadSampleBrief, type BriefSample } from "@/lib/brief";
+import { loadLatestBrief, type BriefSample } from "@/lib/brief";
 
 const t = {
   ink: "var(--brief-ink)",
@@ -34,8 +34,8 @@ export interface LiveDataBlockProps {
   data?: BriefSample;
 }
 
-export function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
-  const brief = data ?? loadSampleBrief();
+export async function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
+  const brief = data ?? (await loadLatestBrief());
   const hasDivergence = brief.teaser.has_divergence;
 
   return (
@@ -142,17 +142,17 @@ export function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
             {formatNextBrief(brief.next_brief_utc)}
           </span>
         </span>
-        <span
-          aria-disabled="true"
-          title="Coming soon"
+        <a
+          href={brief.latest_archive_url}
           style={{
-            color: t.graphite,
-            textDecoration: "none",
-            cursor: "not-allowed",
+            color: t.ink,
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+            textDecorationColor: t.hairline,
           }}
         >
           [VIEW LATEST BRIEF →]
-        </span>
+        </a>
       </div>
     </section>
   );
