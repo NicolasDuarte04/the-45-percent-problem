@@ -48,12 +48,14 @@ export default function BriefSignupPage() {
             fontFamily: "var(--font-sans)",
             fontSize: 14,
             lineHeight: 1.7,
-            color: "var(--text-tertiary)",
+            color: "var(--text-secondary)",
             margin: "0 0 16px",
             maxWidth: 560,
           }}
         >
-          Track both, every day, with the methodology in plain view.
+          Get the quantitative baseline before kickoff. We run 10,000
+          simulations daily to track your team&rsquo;s true probability of
+          advancing, delivered straight to your inbox.
         </p>
         <LiveDataBlock />
         <EmailCaptureForm source="brief" />
