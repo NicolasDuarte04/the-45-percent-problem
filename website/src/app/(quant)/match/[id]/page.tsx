@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import {
-  loadAllMatches,
   loadLedger,
   loadMatch,
   loadSnapshotMeta,
 } from "@/lib/data/loadSnapshot";
+import { getStructuralMatches } from "@/lib/db/structuralData";
+import { loadStructuralMaps, mergeMatch } from "@/lib/db/structuralMerge";
 import { MatchHeader } from "@/components/compositions/MatchHeader";
 import { Flag } from "@/components/primitives/Flag";
 import { MarketBreakdownPanel } from "@/components/compositions/MarketBreakdownPanel";
@@ -16,8 +17,13 @@ import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 export const dynamic = "force-static";
 
 export async function generateStaticParams() {
-  const matches = loadAllMatches();
-  return matches.map((m) => ({ id: m.match_id }));
+  // Generate from Drizzle (the canonical fixture list). Currently only
+  // group-stage matches have resolved teams; knockout slots resolve as the
+  // tournament progresses, so we restrict to GRP for the static build.
+  const matches = await getStructuralMatches();
+  return matches
+    .filter((m) => m.round === "GRP")
+    .map((m) => ({ id: m.match_id }));
 }
 
 export async function generateMetadata({
@@ -27,7 +33,11 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   try {
-    const match = loadMatch(id);
+    const maps = await loadStructuralMaps();
+    if (!maps.matchesById.has(id)) {
+      return { title: "Match detail — The 45% Problem" };
+    }
+    const match = mergeMatch(loadMatch(id), maps);
     return {
       title: `${match.home.display_name} vs ${match.away.display_name} — Match detail`,
       description: `Per-match probability breakdown, goal matrix, and strength inputs for the ${match.round} fixture on ${match.kickoff_utc}.`,
@@ -44,9 +54,14 @@ export default async function MatchDetailPage({
 }) {
   const { id } = await params;
 
+  const maps = await loadStructuralMaps();
+  if (!maps.matchesById.has(id)) {
+    notFound();
+  }
+
   let match;
   try {
-    match = loadMatch(id);
+    match = mergeMatch(loadMatch(id), maps);
   } catch {
     notFound();
   }

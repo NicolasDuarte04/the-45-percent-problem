@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { loadSnapshot } from "@/lib/data/loadSnapshot";
+import {
+  loadStructuralMaps,
+  mergeDivergence,
+  mergeTournament,
+} from "@/lib/db/structuralMerge";
 import { TournamentLeaderboard } from "@/components/compositions/TournamentLeaderboard";
 import { MostLikelyBracket } from "@/components/compositions/MostLikelyBracket";
 import { FeaturedDivergences } from "@/components/compositions/FeaturedDivergences";
@@ -19,8 +24,12 @@ import {
 
 export const dynamic = "force-static";
 
-export default function Home() {
-  const { tournament, divergence, evaluation, meta } = loadSnapshot();
+export default async function Home() {
+  const maps = await loadStructuralMaps();
+  const snap = loadSnapshot();
+  const tournament = mergeTournament(snap.tournament, maps);
+  const divergence = mergeDivergence(snap.divergence, maps);
+  const { evaluation, meta } = snap;
 
   return (
     <div

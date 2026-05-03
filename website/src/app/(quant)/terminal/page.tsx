@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
+import { loadStructuralMaps, mergeDivergence } from "@/lib/db/structuralMerge";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
@@ -19,7 +20,8 @@ export default async function TerminalPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const divergence = loadDivergence();
+  const maps = await loadStructuralMaps();
+  const divergence = mergeDivergence(loadDivergence(), maps);
   const freshness = loadFreshness();
 
   const isStale = freshness.status === "STALE" || freshness.status === "BROKEN";

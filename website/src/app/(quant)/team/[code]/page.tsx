@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import {
-  loadAllTeams,
   loadSnapshotMeta,
   loadTeam,
 } from "@/lib/data/loadSnapshot";
+import { getStructuralTeams } from "@/lib/db/structuralData";
+import { loadStructuralMaps, mergeTeamProgression } from "@/lib/db/structuralMerge";
 import { TeamHeader } from "@/components/compositions/TeamHeader";
 import { Flag } from "@/components/primitives/Flag";
 import { ProgressionConeChart } from "@/components/compositions/ProgressionConeChart";
@@ -14,7 +15,10 @@ import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 export const dynamic = "force-static";
 
 export async function generateStaticParams() {
-  const teams = loadAllTeams();
+  // Generate the 48 routes from Drizzle (the canonical qualifier list), not
+  // from disk snapshots — protects against snapshot drift adding/removing
+  // teams that the draw doesn't sanction.
+  const teams = await getStructuralTeams();
   return teams.map((t) => ({ code: t.fifa_code }));
 }
 
@@ -25,7 +29,11 @@ export async function generateMetadata({
 }) {
   const { code } = await params;
   try {
-    const team = loadTeam(code);
+    const maps = await loadStructuralMaps();
+    if (!maps.teamsByCode.has(code)) {
+      return { title: "Team — The 45% Problem" };
+    }
+    const team = mergeTeamProgression(loadTeam(code), maps);
     return {
       title: `${team.display_name} — Team progression`,
       description: `Per-team progression cone from group stage to champion for ${team.display_name}.`,
@@ -42,9 +50,14 @@ export default async function TeamPage({
 }) {
   const { code } = await params;
 
+  const maps = await loadStructuralMaps();
+  if (!maps.teamsByCode.has(code)) {
+    notFound();
+  }
+
   let team;
   try {
-    team = loadTeam(code);
+    team = mergeTeamProgression(loadTeam(code), maps);
   } catch {
     notFound();
   }
