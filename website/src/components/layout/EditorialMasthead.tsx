@@ -123,6 +123,24 @@ export function EditorialMasthead({
           })}
         </nav>
 
+        <Link
+          href="/brief"
+          aria-current={pathname.startsWith("/brief") ? "page" : undefined}
+          className="no-underline mono shrink-0 hover:underline underline-offset-4"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            letterSpacing: ".08em",
+            textTransform: "uppercase",
+            color: pathname.startsWith("/brief")
+              ? "var(--text-primary)"
+              : "var(--text-tertiary)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Today&rsquo;s brief
+        </Link>
+
         {killTripped && (
           <Link
             href="/vault/kill-criteria"

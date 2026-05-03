@@ -1,0 +1,37 @@
+/* Featured-team chip strip — Addendum v2, Addition 3.
+   Mono 12px, hairline border, no fill. Hover: ink-colored border only. */
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  max-width: 560px;
+}
+
+.prompt {
+  font-family: var(--brief-font-sans);
+  font-size: 12px;
+  color: var(--brief-graphite);
+  margin-right: 4px;
+}
+
+.chip {
+  font-family: var(--brief-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--brief-ink);
+  background: transparent;
+  border: 1px solid var(--brief-hairline);
+  border-radius: 2px;
+  padding: 4px 10px;
+  text-decoration: none;
+  transition: border-color 120ms ease-out;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--brief-ink);
+  outline: none;
+}

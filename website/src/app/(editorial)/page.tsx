@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loadSnapshot } from "@/lib/data/loadSnapshot";
 import { TournamentLeaderboard } from "@/components/compositions/TournamentLeaderboard";
 import { MostLikelyBracket } from "@/components/compositions/MostLikelyBracket";
@@ -106,8 +107,28 @@ export default function Home() {
         >
           {HERO_TROPHY_CAPTION}
         </p>
-        <div className="md:col-span-2" style={{ marginTop: -32 }}>
+        <div
+          className="md:col-span-2 flex flex-wrap items-center gap-3"
+          style={{ marginTop: -32 }}
+        >
           <WatchTrailerButton />
+          <Link
+            href="/brief"
+            className="no-underline inline-flex items-center"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 12,
+              fontWeight: 500,
+              color: "var(--text-primary)",
+              border: "1px solid rgb(31 31 31 / 0.28)",
+              borderRadius: 6,
+              padding: "6px 12px",
+              gap: 4,
+              background: "transparent",
+            }}
+          >
+            Receive the daily brief →
+          </Link>
         </div>
         <div
           className="md:col-span-2"
