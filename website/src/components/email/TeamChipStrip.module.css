@@ -35,3 +35,16 @@
   border-color: var(--brief-ink);
   outline: none;
 }
+
+/* Phase 2 disabled state: routes /teams/[country] and /teams index land in
+   Phase 3. Until then, chips render as visually disabled, non-interactive
+   spans. Removing this class is the Phase 3 swap. */
+.chipDisabled {
+  color: var(--brief-graphite);
+  cursor: not-allowed;
+}
+
+.chipDisabled:hover,
+.chipDisabled:focus-visible {
+  border-color: var(--brief-hairline);
+}
