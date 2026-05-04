@@ -221,6 +221,47 @@ const MATCHDAY_PAIRS: Array<[[number, number], [number, number]]> = [
 ];
 
 /**
+ * Per-group matchday pair overrides.
+ *
+ * Most groups follow MATCHDAY_PAIRS. Exceptions:
+ *   • Group K MD1 is diagonal in FIFA's published schedule: pot[0] v pot[3]
+ *     + pot[1] v pot[2] (POR-COD + UZB-COL), not the standard pot[0]v[1] +
+ *     pot[2]v[3]. Remaining Group K matchdays are adjusted to close the
+ *     round-robin.
+ *   • Groups A, B, D: the host (pot[0] = MEX/CAN/USA) is listed as the home
+ *     side in their MD3 fixture on FIFA's schedule. Standard MD3 has pot[3]
+ *     v pot[0], which puts the host away; we override to pot[0] v pot[3].
+ *
+ * A `null` entry for an MD means "fall through to MATCHDAY_PAIRS[md-1]".
+ */
+const GROUP_MATCHDAY_OVERRIDES: Partial<
+  Record<
+    GroupLetter,
+    [
+      [[number, number], [number, number]] | null,
+      [[number, number], [number, number]] | null,
+      [[number, number], [number, number]] | null,
+    ]
+  >
+> = {
+  // Group K — diagonal MD1 verified against FIFA's published fixture list.
+  // All three MDs overridden to guarantee a complete round-robin:
+  //   MD1: POR-COD, UZB-COL
+  //   MD2: POR-UZB, COD-COL
+  //   MD3: COL-POR, UZB-COD
+  K: [
+    [[0, 3], [1, 2]],
+    [[0, 1], [3, 2]],
+    [[2, 0], [1, 3]],
+  ],
+  // Hosts home in MD3 per FIFA convention (Groups A=MEX, B=CAN, D=USA).
+  // Only MD3 is overridden; MD1 and MD2 follow the standard pattern.
+  A: [null, null, [[0, 3], [1, 2]]],  // MD3: MEX v CZE
+  B: [null, null, [[0, 3], [1, 2]]],  // MD3: CAN v SUI
+  D: [null, null, [[0, 3], [1, 2]]],  // MD3: USA v TUR
+};
+
+/**
  * Per-group MD1 anchor — exact FIFA-published kickoff (UTC) and venue for
  * each of the two MD1 fixtures. Verified against fifa.com fixtures page.
  *
@@ -300,11 +341,18 @@ function buildGroupMatches(): GroupMatch[] {
   const out: GroupMatch[] = [];
   let n = 1;
   for (const md of [1, 2, 3] as const) {
-    const pairs = MATCHDAY_PAIRS[md - 1];
+    // TODO: The uniform +5d / +10d shifts are approximations (~1-3 days off
+    // for some fixtures). A per-match kickoff override map is needed for
+    // accurate live-odds joins. Out of scope until exact dates are confirmed.
     const dayOffset = (md - 1) * 5; // MD2 +5d, MD3 +10d (FIFA's MD spacing)
     for (const g of "ABCDEFGHIJKL".split("") as GroupLetter[]) {
       const teams = GROUP_TEAMS[g];
       const anchors = MD1_ANCHORS[g];
+      // Use per-group override if available, otherwise fall back to the
+      // standard MATCHDAY_PAIRS pattern.
+      const overrideEntry = GROUP_MATCHDAY_OVERRIDES[g]?.[md - 1];
+      const pairs =
+        overrideEntry ?? MATCHDAY_PAIRS[md - 1];
       for (let slot = 0; slot < 2; slot++) {
         const [hi, ai] = pairs[slot];
         const home = teams[hi];

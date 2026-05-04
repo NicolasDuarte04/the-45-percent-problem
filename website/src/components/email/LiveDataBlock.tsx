@@ -1,4 +1,4 @@
-import { loadSampleBrief, type BriefSample } from "@/lib/brief";
+import { loadLatestBrief, type BriefSample } from "@/lib/brief";
 
 const t = {
   ink: "var(--brief-ink)",
@@ -32,11 +32,23 @@ function edgeText(bps: number, direction: "positive" | "negative"): string {
 
 export interface LiveDataBlockProps {
   data?: BriefSample;
+  /**
+   * When true, render a small `◆ FALLBACK` chip in the masthead row. Only
+   * shows when this prop is true AND the brief's `lead_in.fallback_used`
+   * is also true — pages should derive this from a `?debug=fallback`
+   * query param so it stays hidden from general readers.
+   */
+  showFallbackMarker?: boolean;
 }
 
-export function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
-  const brief = data ?? loadSampleBrief();
+export async function LiveDataBlock({
+  data,
+  showFallbackMarker = false,
+}: LiveDataBlockProps = {}) {
+  const brief = data ?? (await loadLatestBrief());
   const hasDivergence = brief.teaser.has_divergence;
+  const renderFallbackMarker =
+    showFallbackMarker && brief.lead_in.fallback_used;
 
   return (
     <section
@@ -72,6 +84,21 @@ export function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
         <span>
           ISSUE {String(brief.issue_number).padStart(3, "0")}
         </span>
+        {renderFallbackMarker && (
+          <span
+            title="lead_in.fallback_used = true (debug only — gated behind ?debug=fallback)"
+            style={{
+              marginLeft: "auto",
+              padding: "2px 8px",
+              border: `1px solid ${t.hairline}`,
+              borderRadius: 2,
+              color: t.graphiteQuiet,
+              letterSpacing: "0.10em",
+            }}
+          >
+            ◆ FALLBACK
+          </span>
+        )}
       </div>
 
       {/* Serif lead-in panel (Addendum v2, Addition 2) */}
@@ -142,17 +169,17 @@ export function LiveDataBlock({ data }: LiveDataBlockProps = {}) {
             {formatNextBrief(brief.next_brief_utc)}
           </span>
         </span>
-        <span
-          aria-disabled="true"
-          title="Coming soon"
+        <a
+          href={brief.latest_archive_url}
           style={{
-            color: t.graphite,
-            textDecoration: "none",
-            cursor: "not-allowed",
+            color: t.ink,
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+            textDecorationColor: t.hairline,
           }}
         >
           [VIEW LATEST BRIEF →]
-        </span>
+        </a>
       </div>
     </section>
   );

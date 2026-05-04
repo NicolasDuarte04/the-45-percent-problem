@@ -84,6 +84,22 @@ export function loadMatch(matchId: string, snapshotId?: string): MatchDetail {
   return validate(MatchDetailSchema, data, `matches/${matchId}.json`);
 }
 
+/**
+ * Like loadMatch but returns null instead of throwing when the per-match JSON
+ * file does not exist. Use this for knockout fixtures that haven't been priced
+ * yet — the structural scaffold exists in Drizzle but the snapshot pipeline
+ * hasn't emitted a detail file for them.
+ */
+export function loadMatchIfPresent(
+  matchId: string,
+  snapshotId?: string,
+): MatchDetail | null {
+  const dir = getSnapshotDir(snapshotId);
+  const p = path.join(dir, "matches", `${matchId}.json`);
+  if (!fs.existsSync(p)) return null;
+  return loadMatch(matchId, snapshotId);
+}
+
 export function loadAllMatches(snapshotId?: string): MatchDetail[] {
   const dir = getSnapshotDir(snapshotId);
   const matchesDir = path.join(dir, "matches");

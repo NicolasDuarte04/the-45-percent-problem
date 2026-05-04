@@ -1,6 +1,10 @@
 {
   "brief_date": "2026-06-12",
   "issue_number": 14,
+  "model_variant": "M0",
+  "code_sha": "a3f2c1d",
+  "data_snapshot_sha": "9b7e2f4",
+  "mc_runs": 10000,
   "next_brief_utc": "2026-06-13T12:00:00Z",
   "latest_archive_url": "/briefs/2026-06-12",
   "lead_in": {
@@ -8,14 +12,111 @@
     "match_sentence": "Today's largest match-day gap is USA vs Mexico, where the model gives the US a 6.3-point edge over bookmaker odds.",
     "fallback_used": false
   },
+  "headline": {
+    "summary_line": "Largest divergence today: USA vs Mexico home side, model 42.3%, market 36.0%, edge +630 bps.",
+    "movers_line": "Three teams shifted >2% in title probability overnight."
+  },
   "teaser": {
     "has_divergence": true,
     "match_label": "United States vs Mexico",
     "side": "HOME",
     "model_prob": 0.423,
-    "market_prob": 0.360,
+    "market_prob": 0.36,
     "edge_bps": 630,
     "edge_direction": "positive"
   },
-  "featured_teams": ["BRAZIL", "ARGENTINA", "USA", "GERMANY", "SPAIN"]
+  "featured_teams": [
+    { "code": "BRA", "name": "BRAZIL" },
+    { "code": "ARG", "name": "ARGENTINA" },
+    { "code": "USA", "name": "USA" },
+    { "code": "GER", "name": "GERMANY" },
+    { "code": "ESP", "name": "SPAIN" }
+  ],
+  "top_divergences": [
+    {
+      "match_id": "2026-06-12_USA_MEX",
+      "kickoff_utc": "2026-06-12T20:00:00Z",
+      "home": "United States",
+      "away": "Mexico",
+      "market": "1X2",
+      "side": "home",
+      "model_prob": 0.423,
+      "market_prob_devigged": 0.36,
+      "edge_bps": 630,
+      "edge_direction": "positive",
+      "ci_95": { "low": 0.39, "high": 0.45 },
+      "volatility_gate": { "triggered": false, "suppressions": [] }
+    },
+    {
+      "match_id": "2026-06-12_BRA_SRB",
+      "kickoff_utc": "2026-06-12T17:00:00Z",
+      "home": "Brazil",
+      "away": "Serbia",
+      "market": "1X2",
+      "side": "draw",
+      "model_prob": 0.281,
+      "market_prob_devigged": 0.245,
+      "edge_bps": 360,
+      "edge_direction": "positive",
+      "volatility_gate": { "triggered": false, "suppressions": [] }
+    },
+    {
+      "match_id": "2026-06-12_FRA_DEN",
+      "kickoff_utc": "2026-06-12T14:00:00Z",
+      "home": "France",
+      "away": "Denmark",
+      "market": "1X2",
+      "side": "away",
+      "model_prob": 0.31,
+      "market_prob_devigged": 0.335,
+      "edge_bps": -250,
+      "edge_direction": "negative",
+      "volatility_gate": {
+        "triggered": true,
+        "suppressions": ["polymarket_volume_floor"]
+      }
+    }
+  ],
+  "tournament_movers": [
+    {
+      "team": "Brazil",
+      "metric": "title_probability",
+      "yesterday": 0.142,
+      "today": 0.118,
+      "delta": -0.024,
+      "delta_bps": -240,
+      "driver": "Argentina win raised conditional bracket strength."
+    },
+    {
+      "team": "Argentina",
+      "metric": "title_probability",
+      "yesterday": 0.121,
+      "today": 0.136,
+      "delta": 0.015,
+      "delta_bps": 150,
+      "driver": "Group win + favorable round-of-16 draw resolution."
+    },
+    {
+      "team": "Germany",
+      "metric": "r16_probability",
+      "yesterday": 0.78,
+      "today": 0.815,
+      "delta": 0.035,
+      "delta_bps": 350,
+      "driver": "Tied result eliminates relegation risk in Group E."
+    }
+  ],
+  "suppressed_today": [
+    {
+      "match_id": "2026-06-12_FRA_DEN",
+      "match_label": "FRA vs DEN",
+      "rule": "polymarket_volume_floor",
+      "reason": "24h volume $42,300 below $50,000 threshold."
+    }
+  ],
+  "methodology_links": {
+    "model_card": "/methodology/m-star",
+    "devig_method": "/methodology/power-devig",
+    "this_brief_archive": "/briefs/2026-06-12"
+  }
 }
