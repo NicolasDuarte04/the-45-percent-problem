@@ -1,37 +1,52 @@
 """
 ingestion/fetch_odds_pinnacle.py
 =================================
-Phase 2 · Task 2.6a — Pinnacle Odds
+Phase 2 · Task 2.6a — Pinnacle Odds (Live Connector + Synthetic Fallback)
 
-Fetches match-winner (1X2) odds for WC 2026 matches from Pinnacle via their
-commercial API. Stores both opening and closing lines per match, which are the
-raw material for CLV measurement.
+Fetches match-winner (1X2) odds for WC 2026 matches in a 3-tier cascade and
+writes them to ``data/raw/odds_pinnacle.parquet`` with a canonical schema.
+The schema does NOT change between tiers — downstream code (devig.py,
+edge_calculator.py, volatility_gate.py) is source-agnostic.
 
-Also attempts to retrieve historical WC odds (2010–2022) for bias-correction
-calibration. These are typically available via third-party datasets or cached
-from previous runs.
+Tier cascade
+------------
+  1. Pinnacle commercial API   (auth via PINNACLE_API_KEY)
+                                — primary; requires a licensee account
+  2. The Odds API              (auth via THE_ODDS_API_KEY)
+                                — public aggregator, free tier 500 req/mo,
+                                  exposes Pinnacle as a named bookmaker
+  3. Synthetic (Elo-derived)   — deterministic fallback so the pipeline,
+                                  CI, and frontend never break when the
+                                  bookmakers haven't opened lines yet
+
+The orchestrator tries each tier in order. The first one that returns
+non-empty records wins. Each row is tagged with its `bookmaker` field
+("pinnacle" for both real-data tiers — the Odds API surfaces Pinnacle's
+prices) so downstream filters keep working.
 
 Authentication
 --------------
-Pinnacle uses HTTP Basic auth: base64(username:password) where the username is
-the API key. Set PINNACLE_API_KEY in .env.
+- Pinnacle commercial API: HTTP Basic, username = API key, blank password.
+  Set ``PINNACLE_API_KEY`` in ``.env``.
+- The Odds API: simple ``apiKey`` query param. Sign up at
+  https://the-odds-api.com (free tier). Set ``THE_ODDS_API_KEY`` in ``.env``.
 
 Run
 ---
   python ingestion/fetch_odds_pinnacle.py
-  python ingestion/fetch_odds_pinnacle.py --force      # re-fetch even if cached
-  python ingestion/fetch_odds_pinnacle.py --synthetic  # generate realistic synthetic data
+  python ingestion/fetch_odds_pinnacle.py --force                # ignore cache
+  python ingestion/fetch_odds_pinnacle.py --source synthetic     # force synth
+  python ingestion/fetch_odds_pinnacle.py --source pinnacle      # only Tier 1
+  python ingestion/fetch_odds_pinnacle.py --source oddsapi       # only Tier 2
 
 Notes
 -----
-- WC 2026 lines typically open 6–8 weeks before kickoff. If the API returns no
-  soccer WC events, the script falls back to deterministic synthetic odds derived
-  from Elo strength differentials (Pinnacle-structure-equivalent, ~4–5% overround).
-- When --synthetic is passed (or when API key is missing / API is unreachable),
-  the script generates realistic synthetic Pinnacle 1X2 lines for all 104 WC 2026
-  matches (opening + closing per match). These mirror Pinnacle's API response
-  structure exactly and can drive the full devig → edge → gate pipeline.
-- The script is designed to be run daily as part of the live pipeline.
+- WC 2026 lines typically open 6–8 weeks before kickoff. Until then both real
+  tiers will return zero events for the soccer_fifa_world_cup sport key, and
+  the synthetic fallback runs automatically — by design.
+- When real records arrive, they're keyed by canonical match_id (M01..M104)
+  via a fixture lookup against ``data/raw/wc2026_fixtures.parquet``. Events
+  that fail the lookup are logged and skipped, never silently miscounted.
 """
 
 from __future__ import annotations
@@ -73,6 +88,54 @@ SNAPSHOT_REG   = PROJECT_ROOT / "data" / "snapshots" / "snapshot_registry.jsonl"
 PINNACLE_API_BASE = "https://api.pinnacle.com"
 SOCCER_SPORT_ID   = 29
 WC_LEAGUE_IDS     = {7593, 7594, 7596}  # FIFA WC, FIFA WC Qual, FIFA WC Women's
+
+# --- Tier 2: The Odds API (public aggregator, free tier 500 req/month) ------
+# Docs: https://the-odds-api.com/liveapi/guides/v4/
+# Sport key once WC 2026 markets open: ``soccer_fifa_world_cup``.
+# Free tier returns up to 500 events per request; one request covers all 104
+# WC fixtures. Quota cost is reported back in response headers we log.
+THE_ODDS_API_BASE  = "https://api.the-odds-api.com/v4"
+THE_ODDS_API_SPORT = "soccer_fifa_world_cup"
+THE_ODDS_API_REGIONS  = "us,uk,eu"     # widest pool that surfaces Pinnacle
+THE_ODDS_API_MARKET   = "h2h"           # head-to-head = 1X2 in their lexicon
+THE_ODDS_API_BOOKMAKER = "pinnacle"     # filter on Pinnacle only — that's what
+                                        # the rest of the pipeline expects in
+                                        # the `bookmaker` column.
+
+# Aliases that map third-party / Odds-API team-name spellings back to the
+# fixture-parquet display_name. Keys are lower-cased; values are the exact
+# team_home / team_away spelling from wc2026_fixtures.parquet. Add new entries
+# here when a new third-party feed surfaces an unfamiliar name — never add a
+# parallel name table elsewhere.
+_ODDS_API_NAME_ALIASES: dict[str, str] = {
+    "south korea":                   "Korea Republic",
+    "korea, republic":               "Korea Republic",
+    "korea republic":                "Korea Republic",
+    "iran":                          "IR Iran",
+    "iran, islamic republic":        "IR Iran",
+    "ir iran":                       "IR Iran",
+    "turkey":                        "Türkiye",
+    "türkiye":                       "Türkiye",
+    "usa":                           "United States",
+    "u.s.a.":                        "United States",
+    "united states of america":      "United States",
+    "united states":                 "United States",
+    "ivory coast":                   "Côte d'Ivoire",
+    "cote d'ivoire":                 "Côte d'Ivoire",
+    "côte d'ivoire":                 "Côte d'Ivoire",
+    "cape verde":                    "Cabo Verde",
+    "cape verde islands":            "Cabo Verde",
+    "cabo verde":                    "Cabo Verde",
+    "dr congo":                      "Congo DR",
+    "democratic republic of congo":  "Congo DR",
+    "congo dr":                      "Congo DR",
+    "congo democratic republic":     "Congo DR",
+    "bosnia and herzegovina":        "Bosnia & Herzegovina",
+    "bosnia & herzegovina":          "Bosnia & Herzegovina",
+    "bosnia-herzegovina":            "Bosnia & Herzegovina",
+    "curacao":                       "Curaçao",
+    "curaçao":                       "Curaçao",
+}
 
 # ---------------------------------------------------------------------------
 # Team name normalisation: fixture names → Elo rating names
@@ -371,7 +434,289 @@ def generate_synthetic() -> list[dict]:
 
 
 # =============================================================================
-# Fetch raw (live API path)
+# Tier 2: The Odds API (public aggregator)
+# =============================================================================
+
+def _odds_api_key() -> str:
+    return os.getenv("THE_ODDS_API_KEY", "").strip()
+
+
+@retry(
+    retry=retry_if_exception_type(requests.exceptions.RequestException),
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    reraise=True,
+)
+def _get_odds_api(path: str, params: dict) -> tuple[list, dict]:
+    """
+    GET ``THE_ODDS_API_BASE + path`` with the API key appended.
+
+    Returns ``(payload, response_headers)``. The headers carry the running
+    quota (``x-requests-remaining`` etc.) which we surface so users know how
+    much of their free tier is left.
+    """
+    full = {**params, "apiKey": _odds_api_key()}
+    url  = THE_ODDS_API_BASE + path
+    resp = requests.get(url, params=full, timeout=20)
+    resp.raise_for_status()
+    return resp.json(), dict(resp.headers)
+
+
+def _norm_team_name(s: str) -> str:
+    """Lower-case + collapse whitespace for forgiving lookups."""
+    return " ".join(str(s).strip().split()).lower()
+
+
+def _alias_to_fixture_name(third_party_name: str) -> str:
+    """
+    Map a third-party team string (from any external feed) to the canonical
+    fixture-parquet display_name. Falls through to the original string if no
+    alias is registered — the match resolver then attempts case-insensitive
+    matching against the fixture lookup as a last resort.
+    """
+    return _ODDS_API_NAME_ALIASES.get(_norm_team_name(third_party_name), third_party_name)
+
+
+def _load_fixture_lookup() -> tuple[dict[tuple[str, str, str], str], list[dict]]:
+    """
+    Build a (home_norm, away_norm, date_str_utc) → match_id index from the
+    canonical fixtures parquet. Returns the lookup plus the raw fixture rows
+    (used when probabilistically dating a third-party event).
+
+    The date_str is the UTC calendar day of kickoff. Most third-party feeds
+    quote kickoff in UTC ISO; tolerance of ±1 day is handled by also
+    indexing the day-before and day-after to absorb timezone-edge events.
+    """
+    fixtures_path = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
+    if not fixtures_path.exists():
+        log.warning("wc2026_fixtures.parquet not found — match resolution disabled")
+        return {}, []
+
+    df = pd.read_parquet(fixtures_path)
+    lookup: dict[tuple[str, str, str], str] = {}
+    fixtures: list[dict] = []
+    for _, row in df.iterrows():
+        match_id = str(row["match_id"])
+        home     = str(row["team_home"])
+        away     = str(row["team_away"])
+        kickoff  = pd.Timestamp(row["kickoff_utc"])
+        if kickoff.tzinfo is None:
+            kickoff = kickoff.tz_localize("UTC")
+
+        home_n = _norm_team_name(home)
+        away_n = _norm_team_name(away)
+
+        # Index ±1 day so a feed quoting kickoff in local time still hits.
+        for delta in (-1, 0, 1):
+            d = (kickoff + pd.Timedelta(days=delta)).strftime("%Y-%m-%d")
+            lookup[(home_n, away_n, d)] = match_id
+
+        fixtures.append({
+            "match_id":    match_id,
+            "home":        home,
+            "away":        away,
+            "kickoff_utc": kickoff,
+        })
+    return lookup, fixtures
+
+
+def _resolve_match_id(
+    home_raw: str,
+    away_raw: str,
+    kickoff_iso: str,
+    lookup: dict[tuple[str, str, str], str],
+) -> Optional[str]:
+    """
+    Resolve a third-party event to a canonical M{NN} match_id.
+
+    Strategy:
+      1. Run the team names through ``_alias_to_fixture_name``
+      2. Try (home, away, kickoff_date) — exact orientation
+      3. Try (away, home, kickoff_date) — feeds occasionally invert sides
+         when there's no formal home team (neutral-venue tournaments).
+      4. Return None on miss; caller logs and skips.
+    """
+    if not lookup:
+        return None
+    home_fix = _alias_to_fixture_name(home_raw)
+    away_fix = _alias_to_fixture_name(away_raw)
+    h, a = _norm_team_name(home_fix), _norm_team_name(away_fix)
+
+    try:
+        kickoff_dt = pd.Timestamp(kickoff_iso)
+        if kickoff_dt.tzinfo is None:
+            kickoff_dt = kickoff_dt.tz_localize("UTC")
+        d = kickoff_dt.tz_convert("UTC").strftime("%Y-%m-%d")
+    except Exception:
+        return None
+
+    if (h, a, d) in lookup:
+        return lookup[(h, a, d)]
+    if (a, h, d) in lookup:   # inverted sides
+        return lookup[(a, h, d)]
+    return None
+
+
+def fetch_via_odds_api(force: bool = False) -> list[dict]:
+    """
+    Fetch live WC 2026 1X2 odds from The Odds API and return them in the
+    canonical pipeline schema (already keyed to M{NN} match_ids).
+
+    Returns an empty list when:
+      - No ``THE_ODDS_API_KEY`` is set
+      - The HTTP request fails after retries
+      - The API returns zero events (markets not yet open)
+      - Every event fails the fixture lookup (name resolution broken)
+    """
+    raw_cache = PROJECT_ROOT / "data" / "raw" / "_odds_api_raw.json"
+
+    if raw_cache.exists() and not force:
+        log.info("Using cached Odds API response", path=str(raw_cache))
+        import json
+        try:
+            cached = json.loads(raw_cache.read_text())
+            return _normalise_odds_api_payload(cached)
+        except Exception as exc:
+            log.warning("Cached Odds API payload unreadable — refetching", error=str(exc))
+
+    if not _odds_api_key():
+        log.info(
+            "THE_ODDS_API_KEY not set — skipping Tier 2",
+            hint="sign up at https://the-odds-api.com (free tier) and add the key to .env",
+        )
+        return []
+
+    log.stage(
+        "Fetching live odds via The Odds API (Tier 2)",
+        sport=THE_ODDS_API_SPORT,
+        regions=THE_ODDS_API_REGIONS,
+        bookmaker=THE_ODDS_API_BOOKMAKER,
+    )
+
+    try:
+        events, headers = _get_odds_api(
+            f"/sports/{THE_ODDS_API_SPORT}/odds",
+            {
+                "regions":    THE_ODDS_API_REGIONS,
+                "markets":    THE_ODDS_API_MARKET,
+                "bookmakers": THE_ODDS_API_BOOKMAKER,
+                "oddsFormat": "decimal",
+                "dateFormat": "iso",
+            },
+        )
+    except requests.exceptions.HTTPError as exc:
+        # 401/422 (bad key, sport not active yet) is informational, not fatal.
+        status = exc.response.status_code if exc.response is not None else None
+        body   = exc.response.text[:200] if exc.response is not None else ""
+        log.warning(
+            "Odds API HTTP error — falling through to next tier",
+            status=status,
+            body=body,
+        )
+        return []
+    except Exception as exc:
+        log.warning("Odds API unreachable — falling through to next tier", error=str(exc)[:160])
+        return []
+
+    quota = {
+        "remaining": headers.get("x-requests-remaining"),
+        "used":      headers.get("x-requests-used"),
+    }
+    log.info("Odds API quota", **{k: v for k, v in quota.items() if v is not None})
+
+    if not isinstance(events, list) or not events:
+        log.info("Odds API returned 0 events — WC 2026 markets not open yet")
+        return []
+
+    raw_cache.parent.mkdir(parents=True, exist_ok=True)
+    import json
+    raw_cache.write_text(json.dumps(events, indent=2, default=str))
+    log.info("Cached Odds API payload", path=str(raw_cache), events=len(events))
+
+    return _normalise_odds_api_payload(events)
+
+
+def _normalise_odds_api_payload(events: list[dict]) -> list[dict]:
+    """
+    Convert a list of Odds-API event dicts into pipeline-schema rows.
+
+    Schema produced (matches build_output expectations):
+      snapshot_id, timestamp, match_id, bookmaker, market_type, outcome,
+      decimal_odds, is_opening, is_closing, last_refreshed
+    """
+    lookup, _ = _load_fixture_lookup()
+    snapshot_ts = datetime.now(timezone.utc).isoformat()
+    records: list[dict] = []
+    unresolved = 0
+
+    for ev in events:
+        commence  = ev.get("commence_time", "")
+        home_team = ev.get("home_team", "")
+        away_team = ev.get("away_team", "")
+
+        match_id = _resolve_match_id(home_team, away_team, commence, lookup)
+        if match_id is None:
+            unresolved += 1
+            log.warning(
+                "Unresolved Odds API event",
+                home=home_team,
+                away=away_team,
+                commence=commence,
+            )
+            continue
+
+        for book in ev.get("bookmakers", []):
+            if str(book.get("key", "")).lower() != THE_ODDS_API_BOOKMAKER:
+                continue
+            last_update = book.get("last_update", snapshot_ts)
+            for mkt in book.get("markets", []):
+                if mkt.get("key") != THE_ODDS_API_MARKET:
+                    continue
+                # outcomes is a list with exactly 3 entries: home / away / draw
+                # (order varies by event — match by `name` field).
+                for outcome in mkt.get("outcomes", []):
+                    name  = str(outcome.get("name", ""))
+                    price = outcome.get("price")
+                    if price is None or price <= 1.0:
+                        continue
+
+                    if _norm_team_name(name) == _norm_team_name(home_team):
+                        bucket = "home_win"
+                    elif _norm_team_name(name) == _norm_team_name(away_team):
+                        bucket = "away_win"
+                    elif _norm_team_name(name) in {"draw", "tie"}:
+                        bucket = "draw"
+                    else:
+                        log.warning("Unknown outcome label", outcome=name, match_id=match_id)
+                        continue
+
+                    records.append({
+                        "snapshot_id":    f"oa_{match_id[:4]}_{bucket[:2]}",
+                        "timestamp":      snapshot_ts,
+                        "match_id":       match_id,
+                        "bookmaker":      "pinnacle",  # canonical
+                        "market_type":    "match_winner",
+                        "outcome":        bucket,
+                        "decimal_odds":   float(price),
+                        "is_opening":     False,   # Odds API gives a snapshot,
+                        "is_closing":     False,   # not opening/closing tags
+                        "last_refreshed": last_update or snapshot_ts,
+                    })
+
+    if unresolved:
+        log.warning("Some events failed fixture resolution", unresolved=unresolved)
+
+    log.success(
+        "Odds API normalised to pipeline schema",
+        events=len(events),
+        rows=len(records),
+        unresolved=unresolved,
+    )
+    return records
+
+
+# =============================================================================
+# Fetch raw (Tier 1: Pinnacle commercial API)
 # =============================================================================
 
 def fetch_raw(force: bool = False) -> list[dict]:
@@ -572,34 +917,106 @@ def _validate_overround(df: pd.DataFrame) -> None:
 
 
 # =============================================================================
+# Tier orchestration
+# =============================================================================
+
+# Source labels recorded in the snapshot registry note + log lines so we can
+# always tell which tier produced any given run's parquet.
+SOURCE_PINNACLE  = "live-pinnacle"
+SOURCE_ODDS_API  = "live-oddsapi"
+SOURCE_SYNTHETIC = "synthetic"
+SOURCE_EMPTY     = "empty"
+
+
+def fetch_real_odds(force: bool = False) -> tuple[pd.DataFrame, str]:
+    """
+    Try real-data tiers in priority order. Returns ``(dataframe, source)``.
+
+    Priority:
+      1. Pinnacle commercial API (auth: PINNACLE_API_KEY)
+      2. The Odds API public aggregator (auth: THE_ODDS_API_KEY)
+
+    On the first non-empty tier, returns its DataFrame in canonical schema.
+    On total real-data failure, returns ``(empty_df, "empty")`` and the
+    caller is expected to fall back to ``generate_synthetic()``.
+    """
+    # ── Tier 1: Pinnacle commercial ────────────────────────────────────────
+    log.info("Tier 1 — attempting Pinnacle commercial API")
+    pin_records = fetch_raw(force=force)
+    if pin_records:
+        cleaned = clean_and_enrich(pin_records)
+        df = build_output(cleaned)
+        log.success("Tier 1 hit — using Pinnacle commercial data", rows=len(df))
+        return df, SOURCE_PINNACLE
+    log.info("Tier 1 returned no records — trying Tier 2")
+
+    # ── Tier 2: The Odds API ───────────────────────────────────────────────
+    log.info("Tier 2 — attempting The Odds API public aggregator")
+    oa_records = fetch_via_odds_api(force=force)
+    if oa_records:
+        df = build_output(pd.DataFrame(oa_records))
+        log.success("Tier 2 hit — using The Odds API data", rows=len(df))
+        return df, SOURCE_ODDS_API
+    log.info("Tier 2 returned no records — caller should fall back to synthetic")
+
+    return _empty_df(), SOURCE_EMPTY
+
+
+def _empty_df() -> pd.DataFrame:
+    return pd.DataFrame(columns=[
+        "snapshot_id", "timestamp", "match_id", "bookmaker", "market_type",
+        "outcome", "decimal_odds", "is_opening", "is_closing", "last_refreshed",
+    ])
+
+
+# =============================================================================
 # Run
 # =============================================================================
 
-def run(force: bool = False, synthetic: bool = False) -> Path:
-    log.stage("=== fetch_odds_pinnacle · Phase 2 Task 2.6a ===")
+_VALID_SOURCES = {"auto", "pinnacle", "oddsapi", "synthetic"}
 
-    if synthetic:
-        log.info("Synthetic mode selected — skipping live API")
-        records = []
-    else:
-        records = fetch_raw(force=force)
 
-    if records:
-        # Live API returned data → go through clean_and_enrich
-        cleaned    = clean_and_enrich(records)
-        output_df  = build_output(cleaned)
-        data_label = "live"
-    else:
-        # No live data → generate synthetic Pinnacle-structure odds
-        log.info("No live Pinnacle odds — generating synthetic odds from Elo ratings")
-        syn_records = generate_synthetic()
-        output_df   = build_output(pd.DataFrame(syn_records)) if syn_records else pd.DataFrame(
-            columns=[
-                "snapshot_id", "timestamp", "match_id", "bookmaker", "market_type",
-                "outcome", "decimal_odds", "is_opening", "is_closing", "last_refreshed",
-            ]
+def run(force: bool = False, source: str = "auto") -> Path:
+    """
+    Orchestrator. ``source`` selects which tiers to attempt:
+
+      auto       — Tier 1 → Tier 2 → Tier 3 (synthetic).  Default.
+      pinnacle   — Tier 1 only.  Synthetic fallback if it returns empty.
+      oddsapi    — Tier 2 only.  Synthetic fallback if it returns empty.
+      synthetic  — Skip both real tiers, write deterministic synthetic data.
+    """
+    if source not in _VALID_SOURCES:
+        raise ValueError(f"--source must be one of {sorted(_VALID_SOURCES)}, got {source!r}")
+
+    log.stage("=== fetch_odds_pinnacle · Phase 2 Task 2.6a ===", source=source)
+
+    output_df: pd.DataFrame = _empty_df()
+    data_label = SOURCE_EMPTY
+
+    if source == "synthetic":
+        log.info("Synthetic source forced — skipping real-data tiers")
+    elif source == "pinnacle":
+        recs = fetch_raw(force=force)
+        if recs:
+            output_df = build_output(clean_and_enrich(recs))
+            data_label = SOURCE_PINNACLE
+    elif source == "oddsapi":
+        recs = fetch_via_odds_api(force=force)
+        if recs:
+            output_df = build_output(pd.DataFrame(recs))
+            data_label = SOURCE_ODDS_API
+    else:  # auto
+        output_df, data_label = fetch_real_odds(force=force)
+
+    if output_df.empty:
+        log.info(
+            "No real odds available — using synthetic Elo-derived fallback",
+            previous_label=data_label,
         )
-        data_label = "synthetic"
+        syn_records = generate_synthetic()
+        if syn_records:
+            output_df  = build_output(pd.DataFrame(syn_records))
+            data_label = SOURCE_SYNTHETIC
 
     log.info("Validating output", rows=len(output_df), data_label=data_label)
     _validate_sample(output_df)
@@ -633,10 +1050,24 @@ def run(force: bool = False, synthetic: bool = False) -> Path:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Fetch / generate Pinnacle 1X2 odds for WC 2026 matches."
+        description="Fetch / generate Pinnacle 1X2 odds for WC 2026 matches.",
     )
-    parser.add_argument("--force",     action="store_true", help="Re-fetch even if cache exists.")
-    parser.add_argument("--synthetic", action="store_true",
-                        help="Skip live API; generate synthetic odds from Elo ratings.")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-fetch even if cache exists.",
+    )
+    parser.add_argument(
+        "--source",
+        choices=sorted(_VALID_SOURCES),
+        default="auto",
+        help="Which odds source to use. 'auto' tries Pinnacle → Odds API → synthetic.",
+    )
+    parser.add_argument(
+        "--synthetic",
+        action="store_true",
+        help="DEPRECATED alias for --source synthetic. Kept for backward compatibility.",
+    )
     args = parser.parse_args()
-    run(force=args.force, synthetic=args.synthetic)
+    chosen_source = "synthetic" if args.synthetic else args.source
+    run(force=args.force, source=chosen_source)
