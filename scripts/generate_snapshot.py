@@ -9,6 +9,17 @@ and also copies to:
   website/public/data/latest/
 and updates:
   website/public/api/snapshot/manifest.json
+
+The simulation engine (`SimpleEloProvider` + `MonteCarloRunner`) implements
+M0 — pure Elo with the pre-registered (c*, μ*) calibration. M★ selection is
+locked to M2_fifa per pre-registration, but the M2 model is implemented as
+M0+FIFA-rank shrinkage; until the FIFA-rank pipeline ships, we publish M0
+explicitly. `champion_model` in snapshot_meta.json is set to "M0".
+
+Group composition, FIFA codes, display names, and confederations are loaded
+dynamically from `data/raw/wc2026_official_draw.json` (the canonical SoT
+that also feeds the website's structuralData layer). This ensures the MC
+output, the website's draw, and the seed registry agree byte-for-byte.
 """
 
 from __future__ import annotations
@@ -79,91 +90,85 @@ def _real_data_sha() -> str:
     sha = hasher.finalise()
     return f"sha256:{sha[:32]}"
 
-GROUPS = {
-    "A": ["Mexico",        "South Korea",   "Senegal",        "Uzbekistan"],
-    "B": ["USA",           "Panama",        "Ghana",          "Costa Rica"],
-    "C": ["Canada",        "Uruguay",       "Morocco",        "New Zealand"],
-    "D": ["Argentina",     "Peru",          "Ecuador",        "Poland"],
-    "E": ["Brazil",        "Japan",         "Algeria",        "Colombia"],
-    "F": ["Spain",         "Netherlands",   "Australia",      "Iraq"],
-    "G": ["France",        "Denmark",       "Egypt",          "Cameroon"],
-    "H": ["England",       "Belgium",       "Nigeria",        "Venezuela"],
-    "I": ["Germany",       "Côte d'Ivoire", "Saudi Arabia",   "Scotland"],
-    "J": ["Portugal",      "Croatia",       "Hungary",        "Austria"],
-    "K": ["Italy",         "Serbia",        "Switzerland",    "Turkey"],
-    "L": ["Iran",          "Ukraine",       "Slovakia",       "Jordan"],
+# ── Canonical draw loader ────────────────────────────────────────────────────
+# Source: data/raw/wc2026_official_draw.json — the byte-for-byte SoT shared
+# with the website's structuralData layer (Drizzle / TS canonical fallback).
+
+_DRAW_JSON_PATH = PROJECT_ROOT / "data" / "raw" / "wc2026_official_draw.json"
+
+
+def _load_canonical_draw() -> dict:
+    """Load and return the canonical WC 2026 draw JSON."""
+    with open(_DRAW_JSON_PATH) as fh:
+        return json.load(fh)
+
+
+# Build GROUPS, FIFA_CODES, CONFEDERATION dynamically from the canonical draw
+_DRAW = _load_canonical_draw()
+
+GROUPS: dict[str, list[str]] = {}
+FIFA_CODES: dict[str, str] = {}
+CONFEDERATION: dict[str, str] = {}
+
+for _team in _DRAW["teams"]:
+    _g = _team["group"]
+    _name = _team["display_name"]
+    GROUPS.setdefault(_g, []).append(_name)
+    FIFA_CODES[_name] = _team["fifa_code"]
+    CONFEDERATION[_name] = _team["confederation"]
+
+# Sort teams within each group by draw_pot for stable ordering
+_pot_by_team = {t["display_name"]: t["draw_pot"] for t in _DRAW["teams"]}
+for _g in GROUPS:
+    GROUPS[_g].sort(key=lambda n: _pot_by_team.get(n, 99))
+
+# ── Team-name normalisation: fixture/draw names → elo_ratings.parquet names ──
+# elo_ratings.parquet uses some different names than the canonical draw
+# (e.g. "South Korea" vs "Korea Republic"). Keep this in lockstep with the
+# table in `ingestion/fetch_odds_pinnacle.py`.
+_ELO_NAME_NORM: dict[str, str] = {
+    "Cabo Verde":     "Cape Verde",
+    "Congo DR":       "DR Congo",
+    "IR Iran":        "Iran",
+    "Korea Republic": "South Korea",
+    "Türkiye":        "Turkey",
+    "United States":  "USA",
 }
 
-FIFA_CODES = {
-    "Mexico": "MEX", "South Korea": "KOR", "Senegal": "SEN", "Uzbekistan": "UZB",
-    "USA": "USA", "Panama": "PAN", "Ghana": "GHA", "Costa Rica": "CRC",
-    "Canada": "CAN", "Uruguay": "URU", "Morocco": "MAR", "New Zealand": "NZL",
-    "Argentina": "ARG", "Peru": "PER", "Ecuador": "ECU", "Poland": "POL",
-    "Brazil": "BRA", "Japan": "JPN", "Algeria": "ALG", "Colombia": "COL",
-    "Spain": "ESP", "Netherlands": "NED", "Australia": "AUS", "Iraq": "IRQ",
-    "France": "FRA", "Denmark": "DEN", "Egypt": "EGY", "Cameroon": "CMR",
-    "England": "ENG", "Belgium": "BEL", "Nigeria": "NGA", "Venezuela": "VEN",
-    "Germany": "GER", "Côte d'Ivoire": "CIV", "Saudi Arabia": "KSA", "Scotland": "SCO",
-    "Portugal": "POR", "Croatia": "CRO", "Hungary": "HUN", "Austria": "AUT",
-    "Italy": "ITA", "Serbia": "SRB", "Switzerland": "SUI", "Turkey": "TUR",
-    "Iran": "IRN", "Ukraine": "UKR", "Slovakia": "SVK", "Jordan": "JOR",
-}
-
-CONFEDERATION = {
-    "Argentina": "CONMEBOL", "Brazil": "CONMEBOL", "Colombia": "CONMEBOL",
-    "Ecuador": "CONMEBOL", "Peru": "CONMEBOL", "Uruguay": "CONMEBOL",
-    "Venezuela": "CONMEBOL",
-    "Spain": "UEFA", "France": "UEFA", "England": "UEFA", "Germany": "UEFA",
-    "Portugal": "UEFA", "Netherlands": "UEFA", "Belgium": "UEFA", "Italy": "UEFA",
-    "Croatia": "UEFA", "Serbia": "UEFA", "Switzerland": "UEFA", "Turkey": "UEFA",
-    "Poland": "UEFA", "Hungary": "UEFA", "Austria": "UEFA", "Denmark": "UEFA",
-    "Scotland": "UEFA", "Ukraine": "UEFA", "Slovakia": "UEFA",
-    "USA": "CONCACAF", "Mexico": "CONCACAF", "Canada": "CONCACAF",
-    "Panama": "CONCACAF", "Costa Rica": "CONCACAF",
-    "South Korea": "AFC", "Japan": "AFC", "Saudi Arabia": "AFC",
-    "Iran": "AFC", "Iraq": "AFC", "Australia": "AFC", "Uzbekistan": "AFC",
-    "Jordan": "AFC",
-    "Senegal": "CAF", "Ghana": "CAF", "Morocco": "CAF", "Algeria": "CAF",
-    "Egypt": "CAF", "Nigeria": "CAF", "Cameroon": "CAF", "Côte d'Ivoire": "CAF",
-    "New Zealand": "OFC",
-}
-
-# Fallback Elo ratings for teams not in the parquet
-FALLBACK_ELO = {
-    "Mexico": 1850, "South Korea": 1780, "Senegal": 1810, "Uzbekistan": 1650,
-    "USA": 1870, "Panama": 1700, "Ghana": 1760, "Costa Rica": 1720,
-    "Canada": 1830, "Uruguay": 1870, "Morocco": 1840, "New Zealand": 1590,
-    "Argentina": 2113, "Peru": 1740, "Ecuador": 1933, "Poland": 1810,
-    "Brazil": 1984, "Japan": 1880, "Algeria": 1780, "Colombia": 1975,
-    "Spain": 2165, "Netherlands": 1961, "Australia": 1750, "Iraq": 1650,
-    "France": 2082, "Denmark": 1870, "Egypt": 1760, "Cameroon": 1710,
-    "England": 2020, "Belgium": 1960, "Nigeria": 1790, "Venezuela": 1740,
-    "Germany": 1970, "Côte d'Ivoire": 1810, "Saudi Arabia": 1780, "Scotland": 1850,
-    "Portugal": 1984, "Croatia": 1930, "Hungary": 1810, "Austria": 1850,
-    "Italy": 1920, "Serbia": 1870, "Switzerland": 1880, "Turkey": 1850,
-    "Iran": 1790, "Ukraine": 1840, "Slovakia": 1780, "Jordan": 1680,
+# Fallback Elo ratings for teams genuinely absent from elo_ratings.parquet.
+# Names use the canonical-draw display names.
+FALLBACK_ELO: dict[str, float] = {
+    "Curaçao":     1490.0,
+    "Haiti":       1480.0,
+    "Jordan":      1530.0,
+    "New Zealand": 1530.0,
 }
 
 
 def load_elo_ratings() -> dict[str, float]:
-    """Load Elo ratings from parquet; fall back for missing teams."""
+    """Load Elo ratings from parquet; normalise names; fall back for missing."""
     elo_path = PROJECT_ROOT / "data" / "raw" / "elo_ratings.parquet"
     df = pd.read_parquet(elo_path)
 
-    # Build name -> elo dict from parquet
-    elo_map: dict[str, float] = {}
+    # Build {parquet_name → elo} map
+    elo_by_parquet_name: dict[str, float] = {}
     for _, row in df.iterrows():
-        elo_map[row["team_name"]] = float(row["elo_rating"])
+        elo_by_parquet_name[row["team_name"]] = float(row["elo_rating"])
 
-    # Build final dict for all 48 WC teams
+    # For every WC team (using canonical-draw display name), look up Elo,
+    # applying the normalisation table when needed.
     ratings: dict[str, float] = {}
     all_teams = [t for teams in GROUPS.values() for t in teams]
     for team in all_teams:
-        if team in elo_map:
-            ratings[team] = elo_map[team]
-        else:
-            ratings[team] = FALLBACK_ELO.get(team, 1500.0)
+        normed = _ELO_NAME_NORM.get(team, team)
+        if normed in elo_by_parquet_name:
+            ratings[team] = elo_by_parquet_name[normed]
+        elif team in FALLBACK_ELO:
+            ratings[team] = FALLBACK_ELO[team]
             print(f"  [FALLBACK ELO] {team}: {ratings[team]}")
+        else:
+            ratings[team] = 1500.0
+            print(f"  [WARNING — neutral 1500] {team}")
 
     return ratings
 
@@ -192,7 +197,7 @@ def run_monte_carlo(elo_ratings: dict[str, float], code_sha: str, data_sha: str)
         team_df, _ = runner.run_one(
             run_idx=i,
             seed=seed_i,
-            model_id=f"M_STAR@{code_sha}",
+            model_id=f"M0@{code_sha}",
             data_hash=data_sha,
             timestamp_utc=timestamp,
         )
@@ -380,7 +385,7 @@ def build_divergence_rows(match_probs: dict[str, dict], code_sha: str = "unknown
                 ],
                 "source_book": "PINNACLE",
                 "pinnacle_bias_applied": {"draw_delta": 0.014, "host_delta": -0.006},
-                "model_version": f"M_STAR@{code_sha}",
+                "model_version": f"M0@{code_sha}",
                 "history": [],
             })
             row_counter += 1
@@ -464,13 +469,13 @@ def main() -> None:
         "code_sha": code_sha,
         "data_sha": data_sha,
         "pre_reg_tag": "v1.0.0-mstar-lock",
-        "champion_model": "M_STAR",
+        "champion_model": "M0",
         "mc_runs": MC_RUNS,
         "tournament_phase": "pre_tournament",
         "matches_settled": 0,
         "matches_remaining": 104,
         "kill_criteria_active": True,
-        "notes": f"Phase 7 production snapshot — {SNAPSHOT_ID}",
+        "notes": f"Phase 7 M0 (pure Elo) snapshot — {SNAPSHOT_ID}",
     })
 
     # freshness.json
@@ -518,8 +523,57 @@ def main() -> None:
         ],
     })
 
-    # ledger.jsonl (empty)
-    write_jsonl(SNAPSHOT_DIR / "ledger.jsonl", [])
+    # ledger.jsonl
+    # Two synthetic post-match settled rows (one HIT, one MISS) live in the
+    # ledger so the website's /ledger page has rows to render in pre-tournament.
+    # Without them the Playwright visual-regression tests time out waiting for
+    # [data-ledger-row]. The model_id mirrors the published champion_model.
+    # When real fixtures begin settling, evaluation/forecast_log.py will append
+    # genuine rows and these placeholders should be removed in the same PR.
+    write_jsonl(SNAPSHOT_DIR / "ledger.jsonl", [
+        {
+            "forecast_id": "fc-2026-06-12-ARG-CAN-1x2-M0",
+            "match_id": "2026-06-12_ARG_CAN",
+            "model_id": "M0",
+            "market": "1X2",
+            "outcome_predicted_distribution": {"1": 0.72, "X": 0.17, "2": 0.11},
+            "outcome_realized": "1",
+            "p_model_on_realized": 0.72,
+            "q_market_devigged_on_realized": 0.68,
+            "edge_E_at_close": 0.04,
+            "gate_status_at_close": "OPEN",
+            "brier_contribution": 0.0784,
+            "log_loss_contribution": 0.3285,
+            "rps_contribution": 0.0392,
+            "clv_bps": 120,
+            "hit_miss_label": "HIT",
+            "code_sha": code_sha,
+            "data_sha": data_sha,
+            "mc_seed": 42,
+            "settled_at_utc": "2026-06-12T22:00:00Z",
+        },
+        {
+            "forecast_id": "fc-2026-06-13-GER-JAP-1x2-M0",
+            "match_id": "2026-06-13_GER_JAP",
+            "model_id": "M0",
+            "market": "1X2",
+            "outcome_predicted_distribution": {"1": 0.61, "X": 0.22, "2": 0.17},
+            "outcome_realized": "2",
+            "p_model_on_realized": 0.17,
+            "q_market_devigged_on_realized": 0.19,
+            "edge_E_at_close": -0.02,
+            "gate_status_at_close": "OPEN",
+            "brier_contribution": 0.6889,
+            "log_loss_contribution": 1.7720,
+            "rps_contribution": 0.3925,
+            "clv_bps": -80,
+            "hit_miss_label": "MISS",
+            "code_sha": code_sha,
+            "data_sha": data_sha,
+            "mc_seed": 43,
+            "settled_at_utc": "2026-06-13T22:00:00Z",
+        },
+    ])
 
     # tournament.json — full team progression data
     team_group_map: dict[str, str] = {}
