@@ -112,7 +112,8 @@ function teamCodesForView(view: PublicPredictionView): string[] {
     case "champions_path":
       return [(view.scenario as ChampionsPathScenario).team];
     case "full_bracket": {
-      const champ = (view.scenario as FullBracketScenario).koAdvancers[14];
+      // R32 schema: koAdvancers[30] is the champion (31 total advancers).
+      const champ = (view.scenario as FullBracketScenario).koAdvancers[30];
       return champ ? [champ] : [];
     }
   }

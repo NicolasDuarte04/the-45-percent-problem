@@ -216,6 +216,11 @@
     animation: none;
     opacity: 1;
   }
+  /* Disable dnd-kit drag-overlay translate so items snap to cursor
+     instead of animating. The click-fallback path still functions. */
+  [data-canvas="simulator"] [aria-grabbed="true"] {
+    transform: none !important;
+  }
 }
 
 /* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */

@@ -6,7 +6,7 @@ import { predictions } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/ratelimit";
 import { ScenarioPayloadSchema } from "@/lib/sim/types";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
-import { computeRealityScoreMock } from "@/lib/sim/computeRealityScoreMock";
+import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { generateUniquePredictionId } from "@/lib/sim/generatePredictionId";
 import { renderStoryLine } from "@/lib/sim/renderStoryLine";
 import {
@@ -79,9 +79,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { mode, scenario } = payload.data;
   const { modelSha, snapshotSha } = meta.data;
 
-  // Canonicalize → mock score → unique ID → server-rendered story line.
+  // Canonicalize → real score → unique ID → server-rendered story line.
   const canonical = canonicalizeScenario(mode, scenario);
-  const { count, total } = computeRealityScoreMock(mode, canonical);
+  const { count, total } = computeRealityScore(mode, canonical, scenario);
 
   let id: string;
   try {

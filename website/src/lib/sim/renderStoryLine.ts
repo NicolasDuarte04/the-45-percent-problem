@@ -65,12 +65,11 @@ function renderChampionsPath(s: ChampionsPathScenario): string {
 }
 
 function renderFullBracket(s: FullBracketScenario): string {
-  // The 15th KO advancer is the predicted champion. The 13th and 14th
-  // are the two finalists. The model's final-loser is whichever of those
-  // two is NOT the 15th.
-  const champ = s.koAdvancers[14];
-  const finalistA = s.koAdvancers[12];
-  const finalistB = s.koAdvancers[13];
+  // R32 schema layout: [0..15]=R32 winners, [16..23]=R16, [24..27]=QF,
+  // [28..29]=SF winners (the two finalists), [30]=champion.
+  const champ = s.koAdvancers[30];
+  const finalistA = s.koAdvancers[28];
+  const finalistB = s.koAdvancers[29];
   const champName = teamName(champ);
   const loser = champ === finalistA ? finalistB : finalistA;
   const loserName = teamName(loser);

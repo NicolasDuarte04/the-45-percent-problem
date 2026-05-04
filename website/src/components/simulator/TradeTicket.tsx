@@ -53,9 +53,9 @@ function flagsForView(view: PublicPredictionView): string[] {
     case "champions_path":
       return [(view.scenario as ChampionsPathScenario).team];
     case "full_bracket": {
-      // koAdvancers length is 15; the predicted champion is entry 14.
+      // R32 schema: koAdvancers[30] is the champion (31 total advancers).
       const fb = view.scenario as FullBracketScenario;
-      const champ = fb.koAdvancers[14];
+      const champ = fb.koAdvancers[30];
       return champ ? [champ] : [];
     }
   }
