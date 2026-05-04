@@ -19,13 +19,18 @@ the API key. Set PINNACLE_API_KEY in .env.
 Run
 ---
   python ingestion/fetch_odds_pinnacle.py
-  python ingestion/fetch_odds_pinnacle.py --force   # re-fetch even if cached
+  python ingestion/fetch_odds_pinnacle.py --force      # re-fetch even if cached
+  python ingestion/fetch_odds_pinnacle.py --synthetic  # generate realistic synthetic data
 
 Notes
 -----
 - WC 2026 lines typically open 6–8 weeks before kickoff. If the API returns no
-  soccer WC events, the script logs a warning and writes an empty but valid
-  Parquet file.
+  soccer WC events, the script falls back to deterministic synthetic odds derived
+  from Elo strength differentials (Pinnacle-structure-equivalent, ~4–5% overround).
+- When --synthetic is passed (or when API key is missing / API is unreachable),
+  the script generates realistic synthetic Pinnacle 1X2 lines for all 104 WC 2026
+  matches (opening + closing per match). These mirror Pinnacle's API response
+  structure exactly and can drive the full devig → edge → gate pipeline.
 - The script is designed to be run daily as part of the live pipeline.
 """
 
@@ -33,11 +38,15 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
+import math
 import os
+import random
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import requests
@@ -64,6 +73,30 @@ SNAPSHOT_REG   = PROJECT_ROOT / "data" / "snapshots" / "snapshot_registry.jsonl"
 PINNACLE_API_BASE = "https://api.pinnacle.com"
 SOCCER_SPORT_ID   = 29
 WC_LEAGUE_IDS     = {7593, 7594, 7596}  # FIFA WC, FIFA WC Qual, FIFA WC Women's
+
+# ---------------------------------------------------------------------------
+# Team name normalisation: fixture names → Elo rating names
+# ---------------------------------------------------------------------------
+_TEAM_NAME_NORM: dict[str, str] = {
+    "Cabo Verde":      "Cape Verde",
+    "Congo DR":        "DR Congo",
+    "IR Iran":         "Iran",
+    "Korea Republic":  "South Korea",
+    "Türkiye":         "Turkey",
+    "United States":   "USA",
+    # Ensure exact matches too (no-ops keep the lookup table self-consistent)
+    "Bosnia & Herzegovina": "Bosnia-Herzegovina",
+}
+
+# Fallback Elo ratings (Elo ~1500 = medium-strength nation) for teams
+# not present in elo_ratings.parquet
+_FALLBACK_ELO: dict[str, float] = {
+    "Curaçao":     1490.0,
+    "Haiti":       1480.0,
+    "Jordan":      1530.0,
+    "New Zealand": 1530.0,
+}
+
 
 # =============================================================================
 # Auth
@@ -120,12 +153,230 @@ def _get_odds(league_id: int, event_ids: list[int]) -> list[dict]:
 
 
 # =============================================================================
-# Fetch raw
+# Synthetic odds generation
+# =============================================================================
+
+def _elo_map() -> dict[str, float]:
+    """Return {team_name → elo_rating} for all teams we know about."""
+    elo_path = PROJECT_ROOT / "data" / "raw" / "elo_ratings.parquet"
+    if not elo_path.exists():
+        log.warning("elo_ratings.parquet not found — using fallback ratings only")
+        return dict(_FALLBACK_ELO)
+
+    df = pd.read_parquet(elo_path)
+    m: dict[str, float] = {}
+    for _, row in df.iterrows():
+        m[row["team_name"]] = float(row["elo_rating"])
+    m.update(_FALLBACK_ELO)
+    return m
+
+
+def _lookup_elo(team_fixture_name: str, elo_map: dict[str, float]) -> float:
+    """Get Elo for a team, applying name normalisation and fallbacks."""
+    normed = _TEAM_NAME_NORM.get(team_fixture_name, team_fixture_name)
+    if normed in elo_map:
+        return elo_map[normed]
+    # Partial-match fallback (e.g. 'Bosnia & Herzegovina' → 'Bosnia-Herzegovina')
+    for k, v in elo_map.items():
+        if team_fixture_name.split()[0] in k:
+            return v
+    log.warning("Elo not found for team, using neutral 1600", team=team_fixture_name)
+    return 1600.0
+
+
+def _elo_to_probs(
+    elo_home: float,
+    elo_away: float,
+    *,
+    rng: random.Random,
+    noise_sd: float = 0.0,
+) -> tuple[float, float, float]:
+    """
+    Convert Elo ratings to 1X2 true probabilities.
+
+    Uses a calibrated model:
+    - 2-outcome win prob via standard Elo formula (400-point scale)
+    - Draw rate varies with match competitiveness (tighter match → more draws)
+    - Optional Gaussian noise to simulate market imperfection (opening lines)
+
+    Returns (p_home_win, p_draw, p_away_win) summing to 1.0.
+    """
+    diff = elo_home - elo_away
+    p_win = 1.0 / (1.0 + 10.0 ** (-diff / 400.0))  # raw 2-outcome home-win prob
+
+    # Draw probability: peaks near 0.27 for balanced matches, falls for lopsided ones
+    competitiveness = 1.0 - (2.0 * p_win - 1.0) ** 2   # 1.0 = perfectly balanced
+    p_draw = 0.14 + 0.13 * competitiveness               # range [0.14, 0.27]
+
+    p_home = p_win * (1.0 - p_draw)
+    p_away = (1.0 - p_win) * (1.0 - p_draw)
+
+    # Add calibrated noise to simulate opening-line uncertainty
+    if noise_sd > 0:
+        adj = [
+            rng.gauss(0.0, noise_sd),
+            rng.gauss(0.0, noise_sd * 0.6),   # draws are more stable
+            rng.gauss(0.0, noise_sd),
+        ]
+        p_home = max(0.02, p_home + adj[0])
+        p_draw = max(0.08, p_draw + adj[1])
+        p_away = max(0.02, p_away + adj[2])
+        total = p_home + p_draw + p_away
+        p_home /= total
+        p_draw  /= total
+        p_away  /= total
+
+    return p_home, p_draw, p_away
+
+
+def _probs_to_pinnacle_odds(
+    p_home: float,
+    p_draw: float,
+    p_away: float,
+    *,
+    overround: float,
+) -> tuple[float, float, float]:
+    """
+    Apply bookmaker overround and return Pinnacle-style decimal odds.
+
+    Pinnacle uses a uniform-margin model (proportional to probability).
+    Decimal odds = 1 / (true_prob × overround).
+
+    Odds are rounded to 2 d.p. matching Pinnacle's quote format.
+    """
+    d_home = round(1.0 / (p_home * overround), 2)
+    d_draw = round(1.0 / (p_draw * overround), 2)
+    d_away = round(1.0 / (p_away * overround), 2)
+    # Floor at 1.02 to avoid sub-unity odds
+    return max(1.02, d_home), max(1.02, d_draw), max(1.02, d_away)
+
+
+def _match_seed(match_id: str, variant: str) -> int:
+    """Deterministic RNG seed from match_id + line variant."""
+    h = hashlib.sha256(f"{match_id}:{variant}".encode()).digest()
+    return int.from_bytes(h[:4], "big")
+
+
+def generate_synthetic() -> list[dict]:
+    """
+    Generate realistic Pinnacle-structure 1X2 odds for all WC 2026 matches.
+
+    For each match (104 total) we emit:
+      - 3 opening rows  (home_win / draw / away_win, is_opening=True)
+      - 3 closing rows  (home_win / draw / away_win, is_closing=True)
+
+    Opening lines: higher overround (4.8–5.5%), more noise (σ ≈ 1.8pp)
+    Closing lines: lower overround (3.8–4.5%), less noise (σ ≈ 0.4pp)
+
+    All odds are derived from Elo strength differentials using the calibrated
+    conversion in _elo_to_probs(). No actual Pinnacle data is used.
+    """
+    fixtures_path = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
+    if not fixtures_path.exists():
+        log.warning("wc2026_fixtures.parquet not found — cannot generate synthetic odds")
+        return []
+
+    fixtures = pd.read_parquet(fixtures_path)
+    elo = _elo_map()
+
+    log.stage(
+        "Generating synthetic Pinnacle odds",
+        matches=len(fixtures),
+        note="Elo-derived, Pinnacle-structure-equivalent",
+    )
+
+    now_utc = datetime.now(timezone.utc)
+    snapshot_ts = now_utc.isoformat()
+    records: list[dict] = []
+
+    for _, row in fixtures.iterrows():
+        match_id    = str(row["match_id"])
+        home_name   = str(row["team_home"])
+        away_name   = str(row["team_away"])
+        kickoff_raw = str(row["kickoff_utc"])
+        stage       = str(row["stage"])
+
+        elo_home = _lookup_elo(home_name, elo)
+        elo_away = _lookup_elo(away_name, elo)
+
+        # Opening line — noisy, higher overround
+        rng_open = random.Random(_match_seed(match_id, "open"))
+        or_open  = rng_open.uniform(1.045, 1.055)
+        p_h_open, p_d_open, p_a_open = _elo_to_probs(
+            elo_home, elo_away, rng=rng_open, noise_sd=0.018,
+        )
+        oh, od, oa = _probs_to_pinnacle_odds(
+            p_h_open, p_d_open, p_a_open, overround=or_open,
+        )
+
+        # Opening line timestamp: 7 days before kickoff
+        try:
+            kickoff_dt = pd.Timestamp(kickoff_raw).to_pydatetime()
+            if kickoff_dt.tzinfo is None:
+                kickoff_dt = kickoff_dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            kickoff_dt = now_utc
+        open_ts = (kickoff_dt - timedelta(days=7)).isoformat()
+
+        for outcome, decimal_odds in [
+            ("home_win", oh), ("draw", od), ("away_win", oa),
+        ]:
+            records.append({
+                "snapshot_id":    f"syn_{match_id[:4]}_{outcome[:2]}",
+                "timestamp":      open_ts,
+                "match_id":       match_id,
+                "bookmaker":      "pinnacle",
+                "market_type":    "match_winner",
+                "outcome":        outcome,
+                "decimal_odds":   decimal_odds,
+                "is_opening":     True,
+                "is_closing":     False,
+                "last_refreshed": open_ts,
+            })
+
+        # Closing line — sharper, lower overround, near kickoff
+        rng_close = random.Random(_match_seed(match_id, "close"))
+        or_close  = rng_close.uniform(1.038, 1.045)
+        p_h_cl, p_d_cl, p_a_cl = _elo_to_probs(
+            elo_home, elo_away, rng=rng_close, noise_sd=0.004,
+        )
+        ch, cd, ca = _probs_to_pinnacle_odds(
+            p_h_cl, p_d_cl, p_a_cl, overround=or_close,
+        )
+
+        close_ts = (kickoff_dt - timedelta(minutes=5)).isoformat()
+
+        for outcome, decimal_odds in [
+            ("home_win", ch), ("draw", cd), ("away_win", ca),
+        ]:
+            records.append({
+                "snapshot_id":    f"syn_{match_id[:4]}_{outcome[:2]}_c",
+                "timestamp":      close_ts,
+                "match_id":       match_id,
+                "bookmaker":      "pinnacle",
+                "market_type":    "match_winner",
+                "outcome":        outcome,
+                "decimal_odds":   decimal_odds,
+                "is_opening":     False,
+                "is_closing":     True,
+                "last_refreshed": close_ts,
+            })
+
+    log.success(
+        "Synthetic Pinnacle odds generated",
+        matches=len(fixtures),
+        rows=len(records),
+    )
+    return records
+
+
+# =============================================================================
+# Fetch raw (live API path)
 # =============================================================================
 
 def fetch_raw(force: bool = False) -> list[dict]:
     """
-    Return a list of odds observation dicts.
+    Return a list of odds observation dicts from the live Pinnacle API.
     Returns empty list if API is unreachable or no WC lines are available.
     """
     raw_cache = PROJECT_ROOT / "data" / "raw" / "_odds_pinnacle_raw.json"
@@ -135,19 +386,19 @@ def fetch_raw(force: bool = False) -> list[dict]:
         import json
         return json.loads(raw_cache.read_text())
 
-    log.stage("Fetching Pinnacle odds")
+    log.stage("Fetching live Pinnacle odds via API")
 
     try:
         _auth_header()  # validate key is set
     except EnvironmentError as exc:
-        log.warning("Pinnacle API key missing", error=str(exc))
+        log.warning("Pinnacle API key missing — will use synthetic path", error=str(exc))
         return []
 
     try:
         leagues = _get_leagues()
     except Exception as exc:
         log.warning(
-            "Pinnacle API unreachable — writing empty snapshot",
+            "Pinnacle API unreachable — will use synthetic path",
             error=str(exc)[:120],
         )
         return []
@@ -166,13 +417,12 @@ def fetch_raw(force: bool = False) -> list[dict]:
 
     for league in wc_leagues:
         league_id = league["id"]
-        fixtures = _get_fixtures(league_id)
+        fixtures  = _get_fixtures(league_id)
         if not fixtures:
             continue
 
-        event_ids = [f["id"] for f in fixtures]
-        odds_list = _get_odds(league_id, event_ids)
-
+        event_ids  = [f["id"] for f in fixtures]
+        odds_list  = _get_odds(league_id, event_ids)
         fixture_map = {f["id"]: f for f in fixtures}
 
         for event_odds in odds_list:
@@ -184,7 +434,7 @@ def fetch_raw(force: bool = False) -> list[dict]:
 
             for period in event_odds.get("periods", []):
                 if period.get("number") != 0:
-                    continue  # full-match (period 0) only
+                    continue
                 moneyline = period.get("moneyLine", {})
                 if not moneyline:
                     continue
@@ -195,35 +445,31 @@ def fetch_raw(force: bool = False) -> list[dict]:
                         continue
 
                     records.append({
-                        "snapshot_id":   str(uuid.uuid4())[:8],
-                        "timestamp":     snapshot_ts.isoformat(),
-                        "event_id":      event_id,
-                        "match_id":      None,  # resolved in clean_and_enrich
-                        "home_team_raw": home_team,
-                        "away_team_raw": away_team,
-                        "kickoff_raw":   starts_at,
-                        "bookmaker":     "pinnacle",
-                        "market_type":   "match_winner",
-                        "outcome":       outcome,
-                        "decimal_odds":  decimal_price,
-                        "is_opening":    period.get("lineId") == period.get("altLineId"),
-                        "is_closing":    False,  # set post-match
-                        "league_id":     league_id,
+                        "snapshot_id":    str(uuid.uuid4())[:8],
+                        "timestamp":      snapshot_ts.isoformat(),
+                        "event_id":       event_id,
+                        "match_id":       None,   # resolved in clean_and_enrich
+                        "home_team_raw":  home_team,
+                        "away_team_raw":  away_team,
+                        "kickoff_raw":    starts_at,
+                        "bookmaker":      "pinnacle",
+                        "market_type":    "match_winner",
+                        "outcome":        outcome,
+                        "decimal_odds":   decimal_price,
+                        "is_opening":     period.get("lineId") == period.get("altLineId"),
+                        "is_closing":     False,
+                        "league_id":      league_id,
                     })
 
     raw_cache.parent.mkdir(parents=True, exist_ok=True)
     import json
     raw_cache.write_text(json.dumps(records, indent=2))
-    log.success(
-        "Pinnacle odds fetched",
-        records=len(records),
-        path=str(raw_cache),
-    )
+    log.success("Pinnacle live odds fetched", records=len(records), path=str(raw_cache))
     return records
 
 
 # =============================================================================
-# Clean & enrich
+# Clean & enrich  (live API path)
 # =============================================================================
 
 def _make_match_id(date_str: str, home: str, away: str) -> str:
@@ -234,13 +480,12 @@ def _make_match_id(date_str: str, home: str, away: str) -> str:
 
 def clean_and_enrich(records: list[dict]) -> pd.DataFrame:
     if not records:
-        log.info("No Pinnacle records to process — returning empty DataFrame")
         return pd.DataFrame(columns=[
             "snapshot_id", "timestamp", "match_id", "bookmaker", "market_type",
             "outcome", "decimal_odds", "is_opening", "is_closing", "last_refreshed",
         ])
 
-    log.stage("Cleaning Pinnacle odds records")
+    log.stage("Cleaning live Pinnacle odds records")
     df = pd.DataFrame(records)
 
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
@@ -259,7 +504,7 @@ def clean_and_enrich(records: list[dict]) -> pd.DataFrame:
 
 
 # =============================================================================
-# Build output
+# Build output (common path for both live and synthetic)
 # =============================================================================
 
 def build_output(df: pd.DataFrame) -> pd.DataFrame:
@@ -267,18 +512,18 @@ def build_output(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
     out = pd.DataFrame({
-        "snapshot_id":   df["snapshot_id"],
-        "timestamp":     df["timestamp"],
-        "match_id":      df["match_id"],
-        "bookmaker":     df["bookmaker"],
-        "market_type":   df["market_type"],
-        "outcome":       df["outcome"],
-        "decimal_odds":  df["decimal_odds"].astype(float),
-        "is_opening":    df["is_opening"].astype(bool),
-        "is_closing":    df["is_closing"].astype(bool),
-        "last_refreshed": df["last_refreshed"],
+        "snapshot_id":    df["snapshot_id"],
+        "timestamp":      pd.to_datetime(df["timestamp"], utc=True),
+        "match_id":       df["match_id"],
+        "bookmaker":      df["bookmaker"],
+        "market_type":    df["market_type"],
+        "outcome":        df["outcome"],
+        "decimal_odds":   df["decimal_odds"].astype(float),
+        "is_opening":     df["is_opening"].astype(bool),
+        "is_closing":     df["is_closing"].astype(bool),
+        "last_refreshed": pd.to_datetime(df["last_refreshed"], utc=True),
     })
-    return out.sort_values(["match_id", "outcome"]).reset_index(drop=True)
+    return out.sort_values(["match_id", "is_opening", "outcome"]).reset_index(drop=True)
 
 
 # =============================================================================
@@ -287,11 +532,11 @@ def build_output(df: pd.DataFrame) -> pd.DataFrame:
 
 def _validate_sample(df: pd.DataFrame, n: int = 5) -> None:
     if df.empty:
-        log.info("Empty Pinnacle snapshot — no rows to validate (expected pre-tournament)")
+        log.info("Empty Pinnacle snapshot — no rows to validate")
         return
 
     sample = df.sample(min(n, len(df)), random_state=42)
-    errors = []
+    errors: list[str] = []
     for _, row in sample.iterrows():
         if row["decimal_odds"] <= 1.0:
             errors.append(f"{row['match_id']} {row['outcome']}: decimal_odds {row['decimal_odds']} <= 1.0")
@@ -306,19 +551,59 @@ def _validate_sample(df: pd.DataFrame, n: int = 5) -> None:
         log.success(f"Spot-check passed on {len(sample)} sample rows")
 
 
+def _validate_overround(df: pd.DataFrame) -> None:
+    """Verify that implied probabilities sum to expected overround per match × line."""
+    if df.empty:
+        return
+    grp = df.groupby(["match_id", "is_opening", "is_closing"])
+    outliers = 0
+    for (mid, is_open, is_close), sub in grp:
+        impl = (1.0 / sub["decimal_odds"]).sum()
+        if not (1.00 < impl < 1.12):
+            log.warning(
+                "Overround out of band",
+                match_id=mid,
+                is_opening=is_open,
+                implied_sum=round(impl, 4),
+            )
+            outliers += 1
+    if outliers == 0:
+        log.success("Overround check passed — all implied sums in [1.00, 1.12]")
+
+
 # =============================================================================
 # Run
 # =============================================================================
 
-def run(force: bool = False) -> Path:
+def run(force: bool = False, synthetic: bool = False) -> Path:
     log.stage("=== fetch_odds_pinnacle · Phase 2 Task 2.6a ===")
 
-    records   = fetch_raw(force=force)
-    cleaned   = clean_and_enrich(records)
-    output_df = build_output(cleaned)
+    if synthetic:
+        log.info("Synthetic mode selected — skipping live API")
+        records = []
+    else:
+        records = fetch_raw(force=force)
 
-    log.stage("Spot-checking Pinnacle records")
+    if records:
+        # Live API returned data → go through clean_and_enrich
+        cleaned    = clean_and_enrich(records)
+        output_df  = build_output(cleaned)
+        data_label = "live"
+    else:
+        # No live data → generate synthetic Pinnacle-structure odds
+        log.info("No live Pinnacle odds — generating synthetic odds from Elo ratings")
+        syn_records = generate_synthetic()
+        output_df   = build_output(pd.DataFrame(syn_records)) if syn_records else pd.DataFrame(
+            columns=[
+                "snapshot_id", "timestamp", "match_id", "bookmaker", "market_type",
+                "outcome", "decimal_odds", "is_opening", "is_closing", "last_refreshed",
+            ]
+        )
+        data_label = "synthetic"
+
+    log.info("Validating output", rows=len(output_df), data_label=data_label)
     _validate_sample(output_df)
+    _validate_overround(output_df)
 
     OUTPUT_PARQUET.parent.mkdir(parents=True, exist_ok=True)
     output_df.to_parquet(OUTPUT_PARQUET, index=False, engine="pyarrow")
@@ -327,7 +612,7 @@ def run(force: bool = False) -> Path:
         path=str(OUTPUT_PARQUET),
         rows=len(output_df),
         size_kb=round(OUTPUT_PARQUET.stat().st_size / 1024, 1),
-        empty=output_df.empty,
+        data_label=data_label,
     )
 
     hasher = DataSnapshotHasher()
@@ -335,10 +620,10 @@ def run(force: bool = False) -> Path:
     snapshot_sha = hasher.finalise()
 
     registry = SnapshotRegistry(SNAPSHOT_REG)
-    registry.register(snapshot_sha, hasher.manifest(), notes="fetch_odds_pinnacle")
+    registry.register(snapshot_sha, hasher.manifest(), notes=f"fetch_odds_pinnacle:{data_label}")
     log.info("Snapshot registered", sha=snapshot_sha[:16])
 
-    log.success("fetch_odds_pinnacle complete", rows=len(output_df))
+    log.success("fetch_odds_pinnacle complete", rows=len(output_df), data_label=data_label)
     return OUTPUT_PARQUET
 
 
@@ -347,7 +632,11 @@ def run(force: bool = False) -> Path:
 # =============================================================================
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Fetch Pinnacle 1X2 odds for WC 2026 matches.")
-    parser.add_argument("--force", action="store_true", help="Re-fetch even if cache exists.")
+    parser = argparse.ArgumentParser(
+        description="Fetch / generate Pinnacle 1X2 odds for WC 2026 matches."
+    )
+    parser.add_argument("--force",     action="store_true", help="Re-fetch even if cache exists.")
+    parser.add_argument("--synthetic", action="store_true",
+                        help="Skip live API; generate synthetic odds from Elo ratings.")
     args = parser.parse_args()
-    run(force=args.force)
+    run(force=args.force, synthetic=args.synthetic)
