@@ -32,7 +32,7 @@
       "match_id": "M51",
       "kickoff_utc": "2026-06-22T19:00:00Z",
       "opponent": "Switzerland",
-      "is_home": false
+      "is_home": true
     }
   ]
 }

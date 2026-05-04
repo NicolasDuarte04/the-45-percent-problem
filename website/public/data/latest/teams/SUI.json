@@ -32,7 +32,7 @@
       "match_id": "M51",
       "kickoff_utc": "2026-06-22T19:00:00Z",
       "opponent": "Canada",
-      "is_home": true
+      "is_home": false
     }
   ]
 }

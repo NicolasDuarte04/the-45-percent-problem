@@ -17,21 +17,21 @@
   "history": [],
   "upcoming_matches": [
     {
-      "match_id": "M21",
-      "kickoff_utc": "2026-06-17T17:00:00Z",
-      "opponent": "Portugal",
-      "is_home": false
+      "match_id": "M22",
+      "kickoff_utc": "2026-06-17T23:00:00Z",
+      "opponent": "Colombia",
+      "is_home": true
     },
     {
-      "match_id": "M46",
-      "kickoff_utc": "2026-06-22T23:00:00Z",
-      "opponent": "Congo DR",
+      "match_id": "M45",
+      "kickoff_utc": "2026-06-22T17:00:00Z",
+      "opponent": "Portugal",
       "is_home": false
     },
     {
       "match_id": "M70",
       "kickoff_utc": "2026-06-27T23:00:00Z",
-      "opponent": "Colombia",
+      "opponent": "Congo DR",
       "is_home": true
     }
   ]
