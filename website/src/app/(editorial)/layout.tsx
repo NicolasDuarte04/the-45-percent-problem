@@ -1,18 +1,14 @@
 import { EditorialMasthead } from "@/components/layout/EditorialMasthead";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 
 export default function EditorialLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const metrics = loadEvaluationMetrics();
-  const killTripped = metrics.kill_criteria_check.tripped;
-
   return (
     <div data-canvas="editorial">
-      <EditorialMasthead killTripped={killTripped} />
+      <EditorialMasthead />
       <main className="flex-1 w-full">{children}</main>
       <SiteFooter />
     </div>
