@@ -7,9 +7,9 @@
   "progression": {
     "p_champion": 0.0001,
     "p_final": 0.0005,
-    "p_sf": 0.0047,
+    "p_sf": 0.0045,
     "p_qf": 0.0192,
-    "p_r16": 0.0852,
+    "p_r16": 0.0853,
     "p_group_qualification": 0.1714,
     "ci_95_champion": [
       1.8e-05,

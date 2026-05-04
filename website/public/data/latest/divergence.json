@@ -1,6 +1,6 @@
 {
   "snapshot_id": "2026-05-04T00:00Z",
-  "generated_at_utc": "2026-05-04T14:52:43Z",
+  "generated_at_utc": "2026-05-04T15:37:22Z",
   "rows": [
     {
       "row_id": "ROW-00000",
@@ -34,7 +34,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -69,7 +69,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -104,7 +104,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -139,7 +139,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -174,7 +174,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -209,7 +209,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -244,7 +244,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -279,7 +279,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -314,7 +314,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -349,7 +349,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -384,7 +384,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -419,7 +419,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -454,7 +454,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -489,7 +489,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -524,7 +524,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -559,7 +559,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -594,7 +594,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -629,7 +629,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -664,7 +664,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -699,7 +699,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -734,7 +734,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -769,7 +769,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -804,7 +804,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -839,7 +839,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -874,7 +874,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -909,7 +909,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -944,7 +944,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -979,7 +979,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1014,7 +1014,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1049,7 +1049,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1084,7 +1084,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1119,7 +1119,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1154,7 +1154,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1189,7 +1189,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1224,7 +1224,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1259,7 +1259,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1294,7 +1294,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1329,7 +1329,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1364,7 +1364,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1399,7 +1399,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1434,7 +1434,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1469,7 +1469,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1504,7 +1504,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1539,7 +1539,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1574,7 +1574,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1609,7 +1609,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1644,7 +1644,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     },
     {
@@ -1679,7 +1679,7 @@
         "draw_delta": 0.014,
         "host_delta": -0.006
       },
-      "model_version": "M0@0217937a42116535",
+      "model_version": "M0@b694f33eb1c83bca",
       "history": []
     }
   ]

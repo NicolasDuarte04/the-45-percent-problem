@@ -8,9 +8,9 @@
     "p_champion": 0.0,
     "p_final": 0.0,
     "p_sf": 0.003,
-    "p_qf": 0.0217,
-    "p_r16": 0.114,
-    "p_group_qualification": 0.1496,
+    "p_qf": 0.0221,
+    "p_r16": 0.1142,
+    "p_group_qualification": 0.1498,
     "ci_95_champion": [
       0.0,
       0.000384

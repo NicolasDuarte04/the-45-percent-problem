@@ -523,8 +523,57 @@ def main() -> None:
         ],
     })
 
-    # ledger.jsonl (empty)
-    write_jsonl(SNAPSHOT_DIR / "ledger.jsonl", [])
+    # ledger.jsonl
+    # Two synthetic post-match settled rows (one HIT, one MISS) live in the
+    # ledger so the website's /ledger page has rows to render in pre-tournament.
+    # Without them the Playwright visual-regression tests time out waiting for
+    # [data-ledger-row]. The model_id mirrors the published champion_model.
+    # When real fixtures begin settling, evaluation/forecast_log.py will append
+    # genuine rows and these placeholders should be removed in the same PR.
+    write_jsonl(SNAPSHOT_DIR / "ledger.jsonl", [
+        {
+            "forecast_id": "fc-2026-06-12-ARG-CAN-1x2-M0",
+            "match_id": "2026-06-12_ARG_CAN",
+            "model_id": "M0",
+            "market": "1X2",
+            "outcome_predicted_distribution": {"1": 0.72, "X": 0.17, "2": 0.11},
+            "outcome_realized": "1",
+            "p_model_on_realized": 0.72,
+            "q_market_devigged_on_realized": 0.68,
+            "edge_E_at_close": 0.04,
+            "gate_status_at_close": "OPEN",
+            "brier_contribution": 0.0784,
+            "log_loss_contribution": 0.3285,
+            "rps_contribution": 0.0392,
+            "clv_bps": 120,
+            "hit_miss_label": "HIT",
+            "code_sha": code_sha,
+            "data_sha": data_sha,
+            "mc_seed": 42,
+            "settled_at_utc": "2026-06-12T22:00:00Z",
+        },
+        {
+            "forecast_id": "fc-2026-06-13-GER-JAP-1x2-M0",
+            "match_id": "2026-06-13_GER_JAP",
+            "model_id": "M0",
+            "market": "1X2",
+            "outcome_predicted_distribution": {"1": 0.61, "X": 0.22, "2": 0.17},
+            "outcome_realized": "2",
+            "p_model_on_realized": 0.17,
+            "q_market_devigged_on_realized": 0.19,
+            "edge_E_at_close": -0.02,
+            "gate_status_at_close": "OPEN",
+            "brier_contribution": 0.6889,
+            "log_loss_contribution": 1.7720,
+            "rps_contribution": 0.3925,
+            "clv_bps": -80,
+            "hit_miss_label": "MISS",
+            "code_sha": code_sha,
+            "data_sha": data_sha,
+            "mc_seed": 43,
+            "settled_at_utc": "2026-06-13T22:00:00Z",
+        },
+    ])
 
     # tournament.json — full team progression data
     team_group_map: dict[str, str] = {}

@@ -1,8 +1,8 @@
 {
   "schema_version": "9.0",
   "snapshot_id": "2026-05-04T00:00Z",
-  "generated_at_utc": "2026-05-04T14:52:43Z",
-  "code_sha": "0217937a42116535",
+  "generated_at_utc": "2026-05-04T15:37:22Z",
+  "code_sha": "b694f33eb1c83bca",
   "data_sha": "sha256:58702ce538d5cc1451c4faa82a7c833d",
   "pre_reg_tag": "v1.0.0-mstar-lock",
   "champion_model": "M0",

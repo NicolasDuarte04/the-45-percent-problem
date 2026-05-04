@@ -5,15 +5,15 @@
   "confederation": "AFC",
   "elo_rating": 1783.0,
   "progression": {
-    "p_champion": 0.0034,
-    "p_final": 0.0119,
-    "p_sf": 0.0492,
-    "p_qf": 0.1022,
-    "p_r16": 0.2357,
-    "p_group_qualification": 0.506,
+    "p_champion": 0.0032,
+    "p_final": 0.0114,
+    "p_sf": 0.0495,
+    "p_qf": 0.102,
+    "p_r16": 0.2361,
+    "p_group_qualification": 0.5061,
     "ci_95_champion": [
-      0.002434,
-      0.004747
+      0.002268,
+      0.004514
     ]
   },
   "history": [],

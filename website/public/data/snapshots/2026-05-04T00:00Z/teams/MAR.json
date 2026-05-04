@@ -6,11 +6,11 @@
   "elo_rating": 1821.0,
   "progression": {
     "p_champion": 0.0101,
-    "p_final": 0.0349,
-    "p_sf": 0.1471,
-    "p_qf": 0.2716,
-    "p_r16": 0.5357,
-    "p_group_qualification": 0.8313,
+    "p_final": 0.0351,
+    "p_sf": 0.1473,
+    "p_qf": 0.2728,
+    "p_r16": 0.5356,
+    "p_group_qualification": 0.8314,
     "ci_95_champion": [
       0.00832,
       0.012257
