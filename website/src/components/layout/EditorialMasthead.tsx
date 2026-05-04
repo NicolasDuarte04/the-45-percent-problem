@@ -8,10 +8,8 @@ interface Tab {
   label: string;
   href: string;
   match: (path: string) => boolean;
-}
-
-interface EditorialMastheadProps {
-  killTripped?: boolean;
+  /** Renders a small mono "BETA" badge inline after the label. */
+  beta?: boolean;
 }
 
 const TABS: Tab[] = [
@@ -45,6 +43,13 @@ const TABS: Tab[] = [
     href: "/vault",
     match: (p) => p.startsWith("/vault"),
   },
+  {
+    id: "scenario",
+    label: "Scenario Simulator",
+    href: "/scenario",
+    match: (p) => p.startsWith("/scenario"),
+    beta: true,
+  },
 ];
 
 const TERMINAL_PREFIXES = [
@@ -59,9 +64,7 @@ function isTerminalRoute(pathname: string): boolean {
   return TERMINAL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-export function EditorialMasthead({
-  killTripped = false,
-}: EditorialMastheadProps = {}) {
+export function EditorialMasthead() {
   const pathname = usePathname() ?? "/";
   const onTerminal = isTerminalRoute(pathname);
 
@@ -118,6 +121,21 @@ export function EditorialMasthead({
                 }}
               >
                 {tab.label}
+                {tab.beta ? (
+                  <span
+                    aria-label="beta"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 9,
+                      marginLeft: 5,
+                      opacity: 0.6,
+                      textTransform: "uppercase",
+                      letterSpacing: ".10em",
+                    }}
+                  >
+                    Beta
+                  </span>
+                ) : null}
               </Link>
             );
           })}
@@ -140,60 +158,6 @@ export function EditorialMasthead({
         >
           Today&rsquo;s brief
         </Link>
-
-        <span
-          className="inline-flex items-baseline gap-1.5 shrink-0"
-          style={{ whiteSpace: "nowrap" }}
-        >
-          <Link
-            href="/scenario"
-            aria-current={
-              pathname.startsWith("/scenario") ? "page" : undefined
-            }
-            className="no-underline mono hover:underline underline-offset-4"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              letterSpacing: ".08em",
-              textTransform: "uppercase",
-              color: pathname.startsWith("/scenario")
-                ? "var(--text-primary)"
-                : "var(--text-tertiary)",
-            }}
-          >
-            [ Scenario simulator ]
-          </Link>
-          <span
-            aria-label="beta"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 9,
-              letterSpacing: ".10em",
-              textTransform: "uppercase",
-              color: "var(--text-tertiary)",
-              opacity: 0.6,
-            }}
-          >
-            beta
-          </span>
-        </span>
-
-        {killTripped && (
-          <Link
-            href="/vault/kill-criteria"
-            className="no-underline mono hover:underline underline-offset-2"
-            style={{
-              fontSize: 11,
-              letterSpacing: "0.02em",
-              color: "var(--text-tertiary)",
-              whiteSpace: "nowrap",
-            }}
-            aria-label="Kill criterion has tripped. See the kill criteria page for details."
-          >
-            kill criteria:{" "}
-            <span style={{ color: "var(--edge-negative)" }}>tripped</span>
-          </Link>
-        )}
 
         {!onTerminal && (
           <Link

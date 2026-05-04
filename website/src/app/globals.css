@@ -173,6 +173,51 @@
   --ring:                #F9B88A;
 }
 
+/* ── Simulator reveal sequence (IMPL_PROMPT §9) ─────────────────────────────
+   CSS-only fade-in chain triggered on first paint. `backwards` fill mode
+   means the element holds the `from` state (opacity 0) during the
+   pre-animation delay, so there is no flash of fully-rendered content
+   even before JS hydration. The chain mirrors §9 exactly:
+
+     t=0    : Reality Score percentage snaps to value (no animation)
+     t=100ms: Rarity band fades in (180ms ease-out)
+     t=200ms: 1-in-N line fades in
+     t=400ms: Trade Ticket / scenario block fades in
+     t=1000ms: Email gate fades in (non-blocking)
+
+   prefers-reduced-motion: reduce overrides every animation to
+   `animation: none; opacity: 1` so the elements render immediately
+   with no delay. Scoped under [data-canvas="simulator"] so the
+   reveal classes never bleed onto editorial or quant surfaces. */
+
+@keyframes simulator-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+[data-canvas="simulator"] .reveal-band {
+  animation: simulator-fade-in 180ms ease-out 100ms 1 backwards;
+}
+[data-canvas="simulator"] .reveal-one-in-n {
+  animation: simulator-fade-in 180ms ease-out 200ms 1 backwards;
+}
+[data-canvas="simulator"] .reveal-ticket {
+  animation: simulator-fade-in 180ms ease-out 400ms 1 backwards;
+}
+[data-canvas="simulator"] .reveal-gate {
+  animation: simulator-fade-in 180ms ease-out 1000ms 1 backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas="simulator"] .reveal-band,
+  [data-canvas="simulator"] .reveal-one-in-n,
+  [data-canvas="simulator"] .reveal-ticket,
+  [data-canvas="simulator"] .reveal-gate {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */
 @theme inline {
   /* Canvas-aware colors — resolve through CSS vars so they flip with the canvas */

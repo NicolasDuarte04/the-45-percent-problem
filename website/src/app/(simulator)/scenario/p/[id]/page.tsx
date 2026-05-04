@@ -10,8 +10,8 @@ import {
   PredictionEmailGate,
   TrackedFootnote,
 } from "@/components/simulator/PredictionEmailGate";
-import { RealityScorePanel } from "@/components/simulator/RealityScorePanel";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
+import { TradeTicket } from "@/components/simulator/TradeTicket";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +27,23 @@ export const dynamic = "force-dynamic";
  *     metadata API. Link-public (anyone with the short ID can view)
  *     but not crawler-indexed.
  *
- * Phase A scope: shows the storyLine, RealityScorePanel, prediction ID,
- * and the model/snapshot SHAs in the footer. Trade Ticket render is
- * Phase A scope but ships in a later step (it pairs with the Trade
- * Ticket component which is a separate UI piece).
+ * Page composition (top to bottom):
+ *   - SimulatorChrome  — masthead with the project / surface / WC2026
+ *                        eyebrow and the submission timestamp on the
+ *                        right; hairline rule below.
+ *   - TradeTicket      — the brutalist receipt card. Contains flags,
+ *                        story line, RealityScorePanel, scenario block,
+ *                        prediction ID strip, footer + watermark.
+ *                        Internal reveals at t=100ms (band) and t=200ms
+ *                        (1-in-N); the scenario block, ID strip, and
+ *                        watermark reveal together at t=400ms via
+ *                        .reveal-ticket per IMPL_PROMPT §9.
+ *   - Email gate /
+ *     TrackedFootnote  — the soft "want to track this?" prompt.
+ *                        Reveals at t=1000ms via .reveal-gate. Rendered
+ *                        only when the prediction is not yet attached
+ *                        to a subscriber (server-derived from
+ *                        view.hasTracking).
  */
 
 export const metadata: Metadata = {
@@ -65,51 +78,17 @@ export default async function PredictionPermalinkPage(props: {
 
   return (
     <SimulatorChrome width="narrow" rightMeta={submittedMeta}>
-      {/* Story line — the share-friendly serif sentence. */}
-      <section className="pt-10 pb-8" aria-labelledby="story-line">
-        <h1
-          id="story-line"
-          className="font-serif text-[24px] leading-[1.3] sm:text-[32px] text-[var(--text-primary)]"
-        >
-          {view.storyLine}
-        </h1>
-      </section>
+      <div className="pt-8 pb-12">
+        <TradeTicket view={view} />
+      </div>
 
-      {/* Reality Score block. */}
-      <RealityScorePanel
-        count={view.countCurrent}
-        total={view.total}
-        state={view.state}
-      />
-
-      {/* Email gate — non-blocking. The score has already rendered
-          above; the gate is the soft "want to track this?" prompt
-          per design v2 §5.9. Rendered only when the prediction is
-          not yet attached to a subscriber (server-derived from the
-          row's subscriber_id). When tracking is already in place,
-          we render a quiet footnote acknowledgement instead. */}
-      {view.hasTracking ? (
-        <TrackedFootnote />
-      ) : (
-        <PredictionEmailGate predictionId={view.id} />
-      )}
-
-      {/* Prediction ID strip — 1px-bordered horizontal cell with the
-          public permalink and the model/snapshot reproducibility footer. */}
-      <section
-        aria-labelledby="prediction-id-label"
-        className="mt-12 border-t border-[var(--rule)] pt-6"
-      >
-        <div className="flex flex-wrap items-baseline justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
-          <span id="prediction-id-label">
-            Prediction ID <span className="text-[var(--text-tertiary)]">{view.id}</span>
-          </span>
-          <span className="tabular-nums">
-            MODEL {view.modelSha.slice(0, 7)} · SNAPSHOT {view.snapshotSha.slice(0, 7)} · N=
-            {view.total.toLocaleString("en-US")}
-          </span>
-        </div>
-      </section>
+      <div className="reveal-gate">
+        {view.hasTracking ? (
+          <TrackedFootnote />
+        ) : (
+          <PredictionEmailGate predictionId={view.id} />
+        )}
+      </div>
     </SimulatorChrome>
   );
 }
