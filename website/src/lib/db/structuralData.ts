@@ -176,6 +176,14 @@ export async function lookupTeam(code: string): Promise<StructuralTeam | null> {
   return all.find((t) => t.fifa_code === code) ?? null;
 }
 
+/** Helper: lookup a match by ID from either source. */
+export async function lookupMatch(
+  matchId: string,
+): Promise<StructuralMatch | null> {
+  const all = await getStructuralMatches();
+  return all.find((m) => m.match_id === matchId) ?? null;
+}
+
 /** Helper: get the venue map (used to render kickoff cards). */
 export function getStructuralVenues() {
   // Venues are immutable static data — always source from TS module.
