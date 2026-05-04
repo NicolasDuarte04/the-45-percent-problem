@@ -61,6 +61,7 @@ jobs:
         run: pnpm exec next build --profile
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+          NEXT_PUBLIC_ENABLE_DEV_ROUTES: '1'
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
