@@ -6,6 +6,10 @@ import { db } from "@/lib/db";
 import { predictions } from "@/lib/db/schema";
 import { isValidPredictionId } from "@/lib/sim/generatePredictionId";
 import { toPublicPredictionView } from "@/lib/sim/predictionViews";
+import {
+  PredictionEmailGate,
+  TrackedFootnote,
+} from "@/components/simulator/PredictionEmailGate";
 import { RealityScorePanel } from "@/components/simulator/RealityScorePanel";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
 
@@ -77,6 +81,18 @@ export default async function PredictionPermalinkPage(props: {
         total={view.total}
         state={view.state}
       />
+
+      {/* Email gate — non-blocking. The score has already rendered
+          above; the gate is the soft "want to track this?" prompt
+          per design v2 §5.9. Rendered only when the prediction is
+          not yet attached to a subscriber (server-derived from the
+          row's subscriber_id). When tracking is already in place,
+          we render a quiet footnote acknowledgement instead. */}
+      {view.hasTracking ? (
+        <TrackedFootnote />
+      ) : (
+        <PredictionEmailGate predictionId={view.id} />
+      )}
 
       {/* Prediction ID strip — 1px-bordered horizontal cell with the
           public permalink and the model/snapshot reproducibility footer. */}

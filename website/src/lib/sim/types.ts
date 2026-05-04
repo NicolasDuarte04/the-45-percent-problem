@@ -143,6 +143,13 @@ export interface PublicPredictionView {
   snapshotSha: string;
   submittedAt: string; // ISO
   updatedAt: string; // ISO
+  /**
+   * True when the prediction row has a subscriber_id attached, i.e.
+   * someone has gone through the email gate. Surfaces only the boolean —
+   * never the email itself or the subscriber id. Used by the permalink
+   * page to decide whether to render the email gate.
+   */
+  hasTracking: boolean;
 }
 
 // ─── Rarity band ────────────────────────────────────────────────────────────

@@ -30,6 +30,11 @@ export function toPublicPredictionView(row: Prediction): PublicPredictionView {
     snapshotSha: row.snapshotSha,
     submittedAt: row.submittedAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    // Boolean derived server-side from the FK; the email itself never
+    // crosses into the public view. Per IMPL_PROMPT §11.7 we infer
+    // tracking from `subscriber_id IS NULL` rather than maintaining a
+    // separate `dismissedEmailGate` column.
+    hasTracking: row.subscriberId !== null,
   };
 }
 

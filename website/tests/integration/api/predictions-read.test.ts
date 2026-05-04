@@ -81,6 +81,30 @@ describe("GET /api/predictions/[id]", () => {
     const res = await GetById(req as never, ctx(bad));
     expect(res.status).toBe(400);
   });
+
+  it("surfaces hasTracking=false when the row has no subscriber attached", async () => {
+    const row = samplePredictionRow({ id: VALID_ID, subscriberId: null });
+    mockDb.select.mockReturnValue(chainMock([row]));
+    const req = getRequest({ url: `http://localhost/api/predictions/${VALID_ID}` });
+    const res = await GetById(req as never, ctx(VALID_ID));
+    const json = await res.json();
+    expect(json.prediction.hasTracking).toBe(false);
+  });
+
+  it("surfaces hasTracking=true when the row has a subscriber attached, without leaking the email or subscriberId", async () => {
+    const row = samplePredictionRow({
+      id: VALID_ID,
+      subscriberId: "subscriber-uuid-tracked",
+      email: "owner@example.com",
+    });
+    mockDb.select.mockReturnValue(chainMock([row]));
+    const req = getRequest({ url: `http://localhost/api/predictions/${VALID_ID}` });
+    const res = await GetById(req as never, ctx(VALID_ID));
+    const json = await res.json();
+    expect(json.prediction.hasTracking).toBe(true);
+    expect(json.prediction).not.toHaveProperty("email");
+    expect(json.prediction).not.toHaveProperty("subscriberId");
+  });
 });
 
 describe("GET /api/predictions?email=...", () => {
