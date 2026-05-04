@@ -12,94 +12,94 @@ test.describe("Primitives showcase — render correctness", () => {
     await expect(page.getByRole("heading", { name: "/dev/primitives" })).toBeVisible();
   });
 
-  // ── MonoNumber ──────────────────────────────────────────────────────────────
+  // ── MonoNumber (NumericCell · mono) ─────────────────────────────────────────
   test.describe("MonoNumber", () => {
     test("renders zero (0.00)", async ({ page }) => {
-      const section = sectionFor(page, "MonoNumber");
+      const section = sectionFor(page, "NumericCell · mono");
       await expect(section.getByText("0.00", { exact: true })).toBeVisible();
     });
 
     test("renders small decimal (0.042)", async ({ page }) => {
-      const section = sectionFor(page, "MonoNumber");
+      const section = sectionFor(page, "NumericCell · mono");
       await expect(section.getByText("0.042", { exact: true })).toBeVisible();
     });
 
     test("renders large value (1234567.89)", async ({ page }) => {
-      const section = sectionFor(page, "MonoNumber");
+      const section = sectionFor(page, "NumericCell · mono");
       await expect(section.getByText("1234567.89", { exact: true })).toBeVisible();
     });
 
     test("renders negative value (-42.5)", async ({ page }) => {
-      const section = sectionFor(page, "MonoNumber");
+      const section = sectionFor(page, "NumericCell · mono");
       await expect(section.getByText("-42.5", { exact: true })).toBeVisible();
     });
 
     test("screenshot — all MonoNumber variants", async ({ page }) => {
-      await expect(sectionFor(page, "MonoNumber")).toHaveScreenshot("mono-number.png");
+      await expect(sectionFor(page, "NumericCell · mono")).toHaveScreenshot("mono-number.png");
     });
   });
 
-  // ── ProbabilityCell ─────────────────────────────────────────────────────────
+  // ── ProbabilityCell (NumericCell · probability) ─────────────────────────────
   test.describe("ProbabilityCell", () => {
     test("near-zero renders 0.8%", async ({ page }) => {
-      const section = sectionFor(page, "ProbabilityCell");
+      const section = sectionFor(page, "NumericCell · probability");
       await expect(section.getByText("0.8%", { exact: true })).toBeVisible();
     });
 
     test("mid renders 41.2%", async ({ page }) => {
-      const section = sectionFor(page, "ProbabilityCell");
+      const section = sectionFor(page, "NumericCell · probability");
       await expect(section.getByText("41.2%", { exact: true })).toBeVisible();
     });
 
     test("near-certain renders 97.3%", async ({ page }) => {
-      const section = sectionFor(page, "ProbabilityCell");
+      const section = sectionFor(page, "NumericCell · probability");
       await expect(section.getByText("97.3%", { exact: true })).toBeVisible();
     });
 
     test("boundary: 0.0% is rendered", async ({ page }) => {
-      const section = sectionFor(page, "ProbabilityCell");
+      const section = sectionFor(page, "NumericCell · probability");
       await expect(section.getByText("0.0%", { exact: true })).toBeVisible();
     });
 
     test("boundary: 100.0% is rendered", async ({ page }) => {
-      const section = sectionFor(page, "ProbabilityCell");
+      const section = sectionFor(page, "NumericCell · probability");
       await expect(section.getByText("100.0%", { exact: true })).toBeVisible();
     });
 
     test("aria-label on 41.2% says '41.2 percent'", async ({ page }) => {
-      const section = sectionFor(page, "ProbabilityCell");
+      const section = sectionFor(page, "NumericCell · probability");
       await expect(section.locator("[aria-label='41.2 percent']")).toBeVisible();
     });
 
     test("screenshot — all ProbabilityCell variants", async ({ page }) => {
-      await expect(sectionFor(page, "ProbabilityCell")).toHaveScreenshot("probability-cell.png");
+      await expect(sectionFor(page, "NumericCell · probability")).toHaveScreenshot("probability-cell.png");
     });
   });
 
-  // ── OddsCell ────────────────────────────────────────────────────────────────
+  // ── OddsCell (NumericCell · decimal odds) ───────────────────────────────────
   test.describe("OddsCell", () => {
     test("short-price renders 1.150", async ({ page }) => {
-      const section = sectionFor(page, "OddsCell");
+      const section = sectionFor(page, "NumericCell · decimal odds");
       await expect(section.getByText("1.150", { exact: true })).toBeVisible();
     });
 
     test("evens renders 2.000", async ({ page }) => {
-      const section = sectionFor(page, "OddsCell");
+      const section = sectionFor(page, "NumericCell · decimal odds");
       await expect(section.getByText("2.000", { exact: true })).toBeVisible();
     });
 
     test("long-price renders 12.500", async ({ page }) => {
-      const section = sectionFor(page, "OddsCell");
+      const section = sectionFor(page, "NumericCell · decimal odds");
       await expect(section.getByText("12.500", { exact: true })).toBeVisible();
     });
 
     test("extreme renders 250.000", async ({ page }) => {
-      const section = sectionFor(page, "OddsCell");
+      const section = sectionFor(page, "NumericCell · decimal odds");
       await expect(section.getByText("250.000", { exact: true })).toBeVisible();
     });
 
     test("screenshot — all OddsCell variants", async ({ page }) => {
-      await expect(sectionFor(page, "OddsCell")).toHaveScreenshot("odds-cell.png");
+      await expect(sectionFor(page, "NumericCell · decimal odds")).toHaveScreenshot("odds-cell.png");
     });
   });
 
@@ -253,27 +253,27 @@ test.describe("Primitives showcase — render correctness", () => {
     });
   });
 
-  // ── ConfidenceInterval ──────────────────────────────────────────────────────
+  // ── ConfidenceInterval (NumericCell · confidence interval) ──────────────────
   test.describe("ConfidenceInterval", () => {
     test("tight CI renders lower bound (0.038)", async ({ page }) => {
-      const section = sectionFor(page, "ConfidenceInterval");
+      const section = sectionFor(page, "NumericCell · confidence interval");
       // The CI span contains "0.038" as part of "[0.038, 0.047]"
       await expect(section.locator("span").filter({ hasText: "0.038" }).first()).toBeVisible();
     });
 
     test("high probability CI renders upper bound (0.891)", async ({ page }) => {
-      const section = sectionFor(page, "ConfidenceInterval");
+      const section = sectionFor(page, "NumericCell · confidence interval");
       await expect(section.locator("span").filter({ hasText: "0.891" }).first()).toBeVisible();
     });
 
     test("CI has aria-label describing range in percent", async ({ page }) => {
-      const section = sectionFor(page, "ConfidenceInterval");
+      const section = sectionFor(page, "NumericCell · confidence interval");
       const el = section.locator("[aria-label*='3.8 to 4.7 percent']");
       await expect(el).toBeVisible();
     });
 
     test("screenshot — all ConfidenceInterval variants", async ({ page }) => {
-      await expect(sectionFor(page, "ConfidenceInterval")).toHaveScreenshot("confidence-interval.png");
+      await expect(sectionFor(page, "NumericCell · confidence interval")).toHaveScreenshot("confidence-interval.png");
     });
   });
 
