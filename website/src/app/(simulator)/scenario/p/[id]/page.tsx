@@ -75,30 +75,27 @@ export default async function PredictionPermalinkPage(props: {
         </h1>
       </section>
 
-      {/* Reality Score block. */}
+      {/* Reality Score block. The score's hero number renders at t=0;
+          the rarity band reveals at t=100ms and the 1-in-N at t=200ms.
+          Both internal reveals are owned by the panel itself via the
+          `.reveal-band` and `.reveal-one-in-n` classes (see
+          globals.css under "Simulator reveal sequence"). */}
       <RealityScorePanel
         count={view.countCurrent}
         total={view.total}
         state={view.state}
       />
 
-      {/* Email gate — non-blocking. The score has already rendered
-          above; the gate is the soft "want to track this?" prompt
-          per design v2 §5.9. Rendered only when the prediction is
-          not yet attached to a subscriber (server-derived from the
-          row's subscriber_id). When tracking is already in place,
-          we render a quiet footnote acknowledgement instead. */}
-      {view.hasTracking ? (
-        <TrackedFootnote />
-      ) : (
-        <PredictionEmailGate predictionId={view.id} />
-      )}
-
-      {/* Prediction ID strip — 1px-bordered horizontal cell with the
-          public permalink and the model/snapshot reproducibility footer. */}
+      {/* Prediction ID strip — the closest equivalent on this page to
+          the Trade Ticket of design v1 §4.1. Reveals at t=400ms via
+          the `.reveal-ticket` class. The actual <TradeTicket /> with
+          its full anatomy (story, score block, scenario block,
+          watermark, etc.) is a separate UI piece scoped for a later
+          step; this strip carries the reproducibility metadata that
+          will end up at the bottom of that ticket as well. */}
       <section
         aria-labelledby="prediction-id-label"
-        className="mt-12 border-t border-[var(--rule)] pt-6"
+        className="reveal-ticket mt-12 border-t border-[var(--rule)] pt-6"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
           <span id="prediction-id-label">
@@ -110,6 +107,23 @@ export default async function PredictionPermalinkPage(props: {
           </span>
         </div>
       </section>
+
+      {/* Email gate — non-blocking, fades in at t=1000ms via the
+          `.reveal-gate` class. Reading order on the page is intentionally
+          chrome → story → score → ticket-strip → gate, so the
+          last-to-appear element is also the lowest-priority "soft ask"
+          per design v2 §5.6+§5.9. Rendered only when the prediction is
+          not yet attached to a subscriber (server-derived from the
+          row's subscriber_id via view.hasTracking). When tracking is
+          already in place, we render a quiet footnote instead — same
+          reveal slot, calmer content. */}
+      <div className="reveal-gate">
+        {view.hasTracking ? (
+          <TrackedFootnote />
+        ) : (
+          <PredictionEmailGate predictionId={view.id} />
+        )}
+      </div>
     </SimulatorChrome>
   );
 }

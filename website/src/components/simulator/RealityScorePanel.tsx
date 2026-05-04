@@ -95,25 +95,28 @@ export function RealityScorePanel({
         {count.toLocaleString("en-US")} / {total.toLocaleString("en-US")} simulations
       </div>
 
-      {/* Rarity band — serif label + sans tone caption. */}
-      <div className="mt-6 font-serif text-[28px] leading-[1.05] sm:text-[32px] text-[var(--text-primary)]">
-        {reading.band}
-      </div>
-      <div className="mt-1 font-sans text-[14px] text-[var(--text-tertiary)]">
-        {reading.caption}
-      </div>
-
-      {/* Resolution-floor caveat (count &lt; 30). 12pt italic sans. */}
-      {reading.belowResolutionFloor ? (
-        <div className="mt-3 font-sans italic text-[12px] text-[var(--text-quiet)]">
-          Fewer than 30 of {total.toLocaleString("en-US")}. Almost no one sees
-          this coming.
+      {/* Rarity band — serif label + sans tone caption + optional
+          resolution-floor caveat. Reveal class fades the whole group
+          starting at t=100ms per IMPL_PROMPT §9. CSS-only animation,
+          see globals.css; reduced-motion is handled there. */}
+      <div className="reveal-band">
+        <div className="mt-6 font-serif text-[28px] leading-[1.05] sm:text-[32px] text-[var(--text-primary)]">
+          {reading.band}
         </div>
-      ) : null}
+        <div className="mt-1 font-sans text-[14px] text-[var(--text-tertiary)]">
+          {reading.caption}
+        </div>
+        {reading.belowResolutionFloor ? (
+          <div className="mt-3 font-sans italic text-[12px] text-[var(--text-quiet)]">
+            Fewer than 30 of {total.toLocaleString("en-US")}. Almost no one
+            sees this coming.
+          </div>
+        ) : null}
+      </div>
 
       {/* 1-in-N translator — the bridge from percentage to a frame any
-          human can hold. */}
-      <div className="mt-6 font-mono text-[16px] tabular-nums text-[var(--text-primary)]">
+          human can hold. Reveals at t=200ms. */}
+      <div className="reveal-one-in-n mt-6 font-mono text-[16px] tabular-nums text-[var(--text-primary)]">
         {oneInNSentence}
       </div>
 
