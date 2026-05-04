@@ -405,6 +405,15 @@ export function teamsInGroup(g: GroupLetter): Team[] {
   return TEAMS.filter((t) => t.group === g);
 }
 
+/**
+ * Display name for a FIFA 3-letter code. Falls back to the code itself
+ * when unknown so callers never render an empty string. Case-insensitive
+ * on input — internally upper-cased before the lookup.
+ */
+export function teamName(code: string): string {
+  return TEAM_BY_CODE[code.toUpperCase()]?.display_name ?? code;
+}
+
 export function groupMatchesIn(g: GroupLetter): GroupMatch[] {
   return GROUP_MATCHES.filter((m) => m.group === g);
 }

@@ -1,4 +1,4 @@
-import { teamName } from "./teams";
+import { teamName } from "@/lib/data/wc2026-official-draw";
 import type {
   AnyScenario,
   ChampionsPathScenario,
