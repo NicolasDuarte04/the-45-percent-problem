@@ -121,6 +121,58 @@
   --ring:                #F9B88A;
 }
 
+/* ── Simulator canvas — Tournament Scenario Simulator ──────────────────────── */
+/* Inherits the same warm-slate base as quant. Brutalist tone: sharp corners
+   everywhere (`--radius: 0`), no shadows. The peach accent is reserved for
+   exactly three surfaces (CTA hover, PROMOTED state, Trade Ticket flag border)
+   per design v2 §6 + Patch v2.1 §2; cyan is forbidden as a fill on simulator
+   surfaces (IMPL_PROMPT §15.2). State colors are alias entries so component
+   code can read --state-dead / --state-promoted directly. */
+[data-canvas="simulator"] {
+  --bg-root:        #0F1216;
+  --bg-panel:       #151A21;
+  --bg-panel-elev:  #1C222B;
+  --border-subtle:  #262D37;
+  --border-default: #262D37;
+  --text-primary:   #EEE8DD;
+  --text-secondary: #EEE8DD;
+  --text-tertiary:  #A8AFBC;
+  --text-quiet:     #6D7585;
+  --data-neutral:   #A8AFBC;
+  --rule:           #262D37;
+  --accent-focus:   #7ED0E8;
+
+  /* Simulator-only tokens. Aliases of existing prism palette entries —
+     no new color values are introduced here (IMPL_PROMPT §15.2). */
+  --accent-warm:    #F9B88A;
+  --state-dead:     color-mix(in oklab, #E76E8A 60%, transparent);
+  --state-promoted: #F9B88A;
+
+  /* Brutalist: 0 radius across the board. */
+  --radius: 0;
+
+  /* Shadcn semantic tokens — same shape as quant, with primary swapped to
+     bone-white so default buttons render as inverted-bone hits. */
+  --background:          #0F1216;
+  --foreground:          #EEE8DD;
+  --card:                #151A21;
+  --card-foreground:     #EEE8DD;
+  --popover:             #1C222B;
+  --popover-foreground:  #EEE8DD;
+  --primary:             #EEE8DD;
+  --primary-foreground:  #0F1216;
+  --secondary:           #151A21;
+  --secondary-foreground:#EEE8DD;
+  --muted:               #1C222B;
+  --muted-foreground:    #A8AFBC;
+  --accent:              #1C222B;
+  --accent-foreground:   #EEE8DD;
+  --destructive:         #E76E8A;
+  --border:              #262D37;
+  --input:               #262D37;
+  --ring:                #F9B88A;
+}
+
 /* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */
 @theme inline {
   /* Canvas-aware colors — resolve through CSS vars so they flip with the canvas */
@@ -227,7 +279,8 @@
     color-scheme: light;
   }
 
-  [data-canvas="quant"] {
+  [data-canvas="quant"],
+  [data-canvas="simulator"] {
     color-scheme: dark;
   }
 
@@ -245,7 +298,8 @@
      slate background to <body> so overscroll/pull-to-refresh never reveals
      the editorial cream. Uses :has() which is supported in all evergreen
      browsers since 2023; no fallback needed for this site's audience. */
-  body:has([data-canvas="quant"]) {
+  body:has([data-canvas="quant"]),
+  body:has([data-canvas="simulator"]) {
     background-color: var(--slate-canvas);
   }
 

@@ -141,6 +141,43 @@ export function EditorialMasthead({
           Today&rsquo;s brief
         </Link>
 
+        <span
+          className="inline-flex items-baseline gap-1.5 shrink-0"
+          style={{ whiteSpace: "nowrap" }}
+        >
+          <Link
+            href="/scenario"
+            aria-current={
+              pathname.startsWith("/scenario") ? "page" : undefined
+            }
+            className="no-underline mono hover:underline underline-offset-4"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: ".08em",
+              textTransform: "uppercase",
+              color: pathname.startsWith("/scenario")
+                ? "var(--text-primary)"
+                : "var(--text-tertiary)",
+            }}
+          >
+            [ Scenario simulator ]
+          </Link>
+          <span
+            aria-label="beta"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 9,
+              letterSpacing: ".10em",
+              textTransform: "uppercase",
+              color: "var(--text-tertiary)",
+              opacity: 0.6,
+            }}
+          >
+            beta
+          </span>
+        </span>
+
         {killTripped && (
           <Link
             href="/vault/kill-criteria"

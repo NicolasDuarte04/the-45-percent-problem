@@ -6,6 +6,8 @@ import {
   date,
   jsonb,
   index,
+  integer,
+  check,
   varchar,
   smallint,
 } from "drizzle-orm/pg-core";
@@ -33,6 +35,14 @@ export const subscribers = pgTable(
     consentAt: timestamp("consent_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // Active topic subscriptions. Default ARRAY['daily_brief'] back-populates
+    // existing rows correctly (Phase 1 had only one channel). Net-new
+    // simulator-only subscribers pass ARRAY['prediction_tracking'] explicitly
+    // via subscribeService so they do not silently inherit daily-brief consent.
+    subscriptionTypes: text("subscription_types")
+      .array()
+      .notNull()
+      .default(sql`ARRAY['daily_brief']::text[]`),
   },
   (t) => [
     index("idx_subscribers_status").on(t.status),
@@ -174,3 +184,55 @@ export type Venue = typeof venues.$inferSelect;
 export type NewVenue = typeof venues.$inferInsert;
 export type Match = typeof matches.$inferSelect;
 export type NewMatch = typeof matches.$inferInsert;
+
+// ─── Tournament Scenario Simulator (Phase A) ────────────────────────────────
+//
+// Public-facing predictions submitted via /scenario. The `id` is a
+// human-readable Crockford-base32 short ID (`45A-2026-XXXX`); it doubles as
+// the public permalink slug. Email/subscriber FK are nullable so users can
+// submit without going through the email gate.
+
+export const predictions = pgTable(
+  "predictions",
+  {
+    id: text("id").primaryKey(),
+    subscriberId: uuid("subscriber_id").references(() => subscribers.id, {
+      onDelete: "set null",
+    }),
+    email: text("email"),
+    mode: text("mode", {
+      enum: ["final_four", "champions_path", "full_bracket"],
+    }).notNull(),
+    scenario: jsonb("scenario").notNull(),
+    storyLine: text("story_line").notNull(),
+    countOriginal: integer("count_original").notNull(),
+    countCurrent: integer("count_current").notNull(),
+    total: integer("total").notNull().default(10000),
+    state: text("state", { enum: ["alive", "dead", "promoted"] })
+      .notNull()
+      .default("alive"),
+    killedBy: text("killed_by"),
+    modelSha: text("model_sha").notNull(),
+    snapshotSha: text("snapshot_sha").notNull(),
+    submittedAt: timestamp("submitted_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("idx_predictions_subscriber_id").on(t.subscriberId),
+    index("idx_predictions_email_lower").on(sql`lower(${t.email})`),
+    index("idx_predictions_state").on(t.state),
+    index("idx_predictions_submitted_at").on(sql`${t.submittedAt} DESC`),
+    check("predictions_total_positive", sql`${t.total} > 0`),
+    check(
+      "predictions_count_bounds",
+      sql`${t.countOriginal} >= 0 AND ${t.countOriginal} <= ${t.total} AND ${t.countCurrent} >= 0 AND ${t.countCurrent} <= ${t.total}`,
+    ),
+  ],
+);
+
+export type Prediction = typeof predictions.$inferSelect;
+export type NewPrediction = typeof predictions.$inferInsert;
