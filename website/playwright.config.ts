@@ -8,6 +8,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // Anti-aliasing and subpixel font rendering differ slightly between the
+  // local Playwright Docker image and the GitHub-hosted runner that uses the
+  // same image. Allow up to 5% pixel drift on screenshot snapshots so those
+  // host-level differences don't break otherwise-stable visuals. Per-test
+  // overrides (e.g. tighter tolerances) still win.
+  expect: {
+    toHaveScreenshot: { maxDiffPixelRatio: 0.05 },
+  },
   use: {
     baseURL: "http://localhost:3000",
     colorScheme: "dark",
