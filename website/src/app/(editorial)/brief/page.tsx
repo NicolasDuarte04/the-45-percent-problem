@@ -4,7 +4,10 @@ import { EmailCaptureForm } from "@/components/email/EmailCaptureForm";
 import { LiveDataBlock } from "@/components/email/LiveDataBlock";
 import { TeamChipStrip } from "@/components/email/TeamChipStrip";
 
-export const dynamic = "force-static";
+// LiveDataBlock now reads from Vercel Blob via lib/brief.ts; the page picks
+// up the cron's nightly write within the revalidate window. Phase 4 will add
+// a targeted revalidatePath() call from the dispatch hook for instant freshness.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Daily brief | 45analytics",
@@ -12,7 +15,14 @@ export const metadata: Metadata = {
     "The 45A daily brief. Probabilistic divergences from the nightly Monte Carlo run. One issue per UTC day. Methodology open. Unsubscribe one click.",
 };
 
-export default function BriefSignupPage() {
+export default async function BriefSignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ debug?: string }>;
+}) {
+  const sp = await searchParams;
+  const showFallbackMarker = sp.debug === "fallback";
+
   return (
     <div
       className="mx-auto"
@@ -57,7 +67,7 @@ export default function BriefSignupPage() {
           simulations daily to track your team&rsquo;s true probability of
           advancing, delivered straight to your inbox.
         </p>
-        <LiveDataBlock />
+        <LiveDataBlock showFallbackMarker={showFallbackMarker} />
         <EmailCaptureForm source="brief" />
         <TeamChipStrip />
       </section>
