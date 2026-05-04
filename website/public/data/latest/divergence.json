@@ -2112,22 +2112,22 @@
         "display_name": "Portugal"
       },
       "away": {
-        "fifa_code": "UZB",
-        "display_name": "Uzbekistan"
+        "fifa_code": "COD",
+        "display_name": "Congo DR"
       },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.784165,
-      "q_market_raw_decimal": 1.3004,
-      "q_market_devigged": 0.788994,
+      "p_model": 0.75259,
+      "q_market_raw_decimal": 1.3561,
+      "q_market_devigged": 0.757419,
       "edge_E": -0.004829,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.705749,
-        0.862582
+        0.677331,
+        0.827849
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -2147,8 +2147,8 @@
         "display_name": "Portugal"
       },
       "away": {
-        "fifa_code": "UZB",
-        "display_name": "Uzbekistan"
+        "fifa_code": "COD",
+        "display_name": "Congo DR"
       },
       "market": "1X2",
       "outcome": "DRAW",
@@ -2182,22 +2182,22 @@
         "display_name": "Portugal"
       },
       "away": {
-        "fifa_code": "UZB",
-        "display_name": "Uzbekistan"
+        "fifa_code": "COD",
+        "display_name": "Congo DR"
       },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.055835,
-      "q_market_raw_decimal": 20.8658,
-      "q_market_devigged": 0.067925,
+      "p_model": 0.08741,
+      "q_market_raw_decimal": 12.5786,
+      "q_market_devigged": 0.0995,
       "edge_E": -0.01209,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.050252,
-        0.061419
+        0.078669,
+        0.096151
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -2213,26 +2213,26 @@
       "kickoff_utc": "2026-06-17T23:00:00Z",
       "round": "GRP",
       "home": {
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
+      },
+      "away": {
         "fifa_code": "COL",
         "display_name": "Colombia"
       },
-      "away": {
-        "fifa_code": "COD",
-        "display_name": "Congo DR"
-      },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.6827,
-      "q_market_raw_decimal": 1.505,
-      "q_market_devigged": 0.684455,
+      "p_model": 0.103967,
+      "q_market_raw_decimal": 11.6657,
+      "q_market_devigged": 0.105722,
       "edge_E": -0.001755,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.61443,
-        0.75097
+        0.09357,
+        0.114364
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -2248,12 +2248,12 @@
       "kickoff_utc": "2026-06-17T23:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
       },
       "away": {
-        "fifa_code": "COD",
-        "display_name": "Congo DR"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "market": "1X2",
       "outcome": "DRAW",
@@ -2283,26 +2283,26 @@
       "kickoff_utc": "2026-06-17T23:00:00Z",
       "round": "GRP",
       "home": {
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
+      },
+      "away": {
         "fifa_code": "COL",
         "display_name": "Colombia"
       },
-      "away": {
-        "fifa_code": "COD",
-        "display_name": "Congo DR"
-      },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.1573,
-      "q_market_raw_decimal": 7.0988,
-      "q_market_devigged": 0.160869,
+      "p_model": 0.736033,
+      "q_market_raw_decimal": 1.3897,
+      "q_market_devigged": 0.739602,
       "edge_E": -0.003569,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.14157,
-        0.17303
+        0.66243,
+        0.809636
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -4632,22 +4632,22 @@
         "display_name": "Portugal"
       },
       "away": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
       },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.518146,
-      "q_market_raw_decimal": 2.017,
-      "q_market_devigged": 0.515798,
+      "p_model": 0.784165,
+      "q_market_raw_decimal": 1.3127,
+      "q_market_devigged": 0.781817,
       "edge_E": 0.002348,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.466331,
-        0.569961
+        0.705749,
+        0.862582
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -4667,22 +4667,22 @@
         "display_name": "Portugal"
       },
       "away": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
       },
       "market": "1X2",
       "outcome": "DRAW",
-      "p_model": 0.220667,
-      "q_market_raw_decimal": 5.2994,
-      "q_market_devigged": 0.208699,
+      "p_model": 0.16,
+      "q_market_raw_decimal": 7.8106,
+      "q_market_devigged": 0.148032,
       "edge_E": 0.011968,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.1986,
-        0.242734
+        0.144,
+        0.176
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -4702,22 +4702,22 @@
         "display_name": "Portugal"
       },
       "away": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "UZB",
+        "display_name": "Uzbekistan"
       },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.261187,
-      "q_market_raw_decimal": 4.3727,
-      "q_market_devigged": 0.248691,
+      "p_model": 0.055835,
+      "q_market_raw_decimal": 42.8463,
+      "q_market_devigged": 0.043339,
       "edge_E": 0.012496,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.235068,
-        0.287306
+        0.050252,
+        0.061419
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -4737,22 +4737,22 @@
         "display_name": "Congo DR"
       },
       "away": {
-        "fifa_code": "UZB",
-        "display_name": "Uzbekistan"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.469089,
-      "q_market_raw_decimal": 2.1741,
-      "q_market_devigged": 0.479957,
+      "p_model": 0.1573,
+      "q_market_raw_decimal": 6.7491,
+      "q_market_devigged": 0.168168,
       "edge_E": -0.010868,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.42218,
-        0.515998
+        0.14157,
+        0.17303
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -4772,22 +4772,22 @@
         "display_name": "Congo DR"
       },
       "away": {
-        "fifa_code": "UZB",
-        "display_name": "Uzbekistan"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "market": "1X2",
       "outcome": "DRAW",
-      "p_model": 0.243333,
-      "q_market_raw_decimal": 4.4935,
-      "q_market_devigged": 0.242542,
+      "p_model": 0.16,
+      "q_market_raw_decimal": 7.1835,
+      "q_market_devigged": 0.159209,
       "edge_E": 0.000791,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.219,
-        0.267666
+        0.144,
+        0.176
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -4807,22 +4807,22 @@
         "display_name": "Congo DR"
       },
       "away": {
-        "fifa_code": "UZB",
-        "display_name": "Uzbekistan"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.287578,
-      "q_market_raw_decimal": 3.9543,
-      "q_market_devigged": 0.272886,
+      "p_model": 0.6827,
+      "q_market_raw_decimal": 1.5432,
+      "q_market_devigged": 0.668008,
       "edge_E": 0.014692,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.25882,
-        0.316336
+        0.61443,
+        0.75097
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -5048,26 +5048,26 @@
       "kickoff_utc": "2026-06-21T19:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "CZE",
-        "display_name": "Czechia"
-      },
-      "away": {
         "fifa_code": "MEX",
         "display_name": "Mexico"
       },
+      "away": {
+        "fifa_code": "CZE",
+        "display_name": "Czechia"
+      },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.225927,
-      "q_market_raw_decimal": 4.5635,
-      "q_market_devigged": 0.23913,
+      "p_model": 0.584073,
+      "q_market_raw_decimal": 1.7323,
+      "q_market_devigged": 0.597276,
       "edge_E": -0.013203,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.203334,
-        0.24852
+        0.525666,
+        0.64248
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -5083,12 +5083,12 @@
       "kickoff_utc": "2026-06-21T19:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "CZE",
-        "display_name": "Czechia"
-      },
-      "away": {
         "fifa_code": "MEX",
         "display_name": "Mexico"
+      },
+      "away": {
+        "fifa_code": "CZE",
+        "display_name": "Czechia"
       },
       "market": "1X2",
       "outcome": "DRAW",
@@ -5118,26 +5118,26 @@
       "kickoff_utc": "2026-06-21T19:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "CZE",
-        "display_name": "Czechia"
-      },
-      "away": {
         "fifa_code": "MEX",
         "display_name": "Mexico"
       },
+      "away": {
+        "fifa_code": "CZE",
+        "display_name": "Czechia"
+      },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.584073,
-      "q_market_raw_decimal": 1.8139,
-      "q_market_devigged": 0.571286,
+      "p_model": 0.225927,
+      "q_market_raw_decimal": 5.1776,
+      "q_market_devigged": 0.21314,
       "edge_E": 0.012787,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.525666,
-        0.64248
+        0.203334,
+        0.24852
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -5258,26 +5258,26 @@
       "kickoff_utc": "2026-06-22T19:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "SUI",
-        "display_name": "Switzerland"
-      },
-      "away": {
         "fifa_code": "CAN",
         "display_name": "Canada"
       },
+      "away": {
+        "fifa_code": "SUI",
+        "display_name": "Switzerland"
+      },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.454716,
-      "q_market_raw_decimal": 2.2506,
-      "q_market_devigged": 0.464317,
+      "p_model": 0.295284,
+      "q_market_raw_decimal": 3.5102,
+      "q_market_devigged": 0.304885,
       "edge_E": -0.009601,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.409244,
-        0.500188
+        0.265756,
+        0.324812
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -5293,12 +5293,12 @@
       "kickoff_utc": "2026-06-22T19:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "SUI",
-        "display_name": "Switzerland"
-      },
-      "away": {
         "fifa_code": "CAN",
         "display_name": "Canada"
+      },
+      "away": {
+        "fifa_code": "SUI",
+        "display_name": "Switzerland"
       },
       "market": "1X2",
       "outcome": "DRAW",
@@ -5328,26 +5328,26 @@
       "kickoff_utc": "2026-06-22T19:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "SUI",
-        "display_name": "Switzerland"
-      },
-      "away": {
         "fifa_code": "CAN",
         "display_name": "Canada"
       },
+      "away": {
+        "fifa_code": "SUI",
+        "display_name": "Switzerland"
+      },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.295284,
-      "q_market_raw_decimal": 3.767,
-      "q_market_devigged": 0.285461,
+      "p_model": 0.454716,
+      "q_market_raw_decimal": 2.3535,
+      "q_market_devigged": 0.444893,
       "edge_E": 0.009823,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.265756,
-        0.324812
+        0.409244,
+        0.500188
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -5678,26 +5678,26 @@
       "kickoff_utc": "2026-06-23T01:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "TUR",
-        "display_name": "Türkiye"
-      },
-      "away": {
         "fifa_code": "USA",
         "display_name": "United States"
       },
+      "away": {
+        "fifa_code": "TUR",
+        "display_name": "Türkiye"
+      },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.320211,
-      "q_market_raw_decimal": 3.3241,
-      "q_market_devigged": 0.320837,
+      "p_model": 0.407789,
+      "q_market_raw_decimal": 2.5746,
+      "q_market_devigged": 0.408415,
       "edge_E": -0.000626,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.28819,
-        0.352232
+        0.36701,
+        0.448568
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -5713,12 +5713,12 @@
       "kickoff_utc": "2026-06-23T01:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "TUR",
-        "display_name": "Türkiye"
-      },
-      "away": {
         "fifa_code": "USA",
         "display_name": "United States"
+      },
+      "away": {
+        "fifa_code": "TUR",
+        "display_name": "Türkiye"
       },
       "market": "1X2",
       "outcome": "DRAW",
@@ -5748,26 +5748,26 @@
       "kickoff_utc": "2026-06-23T01:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "TUR",
-        "display_name": "Türkiye"
-      },
-      "away": {
         "fifa_code": "USA",
         "display_name": "United States"
       },
+      "away": {
+        "fifa_code": "TUR",
+        "display_name": "Türkiye"
+      },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.407789,
-      "q_market_raw_decimal": 2.6464,
-      "q_market_devigged": 0.397873,
+      "p_model": 0.320211,
+      "q_market_raw_decimal": 3.4448,
+      "q_market_devigged": 0.310295,
       "edge_E": 0.009916,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.36701,
-        0.448568
+        0.28819,
+        0.352232
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -7148,8 +7148,8 @@
       "kickoff_utc": "2026-06-27T17:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "COD",
-        "display_name": "Congo DR"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "away": {
         "fifa_code": "POR",
@@ -7157,17 +7157,17 @@
       },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.08741,
-      "q_market_raw_decimal": 13.9392,
-      "q_market_devigged": 0.09174,
+      "p_model": 0.261187,
+      "q_market_raw_decimal": 4.073,
+      "q_market_devigged": 0.265517,
       "edge_E": -0.00433,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.078669,
-        0.096151
+        0.235068,
+        0.287306
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -7183,8 +7183,8 @@
       "kickoff_utc": "2026-06-27T17:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "COD",
-        "display_name": "Congo DR"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "away": {
         "fifa_code": "POR",
@@ -7192,17 +7192,17 @@
       },
       "market": "1X2",
       "outcome": "DRAW",
-      "p_model": 0.16,
-      "q_market_raw_decimal": 7.7658,
-      "q_market_devigged": 0.14877,
+      "p_model": 0.220667,
+      "q_market_raw_decimal": 5.2788,
+      "q_market_devigged": 0.209437,
       "edge_E": 0.01123,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.144,
-        0.176
+        0.1986,
+        0.242734
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -7218,8 +7218,8 @@
       "kickoff_utc": "2026-06-27T17:00:00Z",
       "round": "GRP",
       "home": {
-        "fifa_code": "COD",
-        "display_name": "Congo DR"
+        "fifa_code": "COL",
+        "display_name": "Colombia"
       },
       "away": {
         "fifa_code": "POR",
@@ -7227,17 +7227,17 @@
       },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.75259,
-      "q_market_raw_decimal": 1.386,
-      "q_market_devigged": 0.741495,
+      "p_model": 0.518146,
+      "q_market_raw_decimal": 2.0532,
+      "q_market_devigged": 0.507051,
       "edge_E": 0.011095,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.677331,
-        0.827849
+        0.466331,
+        0.569961
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -7257,22 +7257,22 @@
         "display_name": "Uzbekistan"
       },
       "away": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "COD",
+        "display_name": "Congo DR"
       },
       "market": "1X2",
       "outcome": "HOME",
-      "p_model": 0.103967,
-      "q_market_raw_decimal": 12.5036,
-      "q_market_devigged": 0.099977,
+      "p_model": 0.287578,
+      "q_market_raw_decimal": 3.7938,
+      "q_market_devigged": 0.283588,
       "edge_E": 0.00399,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.09357,
-        0.114364
+        0.25882,
+        0.316336
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -7292,22 +7292,22 @@
         "display_name": "Uzbekistan"
       },
       "away": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "COD",
+        "display_name": "Congo DR"
       },
       "market": "1X2",
       "outcome": "DRAW",
-      "p_model": 0.16,
-      "q_market_raw_decimal": 6.7317,
-      "q_market_devigged": 0.16855,
+      "p_model": 0.243333,
+      "q_market_raw_decimal": 4.3125,
+      "q_market_devigged": 0.251883,
       "edge_E": -0.00855,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.144,
-        0.176
+        0.219,
+        0.267666
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
@@ -7327,22 +7327,22 @@
         "display_name": "Uzbekistan"
       },
       "away": {
-        "fifa_code": "COL",
-        "display_name": "Colombia"
+        "fifa_code": "COD",
+        "display_name": "Congo DR"
       },
       "market": "1X2",
       "outcome": "AWAY",
-      "p_model": 0.736033,
-      "q_market_raw_decimal": 1.3795,
-      "q_market_devigged": 0.744894,
+      "p_model": 0.469089,
+      "q_market_raw_decimal": 2.1836,
+      "q_market_devigged": 0.47795,
       "edge_E": -0.008861,
       "edge_threshold": 0.03,
       "gate_status": "OPEN",
       "gate_rules_tripped": [],
       "snapshot_age_minutes": 0,
       "confidence_band": [
-        0.66243,
-        0.809636
+        0.42218,
+        0.515998
       ],
       "source_book": "PINNACLE",
       "pinnacle_bias_applied": {
