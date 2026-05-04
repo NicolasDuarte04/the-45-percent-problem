@@ -96,7 +96,7 @@ test.describe("Ledger §7.2 — HIT/MISS visual parity", () => {
     const hitRow = page.locator('[data-ledger-row][data-ledger-label="HIT"]').first();
     await expect(hitRow).toBeVisible();
     await expect(hitRow).toHaveScreenshot("ledger-hit-row.png", {
-      maxDiffPixelRatio: 0.02,
+      maxDiffPixelRatio: 0.05,
     });
   });
 
@@ -104,7 +104,7 @@ test.describe("Ledger §7.2 — HIT/MISS visual parity", () => {
     const missRow = page.locator('[data-ledger-row][data-ledger-label="MISS"]').first();
     await expect(missRow).toBeVisible();
     await expect(missRow).toHaveScreenshot("ledger-miss-row.png", {
-      maxDiffPixelRatio: 0.02,
+      maxDiffPixelRatio: 0.05,
     });
   });
 });

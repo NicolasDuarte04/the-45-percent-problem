@@ -14,7 +14,14 @@ import {
 } from "@/lib/formatters";
 
 export default function PrimitivesShowcase() {
-  if (process.env.NODE_ENV === "production") notFound();
+  // Dev-only route, but allow rendering in CI so Playwright can hit it
+  // against the production server. Not exposed in real production builds.
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.NEXT_PUBLIC_ENABLE_DEV_ROUTES !== "1"
+  ) {
+    notFound();
+  }
 
   return (
     <div
@@ -50,7 +57,7 @@ export default function PrimitivesShowcase() {
           <NumericCell value={0.008} formatter={(p) => formatProbability(p, 1)} />
         </Row>
         <Row label="mid (41.2%)">
-          <NumericCell value={0.412} formatter={(p) => formatProbability(p, 1)} />
+          <NumericCell value={0.412} formatter={(p) => formatProbability(p, 1)} ariaLabel="41.2 percent" />
         </Row>
         <Row label="near-certain (97.3%)">
           <NumericCell value={0.973} formatter={(p) => formatProbability(p, 1)} />
@@ -158,6 +165,7 @@ export default function PrimitivesShowcase() {
           <NumericCell<[number, number]>
             value={[0.038, 0.047]}
             formatter={([l, h]) => formatCI(l, h)}
+            ariaLabel="3.8 to 4.7 percent"
           />
         </Row>
         <Row label="wide CI">
