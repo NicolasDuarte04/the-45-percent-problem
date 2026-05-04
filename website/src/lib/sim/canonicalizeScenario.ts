@@ -50,6 +50,7 @@ function canonicalizeFullBracket(s: FullBracketScenario): string {
     m: "fb",
     gw: [...s.groupWinners].map((t) => t.toUpperCase()).sort(),
     gr: [...s.groupRunnersUp].map((t) => t.toUpperCase()).sort(),
+    t3: [...s.bestThirds].map((t) => t.toUpperCase()).sort(),
     ko: s.koAdvancers.map((t) => t.toUpperCase()),
   });
 }

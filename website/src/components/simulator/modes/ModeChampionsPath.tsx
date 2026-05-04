@@ -3,38 +3,29 @@
 /**
  * Champion's Path build mode per IMPL_PROMPT §2.2 + design v2 §5.4.
  *
- * Interaction model:
- *   1. User picks their team from the 48-team grid.
- *   2. Four stages render (R16, QF, SF, F). Each stage shows the
- *      user's team fixed on the left, an empty opponent slot in the
- *      middle, and a W / L result toggle on the right.
- *   3. The team grid below acts as a universal picker: a click
- *      slots the team into the next available position — the team
- *      field if unset, else the next empty stage's opponent.
- *   4. Each stage's opponent must be filled BEFORE its W/L toggle
- *      becomes active.
- *   5. If the user picks L at any stage, all later stages disable
- *      and grey out. The path resolves at that loss.
- *   6. If the user picks W at every stage, the path resolves at the
- *      Final.
- *   7. The narrative line below the stages assembles in serif as the
- *      scenario fills, using the existing renderStoryLine helper —
- *      the same function that produces the story for the Trade
- *      Ticket and the verification email's context block.
+ * Phase C: DnD upgrade — teams can be dragged from the grid onto the
+ * team slot or any stage opponent slot. CPTeamSlot and CPOpponentSlot
+ * are inline sub-components that use useDroppable. Click interaction
+ * still works alongside DnD.
  *
  * Per Patch v2.1 §3: NO partial rarity band, NO partial 1-in-N
  * rendered during build. The reveal happens on /scenario/p/[id].
- *
- * No dropdown filtering of "reachable" opponents (IMPL_PROMPT §2.2's
- * design v1 talks about filtering opponents to those the model
- * considers reachable in at least 1/10,000 runs). Phase A's mock
- * does not have real Monte-Carlo run data; that filter lands in
- * Phase C with the real engine output. For now, all 47 other teams
- * are pickable as any opponent.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import { TeamPickerGrid } from "@/components/simulator/TeamPickerGrid";
 import {
   clearInflight,
@@ -43,6 +34,8 @@ import {
 } from "@/lib/sim/inflightStore";
 import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { renderStoryLine } from "@/lib/sim/renderStoryLine";
+import { computeRealityScore } from "@/lib/sim/computeRealityScore";
+import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import type { ChampionsPathScenario, TeamCode } from "@/lib/sim/types";
 
 interface ModeChampionsPathProps {
@@ -86,8 +79,6 @@ function emptyState(): BuildState {
   };
 }
 
-/** True if a stage strictly before `stage` has result === "L" — meaning
- *  this stage is unreachable and must not accept input. */
 function isPathDeadAt(state: BuildState, stage: StageKey): boolean {
   for (const s of STAGE_KEYS) {
     if (s === stage) return false;
@@ -117,9 +108,6 @@ function nextEmptyOpponentSlot(state: BuildState): StageKey | null {
 function toSubmissionScenario(state: BuildState): ChampionsPathScenario | null {
   if (!state.team) return null;
   const out: ChampionsPathScenario = { team: state.team, r16: { opponent: "", result: "W" } };
-  // We rebuild step-by-step; the empty r16 above is a placeholder so
-  // TypeScript narrows correctly — we'll either fill r16 below or
-  // return null.
   let firstFilled = false;
   for (const s of STAGE_KEYS) {
     const v = state[s];
@@ -159,6 +147,62 @@ function hydrate(): BuildState {
   return base;
 }
 
+// ── Droppable team slot ───────────────────────────────────────────────────────
+
+interface CPTeamSlotProps {
+  code: TeamCode | null;
+}
+
+function CPTeamSlot({ code }: CPTeamSlotProps) {
+  const { isOver, setNodeRef } = useDroppable({ id: "cp-team" });
+  return (
+    <div
+      ref={setNodeRef}
+      className={[
+        "inline-flex min-w-[5rem] items-center justify-center border px-3 py-2 font-mono text-[24px] tabular-nums transition-colors duration-100",
+        code
+          ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]"
+          : "border-[var(--border-default)] text-[var(--text-quiet)]",
+        isOver ? "ring-2 ring-[var(--accent-focus)]" : "",
+      ].join(" ")}
+      aria-label={code ? `Selected team: ${code}` : "Drop your team here"}
+    >
+      {code ?? "?"}
+    </div>
+  );
+}
+
+// ── Droppable opponent slot ───────────────────────────────────────────────────
+
+interface CPOpponentSlotProps {
+  stageKey: StageKey;
+  code: TeamCode | null;
+  isDead: boolean;
+}
+
+function CPOpponentSlot({ stageKey, code, isDead }: CPOpponentSlotProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `cp-opp-${stageKey}`,
+    disabled: isDead,
+  });
+  return (
+    <span
+      ref={setNodeRef}
+      className={[
+        "font-mono text-[18px] tabular-nums sm:text-[20px]",
+        code ? "text-[var(--text-primary)]" : "text-[var(--text-quiet)]",
+        isOver && !isDead
+          ? "outline outline-1 outline-offset-2 outline-[var(--accent-focus)]"
+          : "",
+      ].join(" ")}
+    >
+      {code ?? "—"}
+    </span>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export function ModeChampionsPath({
   modelSha,
   snapshotSha,
@@ -167,7 +211,14 @@ export function ModeChampionsPath({
   const [state, setState] = useState<BuildState>(emptyState);
   const [submitting, setSubmitting] = useState(false);
   const [errorCopy, setErrorCopy] = useState<string | null>(null);
+  const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
   const hydratedRef = useRef(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
 
   useEffect(() => {
     if (hydratedRef.current) return;
@@ -194,15 +245,11 @@ export function ModeChampionsPath({
   function handlePick(code: TeamCode) {
     setErrorCopy(null);
     setState((prev) => {
-      // Toggle off if already used.
       if (prev.team === code) {
-        // Clearing the team also clears every stage.
         return emptyState();
       }
       for (const s of STAGE_KEYS) {
         if (prev[s].opponent === code) {
-          // Clearing this opponent also clears subsequent stages
-          // (their reachability assumption no longer holds).
           const next = { ...prev };
           let clearing = false;
           for (const t of STAGE_KEYS) {
@@ -212,7 +259,6 @@ export function ModeChampionsPath({
           return next;
         }
       }
-      // Net-new pick.
       if (!prev.team) {
         return { ...prev, team: code };
       }
@@ -230,7 +276,6 @@ export function ModeChampionsPath({
     setErrorCopy(null);
     setState((prev) => {
       const next = { ...prev, [stage]: { ...prev[stage], result } };
-      // If this stage just became a loss, clear all later stages.
       if (result === "L") {
         let clearing = false;
         for (const t of STAGE_KEYS) {
@@ -243,6 +288,53 @@ export function ModeChampionsPath({
       }
       return next;
     });
+  }
+
+  function handleDragStart({ active }: DragStartEvent) {
+    setActiveCode((active.data.current?.code as TeamCode) ?? null);
+  }
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    setActiveCode(null);
+    const code = active.data.current?.code as TeamCode | undefined;
+    if (!code || !over) return;
+    const overId = over.id as string;
+
+    if (overId === "cp-team") {
+      if (state.team !== code) {
+        setState({ ...emptyState(), team: code });
+        setErrorCopy(null);
+      }
+    } else if (overId.startsWith("cp-opp-")) {
+      const stageKey = overId.slice("cp-opp-".length) as StageKey;
+      if (!STAGE_KEYS.includes(stageKey)) return;
+      if (!state.team || code === state.team) return;
+      if (isPathDeadAt(state, stageKey)) return;
+
+      setState((prev) => {
+        const next = { ...prev };
+        // Remove code from any stage it already occupies, cascading from there.
+        for (const s of STAGE_KEYS) {
+          if (prev[s].opponent === code) {
+            let clearing = false;
+            for (const t of STAGE_KEYS) {
+              if (t === s) clearing = true;
+              if (clearing) next[t] = emptyStage();
+            }
+            break;
+          }
+        }
+        // Cascade from the target stage forward, then fill it.
+        let clearing = false;
+        for (const t of STAGE_KEYS) {
+          if (t === stageKey) clearing = true;
+          if (clearing) next[t] = emptyStage();
+        }
+        next[stageKey] = { opponent: code, result: null };
+        return next;
+      });
+      setErrorCopy(null);
+    }
   }
 
   function handleReset() {
@@ -286,141 +378,201 @@ export function ModeChampionsPath({
     : "";
   const resolved = isResolved(state);
 
+  // Live Reality Score — only percentage, no band / 1-in-N per v2.1 §3.
+  const liveScore = useMemo(() => {
+    if (!submissionScenario) return null;
+    const canonical = canonicalizeScenario("champions_path", submissionScenario);
+    return computeRealityScore("champions_path", canonical, submissionScenario);
+  }, [submissionScenario]);
+
   return (
-    <section aria-labelledby="cp-heading" className="pt-10 pb-12">
-      <div className="flex items-baseline justify-between gap-4">
-        <h1
-          id="cp-heading"
-          className="font-serif text-[28px] leading-[1.1] sm:text-[40px] text-[var(--text-primary)]"
-        >
-          Tell us your team&rsquo;s story.
-        </h1>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)]"
-        >
-          [ Reset ]
-        </button>
-      </div>
-
-      <p className="mt-3 font-sans text-[14px] text-[var(--text-tertiary)]">
-        {state.team
-          ? "Pick an opponent for each stage, then call the result."
-          : "First, pick the team you are tracing."}
-      </p>
-
-      {/* Stage row — vertical on mobile, horizontal at sm+. */}
-      <ol
-        aria-label="Stages from R16 to Final"
-        className="mt-8 grid grid-cols-1 gap-px border border-[var(--border-default)] bg-[var(--rule)] sm:grid-cols-4"
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <section
+        aria-labelledby="cp-heading"
+        data-canvas="simulator"
+        className="pt-10 pb-12"
       >
-        {STAGE_KEYS.map((s) => {
-          const stage = state[s];
-          const dead = isPathDeadAt(state, s);
-          const active = !dead && (stage.opponent !== null || nextEmptyOpponentSlot(state) === s);
-          const opponentReady = stage.opponent !== null && !dead;
-
-          return (
-            <li
-              key={s}
-              className={[
-                "flex h-32 w-full flex-col bg-[var(--bg-root)] p-3 sm:h-36",
-                dead ? "opacity-40" : "",
-              ].join(" ")}
-            >
-              <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
-                {STAGE_LABELS[s]}
-              </div>
-
-              <div className="mt-2 flex flex-1 items-center justify-between gap-2">
-                {/* Team's code, fixed left. */}
-                <span className="font-mono text-[18px] tabular-nums text-[var(--text-primary)] sm:text-[20px]">
-                  {state.team ?? "—"}
-                </span>
-
-                <span className="font-mono text-[14px] text-[var(--text-quiet)]">
-                  vs
-                </span>
-
-                {/* Opponent slot. */}
-                <span
-                  className={[
-                    "font-mono text-[18px] tabular-nums sm:text-[20px]",
-                    stage.opponent
-                      ? "text-[var(--text-primary)]"
-                      : "text-[var(--text-quiet)]",
-                  ].join(" ")}
-                >
-                  {stage.opponent ?? "—"}
-                </span>
-              </div>
-
-              {/* W / L toggle. */}
-              <div className="mt-2 grid grid-cols-2 gap-px border border-[var(--border-default)] bg-[var(--rule)]">
-                {(["W", "L"] as const).map((r) => {
-                  const isOn = stage.result === r;
-                  const enabled = active && opponentReady && !dead;
-                  return (
-                    <button
-                      key={r}
-                      type="button"
-                      disabled={!enabled}
-                      onClick={() => handleResult(s, r)}
-                      aria-pressed={isOn}
-                      className={[
-                        "py-1.5 text-center font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-                        isOn
-                          ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
-                          : enabled
-                            ? "bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]"
-                            : "bg-[var(--bg-root)] text-[var(--text-quiet)] cursor-not-allowed",
-                      ].join(" ")}
-                    >
-                      {r}
-                    </button>
-                  );
-                })}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-
-      {/* Narrative line — assembles in serif as scenario fills. */}
-      {narrative ? (
-        <p className="mt-8 font-serif text-[18px] leading-[1.45] text-[var(--text-primary)] sm:text-[22px]">
-          {narrative}
-        </p>
-      ) : null}
-
-      {/* Team grid (universal picker). */}
-      <TeamPickerGrid selected={usedCodes} onPick={handlePick} />
-
-      {/* Submit + error. */}
-      <div className="mt-10 flex flex-col items-start gap-3">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!resolved || submitting}
-          className={[
-            "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-            resolved && !submitting
-              ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
-              : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
-          ].join(" ")}
-        >
-          {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
-        </button>
-        {errorCopy ? (
-          <p
-            role="alert"
-            className="font-sans text-[13px] text-[var(--state-dead)]"
+        <div className="flex items-baseline justify-between gap-4">
+          <h1
+            id="cp-heading"
+            className="font-serif text-[28px] leading-[1.1] sm:text-[40px] text-[var(--text-primary)]"
           >
-            {errorCopy}
+            Tell us your team&rsquo;s story.
+          </h1>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)]"
+          >
+            [ Reset ]
+          </button>
+        </div>
+
+        <p className="mt-3 font-sans text-[14px] text-[var(--text-tertiary)]">
+          {state.team
+            ? "Pick an opponent for each stage, then call the result."
+            : "First, pick the team you are tracing — click or drag from the grid."}
+        </p>
+
+        {/* Team slot */}
+        <div className="mt-6 flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
+            Your team
+          </span>
+          <CPTeamSlot code={state.team} />
+          {state.team ? (
+            <button
+              type="button"
+              onClick={() => setState(emptyState())}
+              className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)]"
+            >
+              [ Clear ]
+            </button>
+          ) : null}
+        </div>
+
+        {/* Stage row — vertical on mobile, horizontal at sm+. */}
+        <ol
+          aria-label="Stages from R16 to Final"
+          className="mt-6 grid grid-cols-1 gap-px border border-[var(--border-default)] bg-[var(--rule)] sm:grid-cols-4"
+        >
+          {STAGE_KEYS.map((s) => {
+            const stage = state[s];
+            const dead = isPathDeadAt(state, s);
+            const active = !dead && (stage.opponent !== null || nextEmptyOpponentSlot(state) === s);
+            const opponentReady = stage.opponent !== null && !dead;
+
+            return (
+              <li
+                key={s}
+                className={[
+                  "flex h-32 w-full flex-col bg-[var(--bg-root)] p-3 sm:h-36",
+                  dead ? "opacity-40" : "",
+                ].join(" ")}
+              >
+                <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
+                  {STAGE_LABELS[s]}
+                </div>
+
+                <div className="mt-2 flex flex-1 items-center justify-between gap-2">
+                  {/* Team's code, fixed left. */}
+                  <span className="font-mono text-[18px] tabular-nums text-[var(--text-primary)] sm:text-[20px]">
+                    {state.team ?? "—"}
+                  </span>
+
+                  <span className="font-mono text-[14px] text-[var(--text-quiet)]">
+                    vs
+                  </span>
+
+                  {/* Opponent slot — droppable. */}
+                  <CPOpponentSlot
+                    stageKey={s}
+                    code={stage.opponent}
+                    isDead={dead || !state.team}
+                  />
+                </div>
+
+                {/* W / L toggle. */}
+                <div className="mt-2 grid grid-cols-2 gap-px border border-[var(--border-default)] bg-[var(--rule)]">
+                  {(["W", "L"] as const).map((r) => {
+                    const isOn = stage.result === r;
+                    const enabled = active && opponentReady && !dead;
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        disabled={!enabled}
+                        onClick={() => handleResult(s, r)}
+                        aria-pressed={isOn}
+                        className={[
+                          "py-1.5 text-center font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                          isOn
+                            ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
+                            : enabled
+                              ? "bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]"
+                              : "bg-[var(--bg-root)] text-[var(--text-quiet)] cursor-not-allowed",
+                        ].join(" ")}
+                      >
+                        {r}
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+
+        {/* Narrative line — assembles in serif as scenario fills. */}
+        {narrative ? (
+          <p className="mt-8 font-serif text-[18px] leading-[1.45] text-[var(--text-primary)] sm:text-[22px]">
+            {narrative}
           </p>
         ) : null}
-      </div>
-    </section>
+
+        {/* Team grid (universal picker). */}
+        <TeamPickerGrid selected={usedCodes} onPick={handlePick} draggable={true} />
+
+        {/* Live partial score — percentage only, no band / 1-in-N per v2.1 §3 */}
+        {liveScore && !resolved ? (
+          <div className="mt-8 border border-[var(--border-default)] p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]">
+              Partial Reality Score
+            </div>
+            <div className="mt-1 font-mono text-[28px] tabular-nums text-[var(--text-primary)]">
+              {formatPercent(liveScore.count, liveScore.total)}
+            </div>
+            <div className="mt-0.5 font-mono text-[11px] tabular-nums text-[var(--text-quiet)]">
+              {liveScore.count.toLocaleString("en-US")} / {liveScore.total.toLocaleString("en-US")} simulations
+            </div>
+          </div>
+        ) : null}
+
+        {/* Submit + error. */}
+        <div className="mt-10 flex flex-col items-start gap-3">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!resolved || submitting}
+            className={[
+              "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+              resolved && !submitting
+                ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
+                : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
+            ].join(" ")}
+          >
+            {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
+          </button>
+          {errorCopy ? (
+            <p
+              role="alert"
+              className="font-sans text-[13px] text-[var(--state-dead)]"
+            >
+              {errorCopy}
+            </p>
+          ) : null}
+        </div>
+      </section>
+
+      <DragOverlay dropAnimation={null}>
+        {activeCode ? (
+          <div className="border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[20px] tabular-nums text-[var(--bg-root)] shadow-lg">
+            {activeCode}
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
+}
+
+function formatPercent(count: number, total: number): string {
+  if (total <= 0) return "0.00%";
+  const pct = (count / total) * 100;
+  if (pct < 1) return `${pct.toFixed(2)}%`;
+  if (pct < 25) return `${pct.toFixed(1)}%`;
+  return `${pct.toFixed(0)}%`;
 }

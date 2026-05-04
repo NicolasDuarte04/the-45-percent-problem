@@ -104,13 +104,13 @@ function ChampionsPathBlock({ scenario }: { scenario: ChampionsPathScenario }) {
 }
 
 function FullBracketBlock({ scenario }: { scenario: FullBracketScenario }) {
-  // The 15 koAdvancers map to 8 R16 + 4 QF + 2 SF + 1 F per the
-  // Phase-A bracket shape (FullBracketScenarioSchema). The 15th entry
-  // is the predicted champion; entries 13 and 14 are the two finalists.
-  const r16 = scenario.koAdvancers.slice(0, 8);
-  const qf = scenario.koAdvancers.slice(8, 12);
-  const sf = scenario.koAdvancers.slice(12, 14);
-  const champion = scenario.koAdvancers[14];
+  // R32 schema layout: [0..15]=R32 winners, [16..23]=R16, [24..27]=QF,
+  // [28..29]=SF finalists, [30]=champion.
+  const r32 = scenario.koAdvancers.slice(0, 16);
+  const r16 = scenario.koAdvancers.slice(16, 24);
+  const qf = scenario.koAdvancers.slice(24, 28);
+  const sf = scenario.koAdvancers.slice(28, 30);
+  const champion = scenario.koAdvancers[30];
 
   return (
     <div className="space-y-3">
@@ -123,15 +123,23 @@ function FullBracketBlock({ scenario }: { scenario: FullBracketScenario }) {
         <Row>{scenario.groupRunnersUp.join("  ")}</Row>
       </div>
       <div>
-        <Label>R16 advancers</Label>
-        <Row>{r16.join("  ")}</Row>
+        <Label>Best 3rd-place</Label>
+        <Row>{scenario.bestThirds.join("  ")}</Row>
+      </div>
+      <div>
+        <Label>R16 qualifiers</Label>
+        <Row>{r32.join("  ")}</Row>
       </div>
       <div>
         <Label>Quarterfinalists</Label>
-        <Row>{qf.join("  ")}</Row>
+        <Row>{r16.join("  ")}</Row>
       </div>
       <div>
         <Label>Semifinalists</Label>
+        <Row>{qf.join("  ")}</Row>
+      </div>
+      <div>
+        <Label>Finalists</Label>
         <Row>{sf.join("  ")}</Row>
       </div>
       <div>
