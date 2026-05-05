@@ -92,10 +92,15 @@ export function EditorialMasthead() {
         <div className="flex items-baseline justify-between gap-4 md:contents">
           <Link
             href="/"
-            className="no-underline shrink-0"
+            // text-[22px] on mobile keeps the wordmark from crowding the
+            // "Today's brief" link in the new two-row stack; md:text-[24px]
+            // restores the original desktop size so the masthead height
+            // and downstream baseline cascade match the pre-Phase-1
+            // rendering exactly (visual-regression baselines for
+            // /ledger HIT row depend on this).
+            className="no-underline shrink-0 text-[22px] md:text-[24px]"
             style={{
               fontFamily: "var(--font-serif)",
-              fontSize: 22,
               letterSpacing: "-0.015em",
               color: "var(--text-primary)",
             }}
