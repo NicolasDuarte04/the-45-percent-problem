@@ -27,6 +27,10 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { TeamPickerGrid } from "@/components/simulator/TeamPickerGrid";
+import { Flag } from "@/components/primitives/Flag";
+import { EmptySlot } from "@/components/simulator/EmptySlot";
+import { LiveAgreementGauge } from "@/components/simulator/reality/LiveAgreementGauge";
+import { COUNTRY_NAMES, type FifaCode } from "@/lib/flags/countries";
 import {
   clearInflight,
   readInflightForMode,
@@ -67,33 +71,61 @@ interface FFSlotProps {
   idx: number;
   code: TeamCode | null;
   label: (typeof SLOT_LABELS)[number];
+  isActive: boolean;
   onClear: (idx: number) => void;
+  onActivate: (idx: number) => void;
 }
 
-function FFSlot({ idx, code, label, onClear }: FFSlotProps) {
+function FFSlot({ idx, code, label, isActive, onClear, onActivate }: FFSlotProps) {
   const { isOver, setNodeRef } = useDroppable({ id: String(idx) });
+  const countryName = code ? COUNTRY_NAMES[code as FifaCode] : null;
   return (
     <button
       ref={setNodeRef}
       type="button"
-      onClick={() => code && onClear(idx)}
+      onClick={() => (code ? onClear(idx) : onActivate(idx))}
+      aria-pressed={isActive && !code}
       className={[
-        "flex h-24 w-full flex-col items-center justify-center bg-[var(--bg-root)] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-        code ? "cursor-pointer hover:bg-[var(--bg-panel-elev)]" : "cursor-default",
+        "flex h-28 w-full flex-col items-center justify-center gap-1 bg-[var(--bg-root)] px-2 transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)] sm:h-32",
+        code
+          ? "cursor-pointer hover:bg-[var(--bg-panel-elev)]"
+          : "cursor-pointer",
         isOver ? "ring-1 ring-[var(--accent-focus)] ring-inset" : "",
       ].join(" ")}
       aria-label={
         code
           ? `Slot ${label} filled with ${code}; click to clear`
-          : `Slot ${label} empty`
+          : isActive
+            ? `Slot ${label} armed; tap a team to fill`
+            : `Slot ${label} empty; tap to arm, or drag a team here`
       }
     >
       <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
         {label}
       </div>
-      <div className="mt-1 font-mono text-[28px] tabular-nums tracking-[0.05em] text-[var(--text-primary)] sm:text-[32px]">
-        {code ?? "—"}
-      </div>
+      {code ? (
+        <>
+          <Flag code={code} size={32} />
+          <div className="mt-0.5 font-mono text-[24px] tabular-nums tracking-[0.05em] text-[var(--text-primary)] sm:text-[28px]">
+            {code}
+          </div>
+          {countryName ? (
+            <div className="font-sans text-[10px] leading-tight text-[var(--text-quiet)] sm:text-[11px]">
+              {countryName}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="mt-1 flex h-[68px] w-full items-stretch sm:h-[80px]">
+          <EmptySlot
+            size="md"
+            isOver={isOver}
+            isActive={isActive}
+            label={label}
+            ariaLabel={`Drop a team into ${label}`}
+          />
+        </div>
+      )}
     </button>
   );
 }
@@ -108,6 +140,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errorCopy, setErrorCopy] = useState<string | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
+  const [activeSlotIdx, setActiveSlotIdx] = useState<number | null>(null);
   const hydratedRef = useRef(false);
 
   const sensors = useSensors(
@@ -133,9 +166,11 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   const allFilled = filled.length === SLOT_COUNT;
   const selectedSet = useMemo(() => new Set(filled), [filled]);
 
-  // Live Reality Score — shown once ≥ 2 picks; only percentage (no band / 1-in-N per v2.1 §3).
+  // Live Reality Score — recomputed only when slots change (drop, click,
+  // clear). Used by LiveAgreementGauge once allFilled triggers
+  // isComplete; until then the gauge renders in ghost state.
   const liveScore = useMemo(() => {
-    if (filled.length < 2) return null;
+    if (filled.length < SLOT_COUNT) return null;
     const scenario = { semifinalists: filled };
     const canonical = canonicalizeScenario("final_four", scenario);
     return computeRealityScore("final_four", canonical, scenario);
@@ -149,12 +184,16 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
         next[at] = null;
         return next;
       }
-      const empty = prev.indexOf(null);
-      if (empty === -1) return prev;
+      const target =
+        activeSlotIdx !== null && prev[activeSlotIdx] === null
+          ? activeSlotIdx
+          : prev.indexOf(null);
+      if (target === -1) return prev;
       const next = [...prev];
-      next[empty] = code;
+      next[target] = code;
       return next;
     });
+    setActiveSlotIdx(null);
     setErrorCopy(null);
   }
 
@@ -164,6 +203,12 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
       next[idx] = null;
       return next;
     });
+    setActiveSlotIdx(null);
+    setErrorCopy(null);
+  }
+
+  function handleActivateSlot(idx: number) {
+    setActiveSlotIdx((current) => (current === idx ? null : idx));
     setErrorCopy(null);
   }
 
@@ -194,6 +239,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
 
   function handleReset() {
     setSlots(Array(SLOT_COUNT).fill(null));
+    setActiveSlotIdx(null);
     clearInflight();
     setErrorCopy(null);
   }
@@ -267,7 +313,9 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
                 idx={idx}
                 code={code}
                 label={SLOT_LABELS[idx]}
+                isActive={activeSlotIdx === idx}
                 onClear={handleClearSlot}
+                onActivate={handleActivateSlot}
               />
             </li>
           ))}
@@ -280,20 +328,19 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
           draggable={true}
         />
 
-        {/* Live partial score — percentage only, no band / 1-in-N per v2.1 §3 */}
-        {liveScore && !allFilled ? (
-          <div className="mt-8 border border-[var(--border-default)] p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]">
-              Partial Reality Score
-            </div>
-            <div className="mt-1 font-mono text-[28px] tabular-nums text-[var(--text-primary)]">
-              {formatPercent(liveScore.count, liveScore.total)}
-            </div>
-            <div className="mt-0.5 font-mono text-[11px] tabular-nums text-[var(--text-quiet)]">
-              {liveScore.count.toLocaleString("en-US")} / {liveScore.total.toLocaleString("en-US")} simulations · {filled.length} of 4 picks
-            </div>
-          </div>
-        ) : null}
+        {/* Live Agreement Gauge — Phase D Workstream 3 (Option C).
+            Ghost state until all 4 SF slots are filled per the per-mode
+            show-threshold table. Viral hook only — no scientific rarity
+            words; that vocabulary is reserved for the post-submit
+            RealityScorePanel. */}
+        <div className="mt-8 max-w-md">
+          <LiveAgreementGauge
+            count={liveScore?.count ?? 0}
+            total={liveScore?.total ?? 10000}
+            isComplete={allFilled}
+            variant="compact"
+          />
+        </div>
 
         {/* Submit + error */}
         <div className="mt-10 flex flex-col items-start gap-3">
@@ -329,8 +376,9 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
 
       <DragOverlay dropAnimation={null}>
         {activeCode ? (
-          <div className="border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[20px] tabular-nums text-[var(--bg-root)] shadow-lg">
-            {activeCode}
+          <div className="z-50 inline-flex items-center gap-2 border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[20px] tabular-nums text-[var(--bg-root)] shadow-lg">
+            <Flag code={activeCode} size={24} />
+            <span>{activeCode}</span>
           </div>
         ) : null}
       </DragOverlay>
@@ -338,10 +386,3 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   );
 }
 
-function formatPercent(count: number, total: number): string {
-  if (total <= 0) return "0.00%";
-  const pct = (count / total) * 100;
-  if (pct < 1) return `${pct.toFixed(2)}%`;
-  if (pct < 25) return `${pct.toFixed(1)}%`;
-  return `${pct.toFixed(0)}%`;
-}

@@ -223,6 +223,30 @@
   }
 }
 
+/* EmptySlot tap-to-fill pulse per UX_POLISH_PLAN_SIMULATOR_PHASE_D §3.1.
+   Slot armed for tap-to-fill pulses opacity 0.6 → 1.0 and back over
+   1.2s. Honors prefers-reduced-motion: reduce. */
+@keyframes empty-slot-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.empty-slot-pulse {
+  animation: empty-slot-pulse 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty-slot-pulse { animation: none; opacity: 1; }
+}
+
+/* LiveAgreementGauge segment fill transition per
+   UX_POLISH_PLAN_SIMULATOR_PHASE_D §4.4. CSS-only; no JS animation
+   loop. Honors prefers-reduced-motion: reduce by snapping. */
+.live-gauge-segment {
+  transition: opacity 200ms ease-out, background-color 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-gauge-segment { transition: none; }
+}
+
 /* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */
 @theme inline {
   /* Canvas-aware colors — resolve through CSS vars so they flip with the canvas */

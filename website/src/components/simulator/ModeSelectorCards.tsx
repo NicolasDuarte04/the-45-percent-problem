@@ -15,12 +15,18 @@
  */
 
 import Link from "next/link";
+import {
+  ChampionsPathGlyph,
+  FinalFourGlyph,
+  FullBracketGlyph,
+} from "@/components/simulator/icons/ModeGlyphs";
 
 interface ModeOption {
   href: string;
   heading: string;
   subhead: string;
   duration: string;
+  Glyph: (props: { className?: string }) => React.ReactElement;
 }
 
 const MODES: readonly ModeOption[] = [
@@ -29,18 +35,21 @@ const MODES: readonly ModeOption[] = [
     heading: "[ FINAL FOUR ]",
     subhead: "Who makes the semifinals?",
     duration: "30 seconds.",
+    Glyph: FinalFourGlyph,
   },
   {
     href: "/scenario/champions-path",
     heading: "[ CHAMPION'S PATH ]",
     subhead: "Tell us your team's story to the final.",
     duration: "About a minute.",
+    Glyph: ChampionsPathGlyph,
   },
   {
     href: "/scenario/full-bracket",
     heading: "[ FULL BRACKET ]",
     subhead: "Call the whole tournament.",
     duration: "A few minutes. For the obsessives.",
+    Glyph: FullBracketGlyph,
   },
 ] as const;
 
@@ -59,24 +68,28 @@ export function ModeSelectorCards() {
       </h2>
 
       <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {MODES.map((mode) => (
-          <li key={mode.href} className="contents">
-            <Link
-              href={mode.href}
-              className="group block border border-[var(--border-default)] p-5 transition-colors duration-100 hover:border-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
-            >
-              <div className="font-mono text-[13px] uppercase tracking-[0.10em] text-[var(--text-primary)] transition-colors duration-100 group-hover:text-[var(--accent-warm)]">
-                {mode.heading}
-              </div>
-              <p className="mt-3 font-serif text-[16px] leading-[1.45] text-[var(--text-primary)]">
-                {mode.subhead}
-              </p>
-              <p className="mt-3 font-sans text-[12px] text-[var(--text-quiet)]">
-                {mode.duration}
-              </p>
-            </Link>
-          </li>
-        ))}
+        {MODES.map((mode) => {
+          const Glyph = mode.Glyph;
+          return (
+            <li key={mode.href} className="contents">
+              <Link
+                href={mode.href}
+                className="group relative block border border-[var(--border-default)] p-5 transition-colors duration-100 hover:border-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+              >
+                <Glyph className="pointer-events-none absolute right-4 top-4 text-[var(--text-tertiary)] transition-colors duration-100 group-hover:text-[var(--accent-warm)]" />
+                <div className="pr-8 font-mono text-[13px] uppercase tracking-[0.10em] text-[var(--text-primary)] transition-colors duration-100 group-hover:text-[var(--accent-warm)]">
+                  {mode.heading}
+                </div>
+                <p className="mt-3 font-serif text-[16px] leading-[1.45] text-[var(--text-primary)]">
+                  {mode.subhead}
+                </p>
+                <p className="mt-3 font-sans text-[12px] text-[var(--text-quiet)]">
+                  {mode.duration}
+                </p>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
