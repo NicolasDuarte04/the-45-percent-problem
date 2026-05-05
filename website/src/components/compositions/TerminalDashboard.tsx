@@ -39,7 +39,11 @@ export function TerminalDashboard({
       className="grid gap-6"
       style={{
         // Stack on narrow viewports; two columns once each card has ≥440px.
-        gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))",
+        // The min(440px, 100%) collapses the floor to the container width
+        // on viewports below 440px so a 375px iPhone doesn't get a hard
+        // 440px column that overflows the page. Per the canonical
+        // intrinsic-sizing pattern for resilient grids.
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(440px, 100%), 1fr))",
       }}
     >
       <DivergenceCard rows={topDivergences} totalMarkets={divergence.rows.length} />

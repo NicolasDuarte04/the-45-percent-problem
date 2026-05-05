@@ -110,16 +110,26 @@ export function EmailCaptureForm({
 
   return (
     <>
+      {/* CSS-only stacking + 44px touch targets at ≤480px. Scoped to
+          the form via .email-capture-form so the rule does not leak
+          to other forms. Per Mobile Optimization Plan §4 Phase 1
+          task 5. */}
+      <style>{`
+        .email-capture-form {
+          display: grid;
+          grid-template-columns: ${isStacked ? "1fr" : "minmax(0, 1fr) auto"};
+          gap: 8px;
+          max-width: 560px;
+        }
+        @media (max-width: 480px) {
+          .email-capture-form { grid-template-columns: 1fr; }
+        }
+      `}</style>
       <form
         onSubmit={handleSubmit}
         noValidate
         aria-busy={isBusy}
-        style={{
-          display: "grid",
-          gridTemplateColumns: isStacked ? "1fr" : "minmax(0, 1fr) auto",
-          gap: 8,
-          maxWidth: 560,
-        }}
+        className="email-capture-form"
       >
         <label htmlFor={inputId} className="sr-only">
           Email address
@@ -148,7 +158,7 @@ export function EmailCaptureForm({
             borderRadius: 2,
             padding: "10px 12px",
             outline: "none",
-            minHeight: 40,
+            minHeight: 44,
           }}
         />
         <button
@@ -165,7 +175,7 @@ export function EmailCaptureForm({
             borderRadius: 2,
             padding: "10px 16px",
             cursor: isBusy ? "wait" : "pointer",
-            minHeight: 40,
+            minHeight: 44,
             opacity: isBusy ? 0.6 : 1,
           }}
         >
