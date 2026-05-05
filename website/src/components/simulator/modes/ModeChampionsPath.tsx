@@ -27,6 +27,9 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { TeamPickerGrid } from "@/components/simulator/TeamPickerGrid";
+import { Flag } from "@/components/primitives/Flag";
+import { EmptySlot } from "@/components/simulator/EmptySlot";
+import { LiveAgreementGauge } from "@/components/simulator/reality/LiveAgreementGauge";
 import {
   clearInflight,
   readInflightForMode,
@@ -155,19 +158,33 @@ interface CPTeamSlotProps {
 
 function CPTeamSlot({ code }: CPTeamSlotProps) {
   const { isOver, setNodeRef } = useDroppable({ id: "cp-team" });
+  if (!code) {
+    return (
+      <div
+        ref={setNodeRef}
+        className="inline-flex h-[60px] min-w-[10rem] items-stretch"
+      >
+        <EmptySlot
+          size="lg"
+          isOver={isOver}
+          label="YOUR TEAM"
+          ariaLabel="Drop or tap a team to start the path"
+        />
+      </div>
+    );
+  }
   return (
     <div
       ref={setNodeRef}
       className={[
-        "inline-flex min-w-[5rem] items-center justify-center border px-3 py-2 font-mono text-[24px] tabular-nums transition-colors duration-100",
-        code
-          ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]"
-          : "border-[var(--border-default)] text-[var(--text-quiet)]",
+        "inline-flex min-w-[5rem] items-center justify-center gap-3 border px-3 py-2 font-mono text-[24px] tabular-nums transition-colors duration-100",
+        "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]",
         isOver ? "ring-2 ring-[var(--accent-focus)]" : "",
       ].join(" ")}
-      aria-label={code ? `Selected team: ${code}` : "Drop your team here"}
+      aria-label={`Selected team: ${code}`}
     >
-      {code ?? "?"}
+      <Flag code={code} size={48} />
+      <span>{code}</span>
     </div>
   );
 }
@@ -185,18 +202,28 @@ function CPOpponentSlot({ stageKey, code, isDead }: CPOpponentSlotProps) {
     id: `cp-opp-${stageKey}`,
     disabled: isDead,
   });
+  if (!code) {
+    return (
+      <span
+        ref={setNodeRef}
+        className="inline-flex h-9 min-w-[5.5rem] items-stretch"
+      >
+        <EmptySlot
+          size="sm"
+          isOver={isOver && !isDead}
+          label="OPPONENT"
+          ariaLabel={`Choose opponent for ${stageKey.toUpperCase()}`}
+        />
+      </span>
+    );
+  }
   return (
     <span
       ref={setNodeRef}
-      className={[
-        "font-mono text-[18px] tabular-nums sm:text-[20px]",
-        code ? "text-[var(--text-primary)]" : "text-[var(--text-quiet)]",
-        isOver && !isDead
-          ? "outline outline-1 outline-offset-2 outline-[var(--accent-focus)]"
-          : "",
-      ].join(" ")}
+      className="inline-flex items-center gap-1.5 font-mono text-[18px] tabular-nums text-[var(--text-primary)] sm:text-[20px]"
     >
-      {code ?? "—"}
+      <Flag code={code} size={24} />
+      <span>{code}</span>
     </span>
   );
 }
@@ -460,8 +487,9 @@ export function ModeChampionsPath({
 
                 <div className="mt-2 flex flex-1 items-center justify-between gap-2">
                   {/* Team's code, fixed left. */}
-                  <span className="font-mono text-[18px] tabular-nums text-[var(--text-primary)] sm:text-[20px]">
-                    {state.team ?? "—"}
+                  <span className="inline-flex items-center gap-1.5 font-mono text-[18px] tabular-nums text-[var(--text-primary)] sm:text-[20px]">
+                    {state.team ? <Flag code={state.team} size={24} /> : null}
+                    <span>{state.team ?? "—"}</span>
                   </span>
 
                   <span className="font-mono text-[14px] text-[var(--text-quiet)]">
@@ -517,20 +545,18 @@ export function ModeChampionsPath({
         {/* Team grid (universal picker). */}
         <TeamPickerGrid selected={usedCodes} onPick={handlePick} draggable={true} />
 
-        {/* Live partial score — percentage only, no band / 1-in-N per v2.1 §3 */}
-        {liveScore && !resolved ? (
-          <div className="mt-8 border border-[var(--border-default)] p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]">
-              Partial Reality Score
-            </div>
-            <div className="mt-1 font-mono text-[28px] tabular-nums text-[var(--text-primary)]">
-              {formatPercent(liveScore.count, liveScore.total)}
-            </div>
-            <div className="mt-0.5 font-mono text-[11px] tabular-nums text-[var(--text-quiet)]">
-              {liveScore.count.toLocaleString("en-US")} / {liveScore.total.toLocaleString("en-US")} simulations
-            </div>
-          </div>
-        ) : null}
+        {/* Live Agreement Gauge — show-threshold per Phase D §4.2: the
+            entire path must be resolved (all 4 stages with W/L set, or
+            the first L). Until then, the gauge stays in ghost state to
+            avoid premature rarity claims. */}
+        <div className="mt-8 max-w-md">
+          <LiveAgreementGauge
+            count={liveScore?.count ?? 0}
+            total={liveScore?.total ?? 10000}
+            isComplete={resolved}
+            variant="compact"
+          />
+        </div>
 
         {/* Submit + error. */}
         <div className="mt-10 flex flex-col items-start gap-3">
@@ -560,8 +586,9 @@ export function ModeChampionsPath({
 
       <DragOverlay dropAnimation={null}>
         {activeCode ? (
-          <div className="border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[20px] tabular-nums text-[var(--bg-root)] shadow-lg">
-            {activeCode}
+          <div className="z-50 inline-flex items-center gap-2 border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[20px] tabular-nums text-[var(--bg-root)] shadow-lg">
+            <Flag code={activeCode} size={24} />
+            <span>{activeCode}</span>
           </div>
         ) : null}
       </DragOverlay>
@@ -569,10 +596,3 @@ export function ModeChampionsPath({
   );
 }
 
-function formatPercent(count: number, total: number): string {
-  if (total <= 0) return "0.00%";
-  const pct = (count / total) * 100;
-  if (pct < 1) return `${pct.toFixed(2)}%`;
-  if (pct < 25) return `${pct.toFixed(1)}%`;
-  return `${pct.toFixed(0)}%`;
-}

@@ -42,6 +42,9 @@ import {
   TEAMS,
   type GroupLetter,
 } from "@/lib/data/wc2026-official-draw";
+import { Flag } from "@/components/primitives/Flag";
+import { EmptySlot } from "@/components/simulator/EmptySlot";
+import { LiveAgreementGauge } from "@/components/simulator/reality/LiveAgreementGauge";
 import {
   clearInflight,
   readInflightForMode,
@@ -219,17 +222,29 @@ function FBThirdSlot({ tIdx, code }: FBThirdSlotProps) {
     <div
       ref={setNodeRef}
       className={[
-        "flex h-14 flex-col items-center justify-center bg-[var(--bg-root)] font-mono transition-colors duration-100",
+        "flex h-16 flex-col items-center justify-center gap-0.5 bg-[var(--bg-root)] px-1 font-mono transition-colors duration-100",
         isOver ? "ring-1 ring-[var(--accent-focus)] ring-inset" : "",
       ].join(" ")}
       aria-label={code ? `T${tIdx + 1}: ${code}` : `T${tIdx + 1}: empty`}
     >
-      <span className="text-[9px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
-        T{tIdx + 1}
-      </span>
-      <span className="mt-0.5 text-[16px] tabular-nums text-[var(--text-primary)]">
-        {code ?? "—"}
-      </span>
+      {code ? (
+        <>
+          <span className="text-[9px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
+            T{tIdx + 1}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[14px] tabular-nums text-[var(--text-primary)] sm:text-[16px]">
+            <Flag code={code} size={20} />
+            <span>{code}</span>
+          </span>
+        </>
+      ) : (
+        <EmptySlot
+          size="sm"
+          isOver={isOver}
+          label={`T${tIdx + 1}`}
+          ariaLabel={`Best 3rd-place slot ${tIdx + 1}, empty`}
+        />
+      )}
     </div>
   );
 }
@@ -628,20 +643,17 @@ export function ModeFullBracket({
           </p>
         ) : null}
 
-        {/* Live partial Reality Score — percentage only, per v2.1 §3 */}
-        {liveScore && !resolved ? (
-          <div className="mt-8 border border-[var(--border-default)] p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]">
-              Partial Reality Score
-            </div>
-            <div className="mt-1 font-mono text-[28px] tabular-nums text-[var(--text-primary)]">
-              {formatPercent(liveScore.count, liveScore.total)}
-            </div>
-            <div className="mt-0.5 font-mono text-[11px] tabular-nums text-[var(--text-quiet)]">
-              {liveScore.count.toLocaleString("en-US")} / {liveScore.total.toLocaleString("en-US")} simulations · champion only
-            </div>
-          </div>
-        ) : null}
+        {/* Live Agreement Gauge — show-threshold per Phase D §4.2:
+            once the champion is named, the gauge activates. Other
+            knockout cells can still be partial. */}
+        <div className="mt-8 max-w-md">
+          <LiveAgreementGauge
+            count={liveScore?.count ?? 0}
+            total={liveScore?.total ?? 10000}
+            isComplete={Boolean(state.koAdvancers[30])}
+            variant="compact"
+          />
+        </div>
 
         {/* Submit + error */}
         <div className="mt-10 flex flex-col items-start gap-3">
@@ -668,21 +680,14 @@ export function ModeFullBracket({
 
       <DragOverlay dropAnimation={null}>
         {activeThirdCode ? (
-          <div className="border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[14px] tabular-nums text-[var(--bg-root)] shadow-lg">
-            {activeThirdCode}
+          <div className="z-50 inline-flex items-center gap-2 border border-[var(--text-primary)] bg-[var(--text-primary)] px-3 py-2 font-mono text-[14px] tabular-nums text-[var(--bg-root)] shadow-lg">
+            <Flag code={activeThirdCode} size={20} />
+            <span>{activeThirdCode}</span>
           </div>
         ) : null}
       </DragOverlay>
     </DndContext>
   );
-}
-
-function formatPercent(count: number, total: number): string {
-  if (total <= 0) return "0.00%";
-  const pct = (count / total) * 100;
-  if (pct < 1) return `${pct.toFixed(2)}%`;
-  if (pct < 25) return `${pct.toFixed(1)}%`;
-  return `${pct.toFixed(0)}%`;
 }
 
 // ── Sub-component for a KO stage ──────────────────────────────────────────────
@@ -717,15 +722,28 @@ function KOStage({ label, count, getMatch, getAdvancer, onAdvance }: KOStageProp
                 onClick={() => onAdvance(i, home)}
                 aria-pressed={advancer === home && home !== null}
                 className={[
-                  "flex w-full items-center justify-between border-b border-[var(--border-default)] px-2 py-1.5 font-mono text-[13px] tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                  "flex w-full items-center gap-2 border-b border-[var(--border-default)] px-2 py-1.5 font-mono text-[13px] tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
                   advancer === home && home
                     ? "bg-[var(--text-primary)] text-[var(--bg-root)] border-[var(--text-primary)]"
                     : home
                       ? "text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]"
-                      : "text-[var(--text-quiet)] cursor-not-allowed",
+                      : "cursor-not-allowed text-[var(--text-quiet)]",
                 ].join(" ")}
               >
-                <span>{home ?? "—"}</span>
+                {home ? (
+                  <>
+                    <Flag code={home} size={20} />
+                    <span>{home}</span>
+                  </>
+                ) : (
+                  <span className="flex h-5 w-full items-stretch">
+                    <EmptySlot
+                      size="sm"
+                      label="WINNER"
+                      ariaLabel={`${label} match ${i + 1}, top advancer pending`}
+                    />
+                  </span>
+                )}
               </button>
               <button
                 type="button"
@@ -733,15 +751,28 @@ function KOStage({ label, count, getMatch, getAdvancer, onAdvance }: KOStageProp
                 onClick={() => onAdvance(i, away)}
                 aria-pressed={advancer === away && away !== null}
                 className={[
-                  "mt-px flex w-full items-center justify-between px-2 py-1.5 font-mono text-[13px] tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                  "mt-px flex w-full items-center gap-2 px-2 py-1.5 font-mono text-[13px] tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
                   advancer === away && away
                     ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
                     : away
                       ? "text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]"
-                      : "text-[var(--text-quiet)] cursor-not-allowed",
+                      : "cursor-not-allowed text-[var(--text-quiet)]",
                 ].join(" ")}
               >
-                <span>{away ?? "—"}</span>
+                {away ? (
+                  <>
+                    <Flag code={away} size={20} />
+                    <span>{away}</span>
+                  </>
+                ) : (
+                  <span className="flex h-5 w-full items-stretch">
+                    <EmptySlot
+                      size="sm"
+                      label="WINNER"
+                      ariaLabel={`${label} match ${i + 1}, bottom advancer pending`}
+                    />
+                  </span>
+                )}
               </button>
             </li>
           );
