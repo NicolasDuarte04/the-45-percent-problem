@@ -152,7 +152,13 @@ export default async function Home() {
           title="Tournament leaderboard"
           rightSlot={<GhostLink href="/bracket">All 48 teams →</GhostLink>}
         />
-        <TournamentLeaderboard tournament={tournament} />
+        {/* TournamentLeaderboard declares min-width: 640px on its
+            internal table; the wrapper isolates that overflow so the
+            page never horizontally scrolls on a 375px mobile viewport.
+            Per Mobile Optimization Plan §4 Phase 1 task 4. */}
+        <div className="overflow-x-auto">
+          <TournamentLeaderboard tournament={tournament} />
+        </div>
       </section>
 
       {/* ── Most likely bracket ───────────────────────────────────────────── */}
@@ -162,7 +168,13 @@ export default async function Home() {
           title="Most likely bracket"
           rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
         />
-        <MostLikelyBracket tournament={tournament} />
+        {/* MostLikelyBracket declares min-width: 1100px — the largest
+            offender. Wrapper traps the overflow inside the section
+            instead of forcing the document horizontal scrollbar.
+            Per Mobile Optimization Plan §4 Phase 1 task 4. */}
+        <div className="overflow-x-auto">
+          <MostLikelyBracket tournament={tournament} />
+        </div>
       </section>
 
       {/* ── § 1.7 · Trailer ────────────────────────────────────────────────── */}

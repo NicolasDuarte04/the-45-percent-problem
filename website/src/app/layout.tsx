@@ -43,15 +43,23 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable}`}
+      // overflowX: "clip" prevents horizontal page-level scroll on
+      // narrow viewports (Mobile Optimization Plan §6.1 acceptance
+      // criterion #1) without establishing a new scroll container —
+      // critical for preserving position: sticky on filter bars and
+      // the vault sidebar (which `overflow-x: hidden` would break).
+      // Inlined here rather than in globals.css because Tailwind v4's
+      // PostCSS pipeline strips the `clip` keyword from compiled CSS.
       style={
         {
           "--font-sans":  `var(--font-inter), system-ui, sans-serif`,
           "--font-mono":  `var(--font-jetbrains-mono), ui-monospace, Menlo, monospace`,
           "--font-serif": `var(--font-source-serif-4), Georgia, ui-serif, serif`,
+          overflowX: "clip",
         } as React.CSSProperties
       }
     >
-      <body className="min-h-screen antialiased">
+      <body className="min-h-screen antialiased" style={{ overflowX: "clip" }}>
         <Script src="https://plausible.io/js/script.js" data-domain="45analytics.com" strategy="afterInteractive" />
         <TooltipProvider>
           {children}

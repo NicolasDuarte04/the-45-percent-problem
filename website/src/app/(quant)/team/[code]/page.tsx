@@ -73,10 +73,10 @@ export default async function TeamPage({
       }}
     >
       <div
-        className="shrink-0 px-6 pt-6 pb-4 border-b"
+        className="shrink-0 px-4 md:px-6 pt-6 pb-4 border-b"
         style={{ borderColor: "var(--border-default)" }}
       >
-        <div className="max-w-[1152px] mx-auto px-12">
+        <div className="max-w-[1152px] mx-auto px-0 md:px-12">
           <h1
             className="text-[18px] font-medium tracking-tight"
             style={{ color: "var(--text-primary)" }}
@@ -93,7 +93,7 @@ export default async function TeamPage({
         </div>
       </div>
 
-      <div className="max-w-[1152px] mx-auto w-full px-12 py-6 flex flex-col gap-6">
+      <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6 flex flex-col gap-6">
         <TeamHeader team={team} />
 
         <ProgressionConeChart

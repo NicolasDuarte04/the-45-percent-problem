@@ -31,10 +31,15 @@ export function FeaturedDivergences({ divergence }: FeaturedDivergencesProps) {
   }
 
   return (
-    <div
-      className="grid gap-4"
-      style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
-    >
+    // Stack to a single column at narrow viewports; restore the 3-column
+    // grid at md+ (≥768px). At 375px each of the original three columns
+    // resolved to ~111px, which couldn't fit the inner "p · model /
+    // q · market / edge-badge" Stat grid (1fr 1fr auto + 24px gaps +
+    // a ~61px badge). The overflow leaked the badge to the right edge
+    // of the viewport, producing 144px of page-level horizontal scroll
+    // on the homepage. Per Mobile Optimization Plan §2.3 (cross-cutting
+    // touch-target / overflow audit) and §4 Phase 1 task 4 spirit.
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {top3.map((row) => (
         <DivergenceCard key={row.row_id} row={row} />
       ))}
