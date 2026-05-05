@@ -19,6 +19,7 @@
  */
 
 import { TEAMS } from "@/lib/data/wc2026-official-draw";
+import { Flag } from "@/components/primitives/Flag";
 
 export function TeamGrid() {
   // Sorted at render time. The canonical TEAMS export is in draw order;
@@ -47,9 +48,10 @@ export function TeamGrid() {
         {sorted.map((team) => (
           <li
             key={team.fifa_code}
-            className="bg-[var(--bg-root)] p-3 text-center"
+            className="flex flex-col items-center justify-center bg-[var(--bg-root)] p-3 text-center"
           >
-            <div className="font-mono text-[20px] tabular-nums tracking-[0.05em] text-[var(--text-primary)] sm:text-[24px]">
+            <Flag code={team.fifa_code} size={24} />
+            <div className="mt-2 font-mono text-[20px] tabular-nums tracking-[0.05em] text-[var(--text-primary)] sm:text-[24px]">
               {team.fifa_code}
             </div>
             <div className="mt-1 font-sans text-[10px] leading-tight text-[var(--text-quiet)] sm:text-[11px]">

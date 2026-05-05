@@ -7,13 +7,17 @@
  * INVERTED (solid bone fill, dark text) per design v1 §2.1. Disabled teams
  * render at 40% opacity and are not clickable.
  *
- * Phase C: accepts an optional `draggable` prop. When true, each team item
- * is wrapped with DraggableTeamChip so users can drag teams to droppable
- * slots in addition to the existing click-to-select interaction.
+ * Phase C: accepts an optional `draggable` prop. When true, each cell
+ * attaches `useDraggable` so users can drag teams to droppable slots in
+ * addition to the existing click-to-select interaction. Visual layout
+ * (flag + code + name) is identical between click-only and draggable
+ * variants — the picker reads the same in both modes.
  */
 
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { TEAMS } from "@/lib/data/wc2026-official-draw";
-import { DraggableTeamChip } from "@/components/simulator/DraggableTeamChip";
+import { Flag } from "@/components/primitives/Flag";
 import type { TeamCode } from "@/lib/sim/types";
 
 interface TeamPickerGridProps {
@@ -23,7 +27,7 @@ interface TeamPickerGridProps {
   disabled?: ReadonlySet<TeamCode>;
   /** Click handler. Receives the FIFA code. */
   onPick: (code: TeamCode) => void;
-  /** When true, each item is a DraggableTeamChip; click still works. */
+  /** When true, each cell is also a draggable; click still works. */
   draggable?: boolean;
 }
 
@@ -50,49 +54,102 @@ export function TeamPickerGrid({
 
         return (
           <li key={code} className="contents">
-            {draggable ? (
-              <DraggableTeamChip
-                code={code}
-                selected={isSelected}
-                disabled={isDisabled}
-                onPick={onPick}
-                className="flex w-full flex-col items-center justify-center p-3 text-center"
-              />
-            ) : (
-              <button
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                aria-disabled={isDisabled}
-                disabled={isDisabled}
-                onClick={() => {
-                  if (!isDisabled) onPick(code);
-                }}
-                className={[
-                  "block w-full p-3 text-center transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-                  isSelected
-                    ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
-                    : "bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]",
-                  isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
-                ].join(" ")}
-              >
-                <div className="font-mono text-[20px] tabular-nums tracking-[0.05em] sm:text-[24px]">
-                  {code}
-                </div>
-                <div
-                  className={`mt-1 font-sans text-[10px] leading-tight sm:text-[11px] ${
-                    isSelected
-                      ? "text-[var(--bg-root)] opacity-70"
-                      : "text-[var(--text-quiet)]"
-                  }`}
-                >
-                  {team.display_name}
-                </div>
-              </button>
-            )}
+            <PickerCell
+              code={code}
+              displayName={team.display_name}
+              selected={isSelected}
+              disabled={isDisabled}
+              onPick={onPick}
+              draggable={draggable}
+            />
           </li>
         );
       })}
     </ul>
+  );
+}
+
+interface PickerCellProps {
+  code: TeamCode;
+  displayName: string;
+  selected: boolean;
+  disabled: boolean;
+  onPick: (code: TeamCode) => void;
+  draggable: boolean;
+}
+
+function PickerCell({
+  code,
+  displayName,
+  selected,
+  disabled,
+  onPick,
+  draggable,
+}: PickerCellProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `team-${code}`,
+      data: { code },
+      disabled: !draggable || disabled,
+    });
+
+  // Strip props we set explicitly so they aren't overwritten by the spread.
+  const {
+    role: _role,
+    "aria-disabled": _ariaDisabled,
+    "aria-pressed": _ariaPressed,
+    ...safeAttributes
+  } = attributes;
+  void _role;
+  void _ariaDisabled;
+  void _ariaPressed;
+
+  const style =
+    draggable && transform
+      ? { transform: CSS.Translate.toString(transform) }
+      : undefined;
+
+  return (
+    <button
+      ref={draggable ? setNodeRef : undefined}
+      type="button"
+      role="option"
+      aria-selected={selected}
+      aria-disabled={disabled}
+      aria-grabbed={draggable ? isDragging : undefined}
+      disabled={disabled}
+      onClick={() => {
+        if (!disabled) onPick(code);
+      }}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? safeAttributes : {})}
+      style={style}
+      className={[
+        "flex w-full flex-col items-center justify-center p-3 text-center transition-colors duration-100 touch-none select-none focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+        isDragging ? "opacity-50 z-50" : "",
+        selected
+          ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
+          : "bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]",
+        disabled
+          ? "opacity-40 cursor-not-allowed"
+          : draggable
+            ? "cursor-grab active:cursor-grabbing"
+            : "cursor-pointer",
+      ].join(" ")}
+    >
+      <Flag code={code} size={24} />
+      <div className="mt-2 font-mono text-[20px] tabular-nums tracking-[0.05em] sm:text-[24px]">
+        {code}
+      </div>
+      <div
+        className={`mt-1 font-sans text-[10px] leading-tight sm:text-[11px] ${
+          selected
+            ? "text-[var(--bg-root)] opacity-70"
+            : "text-[var(--text-quiet)]"
+        }`}
+      >
+        {displayName}
+      </div>
+    </button>
   );
 }
