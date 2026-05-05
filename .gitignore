@@ -68,6 +68,9 @@ website/node_modules/
 website/out/
 website/.svelte-kit/
 
+# ─── pnpm content-addressable store (per-machine cache, never tracked) ──────────
+.pnpm-store/
+
 # ─── Personal notes & documents (never commit) ───────────────────────────────
 *.docx
 *.doc
