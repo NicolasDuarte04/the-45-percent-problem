@@ -432,7 +432,8 @@
   .wordmark-accent {
     color: rgb(15, 107, 125);
   }
-  [data-canvas="quant"] .wordmark-accent {
+  [data-canvas="quant"] .wordmark-accent,
+  [data-canvas="simulator"] .wordmark-accent {
     color: var(--text-primary);
   }
 

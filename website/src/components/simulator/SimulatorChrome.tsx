@@ -17,8 +17,9 @@ interface SimulatorChromeProps {
    */
   rightMeta?: string;
   /**
-   * Whether to render the page in a centered 720px column (landing/permalink)
-   * or in a wider container (dashboard). Defaults to centered.
+   * Container width. Both variants are now 1152px to match the site
+   * masthead (the previous 720px "narrow" felt squashed for the team
+   * grid and build modes). Kept as a prop for future flexibility.
    */
   width?: "narrow" | "wide";
 }
@@ -28,10 +29,10 @@ export function SimulatorChrome({
   rightMeta,
   width = "narrow",
 }: SimulatorChromeProps) {
-  const containerCls =
-    width === "narrow"
-      ? "mx-auto max-w-[720px] px-4 sm:px-6"
-      : "mx-auto max-w-[1280px] px-4 sm:px-6";
+  // Both narrow and wide align with the site masthead (max-width: 1152).
+  // Internal sections cap their own reading widths where appropriate.
+  void width;
+  const containerCls = "mx-auto max-w-[1152px] px-4 md:px-12";
 
   return (
     <div className="min-h-screen w-full text-[var(--text-primary)]">
