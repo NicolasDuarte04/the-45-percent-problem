@@ -263,7 +263,9 @@ function OGImage({ view }: { view: PublicPredictionView }) {
             Reality Score
           </div>
 
-          {/* Hero percentage */}
+          {/* Hero percentage. Concatenate prefix + value into a single string
+              so Satori sees one text child — adjacent JSX expressions render
+              as a children array, which Satori rejects on non-flex divs. */}
           <div
             style={{
               fontFamily: "'JetBrains Mono'",
@@ -274,7 +276,7 @@ function OGImage({ view }: { view: PublicPredictionView }) {
               marginBottom: 12,
             }}
           >
-            {promotedPrefix}{pctStr}
+            {`${promotedPrefix}${pctStr}`}
           </div>
 
           {/* Denominator — anti-casino discipline: always visible */}
@@ -369,57 +371,82 @@ function OGImage({ view }: { view: PublicPredictionView }) {
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 
+// Invariant: every code path on this route returns either (a) a valid PNG with
+// `Content-Type: image/png`, or (b) a JSON error response that the client-side
+// download flow will detect (via Content-Type sniff) and refuse to save under
+// a `.png` filename. There is no path that returns plain-text/HTML bytes,
+// because the Trade-Ticket download button uses `<a download>`-style flows
+// that blindly write whatever the server returned to disk.
+function jsonError(status: number, code: string): Response {
+  return new Response(JSON.stringify({ error: code }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const { id } = await ctx.params;
-
-  if (!isValidPredictionId(id)) {
-    return new Response("Not found", { status: 404 });
-  }
-
-  const rows = await db
-    .select()
-    .from(predictions)
-    .where(eq(predictions.id, id))
-    .limit(1);
-
-  const row = rows[0];
-  if (!row) {
-    return new Response("Not found", { status: 404 });
-  }
-
-  const view = toPublicPredictionView(row);
-
-  let fonts: { mono: ArrayBuffer; serif: ArrayBuffer };
   try {
-    fonts = await loadFonts();
-  } catch (err) {
-    console.error("[og] font load failed — falling back to system fonts", err);
-    // Render without custom fonts rather than returning a 500.
+    const { id } = await ctx.params;
+
+    if (!isValidPredictionId(id)) {
+      return jsonError(404, "not_found");
+    }
+
+    const rows = await db
+      .select()
+      .from(predictions)
+      .where(eq(predictions.id, id))
+      .limit(1);
+
+    const row = rows[0];
+    if (!row) {
+      return jsonError(404, "not_found");
+    }
+
+    const view = toPublicPredictionView(row);
+
+    // Font load is best-effort: a missing font drops us to Satori's default
+    // family rather than a 500. Both branches still emit a valid PNG.
+    let fonts: { mono: ArrayBuffer; serif: ArrayBuffer } | null;
+    try {
+      fonts = await loadFonts();
+    } catch (err) {
+      console.error("[og] font load failed — rendering with default fonts", err);
+      fonts = null;
+    }
+
     return new ImageResponse(<OGImage view={view} />, {
       width: 1200,
       height: 630,
+      ...(fonts
+        ? {
+            fonts: [
+              {
+                name: "JetBrains Mono",
+                data: fonts.mono,
+                style: "normal",
+                weight: 400,
+              },
+              {
+                name: "Source Serif 4",
+                data: fonts.serif,
+                style: "normal",
+                weight: 400,
+              },
+            ],
+          }
+        : {}),
+      headers: {
+        "Content-Type": "image/png",
+        "Content-Disposition": `inline; filename="45analytics-${view.id}.png"`,
+        "Cache-Control": "public, max-age=3600, s-maxage=3600, immutable",
+      },
     });
+  } catch (err) {
+    console.error("[og] render failed", err);
+    return jsonError(500, "render_failed");
   }
-
-  return new ImageResponse(<OGImage view={view} />, {
-    width: 1200,
-    height: 630,
-    fonts: [
-      {
-        name: "JetBrains Mono",
-        data: fonts.mono,
-        style: "normal",
-        weight: 400,
-      },
-      {
-        name: "Source Serif 4",
-        data: fonts.serif,
-        style: "normal",
-        weight: 400,
-      },
-    ],
-  });
 }
