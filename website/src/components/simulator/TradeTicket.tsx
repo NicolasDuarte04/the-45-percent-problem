@@ -44,6 +44,15 @@ import type {
 
 interface TradeTicketProps {
   view: PublicPredictionView;
+  /**
+   * VIRAL_LOOP §3.1.D — when true, the ticket renders only the scenario
+   * detail block, the prediction-ID strip, and the provenance footer;
+   * the flag tile, story line, and Reality Score block are omitted
+   * because the parent has lifted them above the share / alert strip
+   * as the page-level hero. Defaults to false (the standalone-card
+   * shape used by the Phase B layout).
+   */
+  compact?: boolean;
 }
 
 function flagsForView(view: PublicPredictionView): string[] {
@@ -61,60 +70,62 @@ function flagsForView(view: PublicPredictionView): string[] {
   }
 }
 
-export function TradeTicket({ view }: TradeTicketProps) {
+export function TradeTicket({ view, compact = false }: TradeTicketProps) {
   const flagCodes = flagsForView(view);
   const permalinkPath = `/scenario/p/${view.id}`;
 
   return (
     <article
-      aria-labelledby="ticket-story"
+      aria-labelledby={compact ? "ticket-scenario-label" : "ticket-story"}
       className="border border-[var(--border-default)] bg-[var(--bg-panel)] p-6 sm:p-8"
     >
-      {/* Flag slot — design v2 §5.7. One row of flags above the story
-          line; size scales with mode (Final Four shows 4 small flags,
-          single-team modes show one larger flag). */}
-      {flagCodes.length > 0 ? (
-        <div className="mb-5 flex items-center gap-2">
-          {flagCodes.map((code) => (
-            <Flag
-              key={code}
-              code={code}
-              size={view.mode === "champions_path" || view.mode === "full_bracket" ? 32 : 24}
+      {/* Flag slot, story line, and Reality Score block are conditionally
+          rendered. In compact mode (VIRAL_LOOP §3.1.D), the parent has
+          already lifted these above the share strip as the page hero, so
+          the ticket card carries only the scenario detail + provenance. */}
+      {!compact ? (
+        <>
+          {flagCodes.length > 0 ? (
+            <div className="mb-5 flex items-center gap-2">
+              {flagCodes.map((code) => (
+                <Flag
+                  key={code}
+                  code={code}
+                  size={view.mode === "champions_path" || view.mode === "full_bracket" ? 32 : 24}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          <h1
+            id="ticket-story"
+            className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
+          >
+            {view.storyLine}
+          </h1>
+
+          <div className="mt-8">
+            <RealityScoreReveal
+              count={view.countCurrent}
+              total={view.total}
+              state={view.state}
             />
-          ))}
-        </div>
+          </div>
+        </>
       ) : null}
 
-      {/* Story line — primary share-friendly serif sentence. */}
-      <h1
-        id="ticket-story"
-        className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
-      >
-        {view.storyLine}
-      </h1>
-
-      {/* Reality Score block. Phase E §9 (E.2) — RealityScoreReveal
-          (client) wraps RealityScorePanel with the entrance fade-up
-          (motion.entry, 400ms), the 5-band rarity bar fill
-          (motion.gaugeFill, 450ms, +100ms delay) and the 1-in-N
-          integer count-up (700ms cubic-out per Q3). The panel itself
-          retains its CSS reveal classes for the rarity-band and
-          one-in-N stagger so the static fallback (when JS hasn't
-          hydrated yet) still reads correctly. */}
-      <div className="mt-8">
-        <RealityScoreReveal
-          count={view.countCurrent}
-          total={view.total}
-          state={view.state}
-        />
-      </div>
-
       {/* Scenario block — mode-specific compact mono listing. Reveals
-          at t=400ms with .reveal-ticket per IMPL_PROMPT §9. Hairline
-          rule above separates the score block from the data block. */}
+          at t=400ms with .reveal-ticket per IMPL_PROMPT §9. The leading
+          rule + spacing only apply when the panel sits beneath the
+          Reality Score block; in compact mode the scenario IS the
+          opening surface, so it renders flush. */}
       <section
         aria-labelledby="ticket-scenario-label"
-        className="reveal-ticket mt-8 border-t border-[var(--rule)] pt-6"
+        className={
+          compact
+            ? "reveal-ticket"
+            : "reveal-ticket mt-8 border-t border-[var(--rule)] pt-6"
+        }
       >
         <span id="ticket-scenario-label" className="sr-only">
           Scenario data
@@ -122,25 +133,25 @@ export function TradeTicket({ view }: TradeTicketProps) {
         <ScenarioBlock mode={view.mode} scenario={view.scenario} />
       </section>
 
-      {/* Prediction ID strip — same data as design v1 §4.1's strip.
-          Permalink rendered as 45analytics.com/p/{id} on the right.
-          Reveals with the rest of the ticket metadata at t=400ms. */}
+      {/* Prediction ID strip — design v1 §4.1. §3.1.A reclassifies the
+          ID hex from --text-tertiary to --text-quiet so the page hero
+          gains visual weight without growing. */}
       <section
         aria-labelledby="ticket-id-label"
         className="reveal-ticket mt-8 flex flex-wrap items-baseline justify-between gap-3 border-t border-[var(--rule)] pt-4 font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]"
       >
         <span id="ticket-id-label">
           Prediction ID{" "}
-          <span className="text-[var(--text-tertiary)]">{view.id}</span>
+          <span className="text-[var(--text-quiet)]">{view.id}</span>
         </span>
         <span className="tabular-nums normal-case tracking-normal text-[10px]">
           45analytics.com{permalinkPath}
         </span>
       </section>
 
-      {/* Footer + watermark. Footer carries the model SHA, snapshot
-          SHA, and N=10000 — design v1 §4.1 reproducibility metadata.
-          Watermark in the bottom-right corner at 40% opacity. */}
+      {/* Footer + watermark. §3.1.A demotes the watermark from raw
+          opacity:0.4 to the --text-quiet token so its weight matches
+          the rest of the provenance row. */}
       <section className="reveal-ticket mt-2 flex flex-wrap items-baseline justify-between gap-3 font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
         <span className="tabular-nums">
           Model {view.modelSha.slice(0, 7)} · Snapshot{" "}
@@ -149,8 +160,7 @@ export function TradeTicket({ view }: TradeTicketProps) {
         </span>
         <span
           aria-label="45analytics watermark"
-          className="font-sans normal-case tracking-normal text-[10px]"
-          style={{ opacity: 0.4 }}
+          className="font-sans normal-case tracking-normal text-[10px] text-[var(--text-quiet)]"
         >
           45analytics
         </span>
