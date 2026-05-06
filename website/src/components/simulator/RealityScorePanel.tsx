@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Hero number + denominator + rarity band + 1-in-N — the "Reality Score"
  * presentation per design v2 §3 + Patch v2.1 §3.
@@ -16,12 +18,19 @@
  * Per Patch v2.1 §3, the rarity band and 1-in-N are NOT rendered by
  * caller code while the user is mid-build (only after submit). This
  * component itself does not enforce that — the parent decides whether
- * to mount it. Pure server component, takes count/total as props.
+ * to mount it.
+ *
+ * MOTION_SPEC.md §1: the hero string is driven through useDecryptValue
+ * so it scrambles for ~400ms and then locks. The hook is reduced-
+ * motion-aware and SSR-safe (server renders the final value), so the
+ * "use client" boundary added here only governs hydration, not the
+ * shape of the rendered HTML.
  */
 
 import { getOneInN, getOneInNSentence } from "@/lib/sim/getOneInN";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
 import { OneInNCountUp } from "@/components/simulator/reality/OneInNCountUp";
+import { useDecryptValue } from "@/lib/motion/useDecryptValue";
 
 interface RealityScorePanelProps {
   count: number;
@@ -61,6 +70,12 @@ export function RealityScorePanel({
 
   const isDead = state === "dead";
   const isPromoted = state === "promoted";
+
+  // MOTION_SPEC.md §1 — decrypt the hero string. The promoted-state "▲ "
+  // prefix and the "%" suffix are non-digit characters and will be held
+  // steady through every frame; only the digits cycle.
+  const heroFinal = `${isPromoted ? "▲ " : ""}${formatPercent(count, total)}`;
+  const heroText = useDecryptValue(heroFinal);
 
   return (
     <section
@@ -102,7 +117,7 @@ export function RealityScorePanel({
             isPromoted ? "text-[var(--state-promoted)]" : "text-[var(--text-primary)]"
           }`}
         >
-          {`${isPromoted ? "▲ " : ""}${formatPercent(count, total)}`}
+          {heroText}
         </span>
         {isDead ? (
           <span

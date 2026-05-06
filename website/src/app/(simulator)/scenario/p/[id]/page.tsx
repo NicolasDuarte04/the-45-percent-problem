@@ -11,6 +11,10 @@ import {
 import { Flag } from "@/components/primitives/Flag";
 import { RealityScoreReveal } from "@/components/simulator/reality/RealityScoreReveal";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
+import {
+  StaggeredReveal,
+  StaggeredRevealItem,
+} from "@/components/simulator/StaggeredReveal";
 import { TicketShareButton } from "@/components/simulator/TicketShareButton";
 import { TradeTicket } from "@/components/simulator/TradeTicket";
 import type {
@@ -153,58 +157,66 @@ export default async function PredictionPermalinkPage(props: {
 
   return (
     <SimulatorChrome width="narrow" rightMeta={submittedMeta}>
-      {/* Hero stack — flag tile + story line + Reality Score block.
-          Lifted out of TradeTicket per §3.1.D so the share + alert
-          actions can sit immediately below without the user scrolling
-          past the entire receipt. */}
-      <section
-        aria-labelledby="hero-story"
-        className="pt-8"
-      >
-        {flagCodes.length > 0 ? (
-          <div className="mb-5 flex items-center gap-2">
-            {flagCodes.map((code) => (
-              <Flag key={code} code={code} size={flagSize} />
-            ))}
-          </div>
-        ) : null}
+      {/* MOTION_SPEC.md §2 — page-level cascade. Three children fade
+          and lift 8px in turn: hero (240ms), share strip (+180ms),
+          alert configurator (+180ms). The .reveal-* CSS classes stay
+          on the inner elements as a no-JS fallback; once mounted, the
+          Framer wrapper takes over and the CSS ones are no-ops on
+          opacity-1 children. */}
+      <StaggeredReveal>
+        <StaggeredRevealItem index={0}>
+          {/* Hero stack — flag tile + story line + Reality Score block.
+              Lifted out of TradeTicket per VIRAL_LOOP §3.1.D so the
+              share + alert actions can sit immediately below without
+              the user scrolling past the entire receipt. */}
+          <section
+            aria-labelledby="hero-story"
+            className="pt-8"
+          >
+            {flagCodes.length > 0 ? (
+              <div className="mb-5 flex items-center gap-2">
+                {flagCodes.map((code) => (
+                  <Flag key={code} code={code} size={flagSize} />
+                ))}
+              </div>
+            ) : null}
 
-        <h1
-          id="hero-story"
-          className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
-        >
-          {view.storyLine}
-        </h1>
+            <h1
+              id="hero-story"
+              className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
+            >
+              {view.storyLine}
+            </h1>
 
-        <div className="mt-8">
-          <RealityScoreReveal
-            count={view.countCurrent}
-            total={view.total}
-            state={view.state}
-          />
-        </div>
-      </section>
+            <div className="mt-8">
+              <RealityScoreReveal
+                count={view.countCurrent}
+                total={view.total}
+                state={view.state}
+              />
+            </div>
+          </section>
+        </StaggeredRevealItem>
 
-      {/* Share / download strip — lifted up under the hero per §3.1.D.
-          Right-aligned so the hero stack reads as the primary surface
-          and the actions are accessory. The 6s nudge-once pulse
-          (§3.1.E) is wired inside TicketShareButton itself. */}
-      <div className="reveal-ticket mt-6 flex justify-end">
-        <TicketShareButton predictionId={view.id} />
-      </div>
+        {/* Share / download strip — lifted up under the hero per
+            VIRAL_LOOP §3.1.D. Right-aligned so the hero stack reads
+            as the primary surface and the actions are accessory. The
+            6s nudge-once pulse (§3.1.E) is wired inside TicketShareButton. */}
+        <StaggeredRevealItem index={1} className="mt-6 flex justify-end">
+          <TicketShareButton predictionId={view.id} />
+        </StaggeredRevealItem>
 
-      {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Bloomberg-style
-          terminal panel sitting under the share strip. The configurator
-          owns its own entrance via .reveal-alert (200ms after the ticket
-          reveal). When the row already carries a subscriber_id, render
-          the quiet TrackedFootnote acknowledgement instead. */}
-      <div className="reveal-alert">
-        {view.hasTracking ? (
-          <TrackedFootnote />
-        ) : (
-          <PredictionAlertConfigurator view={view} />
-        )}
-      </div>
+        {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Bloomberg-style
+            terminal panel. When the row already carries a subscriber_id,
+            render the quiet TrackedFootnote acknowledgement instead. */}
+        <StaggeredRevealItem index={2} className="mt-6">
+          {view.hasTracking ? (
+            <TrackedFootnote />
+          ) : (
+            <PredictionAlertConfigurator view={view} />
+          )}
+        </StaggeredRevealItem>
+      </StaggeredReveal>
 
       {/* Trade Ticket card — demoted below the fold. Compact mode renders
           only the scenario detail + ID strip + provenance footer; the

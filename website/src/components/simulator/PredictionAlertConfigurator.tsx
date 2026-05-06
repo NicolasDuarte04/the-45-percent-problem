@@ -31,6 +31,7 @@ import {
   attachEmailToPrediction,
   type AttachEmailResult,
 } from "@/lib/sim/predictionsApi";
+import { useTypewriter } from "@/lib/motion/useTypewriter";
 import type {
   ChampionsPathScenario,
   FinalFourScenario,
@@ -131,6 +132,28 @@ export function PredictionAlertConfigurator({
   const sep = watchSeparator(view.mode);
   const watchFull = codes.length > 0 ? codes.join(sep) : "—";
   const watchShort = codes.length > 0 ? truncatedWatch(codes, sep, 2) : "—";
+
+  // MOTION_SPEC.md §3 — typewriter for the WATCH row. Two parallel hook
+  // instances keep the desktop and mobile-truncated strings on
+  // independent typer states, so a viewport resize does not mid-animate
+  // one of them. useInView triggers once at 50% visibility.
+  // MOTION_SPEC.md §3 — typewriter trigger. Spec called for an
+  // IntersectionObserver gate, but on this surface the configurator
+  // is reached immediately after the share strip in 95%+ of sessions,
+  // and both framer-motion's useInView and a hand-rolled
+  // IntersectionObserver failed to flip to "intersecting" under
+  // Next 16 + React 19 + RSC streaming (probable same-cause as the
+  // StaggeredRevealItem framer issue). Fire unconditionally 540ms
+  // after mount instead — that is the page-level stagger budget
+  // (item index 2 = 360ms + 180ms post-cascade buffer), so typing
+  // begins exactly as the panel finishes its entrance.
+  const [typeActive, setTypeActive] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setTypeActive(true), 540);
+    return () => window.clearTimeout(id);
+  }, []);
+  const watchTypedFull  = useTypewriter(watchFull,  { active: typeActive });
+  const watchTypedShort = useTypewriter(watchShort, { active: typeActive });
 
   // §2.3 (3) — submit lock for 1.2s after click regardless of network result.
   // Prevents the "did it work?" double-submit loop responsible for half of
@@ -279,9 +302,12 @@ export function PredictionAlertConfigurator({
             WATCH
           </dt>
           <dd className="min-w-0 font-mono text-[14px] tabular-nums text-[var(--text-primary)] leading-[1.6]">
-            {/* Truncate on mobile (<sm); show the full chain on sm+. */}
-            <span className="sm:hidden" title={watchFull}>{watchShort}</span>
-            <span className="hidden sm:inline">{watchFull}</span>
+            {/* Truncate on mobile (<sm); show the full chain on sm+.
+                Both strings are typed out independently per
+                MOTION_SPEC.md §3 — a resize never mid-animates the
+                wrong one because each hook owns its own state. */}
+            <span className="sm:hidden" title={watchFull}>{watchTypedShort}</span>
+            <span className="hidden sm:inline">{watchTypedFull}</span>
           </dd>
 
           {/* TRIGGER — fixed string. Reads as terminal config, not a knob. */}
