@@ -28,25 +28,36 @@ interface AccentPulseProps {
    * fade-out. Defaults to 0 (no pulse on first mount).
    */
   triggerKey: number;
+  /**
+   * Mission 3 — semantic tone. `warm` (default) keeps the original
+   * accent-warm tint used for slot drops and pick landings. `success`
+   * routes through `--ui-success` for "this group is now complete"
+   * moments per the rebind table. Tone is per-call so existing
+   * callers (e.g. ModeFinalFour slot drops) keep their warm pulse
+   * without a sweep.
+   */
+  tone?: "warm" | "success";
 }
 
-export function AccentPulse({ triggerKey }: AccentPulseProps) {
+export function AccentPulse({ triggerKey, tone = "warm" }: AccentPulseProps) {
   const prefersReduced = useReducedMotion();
   // Don't render at all on first mount (triggerKey === 0). Only fires
   // after a real state change bumps the key.
   if (triggerKey === 0) return null;
+  const tintClass =
+    tone === "success" ? "bg-[var(--ui-success)]" : "bg-[var(--accent-warm)]";
   return (
     <motion.span
       key={triggerKey}
       aria-hidden="true"
-      // 8% accent-warm fill per spec; fades to transparent over 250ms.
+      // 8% tint over 250ms; fades to transparent.
       initial={{ opacity: 0.08 }}
       animate={{ opacity: 0 }}
       transition={{
         duration: prefersReduced ? 0 : 0.25,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="pointer-events-none absolute inset-0 bg-[var(--accent-warm)]"
+      className={`pointer-events-none absolute inset-0 ${tintClass}`}
     />
   );
 }

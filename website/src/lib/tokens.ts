@@ -47,6 +47,25 @@ export const semantic = {
   ledgerMiss: prism.rose,
 } as const;
 
+// Role-aliased UI tokens — Mission 3
+//
+// These mirror the `--ui-*` CSS aliases declared in `globals.css`. They name
+// what a surface MEANS rather than what it LOOKS LIKE, so a component asking
+// `uiRoles.guidance` reads as "give me the active-step color" — and a future
+// re-theme retargets four indirections instead of every component.
+//
+// The TS values here resolve to the editorial-canvas hexes (where the deeper
+// AA-safe variants live). The CSS aliases dereference at use-site, so any
+// component reading from the CSS var still picks up the correct quant-canvas
+// override; this export exists for components that need a hex (e.g. SVG
+// fill, canvas-drawn text) rather than a CSS var.
+export const uiRoles = {
+  guidance: '#0F6B7D',  // = --accent-focus (deep teal): focus, current step
+  success:  '#2B8A5F',  // = --edge-positive (deep mint): completion, filled
+  danger:   '#C4435E',  // = --edge-negative (deep rose): errors
+  warning:  '#B07A00',  // = --gate-fired (deep amber): caveats only
+} as const;
+
 // Typography — §2.5
 export const typography = {
   fontSerif: '"Source Serif 4 Variable"',
