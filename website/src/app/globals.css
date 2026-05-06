@@ -277,6 +277,23 @@
   .live-gauge-segment { transition: none; }
 }
 
+/* Share-strip idle nudge per VIRAL_LOOP_PIVOT.md §3.1.E.
+   A single opacity cycle (1 → 0.7 → 1 over 1.6s) fires once after the
+   share buttons have been in the viewport without action for 6 s.
+   The TicketShareButton effect adds the class on the timer and strips
+   it after the animation, so the cue never repeats. */
+@keyframes nudge-once {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+.nudge-once {
+  animation: nudge-once 1.6s ease-in-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nudge-once { animation: none; }
+}
+
 /* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */
 @theme inline {
   /* Canvas-aware colors — resolve through CSS vars so they flip with the canvas */
