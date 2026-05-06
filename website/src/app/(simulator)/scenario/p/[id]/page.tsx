@@ -157,71 +157,83 @@ export default async function PredictionPermalinkPage(props: {
 
   return (
     <SimulatorChrome width="narrow" rightMeta={submittedMeta}>
-      {/* MOTION_SPEC.md §2 — page-level cascade. Three children fade
-          and lift 8px in turn: hero (240ms), share strip (+180ms),
-          alert configurator (+180ms). The .reveal-* CSS classes stay
-          on the inner elements as a no-JS fallback; once mounted, the
-          Framer wrapper takes over and the CSS ones are no-ops on
-          opacity-1 children. */}
-      <StaggeredReveal>
-        <StaggeredRevealItem index={0}>
-          {/* Hero stack — flag tile + story line + Reality Score block.
-              Lifted out of TradeTicket per VIRAL_LOOP §3.1.D so the
-              share + alert actions can sit immediately below without
-              the user scrolling past the entire receipt. */}
-          <section
-            aria-labelledby="hero-story"
-            className="pt-8"
-          >
-            {flagCodes.length > 0 ? (
-              <div className="mb-5 flex items-center gap-2">
-                {flagCodes.map((code) => (
-                  <Flag key={code} code={code} size={flagSize} />
-                ))}
+      {/* Result + Next-Steps dossier — unified container that groups
+          the hero, share strip, and alert configurator on a single
+          elevated surface. The outer card uses --bg-panel (#151A21)
+          against the root --bg-root (#0F1216), with a 1px
+          --border-default rule. The inner alert configurator is
+          further elevated to --bg-panel-elev (#1C222B) so it reads
+          as a distinct config terminal sitting on the dossier
+          surface — three depth tiers: root → dossier → terminal.
+          Per the post-launch UX feedback: the previous floating
+          layout looked too brutalist-stealth on the dark canvas. */}
+      <section
+        aria-labelledby="hero-story"
+        className="mt-8 mb-12 border border-[var(--border-default)] bg-[var(--bg-panel)] p-6 sm:p-8"
+      >
+        {/* MOTION_SPEC.md §2 — page-level cascade. Three children fade
+            and lift 8px in turn: hero (240ms), share strip (+180ms),
+            alert configurator (+180ms). The .reveal-* CSS classes stay
+            on the inner elements as a no-JS fallback; once mounted, the
+            cascade takes over and the CSS ones are no-ops. */}
+        <StaggeredReveal>
+          <StaggeredRevealItem index={0}>
+            {/* Hero stack — flag tile + story line + Reality Score block.
+                Lifted out of TradeTicket per VIRAL_LOOP §3.1.D so the
+                share + alert actions can sit immediately below without
+                the user scrolling past the entire receipt. */}
+            <div>
+              {flagCodes.length > 0 ? (
+                <div className="mb-5 flex items-center gap-2">
+                  {flagCodes.map((code) => (
+                    <Flag key={code} code={code} size={flagSize} />
+                  ))}
+                </div>
+              ) : null}
+
+              <h1
+                id="hero-story"
+                className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
+              >
+                {view.storyLine}
+              </h1>
+
+              <div className="mt-8">
+                <RealityScoreReveal
+                  count={view.countCurrent}
+                  total={view.total}
+                  state={view.state}
+                />
               </div>
-            ) : null}
-
-            <h1
-              id="hero-story"
-              className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
-            >
-              {view.storyLine}
-            </h1>
-
-            <div className="mt-8">
-              <RealityScoreReveal
-                count={view.countCurrent}
-                total={view.total}
-                state={view.state}
-              />
             </div>
-          </section>
-        </StaggeredRevealItem>
+          </StaggeredRevealItem>
 
-        {/* Share / download strip — lifted up under the hero per
-            VIRAL_LOOP §3.1.D. Right-aligned so the hero stack reads
-            as the primary surface and the actions are accessory. The
-            6s nudge-once pulse (§3.1.E) is wired inside TicketShareButton. */}
-        <StaggeredRevealItem index={1} className="mt-6 flex justify-end">
-          <TicketShareButton predictionId={view.id} />
-        </StaggeredRevealItem>
+          {/* Share / download strip — right-aligned so the hero reads
+              as the primary surface. The 6s nudge-once pulse
+              (§3.1.E) is wired inside TicketShareButton. */}
+          <StaggeredRevealItem index={1} className="mt-6 flex justify-end">
+            <TicketShareButton predictionId={view.id} />
+          </StaggeredRevealItem>
 
-        {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Bloomberg-style
-            terminal panel. When the row already carries a subscriber_id,
-            render the quiet TrackedFootnote acknowledgement instead. */}
-        <StaggeredRevealItem index={2} className="mt-6">
-          {view.hasTracking ? (
-            <TrackedFootnote />
-          ) : (
-            <PredictionAlertConfigurator view={view} />
-          )}
-        </StaggeredRevealItem>
-      </StaggeredReveal>
+          {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Sits inside
+              the dossier card and elevates further to bg-panel-elev
+              for the nested-terminal feel. When the row already
+              carries a subscriber_id, render the quiet
+              TrackedFootnote acknowledgement instead. */}
+          <StaggeredRevealItem index={2} className="mt-8">
+            {view.hasTracking ? (
+              <TrackedFootnote />
+            ) : (
+              <PredictionAlertConfigurator view={view} />
+            )}
+          </StaggeredRevealItem>
+        </StaggeredReveal>
+      </section>
 
       {/* Trade Ticket card — demoted below the fold. Compact mode renders
           only the scenario detail + ID strip + provenance footer; the
           flag, story line, and Reality Score now live in the hero above. */}
-      <div className="mt-12 mb-12">
+      <div className="mb-12">
         <TradeTicket view={view} compact />
       </div>
     </SimulatorChrome>

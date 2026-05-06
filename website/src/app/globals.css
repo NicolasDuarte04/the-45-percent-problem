@@ -329,19 +329,29 @@
 .alert-armed-glyph {
   color: var(--ui-success);
 }
-/* Brutalist hide-the-affordance underline state machine.
+/* Visible-affordance input state machine.
+   The previous brutalist hide-the-affordance pattern (transparent
+   border at rest, underline only on focus) post-launch tested as
+   too stealth — users did not register that the NOTIFY value column
+   was an input. The new resting state shows a solid --text-tertiary
+   bottom rule and a subtle inset background so the field reads
+   unmistakably as an input on first glance. The cyan / mint / rose
+   focus and validation transitions are unchanged.
    Anchored under [data-canvas="simulator"] so the selectors carry
-   higher specificity than `* { border-color: var(--border) }` from
-   @layer base, which would otherwise paint the bottom rule slate-grey
-   on every form input regardless of focus. */
+   higher specificity than Tailwind v4's `* { border-color: ... }`
+   from @layer base. */
 [data-canvas="simulator"] input.alert-input {
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--text-tertiary);
+  background-color: rgba(0, 0, 0, 0.20);
   caret-color: var(--ui-guidance);
-  transition: border-bottom-color 100ms ease-out;
+  padding-left: 8px;
+  padding-right: 8px;
+  transition: border-bottom-color 100ms ease-out, background-color 100ms ease-out;
 }
 [data-canvas="simulator"] input.alert-input:focus {
   outline: none;
   border-bottom-color: var(--ui-guidance);
+  background-color: rgba(0, 0, 0, 0.30);
 }
 [data-canvas="simulator"] input.alert-input.is-valid,
 [data-canvas="simulator"] input.alert-input.is-valid:focus {

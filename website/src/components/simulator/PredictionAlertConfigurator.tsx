@@ -269,7 +269,7 @@ export function PredictionAlertConfigurator({
   return (
     <section
       aria-labelledby="alert-eyebrow"
-      className="mx-auto mt-12 w-full max-w-[720px] border border-[var(--border-default)] bg-[var(--bg-panel)]"
+      className="w-full border border-[var(--border-default)] bg-[var(--bg-panel-elev)]"
     >
       {/* ── Eyebrow row ───────────────────────────────────────────────────── */}
       <header
@@ -347,13 +347,14 @@ export function PredictionAlertConfigurator({
               disabled={isSubmitting}
               className={[
                 "alert-input",
-                "block w-full bg-transparent px-0 py-1",
+                // Padding + bg-color come from globals.css `.alert-input`
+                // so the inset look is consistent across the rest /
+                // focus / valid / invalid states. Tailwind utilities
+                // here only carry the layout primitives that don't
+                // collide with that state machine.
+                "block w-full py-2",
                 "font-mono text-[14px] text-[var(--text-primary)]",
                 isSubmitting ? "opacity-60" : "",
-                // Brutalist hide-the-affordance: the underline state
-                // machine lives in globals.css (.alert-input + the two
-                // modifiers below), which fights the Tailwind v4
-                // arbitrary-value var() compile path.
                 touched && isError ? "is-invalid" : "",
                 touched && !isError && emailLooksValid(email) ? "is-valid" : "",
               ].join(" ")}
@@ -372,13 +373,19 @@ export function PredictionAlertConfigurator({
               "font-mono text-[13px] uppercase tracking-[0.10em]",
               "transition-colors duration-100",
               "focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+              // Filled-bone CTA at rest. Inverting from outline to a
+              // solid bone-white block makes the button unmistakably
+              // the primary action against the elevated terminal
+              // surface — the post-launch UX feedback flagged the
+              // previous outline-on-dark version as too stealth.
+              // Hover transitions to peach (the simulator's signature
+              // accent reserved for hover / promoted / flag border per
+              // design v2 §6).
               isSubmitting
-                ? "border-[var(--border-default)] text-[var(--text-quiet)] cursor-progress opacity-70"
+                ? "border-[var(--border-default)] bg-transparent text-[var(--text-quiet)] cursor-progress opacity-70"
                 : [
-                    "border-[var(--text-primary)] text-[var(--text-primary)]",
-                    // Hover reads the peach signature without overwhelming.
-                    "hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)]",
-                    "hover:bg-[var(--accent-warm)]/[.08]",
+                    "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]",
+                    "hover:border-[var(--accent-warm)] hover:bg-[var(--accent-warm)]",
                     "cursor-pointer",
                   ].join(" "),
             ].join(" ")}
@@ -436,7 +443,7 @@ function SuccessPanel({ title, line1, line2 }: SuccessPanelProps) {
   return (
     <section
       aria-live="polite"
-      className="mx-auto mt-12 w-full max-w-[720px] border border-[var(--border-default)] bg-[var(--bg-panel)]"
+      className="w-full border border-[var(--border-default)] bg-[var(--bg-panel-elev)]"
     >
       <header className="flex items-center justify-between border-b border-[var(--rule)] px-5 py-3 sm:px-6">
         <span className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]">
@@ -461,7 +468,7 @@ function SkippedPanel({ onUnskip }: { onUnskip: () => void }) {
   return (
     <section
       aria-live="polite"
-      className="mx-auto mt-12 w-full max-w-[720px] border border-[var(--border-default)] bg-[var(--bg-panel)]"
+      className="w-full border border-[var(--border-default)] bg-[var(--bg-panel-elev)]"
     >
       <header className="flex items-center justify-between border-b border-[var(--rule)] px-5 py-3 sm:px-6">
         <span className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
@@ -505,7 +512,7 @@ export function TrackedFootnote() {
   return (
     <p
       aria-live="polite"
-      className="mx-auto mt-12 w-full max-w-[720px] border-t border-[var(--rule)] pt-4 font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)]"
+      className="w-full border-t border-[var(--rule)] pt-4 font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)]"
     >
       <span className="alert-armed-glyph mr-2" aria-hidden>✓</span>
       Alert armed for this prediction.
