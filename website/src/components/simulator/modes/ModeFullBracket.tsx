@@ -710,9 +710,9 @@ export function ModeFullBracket({
                       className={[
                         "inline-flex h-6 min-w-[24px] items-center justify-center px-1 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
                         isComplete
-                          ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
+                          ? "bg-[var(--ui-success)] text-[var(--bg-root)]"
                           : isCurrent
-                            ? "border border-[var(--accent-warm)] text-[var(--accent-warm)]"
+                            ? "border border-[var(--ui-guidance)] text-[var(--ui-guidance)]"
                             : "border border-[var(--border-default)] text-[var(--text-quiet)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]",
                       ].join(" ")}
                     >
@@ -1013,14 +1013,19 @@ function GroupCard({
       aria-label={`Group ${g}`}
       style={{
         opacity: isDimmed ? 0.5 : 1,
-        borderColor: isFocused ? "var(--accent-warm)" : "var(--border-default)",
+        // Mission 3 — `--ui-guidance` (deep teal) signals "active step / focus"
+        // wherever a step or pick is the user's current attention.
+        borderColor: isFocused ? "var(--ui-guidance)" : "var(--border-default)",
       }}
       className={[
         "relative border",
         emphasized ? "p-5" : "p-3",
       ].join(" ")}
     >
-      <AccentPulse triggerKey={pulseKey} />
+      {/* `tone="success"` per the rebind table — this pulse fires when a
+          group's winner+runner-up pair just landed, which is a completion
+          moment rather than a generic accent. */}
+      <AccentPulse triggerKey={pulseKey} tone="success" />
       <div
         className={[
           "font-mono uppercase tracking-[0.10em] text-[var(--text-quiet)]",
@@ -1030,7 +1035,10 @@ function GroupCard({
         Group {g}
       </div>
       {isComplete ? (
-        <span className="pointer-events-none absolute right-2 top-2 font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
+        // Mission 3 — `--ui-success` (deep mint) is the role token for
+        // completion. Re-uses the same dereference as the mini-progress
+        // filled dot so the two surfaces stay visually consistent.
+        <span className="pointer-events-none absolute right-2 top-2 font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--ui-success)]">
           [ Done ]
         </span>
       ) : null}

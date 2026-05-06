@@ -149,7 +149,11 @@ export function SubmitErrorPanel({
             "border px-4 py-2 font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
             retryInFlight || inBackoff || kind === "invalid"
               ? "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed"
-              : "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer",
+              : // Mission 3 — `--ui-danger` (deep rose) is the accent on
+                // the recovery affordance: this panel only renders for
+                // failures, so the hover tone semantically matches the
+                // surface, not the brand-warm CTA.
+                "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)] cursor-pointer",
           ].join(" ")}
         >
           {retryInFlight

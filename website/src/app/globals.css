@@ -34,6 +34,22 @@
   --ledger-hit:    #2B8A5F;
   --ledger-miss:   #C4435E;
 
+  /* ── Role-aliased UI tokens (Mission 3) ──────────────────────────────────
+     Four semantic roles built as `var()` aliases of the existing palette
+     entries above. No new hex values introduced. The point: components
+     can declare what they MEAN ("active step", "completion") rather than
+     what they LOOK LIKE ("teal", "mint"), so future re-themes touch four
+     indirections instead of every component.
+
+     Quant canvas does NOT redeclare these — `--accent-focus` etc. already
+     swap to the lit Prism variants under `[data-canvas="quant"]`, and the
+     aliases below dereference at use-site, so the same `var(--ui-success)`
+     resolves correctly inside or outside the quant canvas. */
+  --ui-guidance: var(--accent-focus);   /* teal: focus, current step, active */
+  --ui-success:  var(--edge-positive);  /* mint: completion, submitted, filled */
+  --ui-danger:   var(--edge-negative);  /* rose: errors, destructive */
+  --ui-warning:  var(--gate-fired);     /* amber: caveats only — reserved */
+
   /* Prism palette — invariant across canvases */
   --prism-peach:  #F9B88A;
   --prism-coral:  #EC7C6A;
@@ -96,6 +112,20 @@
   --accent-focus:  #7ED0E8;
   --ledger-hit:    #88E0B6;
   --ledger-miss:   #E76E8A;
+
+  /* Re-bind the role tokens to the quant variants. CSS custom-property
+     indirection resolves at the declaring element, not at the consumer:
+     the `:root` definitions of `--ui-*` capture the editorial palette
+     and inherit those resolved hexes downward. Without these re-binds,
+     a future quant component reading `var(--ui-success)` would render
+     in deep editorial mint instead of lit Prism mint. No surface uses
+     the aliases inside quant today (which is why this whole block is
+     additive, not a fix), but the rebind preserves the plan's promise
+     that aliases re-target cleanly per canvas. */
+  --ui-guidance: var(--accent-focus);
+  --ui-success:  var(--edge-positive);
+  --ui-danger:   var(--edge-negative);
+  --ui-warning:  var(--gate-fired);
 
   /* Button radius — 4px on Quant (§2.11) */
   --radius: 0.25rem;
