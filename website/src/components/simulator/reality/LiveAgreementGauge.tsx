@@ -1,5 +1,7 @@
+"use client";
+
 /**
- * LiveAgreementGauge — Phase D Workstream 3.
+ * LiveAgreementGauge — Phase D Workstream 3, Phase E §5.4 motion.
  *
  * Per UX_POLISH_PLAN_SIMULATOR_PHASE_D.md §4.2 + §4.4 with the Option C
  * resolution (§4.1). The live build gauge speaks a 3-state viral
@@ -8,25 +10,22 @@
  * Vanishingly rare). The post-submit hero is RealityScorePanel, which
  * MUST NOT import this component.
  *
- * Anatomy when isComplete=true:
- *   [ HOW THE MODEL READS YOUR CALL ]   (mono 9pt quiet header)
- *   █████░░░░░░░░░░░░░░░░░░░░░░░       (5-segment bar)
- *   [ BOLD CALL ]                       (mono uppercase hook)
- *                              1.84%    (mono tabular percentage)
- *
- * When isComplete=false the bar renders in a ghost outline state and
- * the hook + percentage are suppressed — preserving layout real estate
- * without committing to a verdict on a partial scenario (Patch v2.1
- * §3 spirit).
+ * Phase E motion (§5.4):
+ *   - When `isComplete` flips false → true, the active segment fills
+ *     using the `gaugeFill` preset (450ms). Other segments stay outline.
+ *   - The viral hook label crossfades on change using the `micro`
+ *     preset via <AnimatePresence mode="wait">.
+ *   - Reduced motion: useReducedMotionAware collapses both transitions
+ *     to instant snap.
  *
  * Performance: primitive props only so React.memo stays effective.
- * Segment fill uses a CSS transition (.live-gauge-segment) — no
- * Framer Motion, no rAF, no JS loop. Score recompute happens in the
- * caller on drop, not on drag-over.
+ * Score recompute happens in the caller on drop, not on drag-over.
  */
 
 import { memo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { getLiveHook } from "@/lib/sim/getLiveHook";
+import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 
 interface LiveAgreementGaugeProps {
   count: number;
@@ -73,6 +72,9 @@ function LiveAgreementGaugeImpl({
   const hook = isComplete ? getLiveHook(count, total) : null;
   const percent = isComplete ? formatLivePercent(count, total) : null;
 
+  const gaugeFillTransition = useReducedMotionAware("gaugeFill");
+  const microTransition = useReducedMotionAware("micro");
+
   return (
     <section
       aria-labelledby="live-gauge-heading"
@@ -83,7 +85,7 @@ function LiveAgreementGaugeImpl({
         id="live-gauge-heading"
         className="font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] opacity-60"
       >
-        How the model reads your call
+        How the model reads this
       </h3>
 
       <ul
@@ -95,26 +97,62 @@ function LiveAgreementGaugeImpl({
           return (
             <li
               key={i}
+              // Phase E §8 (D.3) — gauge segment border in accent-warm
+              // when active to tie the gauge into the "you are here"
+              // beacon system used across the simulator.
               className={[
-                "live-gauge-segment border border-[var(--text-primary)]",
+                "relative overflow-hidden border",
                 active
-                  ? "bg-[var(--text-primary)] opacity-100"
-                  : "bg-transparent opacity-100",
+                  ? "border-[var(--accent-warm)]"
+                  : "border-[var(--text-primary)]",
               ].join(" ")}
-            />
+            >
+              <motion.span
+                aria-hidden="true"
+                // Phase E §8 (D.3) — active segment fills with the
+                // accent-warm beacon, replacing the prior text-primary
+                // bone fill.
+                className="absolute inset-0 bg-[var(--accent-warm)]"
+                initial={false}
+                animate={{ opacity: active ? 1 : 0, scaleX: active ? 1 : 0 }}
+                style={{ transformOrigin: "left center" }}
+                transition={gaugeFillTransition}
+              />
+            </li>
           );
         })}
       </ul>
 
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <span
-          className="font-mono text-[14px] uppercase tracking-[0.10em] text-[var(--text-primary)] sm:text-[15px]"
+          className={[
+            "relative inline-block min-h-[1em] font-mono text-[14px] uppercase tracking-[0.10em] sm:text-[15px]",
+            // Phase E §8 (D.3) — viral hook tracks the gauge accent.
+            isComplete
+              ? "text-[var(--accent-warm)]"
+              : "text-[var(--text-primary)]",
+          ].join(" ")}
           aria-label={hook ? `Live hook: ${hook}` : undefined}
         >
-          {hook ?? " "}
+          <AnimatePresence mode="wait" initial={false}>
+            {hook ? (
+              <motion.span
+                key={hook}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={microTransition}
+                className="inline-block"
+              >
+                {hook}
+              </motion.span>
+            ) : (
+              <span key="empty" className="inline-block">&nbsp;</span>
+            )}
+          </AnimatePresence>
         </span>
         <span className="font-mono text-[16px] tabular-nums text-[var(--text-primary)] sm:text-[18px]">
-          {percent ?? " "}
+          {percent ?? " "}
         </span>
       </div>
     </section>

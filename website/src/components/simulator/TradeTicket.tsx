@@ -33,7 +33,7 @@
  */
 
 import { Flag } from "@/components/primitives/Flag";
-import { RealityScorePanel } from "@/components/simulator/RealityScorePanel";
+import { RealityScoreReveal } from "@/components/simulator/reality/RealityScoreReveal";
 import { ScenarioBlock } from "@/components/simulator/ScenarioBlock";
 import type {
   ChampionsPathScenario,
@@ -93,12 +93,16 @@ export function TradeTicket({ view }: TradeTicketProps) {
         {view.storyLine}
       </h1>
 
-      {/* Reality Score block. The panel itself owns its internal
-          reveal classes (.reveal-band at 100ms, .reveal-one-in-n at
-          200ms). The hero number renders at t=0 per IMPL_PROMPT §9
-          step 1. */}
+      {/* Reality Score block. Phase E §9 (E.2) — RealityScoreReveal
+          (client) wraps RealityScorePanel with the entrance fade-up
+          (motion.entry, 400ms), the 5-band rarity bar fill
+          (motion.gaugeFill, 450ms, +100ms delay) and the 1-in-N
+          integer count-up (700ms cubic-out per Q3). The panel itself
+          retains its CSS reveal classes for the rarity-band and
+          one-in-N stagger so the static fallback (when JS hasn't
+          hydrated yet) still reads correctly. */}
       <div className="mt-8">
-        <RealityScorePanel
+        <RealityScoreReveal
           count={view.countCurrent}
           total={view.total}
           state={view.state}

@@ -1,0 +1,179 @@
+"use client";
+
+/**
+ * SubmitErrorPanel — Phase E §9 (E.1).
+ *
+ * The Phase D error state was a single inline string with no recovery
+ * affordance. This panel replaces it with:
+ *
+ *   - A short, human message: "We couldn't reach the model. This is
+ *     on us, not you." (server / network / unknown errors).
+ *   - `[ TRY AGAIN ]` button that re-fires `onRetry` with the same
+ *     payload from the parent's state — no client state lost.
+ *   - `[ COPY DIAGNOSTIC ]` link that copies a short diagnostic
+ *     string (error code + ISO timestamp + scenario hash if provided)
+ *     to the clipboard for the user to send if it persists.
+ *   - A small retry counter so the user sees progress; after 3
+ *     failed retries we surface a heavier "still failing" state
+ *     and ease them toward the diagnostic copy path.
+ *
+ * Backoff: §9 (E.1) calls for 1s / 2s / 4s exponential. We disable
+ * the [ TRY AGAIN ] button for the backoff window after each failure
+ * so the user can't hammer the API.
+ *
+ * Validation errors (`invalid`) and rate-limit errors (`rateLimit`)
+ * keep their existing copy — those aren't "on us" failures, so the
+ * "this is on us" line is hidden for those kinds.
+ */
+
+import { useEffect, useRef, useState } from "react";
+
+export type SubmitErrorKind =
+  | "rateLimit"
+  | "network"
+  | "invalid"
+  | "server";
+
+interface SubmitErrorPanelProps {
+  kind: SubmitErrorKind;
+  /** Re-fires the submit with the parent-held payload. Required. */
+  onRetry: () => void | Promise<void>;
+  /** Optional scenario hash — included in the diagnostic copy. */
+  scenarioHash?: string;
+  /** Disable retry while a submit is already in flight. */
+  retryInFlight?: boolean;
+}
+
+const BACKOFF_MS = [1000, 2000, 4000]; // §9 (E.1) — 1s, 2s, 4s.
+
+function headlineFor(kind: SubmitErrorKind): string {
+  switch (kind) {
+    case "rateLimit":
+      return "Too many predictions in a short window. Wait a moment and try again.";
+    case "invalid":
+      return "Something in the scenario looks wrong. Reset and try again.";
+    case "network":
+      return "We couldn't reach the model. Check your connection and try again.";
+    case "server":
+    default:
+      return "We couldn't reach the model. This is on us, not you.";
+  }
+}
+
+function formatDiagnostic(
+  kind: SubmitErrorKind,
+  scenarioHash?: string,
+  retryCount = 0,
+): string {
+  const ts = new Date().toISOString();
+  const parts = [
+    `code=${kind}`,
+    `ts=${ts}`,
+    `retries=${retryCount}`,
+  ];
+  if (scenarioHash) parts.push(`scenario=${scenarioHash.slice(0, 12)}`);
+  return parts.join(" ");
+}
+
+export function SubmitErrorPanel({
+  kind,
+  onRetry,
+  scenarioHash,
+  retryInFlight = false,
+}: SubmitErrorPanelProps) {
+  const [retryCount, setRetryCount] = useState(0);
+  // backoffSeconds = remaining seconds before [ Try again ] re-enables;
+  // 0 means available now. The retry handler bumps this; an interval
+  // ticks it down. Avoids reading Date.now() during render.
+  const [backoffSeconds, setBackoffSeconds] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const copyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (backoffSeconds <= 0) return;
+    const handle = setInterval(() => {
+      setBackoffSeconds((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(handle);
+  }, [backoffSeconds]);
+
+  useEffect(() => {
+    return () => {
+      if (copyResetRef.current) clearTimeout(copyResetRef.current);
+    };
+  }, []);
+
+  const inBackoff = backoffSeconds > 0;
+  const heavyFailing = retryCount >= BACKOFF_MS.length;
+  const headlineCopy = headlineFor(kind);
+
+  async function handleRetryClick() {
+    if (retryInFlight || inBackoff) return;
+    const slot = Math.min(retryCount, BACKOFF_MS.length - 1);
+    const seconds = Math.ceil(BACKOFF_MS[slot] / 1000);
+    setBackoffSeconds(seconds);
+    setRetryCount((c) => c + 1);
+    await onRetry();
+  }
+
+  async function handleCopyDiagnostic() {
+    // Snapshot retryCount at click time; safe to read state inside an
+    // event handler (just not during render).
+    const text = formatDiagnostic(kind, scenarioHash, retryCount);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // No clipboard access — fall through; the user still sees the text below.
+    }
+    setCopied(true);
+    if (copyResetRef.current) clearTimeout(copyResetRef.current);
+    copyResetRef.current = setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      className="flex flex-col items-start gap-3"
+    >
+      <p className="font-sans text-[14px] text-[var(--state-dead)]">
+        {headlineCopy}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={handleRetryClick}
+          disabled={retryInFlight || inBackoff || kind === "invalid"}
+          className={[
+            "border px-4 py-2 font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+            retryInFlight || inBackoff || kind === "invalid"
+              ? "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed"
+              : "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer",
+          ].join(" ")}
+        >
+          {retryInFlight
+            ? "[ Retrying... ]"
+            : inBackoff
+              ? `[ Wait ${backoffSeconds}s ]`
+              : "[ Try again ]"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleCopyDiagnostic}
+          className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+        >
+          {copied ? "[ Copied ]" : "[ Copy diagnostic ]"}
+        </button>
+      </div>
+
+      {heavyFailing ? (
+        <p className="font-sans text-[12px] italic text-[var(--text-quiet)]">
+          Still failing after several tries. Copy the diagnostic above and
+          email us — we&rsquo;ll dig into it.
+        </p>
+      ) : null}
+    </div>
+  );
+}

@@ -2,26 +2,29 @@
 
 /**
  * EmptySlot — tactile empty-target affordance per
- * UX_POLISH_PLAN_SIMULATOR_PHASE_D.md §3.1.
+ * UX_POLISH_PLAN_SIMULATOR_PHASE_D.md §3.1, with Phase E §5.4 motion.
  *
  * Replaces the en-dash placeholders that previously sat in droppable
  * positions across all three build modes. Communicates "this is a
  * target" via a dashed 1px border + a 1px-stroke "+" glyph + a quiet
  * label.
  *
- * Four states:
- *   - idle               default
- *   - isOver             dnd-kit drag is hovering this slot
- *   - isActive           tap-to-fill is armed (mobile/keyboard flow)
- *   - keyboard-focused   :focus-visible from a real button wrapper
+ * Phase E motion: the glyph + label fade between unlit/lit via the
+ * `micro` preset whenever `isOver` (or `isActive`) toggles. The border
+ * and fill keep their Phase D CSS transition (fast, no JS cost). The
+ * fade-in of the EmptySlot itself when a parent clears its slot (and
+ * the fade-out when filled) is owned by the parent's <AnimatePresence>
+ * wrapper so the team chip and EmptySlot trade places coherently.
+ *
+ * Reduced motion: useReducedMotionAware collapses the micro preset to
+ * { duration: 0 }, so the lit-state crossfade snaps instantly — the
+ * Phase D static behavior.
  *
  * Sharp corners (border-radius: 0). Inline SVG glyph — no icon library.
- * The pulse on `isActive` honors prefers-reduced-motion: reduce.
- *
- * The component is presentational — the parent owns the click /
- * keyboard handlers and arms `isActive`. When parents wrap this in a
- * <button>, the focus ring comes from that button.
  */
+
+import { motion } from "framer-motion";
+import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 
 interface EmptySlotProps {
   /** Optional caption above the glyph; defaults to "DROP A TEAM". */
@@ -71,9 +74,10 @@ export function EmptySlot({
 }: EmptySlotProps) {
   const s = SIZE_CLASSES[size];
   const lit = isOver || isActive;
+  const microTransition = useReducedMotionAware("micro");
 
   return (
-    <span
+    <motion.span
       role="presentation"
       aria-label={ariaLabel}
       data-empty-slot
@@ -89,26 +93,29 @@ export function EmptySlot({
         isActive ? "empty-slot-pulse" : "",
       ].join(" ")}
     >
-      <PlusGlyph
-        size={s.glyph}
+      <motion.span
         className={
           lit
-            ? "text-[var(--accent-warm)] opacity-100"
-            : "text-[var(--text-quiet)] opacity-60"
+            ? "text-[var(--accent-warm)]"
+            : "text-[var(--text-quiet)]"
         }
-      />
-      <span
+        animate={{ opacity: lit ? 1 : 0.6 }}
+        transition={microTransition}
+      >
+        <PlusGlyph size={s.glyph} />
+      </motion.span>
+      <motion.span
         className={[
           "font-mono uppercase tracking-[0.10em]",
           s.label,
-          lit
-            ? "text-[var(--accent-warm)] opacity-90"
-            : "text-[var(--text-quiet)] opacity-60",
+          lit ? "text-[var(--accent-warm)]" : "text-[var(--text-quiet)]",
         ].join(" ")}
+        animate={{ opacity: lit ? 0.9 : 0.6 }}
+        transition={microTransition}
       >
         {label}
-      </span>
-    </span>
+      </motion.span>
+    </motion.span>
   );
 }
 

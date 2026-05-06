@@ -26,10 +26,17 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import { motion } from "framer-motion";
 import { TeamPickerGrid } from "@/components/simulator/TeamPickerGrid";
 import { Flag } from "@/components/primitives/Flag";
 import { EmptySlot } from "@/components/simulator/EmptySlot";
 import { LiveAgreementGauge } from "@/components/simulator/reality/LiveAgreementGauge";
+import { AccentPulse } from "@/components/simulator/AccentPulse";
+import {
+  SubmitErrorPanel,
+  type SubmitErrorKind,
+} from "@/components/simulator/SubmitErrorPanel";
+import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import { COUNTRY_NAMES, type FifaCode } from "@/lib/flags/countries";
 import {
   clearInflight,
@@ -72,13 +79,23 @@ interface FFSlotProps {
   code: TeamCode | null;
   label: (typeof SLOT_LABELS)[number];
   isActive: boolean;
+  pulseKey: number;
   onClear: (idx: number) => void;
   onActivate: (idx: number) => void;
 }
 
-function FFSlot({ idx, code, label, isActive, onClear, onActivate }: FFSlotProps) {
+function FFSlot({
+  idx,
+  code,
+  label,
+  isActive,
+  pulseKey,
+  onClear,
+  onActivate,
+}: FFSlotProps) {
   const { isOver, setNodeRef } = useDroppable({ id: String(idx) });
   const countryName = code ? COUNTRY_NAMES[code as FifaCode] : null;
+  const dropTransition = useReducedMotionAware("drop");
   return (
     <button
       ref={setNodeRef}
@@ -86,7 +103,7 @@ function FFSlot({ idx, code, label, isActive, onClear, onActivate }: FFSlotProps
       onClick={() => (code ? onClear(idx) : onActivate(idx))}
       aria-pressed={isActive && !code}
       className={[
-        "flex h-28 w-full flex-col items-center justify-center gap-1 bg-[var(--bg-root)] px-2 transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)] sm:h-32",
+        "relative flex h-28 w-full flex-col items-center justify-center gap-1 bg-[var(--bg-root)] px-2 transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)] sm:h-32",
         code
           ? "cursor-pointer hover:bg-[var(--bg-panel-elev)]"
           : "cursor-pointer",
@@ -100,23 +117,30 @@ function FFSlot({ idx, code, label, isActive, onClear, onActivate }: FFSlotProps
             : `Slot ${label} empty; tap to arm, or drag a team here`
       }
     >
+      <AccentPulse triggerKey={pulseKey} />
       <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
         {label}
       </div>
       {code ? (
-        <>
-          <Flag code={code} size={32} />
-          <div className="mt-0.5 font-mono text-[24px] tabular-nums tracking-[0.05em] text-[var(--text-primary)] sm:text-[28px]">
-            {code}
-          </div>
+        <span className="flex flex-col items-center">
+          <motion.span
+            layoutId={`team-chip-${code}`}
+            transition={dropTransition}
+            className="flex flex-col items-center"
+          >
+            <Flag code={code} size={32} />
+            <span className="mt-0.5 font-mono text-[24px] tabular-nums tracking-[0.05em] text-[var(--text-primary)] sm:text-[28px]">
+              {code}
+            </span>
+          </motion.span>
           {countryName ? (
-            <div className="font-sans text-[10px] leading-tight text-[var(--text-quiet)] sm:text-[11px]">
+            <span className="font-sans text-[10px] leading-tight text-[var(--text-quiet)] sm:text-[11px]">
               {countryName}
-            </div>
+            </span>
           ) : null}
-        </>
+        </span>
       ) : (
-        <div className="mt-1 flex h-[68px] w-full items-stretch sm:h-[80px]">
+        <span className="mt-1 flex h-[68px] w-full items-stretch sm:h-[80px]">
           <EmptySlot
             size="md"
             isOver={isOver}
@@ -124,7 +148,7 @@ function FFSlot({ idx, code, label, isActive, onClear, onActivate }: FFSlotProps
             label={label}
             ariaLabel={`Drop a team into ${label}`}
           />
-        </div>
+        </span>
       )}
     </button>
   );
@@ -138,10 +162,20 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
     Array(SLOT_COUNT).fill(null),
   );
   const [submitting, setSubmitting] = useState(false);
-  const [errorCopy, setErrorCopy] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
   const [activeSlotIdx, setActiveSlotIdx] = useState<number | null>(null);
+  // Phase E §6 (B.1) — picker auto-collapses to a thin bar once all slots
+  // are filled. User can re-expand via the bar; clearing any slot
+  // auto-expands again per Q1.
+  const [manuallyExpanded, setManuallyExpanded] = useState(false);
+  // Phase E §8 (D.3) — per-slot pulse counter. Bumping a slot's value
+  // re-mounts its <AccentPulse>, firing a single 250ms warm-tint pulse.
+  const [pulseKeys, setPulseKeys] = useState<number[]>(() =>
+    Array(SLOT_COUNT).fill(0),
+  );
   const hydratedRef = useRef(false);
+  const layoutTransition = useReducedMotionAware("layout");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -165,6 +199,10 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   const filled = slots.filter((c): c is TeamCode => Boolean(c));
   const allFilled = filled.length === SLOT_COUNT;
   const selectedSet = useMemo(() => new Set(filled), [filled]);
+  // Q1 — picker is expanded whenever any slot is empty, OR when the user
+  // explicitly tapped "Edit teams" while complete. Reset of the
+  // manual flag is handled inline in handlers that cause a slot to clear.
+  const pickerExpanded = !allFilled || manuallyExpanded;
 
   // Live Reality Score — recomputed only when slots change (drop, click,
   // clear). Used by LiveAgreementGauge once allFilled triggers
@@ -177,9 +215,13 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   }, [filled]);
 
   function handlePick(code: TeamCode) {
+    let pulseTarget: number | null = null;
     setSlots((prev) => {
       const at = prev.indexOf(code);
       if (at !== -1) {
+        // Removing a selected team frees a slot — reset the manual-expand
+        // flag so the next allFilled flip auto-collapses again.
+        setManuallyExpanded(false);
         const next = [...prev];
         next[at] = null;
         return next;
@@ -191,10 +233,19 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
       if (target === -1) return prev;
       const next = [...prev];
       next[target] = code;
+      pulseTarget = target;
       return next;
     });
+    if (pulseTarget !== null) {
+      const t = pulseTarget;
+      setPulseKeys((prev) => {
+        const next = [...prev];
+        next[t] = next[t] + 1;
+        return next;
+      });
+    }
     setActiveSlotIdx(null);
-    setErrorCopy(null);
+    setErrorKind(null);
   }
 
   function handleClearSlot(idx: number) {
@@ -204,12 +255,14 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
       return next;
     });
     setActiveSlotIdx(null);
-    setErrorCopy(null);
+    setErrorKind(null);
+    // Q1 — clearing should auto-expand and re-arm auto-collapse next time.
+    setManuallyExpanded(false);
   }
 
   function handleActivateSlot(idx: number) {
     setActiveSlotIdx((current) => (current === idx ? null : idx));
-    setErrorCopy(null);
+    setErrorKind(null);
   }
 
   function handleDropToSlot(idx: number, code: TeamCode) {
@@ -220,7 +273,13 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
       next[idx] = code;
       return next;
     });
-    setErrorCopy(null);
+    setPulseKeys((prev) => {
+      const next = [...prev];
+      next[idx] = next[idx] + 1;
+      return next;
+    });
+    setErrorKind(null);
+    setManuallyExpanded(false);
   }
 
   function handleDragStart({ active }: DragStartEvent) {
@@ -241,13 +300,14 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
     setSlots(Array(SLOT_COUNT).fill(null));
     setActiveSlotIdx(null);
     clearInflight();
-    setErrorCopy(null);
+    setErrorKind(null);
+    setManuallyExpanded(false);
   }
 
   async function handleSubmit() {
     if (!allFilled || submitting) return;
     setSubmitting(true);
-    setErrorCopy(null);
+    setErrorKind(null);
     const result = await submitPrediction({
       mode: "final_four",
       scenario: { semifinalists: filled },
@@ -260,15 +320,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
       return;
     }
     setSubmitting(false);
-    setErrorCopy(
-      result.kind === "rateLimit"
-        ? "Too many predictions in a short window. Wait a moment and try again."
-        : result.kind === "network"
-          ? "Could not reach the server. Check your connection and try again."
-          : result.kind === "invalid"
-            ? "Something in the scenario looks wrong. Reset and try again."
-            : "Something went wrong on our side. Try again in a moment.",
-    );
+    setErrorKind(result.kind);
   }
 
   return (
@@ -314,6 +366,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
                 code={code}
                 label={SLOT_LABELS[idx]}
                 isActive={activeSlotIdx === idx}
+                pulseKey={pulseKeys[idx]}
                 onClear={handleClearSlot}
                 onActivate={handleActivateSlot}
               />
@@ -321,12 +374,34 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
           ))}
         </ol>
 
-        {/* Team grid */}
-        <TeamPickerGrid
-          selected={selectedSet}
-          onPick={handlePick}
-          draggable={true}
-        />
+        {/* Team grid — Phase E §6 (B.1) auto-collapse.
+            When all 4 slots are filled, the grid collapses to a thin
+            "EDIT TEAMS" bar via the layout preset (320ms). The
+            gauge below slides up smoothly because the wrapper's height
+            transitions instead of unmounting. */}
+        <motion.div
+          layout
+          transition={layoutTransition}
+          className="overflow-hidden"
+        >
+          {pickerExpanded ? (
+            <TeamPickerGrid
+              selected={selectedSet}
+              onPick={handlePick}
+              draggable={true}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setManuallyExpanded(true)}
+              className="mt-6 flex h-12 w-full items-center justify-center border border-[var(--border-default)] bg-[var(--bg-root)] font-mono text-[12px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] transition-colors duration-100 hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+              aria-expanded={false}
+              aria-controls="ff-picker-grid"
+            >
+              [ Edit teams ]
+            </button>
+          )}
+        </motion.div>
 
         {/* Live Agreement Gauge — Phase D Workstream 3 (Option C).
             Ghost state until all 4 SF slots are filled per the per-mode
@@ -357,13 +432,12 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
           >
             {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
           </button>
-          {errorCopy ? (
-            <p
-              role="alert"
-              className="font-sans text-[13px] text-[var(--state-dead)]"
-            >
-              {errorCopy}
-            </p>
+          {errorKind ? (
+            <SubmitErrorPanel
+              kind={errorKind}
+              onRetry={handleSubmit}
+              retryInFlight={submitting}
+            />
           ) : null}
           {!allFilled ? (
             <p className="font-sans text-[12px] text-[var(--text-quiet)]">
