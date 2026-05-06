@@ -26,10 +26,17 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import { motion } from "framer-motion";
 import { TeamPickerGrid } from "@/components/simulator/TeamPickerGrid";
 import { Flag } from "@/components/primitives/Flag";
 import { EmptySlot } from "@/components/simulator/EmptySlot";
 import { LiveAgreementGauge } from "@/components/simulator/reality/LiveAgreementGauge";
+import { AccentPulse } from "@/components/simulator/AccentPulse";
+import {
+  SubmitErrorPanel,
+  type SubmitErrorKind,
+} from "@/components/simulator/SubmitErrorPanel";
+import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import {
   clearInflight,
   readInflightForMode,
@@ -237,9 +244,21 @@ export function ModeChampionsPath({
   const router = useRouter();
   const [state, setState] = useState<BuildState>(emptyState);
   const [submitting, setSubmitting] = useState(false);
-  const [errorCopy, setErrorCopy] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
+  // Phase E §6 (B.2) — stage focus. When set, picks route to this stage
+  // and only its presence guides the picker's "you are here" beacon.
+  // null defaults to nextEmptyOpponentSlot for natural forward progression.
+  const [activeStage, setActiveStage] = useState<StageKey | null>(null);
+  // Phase E §6 (B.1)/Q1 — picker collapses once the path is fully resolved.
+  const [manuallyExpanded, setManuallyExpanded] = useState(false);
+  // Phase E §8 (D.3) — per-stage pulse counter, bumped on stage advance
+  // (when the W/L result lands), one shot per stage advance.
+  const [stagePulseKeys, setStagePulseKeys] = useState<Record<StageKey, number>>(
+    () => ({ r16: 0, qf: 0, sf: 0, f: 0 }),
+  );
   const hydratedRef = useRef(false);
+  const layoutTransition = useReducedMotionAware("layout");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -270,7 +289,10 @@ export function ModeChampionsPath({
   }, [state]);
 
   function handlePick(code: TeamCode) {
-    setErrorCopy(null);
+    setErrorKind(null);
+    // Any pick change can invalidate downstream stages → reset the
+    // manual-expand flag so the next resolved flip auto-collapses.
+    setManuallyExpanded(false);
     setState((prev) => {
       if (prev.team === code) {
         return emptyState();
@@ -289,10 +311,16 @@ export function ModeChampionsPath({
       if (!prev.team) {
         return { ...prev, team: code };
       }
-      const slot = nextEmptyOpponentSlot(prev);
-      if (!slot) return prev;
+      // Phase E §6 (B.2) — route to the focused stage if one is active and
+      // its slot is empty (or equal to nextEmpty). Otherwise fall back to
+      // nextEmptyOpponentSlot for forward progression.
+      const candidate =
+        activeStage && !isPathDeadAt(prev, activeStage) && prev[activeStage].opponent === null
+          ? activeStage
+          : nextEmptyOpponentSlot(prev);
+      if (!candidate) return prev;
       const next = { ...prev };
-      next[slot] = { opponent: code, result: null };
+      next[candidate] = { opponent: code, result: null };
       return next;
     });
   }
@@ -300,7 +328,11 @@ export function ModeChampionsPath({
   function handleResult(stage: StageKey, result: "W" | "L") {
     if (state[stage].opponent === null) return;
     if (isPathDeadAt(state, stage)) return;
-    setErrorCopy(null);
+    setErrorKind(null);
+    // Setting an L invalidates later stages → re-arm auto-collapse.
+    setManuallyExpanded(false);
+    // §8 (D.3) — fire the accent pulse on this stage card.
+    setStagePulseKeys((prev) => ({ ...prev, [stage]: prev[stage] + 1 }));
     setState((prev) => {
       const next = { ...prev, [stage]: { ...prev[stage], result } };
       if (result === "L") {
@@ -330,7 +362,7 @@ export function ModeChampionsPath({
     if (overId === "cp-team") {
       if (state.team !== code) {
         setState({ ...emptyState(), team: code });
-        setErrorCopy(null);
+        setErrorKind(null);
       }
     } else if (overId.startsWith("cp-opp-")) {
       const stageKey = overId.slice("cp-opp-".length) as StageKey;
@@ -360,14 +392,16 @@ export function ModeChampionsPath({
         next[stageKey] = { opponent: code, result: null };
         return next;
       });
-      setErrorCopy(null);
+      setErrorKind(null);
     }
   }
 
   function handleReset() {
     setState(emptyState());
+    setActiveStage(null);
+    setManuallyExpanded(false);
     clearInflight();
-    setErrorCopy(null);
+    setErrorKind(null);
   }
 
   async function handleSubmit() {
@@ -375,7 +409,7 @@ export function ModeChampionsPath({
     const scenario = toSubmissionScenario(state);
     if (!scenario) return;
     setSubmitting(true);
-    setErrorCopy(null);
+    setErrorKind(null);
     const result = await submitPrediction({
       mode: "champions_path",
       scenario,
@@ -388,15 +422,7 @@ export function ModeChampionsPath({
       return;
     }
     setSubmitting(false);
-    setErrorCopy(
-      result.kind === "rateLimit"
-        ? "Too many predictions in a short window. Wait a moment and try again."
-        : result.kind === "network"
-          ? "Could not reach the server. Check your connection and try again."
-          : result.kind === "invalid"
-            ? "Something in the scenario looks wrong. Reset and try again."
-            : "Something went wrong on our side. Try again in a moment.",
-    );
+    setErrorKind(result.kind);
   }
 
   const submissionScenario = toSubmissionScenario(state);
@@ -404,6 +430,27 @@ export function ModeChampionsPath({
     ? renderStoryLine("champions_path", submissionScenario)
     : "";
   const resolved = isResolved(state);
+
+  // Phase E §6 (B.2) — derive the effective focus stage. Falls back to the
+  // next-empty slot for natural progression when the user hasn't tapped
+  // a stage card explicitly.
+  const focusStage: StageKey | null = activeStage ?? nextEmptyOpponentSlot(state);
+  // Q1 — picker is expanded whenever the path is unresolved, OR when the
+  // user explicitly tapped "Edit story" while resolved. Reset of
+  // the manual flag is handled inline in handlers that mutate state.
+  const pickerExpanded = !resolved || manuallyExpanded;
+
+  function isStageCompleted(s: StageKey): boolean {
+    const v = state[s];
+    return v.opponent !== null && v.result !== null;
+  }
+
+  function handleStageCardClick(s: StageKey) {
+    if (!state.team) return;
+    if (isPathDeadAt(state, s)) return;
+    setActiveStage(s);
+    setErrorKind(null);
+  }
 
   // Live Reality Score — only percentage, no band / 1-in-N per v2.1 §3.
   const liveScore = useMemo(() => {
@@ -462,7 +509,10 @@ export function ModeChampionsPath({
           ) : null}
         </div>
 
-        {/* Stage row — vertical on mobile, horizontal at sm+. */}
+        {/* Stage row — vertical on mobile, horizontal at sm+. Phase E
+            §6 (B.2): tappable to set focus; active stage gets the
+            accent-warm border; completed stages dim to ~60%; dead
+            stages stay at the existing 40%. */}
         <ol
           aria-label="Stages from R16 to Final"
           className="mt-6 grid grid-cols-1 gap-px border border-[var(--border-default)] bg-[var(--rule)] sm:grid-cols-4"
@@ -472,15 +522,33 @@ export function ModeChampionsPath({
             const dead = isPathDeadAt(state, s);
             const active = !dead && (stage.opponent !== null || nextEmptyOpponentSlot(state) === s);
             const opponentReady = stage.opponent !== null && !dead;
+            const completed = isStageCompleted(s);
+            const isFocused = focusStage === s && !dead;
 
             return (
               <li
                 key={s}
+                onClick={() => handleStageCardClick(s)}
+                role="button"
+                tabIndex={state.team && !dead ? 0 : -1}
+                aria-pressed={isFocused}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleStageCardClick(s);
+                  }
+                }}
                 className={[
-                  "flex h-32 w-full flex-col bg-[var(--bg-root)] p-3 sm:h-36",
-                  dead ? "opacity-40" : "",
+                  "relative flex h-32 w-full cursor-pointer flex-col bg-[var(--bg-root)] p-3 transition-colors duration-100 sm:h-36",
+                  "border focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                  isFocused
+                    ? "border-[var(--accent-warm)]"
+                    : "border-transparent",
+                  dead ? "opacity-40 cursor-not-allowed" : "",
+                  !dead && completed && !isFocused ? "opacity-60" : "",
                 ].join(" ")}
               >
+                <AccentPulse triggerKey={stagePulseKeys[s]} />
                 <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
                   {STAGE_LABELS[s]}
                 </div>
@@ -514,7 +582,10 @@ export function ModeChampionsPath({
                         key={r}
                         type="button"
                         disabled={!enabled}
-                        onClick={() => handleResult(s, r)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResult(s, r);
+                        }}
                         aria-pressed={isOn}
                         className={[
                           "py-1.5 text-center font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
@@ -542,8 +613,28 @@ export function ModeChampionsPath({
           </p>
         ) : null}
 
-        {/* Team grid (universal picker). */}
-        <TeamPickerGrid selected={usedCodes} onPick={handlePick} draggable={true} />
+        {/* Team grid (universal picker). Phase E §6 (B.2)/(B.1): collapses
+            once the entire path is resolved; the focused stage above
+            tells the user where the next pick lands. */}
+        <motion.div
+          layout
+          transition={layoutTransition}
+          className="overflow-hidden"
+        >
+          {pickerExpanded ? (
+            <TeamPickerGrid selected={usedCodes} onPick={handlePick} draggable={true} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setManuallyExpanded(true)}
+              className="mt-6 flex h-12 w-full items-center justify-center border border-[var(--border-default)] bg-[var(--bg-root)] font-mono text-[12px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] transition-colors duration-100 hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+              aria-expanded={false}
+              aria-controls="cp-picker-grid"
+            >
+              [ Edit story ]
+            </button>
+          )}
+        </motion.div>
 
         {/* Live Agreement Gauge — show-threshold per Phase D §4.2: the
             entire path must be resolved (all 4 stages with W/L set, or
@@ -573,13 +664,12 @@ export function ModeChampionsPath({
           >
             {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
           </button>
-          {errorCopy ? (
-            <p
-              role="alert"
-              className="font-sans text-[13px] text-[var(--state-dead)]"
-            >
-              {errorCopy}
-            </p>
+          {errorKind ? (
+            <SubmitErrorPanel
+              kind={errorKind}
+              onRetry={handleSubmit}
+              retryInFlight={submitting}
+            />
           ) : null}
         </div>
       </section>

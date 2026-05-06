@@ -21,6 +21,7 @@
 
 import { getOneInN, getOneInNSentence } from "@/lib/sim/getOneInN";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
+import { OneInNCountUp } from "@/components/simulator/reality/OneInNCountUp";
 
 interface RealityScorePanelProps {
   count: number;
@@ -29,6 +30,13 @@ interface RealityScorePanelProps {
   variant?: "submitted" | "promoted";
   /** Optional state badge for the dashboard's three variants. */
   state?: "alive" | "dead" | "promoted";
+  /**
+   * Phase E §9 (E.2) + Q3. When provided, the 1-in-N integer animates
+   * from 1 → this target over 700ms cubic-out via OneInNCountUp.
+   * When omitted (server-only contexts like dashboards / OG images),
+   * the static `oneInNSentence` renders unchanged.
+   */
+  oneInNTarget?: number;
 }
 
 function formatPercent(count: number, total: number): string {
@@ -45,6 +53,7 @@ export function RealityScorePanel({
   total,
   variant = "submitted",
   state = "alive",
+  oneInNTarget,
 }: RealityScorePanelProps) {
   const reading = getRarityBand(count, total);
   const oneInN = getOneInN(count, total);
@@ -115,9 +124,20 @@ export function RealityScorePanel({
       </div>
 
       {/* 1-in-N translator — the bridge from percentage to a frame any
-          human can hold. Reveals at t=200ms. */}
+          human can hold. Reveals at t=200ms. Phase E §9 (E.2) + Q3 —
+          when oneInNTarget is provided, the integer counts up from
+          1 → final over 700ms cubic-out; otherwise the static
+          sentence renders unchanged. */}
       <div className="reveal-one-in-n mt-6 font-mono text-[16px] tabular-nums text-[var(--text-primary)]">
-        {oneInNSentence}
+        {oneInNTarget !== undefined ? (
+          <OneInNCountUp
+            target={oneInNTarget}
+            prefix="1 in "
+            suffix=" simulated tournaments matched your prediction."
+          />
+        ) : (
+          oneInNSentence
+        )}
       </div>
 
       {/* Aria-only restatement for screen readers; visually redundant. */}

@@ -16,8 +16,10 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 import { TEAMS } from "@/lib/data/wc2026-official-draw";
 import { Flag } from "@/components/primitives/Flag";
+import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import type { TeamCode } from "@/lib/sim/types";
 
 interface TeamPickerGridProps {
@@ -92,6 +94,7 @@ function PickerCell({
       data: { code },
       disabled: !draggable || disabled,
     });
+  const dropTransition = useReducedMotionAware("drop");
 
   // Strip props we set explicitly so they aren't overwritten by the spread.
   const {
@@ -137,10 +140,16 @@ function PickerCell({
             : "cursor-pointer",
       ].join(" ")}
     >
-      <Flag code={code} size={24} />
-      <div className="mt-2 font-mono text-[20px] tabular-nums tracking-[0.05em] sm:text-[24px]">
-        {code}
-      </div>
+      <motion.span
+        layoutId={`team-chip-${code}`}
+        transition={dropTransition}
+        className="flex flex-col items-center justify-center"
+      >
+        <Flag code={code} size={24} />
+        <span className="mt-2 font-mono text-[20px] tabular-nums tracking-[0.05em] sm:text-[24px]">
+          {code}
+        </span>
+      </motion.span>
       <div
         className={`mt-1 font-sans text-[10px] leading-tight sm:text-[11px] ${
           selected
