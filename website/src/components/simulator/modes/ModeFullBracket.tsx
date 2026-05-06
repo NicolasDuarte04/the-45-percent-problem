@@ -1053,10 +1053,17 @@ function GroupCard({
           group's winner+runner-up pair just landed, which is a completion
           moment rather than a generic accent. */}
       <AccentPulse triggerKey={pulseKey} tone="success" />
+      {/* Polish — emphasize the group label so the carousel always tells
+          the user where they are. The emphasized (carousel) variant lifts
+          the weight, jumps a size, and routes through `--ui-guidance` so
+          the label semantically reads as "you are here". The compact
+          (wall) variant stays muted to keep the 12-grid visually quiet. */}
       <div
         className={[
-          "font-mono uppercase tracking-[0.10em] text-[var(--text-quiet)]",
-          emphasized ? "text-[12px]" : "text-[10px]",
+          "font-mono uppercase tracking-[0.10em]",
+          emphasized
+            ? "text-[14px] font-semibold text-[var(--ui-guidance)]"
+            : "text-[10px] text-[var(--text-quiet)]",
         ].join(" ")}
       >
         Group {g}
@@ -1087,7 +1094,15 @@ function GroupCard({
                     : "border-[var(--border-default)] bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]",
                 ].join(" ")}
               >
-                <span>{code}</span>
+                <span className="inline-flex items-center gap-2">
+                  {/* Polish — restore the visual language: every team
+                      pick shows its national flag next to the FIFA code,
+                      matching `TeamGrid` and the best-3rds row. Larger
+                      flag in the carousel (emphasized) variant, smaller
+                      in the wall view to keep the 12-grid compact. */}
+                  <Flag code={code} size={emphasized ? 22 : 16} />
+                  <span>{code}</span>
+                </span>
                 <span className="text-[10px] opacity-70">{rank}</span>
               </button>
             </li>
