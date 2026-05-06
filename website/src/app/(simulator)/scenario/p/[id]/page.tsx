@@ -5,9 +5,9 @@ import { isValidPredictionId } from "@/lib/sim/generatePredictionId";
 import { getPrediction } from "@/lib/sim/getPrediction";
 import { toPublicPredictionView } from "@/lib/sim/predictionViews";
 import {
-  PredictionEmailGate,
+  PredictionAlertConfigurator,
   TrackedFootnote,
-} from "@/components/simulator/PredictionEmailGate";
+} from "@/components/simulator/PredictionAlertConfigurator";
 import { Flag } from "@/components/primitives/Flag";
 import { RealityScoreReveal } from "@/components/simulator/reality/RealityScoreReveal";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
@@ -193,14 +193,16 @@ export default async function PredictionPermalinkPage(props: {
         <TicketShareButton predictionId={view.id} />
       </div>
 
-      {/* Alert / email gate — lifted up under the share strip per §3.1.D.
-          The redesign of this block as a "Bloomberg alert configurator"
-          (§2) is PR 3; this PR only changes its position. */}
-      <div className="reveal-gate mt-6">
+      {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Bloomberg-style
+          terminal panel sitting under the share strip. The configurator
+          owns its own entrance via .reveal-alert (200ms after the ticket
+          reveal). When the row already carries a subscriber_id, render
+          the quiet TrackedFootnote acknowledgement instead. */}
+      <div className="reveal-alert">
         {view.hasTracking ? (
           <TrackedFootnote />
         ) : (
-          <PredictionEmailGate predictionId={view.id} />
+          <PredictionAlertConfigurator view={view} />
         )}
       </div>
 
