@@ -79,17 +79,30 @@ export function RealityScorePanel({
         Reality Score
       </div>
 
+      {/* Peach scanline — the 45analytics signature accent (VIRAL_LOOP §3.1.B).
+          64px wide, 1px tall, --state-promoted. Repeats the OG image's
+          vertical rule so the on-page surface and the export read as one
+          artifact. Suppressed on dead state, no animation, no glow. */}
+      {!isDead ? (
+        <div
+          aria-hidden
+          className="mt-4 h-px w-16 bg-[var(--state-promoted)]"
+        />
+      ) : null}
+
       {/* Hero number. Monospace with tabular figures so digit widths align.
+          §3.1.C: bumps to 88px on sm+. The percentage is the supporting
+          unit on the OG export, but the on-page hero still leads with it
+          since the live result screen has more room to land hard.
           Strikethrough is a 1px diagonal rule rendered via inline gradient
           for the DEAD state — sharp, no fuzzy outline. */}
-      <div className="mt-2 relative inline-block">
+      <div className="mt-4 relative inline-block">
         <span
-          className={`font-mono tabular-nums text-[48px] leading-[1] sm:text-[64px] ${
+          className={`font-mono tabular-nums text-[48px] leading-[1] sm:text-[88px] ${
             isPromoted ? "text-[var(--state-promoted)]" : "text-[var(--text-primary)]"
           }`}
         >
-          {isPromoted ? "▲ " : ""}
-          {formatPercent(count, total)}
+          {`${isPromoted ? "▲ " : ""}${formatPercent(count, total)}`}
         </span>
         {isDead ? (
           <span
@@ -99,7 +112,9 @@ export function RealityScorePanel({
         ) : null}
       </div>
 
-      {/* Denominator. Always renders — the anti-casino discipline. */}
+      {/* Denominator. Always renders — the anti-casino discipline.
+          §3.1.A keeps the denominator at --text-tertiary; only the
+          provenance lines below drop further to --text-quiet. */}
       <div className="mt-2 font-mono text-[14px] tabular-nums text-[var(--text-tertiary)]">
         {count.toLocaleString("en-US")} / {total.toLocaleString("en-US")} simulations
       </div>

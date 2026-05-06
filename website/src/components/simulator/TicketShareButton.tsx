@@ -21,7 +21,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface TicketShareButtonProps {
   predictionId: string;
@@ -38,9 +38,50 @@ const DOWNLOAD_LABEL: Record<DownloadState, string> = {
 export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
   const [copyLabel, setCopyLabel] = useState<"Share" | "Copied!">("Share");
   const [downloadState, setDownloadState] = useState<DownloadState>("idle");
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const ogHref = `/api/og/scenario/${predictionId}`;
   const downloadName = `45analytics-${predictionId}.png`;
+
+  // VIRAL_LOOP §3.1.E — single 1.6s opacity cycle once the buttons have
+  // been visible for 6 s without user action. The IntersectionObserver
+  // guards "in the viewport"; the 6 s timer is the "user did not act"
+  // signal. A second-and-final fire never happens (animation is `once`),
+  // so we do not pulse repeatedly the way a casino would.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let fired = false;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          return;
+        }
+        if (fired || timer) return;
+        timer = setTimeout(() => {
+          el.classList.add("nudge-once");
+          fired = true;
+          // Strip the class after the animation completes so re-entering
+          // the viewport later does not re-fire visually.
+          setTimeout(() => el.classList.remove("nudge-once"), 1700);
+        }, 6000);
+      },
+      { threshold: 0.6 },
+    );
+    obs.observe(el);
+    return () => {
+      obs.disconnect();
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   const handleDownload = useCallback(async () => {
     // Guard re-entry: a second click while loading would either no-op or
@@ -114,7 +155,7 @@ export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
   }, [predictionId]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div ref={wrapperRef} className="flex items-center gap-2">
       {/* Download PNG — typed fetch + content-type validation. The button
           replaces the prior `<a download>` so a non-PNG response (JSON 4xx /
           HTML 5xx) is detected and surfaced as "Failed, retry" instead of
