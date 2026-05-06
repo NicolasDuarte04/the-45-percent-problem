@@ -24,6 +24,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   TEAMS,
   type GroupLetter,
@@ -44,6 +45,8 @@ import {
 import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
+import { teamsByGroupSortedByElo } from "@/lib/sim/elo";
+import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import type { FullBracketScenario, TeamCode } from "@/lib/sim/types";
 
 interface ModeFullBracketProps {
@@ -129,6 +132,30 @@ function hydrate(): BuildState {
     }
   }
   return base;
+}
+
+// "Show all 12" preference is per-mode (executive decision Q2): a user who
+// prefers the wall view in Full Bracket may not want it elsewhere. The key
+// includes "full_bracket" so other modes wire up their own keys later.
+const SHOW_ALL_STORAGE_KEY = "45a:sim:showAll12:full_bracket";
+
+function readShowAllPreference(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(SHOW_ALL_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeShowAllPreference(showAll: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (showAll) window.localStorage.setItem(SHOW_ALL_STORAGE_KEY, "1");
+    else window.localStorage.removeItem(SHOW_ALL_STORAGE_KEY);
+  } catch {
+    /* swallow — quota errors / privacy mode */
+  }
 }
 
 function teamsByGroup(): Record<GroupLetter, TeamCode[]> {
@@ -236,6 +263,28 @@ export function ModeFullBracket({
   // focus overrides "next alphabetical incomplete" and lifts dim.
   const [dimmedGroups, setDimmedGroups] = useState<Set<GroupLetter>>(new Set());
   const [manualFocusGroup, setManualFocusGroup] = useState<GroupLetter | null>(null);
+  // Mission 2 — carousel state. `showAll` flips Step 1 between the
+  // single-group "stadium" carousel (default) and the legacy 12-group
+  // wall (escape hatch). Hydrated from localStorage on mount; written
+  // back on toggle.
+  const [showAll, setShowAll] = useState(false);
+  // The group currently centered in the carousel. Defaults to the
+  // first incomplete group (or "A" when everything is filled). Updated
+  // on selection, on tap-to-jump in the progress strip, and when the
+  // user lands a winner+runnerUp pair (auto-advance to the next
+  // incomplete group, the carousel's "satisfying click").
+  const [carouselGroup, setCarouselGroup] = useState<GroupLetter>("A");
+  // Direction of the most recent carousel transition (1 = forward,
+  // -1 = backward). Drives the framer-motion slide so jumps backward
+  // animate from the left, not the right.
+  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
+  // Groups the user has touched by clicking a team button (vs. via
+  // Auto-fill). "Auto-fill remaining" only surfaces once this has at
+  // least one entry, per executive decision Q1: respect their work.
+  const [manuallyTouched, setManuallyTouched] = useState<Set<GroupLetter>>(
+    new Set(),
+  );
+  const carouselTransition = useReducedMotionAware("layout");
   // Phase E §8 (D.3) — per-group pulse counter. Bumped when a group
   // transitions incomplete → complete; <AccentPulse> re-mounts and
   // fires the 250ms warm-tint flash.
@@ -264,6 +313,13 @@ export function ModeFullBracket({
     }
     setDimmedGroups(initialComplete);
     prevCompleteRef.current = initialComplete;
+    // Mission 2 — restore "Show all 12" preference and park the
+    // carousel on the first incomplete group (or A if everything
+    // is already complete from the cached scenario).
+    setShowAll(readShowAllPreference());
+    const firstIncomplete =
+      GROUPS.find((g) => !initialComplete.has(g)) ?? "A";
+    setCarouselGroup(firstIncomplete);
     hydratedRef.current = true;
   }, []);
 
@@ -349,6 +405,15 @@ export function ModeFullBracket({
       // auto-focus tracks the new group naturally.
       setManualFocusGroup(null);
     }
+    // Mission 2 — record that the user has personally touched this
+    // group. "Auto-fill remaining" hides until at least one entry is
+    // present, so it never appears unprompted.
+    setManuallyTouched((prev) => {
+      if (prev.has(g)) return prev;
+      const next = new Set(prev);
+      next.add(g);
+      return next;
+    });
     setState((prev) => {
       const sel = prev.groupSelections[g];
       let nextSel: GroupSelection;
@@ -364,12 +429,109 @@ export function ModeFullBracket({
       } else {
         nextSel = { ...sel, runnerUp: code };
       }
+      // Mission 2 — if this click landed the second pick (winner +
+      // runner-up), auto-advance the carousel to the next incomplete
+      // group. The render-time effect below would do this too, but
+      // doing it here keeps the slide direction = forward.
+      if (nextSel.winner && nextSel.runnerUp) {
+        const startIdx = GROUPS.indexOf(g);
+        for (let i = 1; i <= GROUPS.length; i++) {
+          const candidate = GROUPS[(startIdx + i) % GROUPS.length];
+          const cs =
+            candidate === g
+              ? nextSel
+              : prev.groupSelections[candidate];
+          if (!(cs.winner && cs.runnerUp)) {
+            setSlideDirection(1);
+            setCarouselGroup(candidate);
+            break;
+          }
+        }
+      }
       return {
         ...prev,
         groupSelections: { ...prev.groupSelections, [g]: nextSel },
         bestThirds: Array(8).fill(null),
         koAdvancers: Array(31).fill(null),
       };
+    });
+  }
+
+  function handleJumpToGroup(g: GroupLetter) {
+    if (g === carouselGroup) return;
+    const cur = GROUPS.indexOf(carouselGroup);
+    const tgt = GROUPS.indexOf(g);
+    setSlideDirection(tgt >= cur ? 1 : -1);
+    setCarouselGroup(g);
+    // Tap-to-jump implies the user wants to focus this group (e.g. to
+    // edit a completed pick), so lift any dim and pin manual focus.
+    setManualFocusGroup(g);
+    setDimmedGroups((prev) => {
+      if (!prev.has(g)) return prev;
+      const next = new Set(prev);
+      next.delete(g);
+      return next;
+    });
+  }
+
+  function handleAutoFillAll() {
+    // Auto-fill resets the entire group stage: every group's winner =
+    // top-Elo, runner-up = second-Elo. KO + thirds reset because their
+    // upstream changed. Manually-touched is cleared because the user
+    // has explicitly asked the model-independent baseline to take over.
+    setErrorKind(null);
+    const sorted = teamsByGroupSortedByElo();
+    setState((prev) => {
+      const groupSelections = {} as Record<GroupLetter, GroupSelection>;
+      for (const g of GROUPS) {
+        groupSelections[g] = {
+          winner: sorted[g][0],
+          runnerUp: sorted[g][1],
+        };
+      }
+      return {
+        ...prev,
+        groupSelections,
+        bestThirds: Array(8).fill(null),
+        koAdvancers: Array(31).fill(null),
+      };
+    });
+    setManuallyTouched(new Set());
+    setManualFocusGroup(null);
+  }
+
+  function handleAutoFillRemaining() {
+    // Same logic as Auto-fill all, but only touches groups that aren't
+    // yet complete. Preserves user picks (per executive decision Q1).
+    setErrorKind(null);
+    const sorted = teamsByGroupSortedByElo();
+    setState((prev) => {
+      const groupSelections = { ...prev.groupSelections };
+      let touchedAny = false;
+      for (const g of GROUPS) {
+        const sel = groupSelections[g];
+        if (sel.winner && sel.runnerUp) continue;
+        groupSelections[g] = {
+          winner: sorted[g][0],
+          runnerUp: sorted[g][1],
+        };
+        touchedAny = true;
+      }
+      if (!touchedAny) return prev;
+      return {
+        ...prev,
+        groupSelections,
+        bestThirds: Array(8).fill(null),
+        koAdvancers: Array(31).fill(null),
+      };
+    });
+  }
+
+  function handleToggleShowAll() {
+    setShowAll((prev) => {
+      const next = !prev;
+      writeShowAllPreference(next);
+      return next;
     });
   }
 
@@ -407,6 +569,10 @@ export function ModeFullBracket({
     setState(emptyState());
     clearInflight();
     setErrorKind(null);
+    setManuallyTouched(new Set());
+    setManualFocusGroup(null);
+    setSlideDirection(1);
+    setCarouselGroup("A");
   }
 
   async function handleSubmit() {
@@ -476,69 +642,167 @@ export function ModeFullBracket({
           Twelve group winners, twelve runners-up, eight best 3rd-place teams, then the full knockout bracket.
         </p>
 
-        {/* Step 1 — Groups. Phase E §8 (D.1) — serif conversational
-            voice replaces the bone-dry "STEP 1 — GROUP STAGE" header. */}
+        {/* Step 1 — Groups. Mission 2 refactor: single-group carousel
+            with peek slivers + 12-dot progress strip + Auto-fill from
+            Elo + Show-all-12 escape hatch. The legacy 12-grid wall is
+            still rendered when `showAll` is true (toggle persisted in
+            localStorage scoped per-mode). */}
         <div className="mt-8">
-          <h2 className="font-serif text-[20px] leading-[1.3] text-[var(--text-primary)] sm:text-[22px]">
-            First, rank the groups.
-          </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {GROUPS.map((g) => {
-              const sel = state.groupSelections[g];
-              const isComplete = Boolean(sel.winner && sel.runnerUp);
-              const isFocused = focusedGroup === g;
-              // The focused group is never visually dim, even if its
-              // dim timer already fired (Phase E §6 (B.3) "the dim lifts").
-              const isDimmed = dimmedGroups.has(g) && !isFocused;
-              return (
-                <li key={g}>
-                  <div
-                    role="group"
-                    aria-label={`Group ${g}`}
-                    style={{
-                      opacity: isDimmed ? 0.5 : 1,
-                      borderColor: isFocused ? "var(--accent-warm)" : "var(--border-default)",
-                    }}
-                    className="relative border p-3"
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="font-serif text-[20px] leading-[1.3] text-[var(--text-primary)] sm:text-[22px]">
+              First, rank the groups.
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAutoFillAll}
+                className="border border-[var(--text-primary)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-primary)] transition-colors duration-100 hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+              >
+                [ Auto-fill all ]
+              </button>
+              {/* "Auto-fill remaining" stays hidden until at least one
+                  group has been filled manually (executive decision Q1).
+                  This way the button never appears unprompted. */}
+              {manuallyTouched.size > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleAutoFillRemaining}
+                  className="border border-[var(--text-primary)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-primary)] transition-colors duration-100 hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+                >
+                  [ Auto-fill remaining ]
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleToggleShowAll}
+                aria-pressed={showAll}
+                className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+              >
+                {showAll ? "[ Show one ]" : "[ Show all 12 ]"}
+              </button>
+            </div>
+          </div>
+          <p className="mt-2 font-sans text-[12px] italic text-[var(--text-quiet)]">
+            Auto-fill uses pre-tournament Elo. The model&rsquo;s call appears after you submit.
+          </p>
+
+          {/* Mini-progress strip — 12 dots, A through L. Filled = pair
+              complete, ringed = current, plain = incomplete. Tap-to-jump
+              centers the carousel on that group (and lifts dim if it
+              was a completed-and-dimmed pick). Hidden in the wall view
+              because the wall already shows everything at once. */}
+          {!showAll ? (
+            <ol
+              aria-label="Group progress"
+              className="mt-4 flex flex-wrap items-center gap-1.5"
+            >
+              {GROUPS.map((g) => {
+                const sel = state.groupSelections[g];
+                const isComplete = Boolean(sel.winner && sel.runnerUp);
+                const isCurrent = carouselGroup === g;
+                return (
+                  <li key={g} className="contents">
+                    <button
+                      type="button"
+                      onClick={() => handleJumpToGroup(g)}
+                      aria-label={`Jump to group ${g}${isComplete ? " (complete)" : ""}`}
+                      aria-current={isCurrent ? "step" : undefined}
+                      className={[
+                        "inline-flex h-6 min-w-[24px] items-center justify-center px-1 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                        isComplete
+                          ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
+                          : isCurrent
+                            ? "border border-[var(--accent-warm)] text-[var(--accent-warm)]"
+                            : "border border-[var(--border-default)] text-[var(--text-quiet)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]",
+                      ].join(" ")}
+                    >
+                      {g}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
+
+          {/* Carousel (default) vs. wall (Show all 12). The carousel
+              renders three groups: the previous as a 5% peek sliver on
+              the left, the active at full width, and the next as a 5%
+              peek sliver on the right. Selecting both slots in the
+              active group auto-advances to the next incomplete group
+              (handled in handleGroupClick). */}
+          {showAll ? (
+            <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {GROUPS.map((g) => {
+                const sel = state.groupSelections[g];
+                const isComplete = Boolean(sel.winner && sel.runnerUp);
+                const isFocused = focusedGroup === g;
+                const isDimmed = dimmedGroups.has(g) && !isFocused;
+                return (
+                  <li key={g}>
+                    <GroupCard
+                      g={g}
+                      sel={sel}
+                      teams={groupTeams[g]}
+                      pulseKey={groupPulseKeys[g]}
+                      isComplete={isComplete}
+                      isFocused={isFocused}
+                      isDimmed={isDimmed}
+                      onPick={(code) => handleGroupClick(g, code)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="relative mt-6 overflow-hidden">
+              <div
+                className="grid items-stretch gap-2"
+                style={{ gridTemplateColumns: "5% 1fr 5%" }}
+              >
+                {/* Previous-group peek sliver */}
+                <PeekSliver
+                  letter={prevGroupLetter(carouselGroup)}
+                  side="left"
+                  onClick={() => handleJumpToGroup(prevGroupLetter(carouselGroup))}
+                />
+                {/* The carousel uses a key-change re-mount rather than
+                    AnimatePresence: the new card slides in from the
+                    side the user is heading toward and the old one is
+                    discarded immediately. AnimatePresence + mode="wait"
+                    held the prior card in the DOM under React 19, which
+                    visibly froze the carousel on "A". The simpler
+                    re-mount keeps the motion intent and stays correct. */}
+                <div className="relative min-h-[260px]">
+                  <motion.div
+                    key={carouselGroup}
+                    initial={{ opacity: 0, x: slideDirection * 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={carouselTransition}
                   >
-                    <AccentPulse triggerKey={groupPulseKeys[g]} />
-                    <div className="font-mono text-[10px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
-                      Group {g}
-                    </div>
-                    {isComplete ? (
-                      <span className="pointer-events-none absolute right-2 top-2 font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
-                        [ Done ]
-                      </span>
-                    ) : null}
-                    <ul className="mt-1 space-y-1">
-                      {groupTeams[g].map((code) => {
-                        const rank =
-                          sel.winner === code ? "1" : sel.runnerUp === code ? "2" : "";
-                        const inverted = rank !== "";
-                        return (
-                          <li key={code} className="contents">
-                            <button
-                              type="button"
-                              onClick={() => handleGroupClick(g, code)}
-                              className={[
-                                "flex w-full items-center justify-between border px-2 py-1.5 font-mono text-[13px] tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-                                inverted
-                                  ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]"
-                                  : "border-[var(--border-default)] bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]",
-                              ].join(" ")}
-                            >
-                              <span>{code}</span>
-                              <span className="text-[10px] opacity-70">{rank}</span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    <GroupCard
+                      g={carouselGroup}
+                      sel={state.groupSelections[carouselGroup]}
+                      teams={groupTeams[carouselGroup]}
+                      pulseKey={groupPulseKeys[carouselGroup]}
+                      isComplete={Boolean(
+                        state.groupSelections[carouselGroup].winner &&
+                          state.groupSelections[carouselGroup].runnerUp,
+                      )}
+                      isFocused={true}
+                      isDimmed={false}
+                      emphasized
+                      onPick={(code) => handleGroupClick(carouselGroup, code)}
+                    />
+                  </motion.div>
+                </div>
+                <PeekSliver
+                  letter={nextGroupLetter(carouselGroup)}
+                  side="right"
+                  onClick={() => handleJumpToGroup(nextGroupLetter(carouselGroup))}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Step 2 — Best 3rd-place teams. Phase E §6 (B.4) restructure:
@@ -690,6 +954,141 @@ export function ModeFullBracket({
         </div>
       </section>
     </>
+  );
+}
+
+// ── Carousel helpers ─────────────────────────────────────────────────────────
+//
+// The carousel wraps A↔L. Going "previous" from A lands on L; going "next"
+// from L lands on A. This matches the progress strip's ring shape — the
+// user can spin around the alphabet rather than dead-ending at the edges.
+
+function prevGroupLetter(g: GroupLetter): GroupLetter {
+  const i = GROUPS.indexOf(g);
+  return GROUPS[(i - 1 + GROUPS.length) % GROUPS.length];
+}
+
+function nextGroupLetter(g: GroupLetter): GroupLetter {
+  const i = GROUPS.indexOf(g);
+  return GROUPS[(i + 1) % GROUPS.length];
+}
+
+interface GroupCardProps {
+  g: GroupLetter;
+  sel: GroupSelection;
+  teams: TeamCode[];
+  pulseKey: number;
+  isComplete: boolean;
+  isFocused: boolean;
+  isDimmed: boolean;
+  onPick: (code: TeamCode) => void;
+  /**
+   * The carousel's centered card is rendered larger and uses a heavier
+   * border treatment to read as a "stadium" view. Wall-mode cards use
+   * the original compact treatment so the 12-grid still fits on
+   * Phase D layouts.
+   */
+  emphasized?: boolean;
+}
+
+/**
+ * One group's card — winner + runner-up picker. Extracted from the
+ * Phase E inline implementation so the carousel and the wall view can
+ * share the same render path.
+ */
+function GroupCard({
+  g,
+  sel,
+  teams,
+  pulseKey,
+  isComplete,
+  isFocused,
+  isDimmed,
+  onPick,
+  emphasized = false,
+}: GroupCardProps) {
+  return (
+    <div
+      role="group"
+      aria-label={`Group ${g}`}
+      style={{
+        opacity: isDimmed ? 0.5 : 1,
+        borderColor: isFocused ? "var(--accent-warm)" : "var(--border-default)",
+      }}
+      className={[
+        "relative border",
+        emphasized ? "p-5" : "p-3",
+      ].join(" ")}
+    >
+      <AccentPulse triggerKey={pulseKey} />
+      <div
+        className={[
+          "font-mono uppercase tracking-[0.10em] text-[var(--text-quiet)]",
+          emphasized ? "text-[12px]" : "text-[10px]",
+        ].join(" ")}
+      >
+        Group {g}
+      </div>
+      {isComplete ? (
+        <span className="pointer-events-none absolute right-2 top-2 font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
+          [ Done ]
+        </span>
+      ) : null}
+      <ul className={emphasized ? "mt-2 space-y-2" : "mt-1 space-y-1"}>
+        {teams.map((code) => {
+          const rank =
+            sel.winner === code ? "1" : sel.runnerUp === code ? "2" : "";
+          const inverted = rank !== "";
+          return (
+            <li key={code} className="contents">
+              <button
+                type="button"
+                onClick={() => onPick(code)}
+                className={[
+                  "flex w-full items-center justify-between border font-mono tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                  emphasized ? "px-3 py-2.5 text-[15px]" : "px-2 py-1.5 text-[13px]",
+                  inverted
+                    ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]"
+                    : "border-[var(--border-default)] bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]",
+                ].join(" ")}
+              >
+                <span>{code}</span>
+                <span className="text-[10px] opacity-70">{rank}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+interface PeekSliverProps {
+  letter: GroupLetter;
+  side: "left" | "right";
+  onClick: () => void;
+}
+
+/**
+ * 5% peek sliver foreshadowing the next/previous group in the carousel.
+ * Renders the group's letter so the user sees what they'll land on if
+ * they click. The sliver itself is tap-to-jump.
+ */
+function PeekSliver({ letter, side, onClick }: PeekSliverProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Go to ${side === "left" ? "previous" : "next"} group ${letter}`}
+      className={[
+        "flex h-full min-h-[200px] cursor-pointer items-center justify-center border border-[var(--border-default)] bg-[var(--bg-root)] font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] transition-colors duration-100 hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+        side === "left" ? "border-r-0" : "border-l-0",
+      ].join(" ")}
+    >
+      <span className="rotate-180" style={{ writingMode: "vertical-rl" }}>
+        {side === "left" ? `← ${letter}` : `${letter} →`}
+      </span>
+    </button>
   );
 }
 
