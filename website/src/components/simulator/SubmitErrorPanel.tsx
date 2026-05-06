@@ -34,6 +34,15 @@ export type SubmitErrorKind =
   | "invalid"
   | "server";
 
+/**
+ * One field-level issue surfaced for `kind: "invalid"` (only present
+ * when the route returned them under `?debug=1`).
+ */
+export interface SubmitInvalidIssueView {
+  path: string;
+  message: string;
+}
+
 interface SubmitErrorPanelProps {
   kind: SubmitErrorKind;
   /** Re-fires the submit with the parent-held payload. Required. */
@@ -42,21 +51,44 @@ interface SubmitErrorPanelProps {
   scenarioHash?: string;
   /** Disable retry while a submit is already in flight. */
   retryInFlight?: boolean;
+  /**
+   * Field-level issues for `kind: "invalid"`. Optional: when present
+   * we render them under the headline so the user knows which slots to
+   * revisit. Surfaced from the route's `?debug=1` payload.
+   */
+  invalidIssues?: SubmitInvalidIssueView[];
+  /**
+   * Seconds until rate limit clears. Optional: when present we
+   * substitute the literal `{n}` placeholder in the rate-limit
+   * headline. Falls back to "a moment" if absent.
+   */
+  rateLimitRetrySeconds?: number;
 }
 
 const BACKOFF_MS = [1000, 2000, 4000]; // §9 (E.1) — 1s, 2s, 4s.
 
-function headlineFor(kind: SubmitErrorKind): string {
+function headlineFor(
+  kind: SubmitErrorKind,
+  opts: { rateLimitRetrySeconds?: number; missingSlots?: number } = {},
+): string {
   switch (kind) {
-    case "rateLimit":
-      return "Too many predictions in a short window. Wait a moment and try again.";
-    case "invalid":
-      return "Something in the scenario looks wrong. Reset and try again.";
     case "network":
-      return "We couldn't reach the model. Check your connection and try again.";
+      return "Lost the connection. Try again.";
+    case "rateLimit": {
+      const n = opts.rateLimitRetrySeconds;
+      const wait = typeof n === "number" && n > 0 ? `${n}s` : "a moment";
+      return `Too many submits. Try again in ${wait}.`;
+    }
+    case "invalid": {
+      const m = opts.missingSlots ?? 0;
+      if (m > 0) {
+        return `Bracket incomplete: ${m} slot${m === 1 ? "" : "s"} need attention.`;
+      }
+      return "Something in the scenario looks wrong. Reset and try again.";
+    }
     case "server":
     default:
-      return "We couldn't reach the model. This is on us, not you.";
+      return "Model engine threw. We're looking at the logs.";
   }
 }
 
@@ -80,6 +112,8 @@ export function SubmitErrorPanel({
   onRetry,
   scenarioHash,
   retryInFlight = false,
+  invalidIssues,
+  rateLimitRetrySeconds,
 }: SubmitErrorPanelProps) {
   const [retryCount, setRetryCount] = useState(0);
   // backoffSeconds = remaining seconds before [ Try again ] re-enables;
@@ -105,7 +139,10 @@ export function SubmitErrorPanel({
 
   const inBackoff = backoffSeconds > 0;
   const heavyFailing = retryCount >= BACKOFF_MS.length;
-  const headlineCopy = headlineFor(kind);
+  const headlineCopy = headlineFor(kind, {
+    rateLimitRetrySeconds,
+    missingSlots: invalidIssues?.length,
+  });
 
   async function handleRetryClick() {
     if (retryInFlight || inBackoff) return;
@@ -139,6 +176,17 @@ export function SubmitErrorPanel({
       <p className="font-sans text-[14px] text-[var(--state-dead)]">
         {headlineCopy}
       </p>
+
+      {kind === "invalid" && invalidIssues && invalidIssues.length > 0 ? (
+        <ul className="list-disc pl-5 font-mono text-[11px] text-[var(--text-quiet)]">
+          {invalidIssues.slice(0, 6).map((iss, idx) => (
+            <li key={`${iss.path}-${idx}`}>
+              <span className="text-[var(--text-primary)]">{iss.path || "(payload)"}</span>
+              {iss.message ? <> — {iss.message}</> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <button

@@ -48,20 +48,48 @@ function jsonError(
   return NextResponse.json({ ok: false, error: variant, ...extra }, { status });
 }
 
+/**
+ * Map a list of Zod issues to the compact { path, code, message } shape
+ * we surface in 400 responses (under `?debug=1`). Keeps the server log
+ * and the wire payload in sync.
+ */
+function summarizeZodIssues(
+  issues: readonly z.ZodIssue[],
+): Array<{ path: string; code: string; message: string }> {
+  return issues.map((i) => ({
+    path: i.path.join("."),
+    code: i.code,
+    message: i.message,
+  }));
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // `?debug=1` opts the response into surfacing structured Zod issues
+  // alongside the `invalid` error code. Off by default — including in
+  // production — so the wire stays sparse on the happy path.
+  const debug = req.nextUrl.searchParams.get("debug") === "1";
+
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return jsonError("invalid", 400);
+    return jsonError("invalid", 400, debug ? { reason: "malformed_json" } : undefined);
   }
 
   // Validate the discriminated mode/scenario union and the meta fields
   // independently so a single malformed payload yields one consistent
-  // error code.
+  // error code. When `?debug=1`, surface the offending field paths so
+  // the client can show the user which slot is wrong.
   const payload = ScenarioPayloadSchema.safeParse(body);
   const meta = MetaSchema.safeParse(body);
   if (!payload.success || !meta.success) {
+    if (debug) {
+      const issues = [
+        ...(payload.success ? [] : payload.error.issues),
+        ...(meta.success ? [] : meta.error.issues),
+      ];
+      return jsonError("invalid", 400, { issues: summarizeZodIssues(issues) });
+    }
     return jsonError("invalid", 400);
   }
 
@@ -83,18 +111,34 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const canonical = canonicalizeScenario(mode, scenario);
   const { count, total } = computeRealityScore(mode, canonical, scenario);
 
+  // Track DB failures inside `existsCheck` separately from the
+  // `generateUniquePredictionId` exhaustion case. Conflating them (the
+  // pre-fix behavior) made a missing `predictions` table look like a
+  // statistical impossibility instead of an unrun migration.
+  let dbErr: unknown = null;
   let id: string;
   try {
     id = await generateUniquePredictionId(async (candidate) => {
-      const rows = await db
-        .select({ id: predictions.id })
-        .from(predictions)
-        .where(eq(predictions.id, candidate))
-        .limit(1);
-      return rows.length > 0;
+      try {
+        const rows = await db
+          .select({ id: predictions.id })
+          .from(predictions)
+          .where(eq(predictions.id, candidate))
+          .limit(1);
+        return rows.length > 0;
+      } catch (err) {
+        dbErr = err;
+        // Re-throw so generateUniquePredictionId stops; the outer catch
+        // will see this and return a 500 with the real cause logged.
+        throw err;
+      }
     });
   } catch (err) {
-    console.error("[predictions] id generation exhausted", err);
+    if (dbErr) {
+      console.error("[predictions] id existence check failed (DB)", dbErr);
+    } else {
+      console.error("[predictions] id generation exhausted", err);
+    }
     return jsonError("server", 500);
   }
 
@@ -125,6 +169,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   if (!inserted) {
+    console.error("[predictions] insert returned no row", { id });
     return jsonError("server", 500);
   }
 

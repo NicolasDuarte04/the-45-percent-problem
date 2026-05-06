@@ -167,6 +167,55 @@ describe("POST /api/predictions", () => {
     expect(res.status).toBe(500);
     expect((await res.json()).error).toBe("server");
   });
+
+  it("returns 500 when the existence-check SELECT fails (e.g. missing table)", async () => {
+    // Simulate the production failure mode that motivated this fix:
+    // the `predictions` table does not exist (42P01), so the SELECT
+    // inside `existsCheck` rejects. Pre-fix, this was logged as
+    // "id generation exhausted" — misleading ops; now it surfaces as
+    // a `server` 500 with the real cause logged.
+    mockDb.select.mockImplementation(() => {
+      throw new Error('relation "predictions" does not exist');
+    });
+    const req = jsonPostRequest({
+      url: "http://localhost/api/predictions",
+      body: VALID_BODY_FF,
+    });
+    const res = await PostPrediction(req as never);
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe("server");
+  });
+
+  it("includes structured Zod issues when ?debug=1 is set", async () => {
+    const req = jsonPostRequest({
+      url: "http://localhost/api/predictions?debug=1",
+      body: { ...VALID_BODY_FF, mode: "weird_mode" },
+    });
+    const res = await PostPrediction(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe("invalid");
+    expect(Array.isArray(json.issues)).toBe(true);
+    expect(json.issues.length).toBeGreaterThan(0);
+    // Each issue has a path/code/message triple.
+    for (const iss of json.issues) {
+      expect(typeof iss.path).toBe("string");
+      expect(typeof iss.code).toBe("string");
+      expect(typeof iss.message).toBe("string");
+    }
+  });
+
+  it("omits Zod issues by default (no ?debug=1)", async () => {
+    const req = jsonPostRequest({
+      url: "http://localhost/api/predictions",
+      body: { ...VALID_BODY_FF, mode: "weird_mode" },
+    });
+    const res = await PostPrediction(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe("invalid");
+    expect(json).not.toHaveProperty("issues");
+  });
 });
 
 describe("POST /api/admin/predictions/[id]/state", () => {
