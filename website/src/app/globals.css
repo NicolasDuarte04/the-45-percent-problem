@@ -178,6 +178,26 @@
   --state-dead:     color-mix(in oklab, #E76E8A 60%, transparent);
   --state-promoted: #F9B88A;
 
+  /* Semantic — restored to lit Prism on the simulator canvas, mirroring
+     the quant block. The mid-:root values of --edge-* are deepened for
+     the cream canvas; on slate the lit Prism tones read with adequate
+     contrast and signal correctly. Without these the caret-color and
+     focus-underline rules in PredictionAlertConfigurator would resolve
+     to editorial-deep colors and read as muddy on the dark canvas. */
+  --edge-positive: #88E0B6;
+  --edge-negative: #EF5A7D;
+  --gate-fired:    #F5D76E;
+
+  /* Re-bind the role tokens so var(--ui-success) etc. resolve to the
+     lit-Prism values on this canvas. CSS custom-property indirection
+     resolves at the declaring element, not at the consumer; without
+     this rebind every --ui-* alias inherits the editorial values from
+     :root and prints as the wrong color on the simulator surface. */
+  --ui-guidance: var(--accent-focus);
+  --ui-success:  var(--edge-positive);
+  --ui-danger:   var(--edge-negative);
+  --ui-warning:  var(--gate-fired);
+
   /* Brutalist: 0 radius across the board. */
   --radius: 0;
 
@@ -275,6 +295,71 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .live-gauge-segment { transition: none; }
+}
+
+/* Alert-configurator decoration per VIRAL_LOOP_PIVOT.md §2.2 + §2.4.
+
+   .reveal-alert      — entrance fade for the configurator panel,
+                         starts 200ms after the trade-ticket reveal so
+                         the eye lands hero → share → alert in order.
+   .alert-status-pip  — the blinking cursor bar in the eyebrow's
+                         "STATUS: ▍" before submit. Anchors the panel
+                         visually as a terminal config window.
+   .alert-armed-glyph — the success ✓ glyph in --ui-success after the
+                         alert is armed.
+   .alert-input       — brutalist hide-the-affordance: rest state has
+                         no underline; focus draws a 1px --ui-guidance
+                         rule. The valid / invalid modifier classes
+                         override on blur to --ui-success / --ui-danger
+                         respectively. Tailwind v4 arbitrary-value
+                         variants with var() do not always survive the
+                         compile pass, so the state machine lives here. */
+[data-canvas="simulator"] .reveal-alert {
+  animation: simulator-fade-in 250ms ease-out 600ms 1 backwards;
+}
+@keyframes alert-status-pip {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.alert-status-pip {
+  display: inline-block;
+  color: var(--ui-guidance);
+  animation: alert-status-pip 1.05s steps(1, end) infinite;
+}
+.alert-armed-glyph {
+  color: var(--ui-success);
+}
+/* Brutalist hide-the-affordance underline state machine.
+   Anchored under [data-canvas="simulator"] so the selectors carry
+   higher specificity than `* { border-color: var(--border) }` from
+   @layer base, which would otherwise paint the bottom rule slate-grey
+   on every form input regardless of focus. */
+[data-canvas="simulator"] input.alert-input {
+  border-bottom: 1px solid transparent;
+  caret-color: var(--ui-guidance);
+  transition: border-bottom-color 100ms ease-out;
+}
+[data-canvas="simulator"] input.alert-input:focus {
+  outline: none;
+  border-bottom-color: var(--ui-guidance);
+}
+[data-canvas="simulator"] input.alert-input.is-valid,
+[data-canvas="simulator"] input.alert-input.is-valid:focus {
+  border-bottom-color: var(--ui-success);
+}
+[data-canvas="simulator"] input.alert-input.is-invalid,
+[data-canvas="simulator"] input.alert-input.is-invalid:focus {
+  border-bottom-color: var(--ui-danger);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas="simulator"] .reveal-alert {
+    animation: none;
+    opacity: 1;
+  }
+  .alert-status-pip {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* Share-strip idle nudge per VIRAL_LOOP_PIVOT.md §3.1.E.
