@@ -13,9 +13,21 @@
 
 import type { PublicPredictionView } from "./types";
 
+/**
+ * One Zod issue, summarized into the shape the route returns under
+ * `?debug=1`. The path is dot-joined (e.g. `scenario.koAdvancers.4`)
+ * so the panel can show a readable field reference without depending
+ * on Zod's internal types reaching the client.
+ */
+export interface SubmitInvalidIssue {
+  path: string;
+  code: string;
+  message: string;
+}
+
 export type SubmitPredictionResult =
   | { kind: "ok"; prediction: PublicPredictionView }
-  | { kind: "invalid" }
+  | { kind: "invalid"; issues?: SubmitInvalidIssue[]; reason?: string }
   | { kind: "rateLimit"; retryAfterMs: number }
   | { kind: "server" }
   | { kind: "network" };
@@ -27,12 +39,24 @@ export interface SubmitPredictionInput {
   snapshotSha: string;
 }
 
+export interface SubmitPredictionOptions {
+  /**
+   * When true, append `?debug=1` so the route surfaces structured Zod
+   * issues for `invalid` responses. Off by default: production paths
+   * keep the wire sparse, and the simulator only opts in when the URL
+   * itself was loaded with `?debug=1`.
+   */
+  debug?: boolean;
+}
+
 export async function submitPrediction(
   input: SubmitPredictionInput,
+  opts: SubmitPredictionOptions = {},
 ): Promise<SubmitPredictionResult> {
+  const url = opts.debug ? "/api/predictions?debug=1" : "/api/predictions";
   let res: Response;
   try {
-    res = await fetch("/api/predictions", {
+    res = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),
@@ -67,7 +91,19 @@ export async function submitPrediction(
   }
 
   if (res.status >= 400 && res.status < 500) {
-    return { kind: "invalid" };
+    let issues: SubmitInvalidIssue[] | undefined;
+    let reason: string | undefined;
+    try {
+      const json = (await res.json()) as {
+        issues?: SubmitInvalidIssue[];
+        reason?: string;
+      };
+      if (Array.isArray(json?.issues)) issues = json.issues;
+      if (typeof json?.reason === "string") reason = json.reason;
+    } catch {
+      /* swallow — the route only ships these under ?debug=1 */
+    }
+    return { kind: "invalid", issues, reason };
   }
 
   return { kind: "server" };

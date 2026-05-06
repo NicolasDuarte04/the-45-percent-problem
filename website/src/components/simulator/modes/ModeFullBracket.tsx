@@ -36,6 +36,7 @@ import { AccentPulse } from "@/components/simulator/AccentPulse";
 import {
   SubmitErrorPanel,
   type SubmitErrorKind,
+  type SubmitInvalidIssueView,
 } from "@/components/simulator/SubmitErrorPanel";
 import {
   clearInflight,
@@ -256,6 +257,12 @@ export function ModeFullBracket({
   const [state, setState] = useState<BuildState>(emptyState);
   const [submitting, setSubmitting] = useState(false);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
+  const [invalidIssues, setInvalidIssues] = useState<
+    SubmitInvalidIssueView[] | undefined
+  >(undefined);
+  const [rateLimitRetrySeconds, setRateLimitRetrySeconds] = useState<
+    number | undefined
+  >(undefined);
   // Phase E §6 (B.3) — per-group dim state and manual-focus override.
   // dimmedGroups holds the set of groups currently dimmed (50% opacity);
   // a fresh group-completion schedules a 700ms timer before adding to
@@ -584,12 +591,25 @@ export function ModeFullBracket({
 
     setSubmitting(true);
     setErrorKind(null);
-    const result = await submitPrediction({
-      mode: "full_bracket",
-      scenario: { groupWinners, groupRunnersUp, bestThirds, koAdvancers },
-      modelSha,
-      snapshotSha,
-    });
+    setInvalidIssues(undefined);
+    setRateLimitRetrySeconds(undefined);
+    // `?debug=1` opts the submit into requesting structured Zod issues
+    // from the route. Read inline (post-hydration, only on user click)
+    // rather than via `useSearchParams()` — the hook would force the
+    // page out of static rendering and the build error Vercel caught
+    // (`useSearchParams() should be wrapped in a suspense boundary`).
+    const debug =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("debug") === "1";
+    const result = await submitPrediction(
+      {
+        mode: "full_bracket",
+        scenario: { groupWinners, groupRunnersUp, bestThirds, koAdvancers },
+        modelSha,
+        snapshotSha,
+      },
+      { debug },
+    );
     if (result.kind === "ok") {
       clearInflight();
       router.push(`/scenario/p/${result.prediction.id}`);
@@ -597,6 +617,11 @@ export function ModeFullBracket({
     }
     setSubmitting(false);
     setErrorKind(result.kind);
+    if (result.kind === "invalid") {
+      setInvalidIssues(result.issues);
+    } else if (result.kind === "rateLimit") {
+      setRateLimitRetrySeconds(Math.ceil(result.retryAfterMs / 1000));
+    }
   }
 
   const groupsDone = allGroupsComplete(state);
@@ -949,6 +974,8 @@ export function ModeFullBracket({
               kind={errorKind}
               onRetry={handleSubmit}
               retryInFlight={submitting}
+              invalidIssues={invalidIssues}
+              rateLimitRetrySeconds={rateLimitRetrySeconds}
             />
           ) : null}
         </div>
