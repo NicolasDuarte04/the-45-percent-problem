@@ -5,14 +5,41 @@ import { isValidPredictionId } from "@/lib/sim/generatePredictionId";
 import { getPrediction } from "@/lib/sim/getPrediction";
 import { toPublicPredictionView } from "@/lib/sim/predictionViews";
 import {
-  PredictionEmailGate,
+  PredictionAlertConfigurator,
   TrackedFootnote,
-} from "@/components/simulator/PredictionEmailGate";
+} from "@/components/simulator/PredictionAlertConfigurator";
+import { Flag } from "@/components/primitives/Flag";
+import { RealityScoreReveal } from "@/components/simulator/reality/RealityScoreReveal";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
-import { TradeTicket } from "@/components/simulator/TradeTicket";
+import {
+  StaggeredReveal,
+  StaggeredRevealItem,
+} from "@/components/simulator/StaggeredReveal";
 import { TicketShareButton } from "@/components/simulator/TicketShareButton";
+import { TradeTicket } from "@/components/simulator/TradeTicket";
+import type {
+  ChampionsPathScenario,
+  FinalFourScenario,
+  FullBracketScenario,
+  PublicPredictionView,
+} from "@/lib/sim/types";
 
 export const dynamic = "force-dynamic";
+
+/** Mirror of TradeTicket.flagsForView — re-implemented at the page layer
+ *  so the hero can render the flag tile without re-importing private helpers. */
+function heroFlags(view: PublicPredictionView): string[] {
+  switch (view.mode) {
+    case "final_four":
+      return (view.scenario as FinalFourScenario).semifinalists;
+    case "champions_path":
+      return [(view.scenario as ChampionsPathScenario).team];
+    case "full_bracket": {
+      const champ = (view.scenario as FullBracketScenario).koAdvancers[30];
+      return champ ? [champ] : [];
+    }
+  }
+}
 
 /**
  * Public permalink page for a submitted prediction.
@@ -34,12 +61,17 @@ export const dynamic = "force-dynamic";
  *   - getPrediction (react/cache) is called once and reused by both
  *     generateMetadata and Page so the DB is never hit twice per request.
  *
- * Page composition (top to bottom):
+ * Page composition (top to bottom) — VIRAL_LOOP §3.1.D:
  *   - SimulatorChrome  — masthead with eyebrow + submission timestamp
- *   - TradeTicket      — brutalist receipt card (server component)
- *   - TicketShareButton— download PNG + share/copy permalink (client component)
- *   - Email gate /
- *     TrackedFootnote  — soft "want to track this?" prompt
+ *   - Hero stack       — flag tile, story line, Reality Score block
+ *                          (lifted out of TradeTicket so the user does not
+ *                          have to scroll past the receipt to act)
+ *   - Share strip      — ↓ PNG · Share (lifted up under the hero)
+ *   - Email gate /     — soft "want to track this?" prompt, lifted up
+ *     TrackedFootnote     above the receipt
+ *   - TradeTicket      — compact mode: scenario detail + ID strip +
+ *                          provenance footer only (the canonical receipt
+ *                          card, demoted below the fold)
  */
 
 // ── OG metadata ───────────────────────────────────────────────────────────────
@@ -119,23 +151,90 @@ export default async function PredictionPermalinkPage(props: {
   const submitted = new Date(view.submittedAt);
   const submittedMeta = `${submitted.toISOString().slice(0, 16).replace("T", " ")} UTC`;
 
+  const flagCodes = heroFlags(view);
+  const flagSize =
+    view.mode === "champions_path" || view.mode === "full_bracket" ? 32 : 24;
+
   return (
     <SimulatorChrome width="narrow" rightMeta={submittedMeta}>
-      <div className="pt-8 pb-12">
-        <TradeTicket view={view} />
+      {/* Result + Next-Steps dossier — unified container that groups
+          the hero, share strip, and alert configurator on a single
+          elevated surface. The outer card uses --bg-panel (#151A21)
+          against the root --bg-root (#0F1216), with a 1px
+          --border-default rule. The inner alert configurator is
+          further elevated to --bg-panel-elev (#1C222B) so it reads
+          as a distinct config terminal sitting on the dossier
+          surface — three depth tiers: root → dossier → terminal.
+          Per the post-launch UX feedback: the previous floating
+          layout looked too brutalist-stealth on the dark canvas. */}
+      <section
+        aria-labelledby="hero-story"
+        className="mt-8 mb-12 border border-[var(--border-default)] bg-[var(--bg-panel)] p-6 sm:p-8"
+      >
+        {/* MOTION_SPEC.md §2 — page-level cascade. Three children fade
+            and lift 8px in turn: hero (240ms), share strip (+180ms),
+            alert configurator (+180ms). The .reveal-* CSS classes stay
+            on the inner elements as a no-JS fallback; once mounted, the
+            cascade takes over and the CSS ones are no-ops. */}
+        <StaggeredReveal>
+          <StaggeredRevealItem index={0}>
+            {/* Hero stack — flag tile + story line + Reality Score block.
+                Lifted out of TradeTicket per VIRAL_LOOP §3.1.D so the
+                share + alert actions can sit immediately below without
+                the user scrolling past the entire receipt. */}
+            <div>
+              {flagCodes.length > 0 ? (
+                <div className="mb-5 flex items-center gap-2">
+                  {flagCodes.map((code) => (
+                    <Flag key={code} code={code} size={flagSize} />
+                  ))}
+                </div>
+              ) : null}
 
-        {/* Share / download strip — reveals with the ticket at t=400ms. */}
-        <div className="reveal-ticket mt-4 flex justify-end">
-          <TicketShareButton predictionId={view.id} />
-        </div>
-      </div>
+              <h1
+                id="hero-story"
+                className="font-serif text-[24px] leading-[1.25] sm:text-[32px] text-[var(--text-primary)]"
+              >
+                {view.storyLine}
+              </h1>
 
-      <div className="reveal-gate">
-        {view.hasTracking ? (
-          <TrackedFootnote />
-        ) : (
-          <PredictionEmailGate predictionId={view.id} />
-        )}
+              <div className="mt-8">
+                <RealityScoreReveal
+                  count={view.countCurrent}
+                  total={view.total}
+                  state={view.state}
+                />
+              </div>
+            </div>
+          </StaggeredRevealItem>
+
+          {/* Share / download strip — right-aligned so the hero reads
+              as the primary surface. The 6s nudge-once pulse
+              (§3.1.E) is wired inside TicketShareButton. */}
+          <StaggeredRevealItem index={1} className="mt-6 flex justify-end">
+            <TicketShareButton predictionId={view.id} />
+          </StaggeredRevealItem>
+
+          {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Sits inside
+              the dossier card and elevates further to bg-panel-elev
+              for the nested-terminal feel. When the row already
+              carries a subscriber_id, render the quiet
+              TrackedFootnote acknowledgement instead. */}
+          <StaggeredRevealItem index={2} className="mt-8">
+            {view.hasTracking ? (
+              <TrackedFootnote />
+            ) : (
+              <PredictionAlertConfigurator view={view} />
+            )}
+          </StaggeredRevealItem>
+        </StaggeredReveal>
+      </section>
+
+      {/* Trade Ticket card — demoted below the fold. Compact mode renders
+          only the scenario detail + ID strip + provenance footer; the
+          flag, story line, and Reality Score now live in the hero above. */}
+      <div className="mb-12">
+        <TradeTicket view={view} compact />
       </div>
     </SimulatorChrome>
   );
