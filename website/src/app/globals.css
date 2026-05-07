@@ -361,6 +361,14 @@
 [data-canvas="simulator"] input.alert-input.is-invalid:focus {
   border-bottom-color: var(--ui-danger);
 }
+/* Placeholder ("operator@domain.com") rendered in --text-quiet so the
+   format hint reads as terminal example syntax, not as user-entered
+   data. opacity: 1 defeats the user-agent default that dims the
+   placeholder past the token's intended weight. */
+[data-canvas="simulator"] input.alert-input::placeholder {
+  color: var(--text-quiet);
+  opacity: 1;
+}
 @media (prefers-reduced-motion: reduce) {
   [data-canvas="simulator"] .reveal-alert {
     animation: none;
