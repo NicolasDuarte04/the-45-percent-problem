@@ -155,6 +155,38 @@ export function PredictionAlertConfigurator({
   const watchTypedFull  = useTypewriter(watchFull,  { active: typeActive });
   const watchTypedShort = useTypewriter(watchShort, { active: typeActive });
 
+  // CRO polish: auto-focus the NOTIFY input once the panel has finished its
+  // StaggeredReveal entrance. Stagger budget is 360ms (item index 2) +
+  // 240ms (per-item duration) = 600ms; firing at 640ms lands focus right
+  // after the panel settles, so the lit-cyan caret begins blinking
+  // without the user clicking. Guards:
+  //   - only fire on touch-free pointers — auto-focusing on mobile would
+  //     also unroll the soft keyboard before the user has read the score.
+  //   - only fire if no other element has already taken focus.
+  //   - prefers-reduced-motion: drop the 640ms delay; the panel already
+  //     rendered instantly, so the caret should land instantly too.
+  //   - { preventScroll: true } so the page does not jump if the panel is
+  //     below the fold.
+  // Empty dependency array means this fires once per mount; the React-
+  // managed remount on the success / skipped states never reaches this
+  // branch because those states render a different panel altogether.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isCoarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    if (isCoarse) return;
+    const prefersReduced =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const delayMs = prefersReduced ? 0 : 640;
+    const id = window.setTimeout(() => {
+      if (typeof document === "undefined") return;
+      const active = document.activeElement;
+      const userBusy = active && active !== document.body && active !== inputRef.current;
+      if (userBusy) return;
+      inputRef.current?.focus({ preventScroll: true });
+    }, delayMs);
+    return () => window.clearTimeout(id);
+  }, []);
+
   // §2.3 (3) — submit lock for 1.2s after click regardless of network result.
   // Prevents the "did it work?" double-submit loop responsible for half of
   // bounce in newsletter forms.
@@ -318,8 +350,13 @@ export function PredictionAlertConfigurator({
             state change only
           </dd>
 
-          {/* NOTIFY — the only input. No placeholder text in the input
-              itself; the WATCH and TRIGGER rows establish purpose. */}
+          {/* NOTIFY — the only input. The original VIRAL_LOOP §2.2 spec
+              called for no placeholder ("WATCH and TRIGGER establish
+              purpose"). The CRO follow-up overrides that: a single
+              terminal-style example string ("operator@domain.com") in
+              --text-quiet doubles as a format hint and proves the field
+              accepts an email, lifting first-look affordance without
+              competing with the directive rows above. */}
           <dt className="self-center font-mono text-[12px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] leading-[1.6]">
             NOTIFY
           </dt>
@@ -336,6 +373,7 @@ export function PredictionAlertConfigurator({
               spellCheck={false}
               required
               maxLength={254}
+              placeholder="operator@domain.com"
               value={email}
               onChange={(e) => {
                 // §2.3 (2): do NOT validate on change. Just clear stale
