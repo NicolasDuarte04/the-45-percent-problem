@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "active_batch_id": "batch_20260512_013228Z",
+  "active_batch_path": "outputs/phase5/batches/batch_20260512_013228Z",
+  "activated_at_utc": "2026-05-12T01:33:11Z",
+  "matrix_sha256_run": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe",
+  "matrix_sha256_lock": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe",
+  "prior_active_batch_id": "batch_20260511_140718Z",
+  "prior_active_batch_path": "outputs/phase5/batches/batch_20260511_140718Z",
+  "supersession_reason": "Amendment v1.1 data completeness: prior batch ran against the now-superseded strength matrix 8ae40a863beb6a7eb78797efd7ab7d4de5d289c13104984293cff83db658f3cf; new batch runs against the post-amendment strength matrix f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe. See osf/amendments/amendment_v1.1_data_completeness.md.",
+  "amendment_pointer": "osf/amendments/amendment_v1.1_data_completeness.md"
+}

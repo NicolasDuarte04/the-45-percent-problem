@@ -1,0 +1,107 @@
+condition,round,opponent,conditional_probability,n_conditioned_runs,snapshot_sha
+runner_up_group_D,Final,Argentina,0.265487,113,d97a256125b3b3a1
+runner_up_group_D,Final,France,0.230088,113,d97a256125b3b3a1
+runner_up_group_D,Final,England,0.141593,113,d97a256125b3b3a1
+runner_up_group_D,Final,Colombia,0.061947,113,d97a256125b3b3a1
+runner_up_group_D,Final,Croatia,0.061947,113,d97a256125b3b3a1
+runner_up_group_D,Final,Belgium,0.044248,113,d97a256125b3b3a1
+runner_up_group_D,Final,Iran,0.035398,113,d97a256125b3b3a1
+runner_up_group_D,Final,Mexico,0.035398,113,d97a256125b3b3a1
+runner_up_group_D,Final,Senegal,0.026549,113,d97a256125b3b3a1
+runner_up_group_D,Final,Spain,0.017699,113,d97a256125b3b3a1
+runner_up_group_D,Final,Brazil,0.017699,113,d97a256125b3b3a1
+runner_up_group_D,Final,Scotland,0.017699,113,d97a256125b3b3a1
+runner_up_group_D,Final,Czechia,0.00885,113,d97a256125b3b3a1
+runner_up_group_D,Final,South Africa,0.00885,113,d97a256125b3b3a1
+runner_up_group_D,Final,Portugal,0.00885,113,d97a256125b3b3a1
+runner_up_group_D,Final,Switzerland,0.00885,113,d97a256125b3b3a1
+runner_up_group_D,Final,Japan,0.00885,113,d97a256125b3b3a1
+runner_up_group_D,QF,Mexico,0.34955,555,d97a256125b3b3a1
+runner_up_group_D,QF,Switzerland,0.29009,555,d97a256125b3b3a1
+runner_up_group_D,QF,South Korea,0.136937,555,d97a256125b3b3a1
+runner_up_group_D,QF,Canada,0.127928,555,d97a256125b3b3a1
+runner_up_group_D,QF,Czechia,0.03964,555,d97a256125b3b3a1
+runner_up_group_D,QF,Qatar,0.032432,555,d97a256125b3b3a1
+runner_up_group_D,QF,South Africa,0.016216,555,d97a256125b3b3a1
+runner_up_group_D,QF,Bosnia & Herzegovina,0.007207,555,d97a256125b3b3a1
+runner_up_group_D,R16,Brazil,0.307213,1123,d97a256125b3b3a1
+runner_up_group_D,R16,Morocco,0.278718,1123,d97a256125b3b3a1
+runner_up_group_D,R16,Turkey,0.184328,1123,d97a256125b3b3a1
+runner_up_group_D,R16,Australia,0.117542,1123,d97a256125b3b3a1
+runner_up_group_D,R16,Scotland,0.069457,1123,d97a256125b3b3a1
+runner_up_group_D,R16,Paraguay,0.03829,1123,d97a256125b3b3a1
+runner_up_group_D,R16,Haiti,0.004452,1123,d97a256125b3b3a1
+runner_up_group_D,R32,Brazil,0.483303,2785,d97a256125b3b3a1
+runner_up_group_D,R32,Morocco,0.463196,2785,d97a256125b3b3a1
+runner_up_group_D,R32,Scotland,0.047397,2785,d97a256125b3b3a1
+runner_up_group_D,R32,Haiti,0.006104,2785,d97a256125b3b3a1
+runner_up_group_D,SF,Spain,0.419558,317,d97a256125b3b3a1
+runner_up_group_D,SF,Germany,0.160883,317,d97a256125b3b3a1
+runner_up_group_D,SF,Belgium,0.129338,317,d97a256125b3b3a1
+runner_up_group_D,SF,Netherlands,0.123028,317,d97a256125b3b3a1
+runner_up_group_D,SF,Uruguay,0.053628,317,d97a256125b3b3a1
+runner_up_group_D,SF,Japan,0.0347,317,d97a256125b3b3a1
+runner_up_group_D,SF,Iran,0.031546,317,d97a256125b3b3a1
+runner_up_group_D,SF,Ecuador,0.025237,317,d97a256125b3b3a1
+runner_up_group_D,SF,Egypt,0.006309,317,d97a256125b3b3a1
+runner_up_group_D,SF,Sweden,0.006309,317,d97a256125b3b3a1
+runner_up_group_D,SF,Saudi Arabia,0.003155,317,d97a256125b3b3a1
+runner_up_group_D,SF,Cape Verde,0.003155,317,d97a256125b3b3a1
+runner_up_group_D,SF,Côte d'Ivoire,0.003155,317,d97a256125b3b3a1
+won_group_D,Final,Argentina,0.220339,177,d97a256125b3b3a1
+won_group_D,Final,France,0.20339,177,d97a256125b3b3a1
+won_group_D,Final,England,0.124294,177,d97a256125b3b3a1
+won_group_D,Final,Portugal,0.073446,177,d97a256125b3b3a1
+won_group_D,Final,Brazil,0.056497,177,d97a256125b3b3a1
+won_group_D,Final,Morocco,0.033898,177,d97a256125b3b3a1
+won_group_D,Final,Colombia,0.033898,177,d97a256125b3b3a1
+won_group_D,Final,Senegal,0.028249,177,d97a256125b3b3a1
+won_group_D,Final,Ecuador,0.028249,177,d97a256125b3b3a1
+won_group_D,Final,Germany,0.022599,177,d97a256125b3b3a1
+won_group_D,Final,Iran,0.016949,177,d97a256125b3b3a1
+won_group_D,Final,Croatia,0.016949,177,d97a256125b3b3a1
+won_group_D,Final,Egypt,0.016949,177,d97a256125b3b3a1
+won_group_D,Final,South Korea,0.016949,177,d97a256125b3b3a1
+won_group_D,Final,Mexico,0.011299,177,d97a256125b3b3a1
+won_group_D,Final,Australia,0.011299,177,d97a256125b3b3a1
+won_group_D,Final,Scotland,0.011299,177,d97a256125b3b3a1
+won_group_D,Final,Spain,0.011299,177,d97a256125b3b3a1
+won_group_D,Final,Switzerland,0.011299,177,d97a256125b3b3a1
+won_group_D,Final,Côte d'Ivoire,0.011299,177,d97a256125b3b3a1
+won_group_D,Final,Panama,0.00565,177,d97a256125b3b3a1
+won_group_D,Final,Belgium,0.00565,177,d97a256125b3b3a1
+won_group_D,Final,Netherlands,0.00565,177,d97a256125b3b3a1
+won_group_D,Final,Austria,0.00565,177,d97a256125b3b3a1
+won_group_D,Final,Japan,0.00565,177,d97a256125b3b3a1
+won_group_D,Final,Uruguay,0.00565,177,d97a256125b3b3a1
+won_group_D,Final,Turkey,0.00565,177,d97a256125b3b3a1
+won_group_D,QF,Mexico,0.345291,892,d97a256125b3b3a1
+won_group_D,QF,Switzerland,0.286996,892,d97a256125b3b3a1
+won_group_D,QF,South Korea,0.152466,892,d97a256125b3b3a1
+won_group_D,QF,Canada,0.118834,892,d97a256125b3b3a1
+won_group_D,QF,Czechia,0.054933,892,d97a256125b3b3a1
+won_group_D,QF,Qatar,0.020179,892,d97a256125b3b3a1
+won_group_D,QF,Bosnia & Herzegovina,0.014574,892,d97a256125b3b3a1
+won_group_D,QF,South Africa,0.006726,892,d97a256125b3b3a1
+won_group_D,R16,Brazil,0.359238,1943,d97a256125b3b3a1
+won_group_D,R16,Morocco,0.336593,1943,d97a256125b3b3a1
+won_group_D,R16,Turkey,0.124035,1943,d97a256125b3b3a1
+won_group_D,R16,Australia,0.106022,1943,d97a256125b3b3a1
+won_group_D,R16,Paraguay,0.049408,1943,d97a256125b3b3a1
+won_group_D,R16,Scotland,0.024704,1943,d97a256125b3b3a1
+won_group_D,R32,Morocco,0.404577,4239,d97a256125b3b3a1
+won_group_D,R32,Brazil,0.38594,4239,d97a256125b3b3a1
+won_group_D,R32,Scotland,0.176693,4239,d97a256125b3b3a1
+won_group_D,R32,Haiti,0.032791,4239,d97a256125b3b3a1
+won_group_D,SF,Spain,0.40501,479,d97a256125b3b3a1
+won_group_D,SF,Netherlands,0.164927,479,d97a256125b3b3a1
+won_group_D,SF,Germany,0.127349,479,d97a256125b3b3a1
+won_group_D,SF,Belgium,0.106472,479,d97a256125b3b3a1
+won_group_D,SF,Uruguay,0.068894,479,d97a256125b3b3a1
+won_group_D,SF,Japan,0.058455,479,d97a256125b3b3a1
+won_group_D,SF,Iran,0.02714,479,d97a256125b3b3a1
+won_group_D,SF,Ecuador,0.020877,479,d97a256125b3b3a1
+won_group_D,SF,Côte d'Ivoire,0.008351,479,d97a256125b3b3a1
+won_group_D,SF,Egypt,0.006263,479,d97a256125b3b3a1
+won_group_D,SF,Tunisia,0.004175,479,d97a256125b3b3a1
+won_group_D,SF,Saudi Arabia,0.002088,479,d97a256125b3b3a1

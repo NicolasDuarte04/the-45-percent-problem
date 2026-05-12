@@ -1,27 +1,28 @@
 """
 ingestion/fetch_odds_pinnacle.py
 =================================
-Phase 2 · Task 2.6a — Pinnacle Odds (Live Connector + Synthetic Fallback)
+Phase 2, Task 2.6a: Pinnacle Odds (Live Connector + Synthetic Fallback)
 
 Fetches match-winner (1X2) odds for WC 2026 matches in a 3-tier cascade and
 writes them to ``data/raw/odds_pinnacle.parquet`` with a canonical schema.
-The schema does NOT change between tiers — downstream code (devig.py,
+The schema does NOT change between tiers; downstream code (devig.py,
 edge_calculator.py, volatility_gate.py) is source-agnostic.
 
 Tier cascade
 ------------
-  1. Pinnacle commercial API   (auth via PINNACLE_API_KEY)
-                                — primary; requires a licensee account
-  2. The Odds API              (auth via THE_ODDS_API_KEY)
-                                — public aggregator, free tier 500 req/mo,
-                                  exposes Pinnacle as a named bookmaker
-  3. Synthetic (Elo-derived)   — deterministic fallback so the pipeline,
-                                  CI, and frontend never break when the
-                                  bookmakers haven't opened lines yet
+  1. Pinnacle commercial API   (auth via PINNACLE_API_KEY).
+                               Primary; requires a licensee account.
+  2. The Odds API              (auth via THE_ODDS_API_KEY).
+                               Public aggregator, free tier 500 req/mo,
+                               exposes Pinnacle as a named bookmaker.
+  3. Synthetic (Elo-derived).
+                               Deterministic fallback so the pipeline,
+                               CI, and frontend never break when the
+                               bookmakers haven't opened lines yet.
 
 The orchestrator tries each tier in order. The first one that returns
 non-empty records wins. Each row is tagged with its `bookmaker` field
-("pinnacle" for both real-data tiers — the Odds API surfaces Pinnacle's
+("pinnacle" for both real-data tiers; the Odds API surfaces Pinnacle's
 prices) so downstream filters keep working.
 
 Authentication
@@ -41,9 +42,9 @@ Run
 
 Notes
 -----
-- WC 2026 lines typically open 6–8 weeks before kickoff. Until then both real
+- WC 2026 lines typically open 6 to 8 weeks before kickoff. Until then both real
   tiers will return zero events for the soccer_fifa_world_cup sport key, and
-  the synthetic fallback runs automatically — by design.
+  the synthetic fallback runs automatically, by design.
 - When real records arrive, they're keyed by canonical match_id (M01..M104)
   via a fixture lookup against ``data/raw/wc2026_fixtures.parquet``. Events
   that fail the lookup are logged and skipped, never silently miscounted.
@@ -98,14 +99,14 @@ THE_ODDS_API_BASE  = "https://api.the-odds-api.com/v4"
 THE_ODDS_API_SPORT = "soccer_fifa_world_cup"
 THE_ODDS_API_REGIONS  = "us,uk,eu"     # widest pool that surfaces Pinnacle
 THE_ODDS_API_MARKET   = "h2h"           # head-to-head = 1X2 in their lexicon
-THE_ODDS_API_BOOKMAKER = "pinnacle"     # filter on Pinnacle only — that's what
+THE_ODDS_API_BOOKMAKER = "pinnacle"     # filter on Pinnacle only; that's what
                                         # the rest of the pipeline expects in
                                         # the `bookmaker` column.
 
 # Aliases that map third-party / Odds-API team-name spellings back to the
 # fixture-parquet display_name. Keys are lower-cased; values are the exact
 # team_home / team_away spelling from wc2026_fixtures.parquet. Add new entries
-# here when a new third-party feed surfaces an unfamiliar name — never add a
+# here when a new third-party feed surfaces an unfamiliar name; never add a
 # parallel name table elsewhere.
 _ODDS_API_NAME_ALIASES: dict[str, str] = {
     "south korea":                   "Korea Republic",
@@ -223,7 +224,7 @@ def _elo_map() -> dict[str, float]:
     """Return {team_name → elo_rating} for all teams we know about."""
     elo_path = PROJECT_ROOT / "data" / "raw" / "elo_ratings.parquet"
     if not elo_path.exists():
-        log.warning("elo_ratings.parquet not found — using fallback ratings only")
+        log.warning("elo_ratings.parquet not found; using fallback ratings only")
         return dict(_FALLBACK_ELO)
 
     df = pd.read_parquet(elo_path)
@@ -328,15 +329,15 @@ def generate_synthetic() -> list[dict]:
       - 3 opening rows  (home_win / draw / away_win, is_opening=True)
       - 3 closing rows  (home_win / draw / away_win, is_closing=True)
 
-    Opening lines: higher overround (4.8–5.5%), more noise (σ ≈ 1.8pp)
-    Closing lines: lower overround (3.8–4.5%), less noise (σ ≈ 0.4pp)
+    Opening lines: higher overround (4.8 to 5.5%), more noise (σ ≈ 1.8pp)
+    Closing lines: lower overround (3.8 to 4.5%), less noise (σ ≈ 0.4pp)
 
     All odds are derived from Elo strength differentials using the calibrated
     conversion in _elo_to_probs(). No actual Pinnacle data is used.
     """
     fixtures_path = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
     if not fixtures_path.exists():
-        log.warning("wc2026_fixtures.parquet not found — cannot generate synthetic odds")
+        log.warning("wc2026_fixtures.parquet not found; cannot generate synthetic odds")
         return []
 
     fixtures = pd.read_parquet(fixtures_path)
@@ -362,7 +363,7 @@ def generate_synthetic() -> list[dict]:
         elo_home = _lookup_elo(home_name, elo)
         elo_away = _lookup_elo(away_name, elo)
 
-        # Opening line — noisy, higher overround
+        # Opening line; noisy, higher overround
         rng_open = random.Random(_match_seed(match_id, "open"))
         or_open  = rng_open.uniform(1.045, 1.055)
         p_h_open, p_d_open, p_a_open = _elo_to_probs(
@@ -397,7 +398,7 @@ def generate_synthetic() -> list[dict]:
                 "last_refreshed": open_ts,
             })
 
-        # Closing line — sharper, lower overround, near kickoff
+        # Closing line; sharper, lower overround, near kickoff
         rng_close = random.Random(_match_seed(match_id, "close"))
         or_close  = rng_close.uniform(1.038, 1.045)
         p_h_cl, p_d_cl, p_a_cl = _elo_to_probs(
@@ -471,7 +472,7 @@ def _alias_to_fixture_name(third_party_name: str) -> str:
     """
     Map a third-party team string (from any external feed) to the canonical
     fixture-parquet display_name. Falls through to the original string if no
-    alias is registered — the match resolver then attempts case-insensitive
+    alias is registered; the match resolver then attempts case-insensitive
     matching against the fixture lookup as a last resort.
     """
     return _ODDS_API_NAME_ALIASES.get(_norm_team_name(third_party_name), third_party_name)
@@ -489,7 +490,7 @@ def _load_fixture_lookup() -> tuple[dict[tuple[str, str, str], str], list[dict]]
     """
     fixtures_path = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
     if not fixtures_path.exists():
-        log.warning("wc2026_fixtures.parquet not found — match resolution disabled")
+        log.warning("wc2026_fixtures.parquet not found; match resolution disabled")
         return {}, []
 
     df = pd.read_parquet(fixtures_path)
@@ -531,8 +532,8 @@ def _resolve_match_id(
 
     Strategy:
       1. Run the team names through ``_alias_to_fixture_name``
-      2. Try (home, away, kickoff_date) — exact orientation
-      3. Try (away, home, kickoff_date) — feeds occasionally invert sides
+      2. Try (home, away, kickoff_date); exact orientation
+      3. Try (away, home, kickoff_date); feeds occasionally invert sides
          when there's no formal home team (neutral-venue tournaments).
       4. Return None on miss; caller logs and skips.
     """
@@ -577,11 +578,11 @@ def fetch_via_odds_api(force: bool = False) -> list[dict]:
             cached = json.loads(raw_cache.read_text())
             return _normalise_odds_api_payload(cached)
         except Exception as exc:
-            log.warning("Cached Odds API payload unreadable — refetching", error=str(exc))
+            log.warning("Cached Odds API payload unreadable; refetching", error=str(exc))
 
     if not _odds_api_key():
         log.info(
-            "THE_ODDS_API_KEY not set — skipping Tier 2",
+            "THE_ODDS_API_KEY not set; skipping Tier 2",
             hint="sign up at https://the-odds-api.com (free tier) and add the key to .env",
         )
         return []
@@ -609,13 +610,13 @@ def fetch_via_odds_api(force: bool = False) -> list[dict]:
         status = exc.response.status_code if exc.response is not None else None
         body   = exc.response.text[:200] if exc.response is not None else ""
         log.warning(
-            "Odds API HTTP error — falling through to next tier",
+            "Odds API HTTP error; falling through to next tier",
             status=status,
             body=body,
         )
         return []
     except Exception as exc:
-        log.warning("Odds API unreachable — falling through to next tier", error=str(exc)[:160])
+        log.warning("Odds API unreachable; falling through to next tier", error=str(exc)[:160])
         return []
 
     quota = {
@@ -625,7 +626,7 @@ def fetch_via_odds_api(force: bool = False) -> list[dict]:
     log.info("Odds API quota", **{k: v for k, v in quota.items() if v is not None})
 
     if not isinstance(events, list) or not events:
-        log.info("Odds API returned 0 events — WC 2026 markets not open yet")
+        log.info("Odds API returned 0 events; WC 2026 markets not open yet")
         return []
 
     raw_cache.parent.mkdir(parents=True, exist_ok=True)
@@ -673,7 +674,7 @@ def _normalise_odds_api_payload(events: list[dict]) -> list[dict]:
                 if mkt.get("key") != THE_ODDS_API_MARKET:
                     continue
                 # outcomes is a list with exactly 3 entries: home / away / draw
-                # (order varies by event — match by `name` field).
+                # (order varies by event; match by `name` field).
                 for outcome in mkt.get("outcomes", []):
                     name  = str(outcome.get("name", ""))
                     price = outcome.get("price")
@@ -736,14 +737,14 @@ def fetch_raw(force: bool = False) -> list[dict]:
     try:
         _auth_header()  # validate key is set
     except EnvironmentError as exc:
-        log.warning("Pinnacle API key missing — will use synthetic path", error=str(exc))
+        log.warning("Pinnacle API key missing; will use synthetic path", error=str(exc))
         return []
 
     try:
         leagues = _get_leagues()
     except Exception as exc:
         log.warning(
-            "Pinnacle API unreachable — will use synthetic path",
+            "Pinnacle API unreachable; will use synthetic path",
             error=str(exc)[:120],
         )
         return []
@@ -754,7 +755,7 @@ def fetch_raw(force: bool = False) -> list[dict]:
     ]
 
     if not wc_leagues:
-        log.warning("No WC 2026 leagues found on Pinnacle yet — lines may not be open")
+        log.warning("No WC 2026 leagues found on Pinnacle yet; lines may not be open")
         return []
 
     records: list[dict] = []
@@ -818,6 +819,12 @@ def fetch_raw(force: bool = False) -> list[dict]:
 # =============================================================================
 
 def _make_match_id(date_str: str, home: str, away: str) -> str:
+    """
+    Legacy fallback identifier used when fixture resolution fails on a Tier 1
+    record. Kept for diagnostic logging; the canonical M{NN} match_id is
+    produced by ``clean_and_enrich`` via the shared ``_resolve_match_id``
+    machinery (same logic Tier 2 uses).
+    """
     home_slug = home.replace(" ", "_")[:20]
     away_slug = away.replace(" ", "_")[:20]
     return f"{date_str}_{home_slug}_{away_slug}"
@@ -838,13 +845,40 @@ def clean_and_enrich(records: list[dict]) -> pd.DataFrame:
     df["kickoff_utc"] = pd.to_datetime(df["kickoff_raw"], errors="coerce", utc=True)
     df["date_str"] = df["kickoff_utc"].dt.strftime("%Y-%m-%d").fillna("unknown")
 
-    df["match_id"] = df.apply(
-        lambda r: _make_match_id(r["date_str"], r["home_team_raw"], r["away_team_raw"]),
-        axis=1,
-    )
+    # Resolve to canonical M{NN} match_id via the shared fixture lookup, so
+    # Tier 1 output matches Tier 2 (Odds API) and Tier 3 (synthetic). Rows
+    # that fail fixture resolution are logged with a diagnostic legacy id and
+    # dropped: downstream joins (data_loader.get_odds, market_pipeline) all
+    # key on canonical fixture match_ids, and a non-canonical row would
+    # silently miss its fixture and never produce a divergence.
+    lookup, _ = _load_fixture_lookup()
+    resolved: list[Optional[str]] = []
+    for _, r in df.iterrows():
+        mid = _resolve_match_id(
+            r["home_team_raw"], r["away_team_raw"], r["kickoff_raw"], lookup,
+        )
+        resolved.append(mid)
+    df["match_id"] = resolved
+    unresolved_mask = df["match_id"].isna()
+    n_unresolved = int(unresolved_mask.sum())
+    if n_unresolved:
+        for _, r in df[unresolved_mask].iterrows():
+            log.warning(
+                "Tier 1 row failed fixture resolution; dropping",
+                home=r["home_team_raw"],
+                away=r["away_team_raw"],
+                kickoff=r["kickoff_raw"],
+                legacy_id=_make_match_id(r["date_str"], r["home_team_raw"], r["away_team_raw"]),
+            )
+        df = df.loc[~unresolved_mask].copy()
+
     df["last_refreshed"] = df["timestamp"]
 
-    log.success("Pinnacle clean complete", records=len(df))
+    log.success(
+        "Pinnacle clean complete",
+        records=len(df),
+        unresolved_dropped=n_unresolved,
+    )
     return df
 
 
@@ -877,7 +911,7 @@ def build_output(df: pd.DataFrame) -> pd.DataFrame:
 
 def _validate_sample(df: pd.DataFrame, n: int = 5) -> None:
     if df.empty:
-        log.info("Empty Pinnacle snapshot — no rows to validate")
+        log.info("Empty Pinnacle snapshot; no rows to validate")
         return
 
     sample = df.sample(min(n, len(df)), random_state=42)
@@ -913,7 +947,7 @@ def _validate_overround(df: pd.DataFrame) -> None:
             )
             outliers += 1
     if outliers == 0:
-        log.success("Overround check passed — all implied sums in [1.00, 1.12]")
+        log.success("Overround check passed; all implied sums in [1.00, 1.12]")
 
 
 # =============================================================================
@@ -941,23 +975,23 @@ def fetch_real_odds(force: bool = False) -> tuple[pd.DataFrame, str]:
     caller is expected to fall back to ``generate_synthetic()``.
     """
     # ── Tier 1: Pinnacle commercial ────────────────────────────────────────
-    log.info("Tier 1 — attempting Pinnacle commercial API")
+    log.info("Tier 1; attempting Pinnacle commercial API")
     pin_records = fetch_raw(force=force)
     if pin_records:
         cleaned = clean_and_enrich(pin_records)
         df = build_output(cleaned)
-        log.success("Tier 1 hit — using Pinnacle commercial data", rows=len(df))
+        log.success("Tier 1 hit; using Pinnacle commercial data", rows=len(df))
         return df, SOURCE_PINNACLE
-    log.info("Tier 1 returned no records — trying Tier 2")
+    log.info("Tier 1 returned no records; trying Tier 2")
 
     # ── Tier 2: The Odds API ───────────────────────────────────────────────
-    log.info("Tier 2 — attempting The Odds API public aggregator")
+    log.info("Tier 2; attempting The Odds API public aggregator")
     oa_records = fetch_via_odds_api(force=force)
     if oa_records:
         df = build_output(pd.DataFrame(oa_records))
-        log.success("Tier 2 hit — using The Odds API data", rows=len(df))
+        log.success("Tier 2 hit; using The Odds API data", rows=len(df))
         return df, SOURCE_ODDS_API
-    log.info("Tier 2 returned no records — caller should fall back to synthetic")
+    log.info("Tier 2 returned no records; caller should fall back to synthetic")
 
     return _empty_df(), SOURCE_EMPTY
 
@@ -980,10 +1014,10 @@ def run(force: bool = False, source: str = "auto") -> Path:
     """
     Orchestrator. ``source`` selects which tiers to attempt:
 
-      auto       — Tier 1 → Tier 2 → Tier 3 (synthetic).  Default.
-      pinnacle   — Tier 1 only.  Synthetic fallback if it returns empty.
-      oddsapi    — Tier 2 only.  Synthetic fallback if it returns empty.
-      synthetic  — Skip both real tiers, write deterministic synthetic data.
+      auto      : Tier 1 then Tier 2 then Tier 3 (synthetic).  Default.
+      pinnacle  : Tier 1 only.  Synthetic fallback if it returns empty.
+      oddsapi   : Tier 2 only.  Synthetic fallback if it returns empty.
+      synthetic : Skip both real tiers, write deterministic synthetic data.
     """
     if source not in _VALID_SOURCES:
         raise ValueError(f"--source must be one of {sorted(_VALID_SOURCES)}, got {source!r}")
@@ -994,7 +1028,7 @@ def run(force: bool = False, source: str = "auto") -> Path:
     data_label = SOURCE_EMPTY
 
     if source == "synthetic":
-        log.info("Synthetic source forced — skipping real-data tiers")
+        log.info("Synthetic source forced; skipping real-data tiers")
     elif source == "pinnacle":
         recs = fetch_raw(force=force)
         if recs:
@@ -1010,7 +1044,7 @@ def run(force: bool = False, source: str = "auto") -> Path:
 
     if output_df.empty:
         log.info(
-            "No real odds available — using synthetic Elo-derived fallback",
+            "No real odds available; using synthetic Elo-derived fallback",
             previous_label=data_label,
         )
         syn_records = generate_synthetic()

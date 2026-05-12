@@ -3,8 +3,61 @@
   "L_CV": 0.99337,
   "delta_vs_M0": -0.04096,
   "sigma_CV": 0.006587,
-  "matrix_sha256": "8ae40a863beb6a7eb78797efd7ab7d4de5d289c13104984293cff83db658f3cf",
-  "CHAMPION_LOCKED": true,
   "tau_star": 180.0,
-  "w_star": 1.0
+  "w_star": 1.0,
+  "matrix_sha256": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe",
+  "matrix_sha256_prior": "8ae40a863beb6a7eb78797efd7ab7d4de5d289c13104984293cff83db658f3cf",
+  "CHAMPION_LOCKED": true,
+  "amendment_v": "v1.1",
+  "amendment_reason": "Data completeness backfill: fifa_rankings.parquet rebuilt from real 2026-04-01 FIFA publication. Prior synthetic snapshot was mislabelled as 2026-03-20 and did not correspond to any real FIFA publication. M2 strength matrix rebuilt; CV-derived statistics PROCEDURALLY PINNED at OSF lock per pre-registration discipline; sensitivity quantified in osf/amendments/amendment_v1.1_diagnostic_cv_rescore.json.",
+  "amendment_date": "2026-05-12T01:17:33Z",
+  "amendment_files_changed": [
+    {
+      "path": "ingestion/fetch_historical_matches.py",
+      "pre_sha256": "1f2fe2ee212374e7e03a7a086139120c375c0262c36414461d943ccc3234e060",
+      "post_sha256": "df03e59c6a6d347ac7d82381638080b040dc6a0f90af747d8543565eb24bbf35",
+      "change_description": "Section 1: TEAM_NAME_MAP extended with two new aliases (Cabo Verde -> Cape Verde; Türkiye -> Turkey). No other lines changed."
+    },
+    {
+      "path": "ingestion/fetch_fifa_rankings.py",
+      "pre_sha256": "a6f88814e20314ce619fe9993891812d3f0e99f52dcc853a613957705625f9e9",
+      "post_sha256": "429c8f10278a956e82e8ed486466d35422a2a8e29cf6947e32e7413edeec30f8",
+      "change_description": "Section 1: WC2026_FIFA_RANKINGS hardcoded list replaced with 48 real rows from the 2026-04-01 FIFA publication; SNAPSHOT_DATE constant updated to date(2026, 4, 1); provenance comment block added above the list."
+    },
+    {
+      "path": "data/raw/fifa_rankings.parquet",
+      "pre_sha256": "untracked_in_git; see Section 1 acceptance report for pre-state details",
+      "post_sha256": "cc67b40323b96db904392a8f53843566eb05f186d4e7b12e4b84b0f680fc5843",
+      "change_description": "Section 1: full re-write to 48 rows from the real 2026-04-01 FIFA publication; replaces the prior synthetic-fallback 48-row snapshot that did not correspond to any real FIFA publication date. Sidecar README at data/raw/fifa_rankings.parquet.README.md."
+    },
+    {
+      "path": "data/raw/wc2026_fixtures.parquet",
+      "pre_sha256": "untracked_in_git; see Section 1 acceptance report for pre-state details",
+      "post_sha256": "84b16c74bb05a8010889aed6a4bba82578ccbe6923b47389039b1f1cb25f3033",
+      "change_description": "Section 1: team-name columns normalised through the updated TEAM_NAME_MAP (Cabo Verde -> Cape Verde; Türkiye -> Turkey). Schedule rows unchanged in count or order. Sidecar README at data/raw/wc2026_fixtures.parquet.README.md."
+    },
+    {
+      "path": "data/calibration/champion_model.json",
+      "pre_sha256": "53462f0fc67edadf27ea9f93f74f32cf7b004353835ae958df93f715d868b0cf",
+      "post_sha256": "self_reference; computed_post_write_by_reviewer_protocol",
+      "change_description": "Section 2: matrix_sha256 updated to reflect the rebuilt 48x48 M2 strength matrix; matrix_sha256_prior preserves the OSF-lock value; amendment_v1.1 metadata block added; procedural pin recorded. CV-derived statistics (champion_model_id, L_CV, delta_vs_M0, sigma_CV, w_star) unchanged from OSF lock."
+    }
+  ],
+  "procedural_pin": {
+    "pinned_at": "2026-04-22T00:00:00Z (OSF lock)",
+    "pinned_statistics": [
+      "champion_model_id",
+      "L_CV",
+      "delta_vs_M0",
+      "sigma_CV",
+      "w_star"
+    ],
+    "pinned_files": [
+      "data/calibration/cv_battery_results.json",
+      "data/calibration/m2_fifa_params.json",
+      "evaluation/cv_battery_result.json"
+    ],
+    "pin_rationale": "Pre-registration discipline: the CV battery and champion-selection decision were sealed at OSF lock under the data available at that moment. Subsequent data-completeness corrections are forward-looking input refreshes for the WC2026 simulation; they do not retroactively alter the OSF-sealed historical CV adjudication.",
+    "sensitivity_diagnostic": "osf/amendments/amendment_v1.1_diagnostic_cv_rescore.json"
+  }
 }

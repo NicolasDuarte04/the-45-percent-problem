@@ -1,6 +1,6 @@
 {
-  "snapshot_id": "2026-05-12T00:00Z",
-  "generated_at_utc": "2026-05-12T01:55:40Z",
+  "snapshot_id": "2026-05-12T12:44Z",
+  "generated_at_utc": "2026-05-07T01:51:52Z",
   "rows": [
     {
       "row_id": "ROW-00000",
@@ -1634,5 +1634,6 @@
       },
       "model_version": "M0@43cbc95c39325188"
     }
-  ]
+  ],
+  "notes": "Carried forward from snapshot 2026-05-07T00:00Z; row-level model_version stamps were emitted under the prior M0 snapshot pipeline. Re-derivation under M_STAR is pending the Pinnacle real-data ingestion documented in PINNACLE_INGESTION_READINESS.md gap 5.2; per-team tournament probabilities in tournament.json are the M2 batch outputs and are the authoritative pre-tournament numbers."
 }

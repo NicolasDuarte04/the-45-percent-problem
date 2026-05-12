@@ -167,6 +167,31 @@ export default async function MethodologyEntryPage({
           Read the full methodology →
         </Link>
       </section>
+
+      <aside
+        aria-label="Amendment record"
+        style={{
+          maxWidth: 640,
+          marginTop: 24,
+          fontFamily: "var(--font-sans)",
+          fontSize: 12,
+          lineHeight: 1.6,
+          fontStyle: "italic",
+          color: "var(--text-tertiary)",
+        }}
+      >
+        Probabilities are computed against amendment v1.1 of the locked
+        champion artifact; see
+        {" "}
+        <code
+          className="mono"
+          style={{ fontSize: 11, fontStyle: "normal" }}
+        >
+          osf/amendments/amendment_v1.1_data_completeness.md
+        </code>
+        {" "}
+        for the data-completeness backfill record.
+      </aside>
     </div>
   );
 }

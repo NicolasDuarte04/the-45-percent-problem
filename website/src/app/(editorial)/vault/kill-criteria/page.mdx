@@ -1,18 +1,24 @@
 <Dropcap>
-  In Phase 8, the kill criterion's pre-flight sanity gate fired. M2, the
-  candidate that won the cross-validation log-loss battery, beat M0 by
-  1.75 standard errors, falling short of the pre-registered 2.0 SE bar
-  by 0.25 SE. The pre-registered consequence took effect: the paper's
-  framing pivoted to the kill-criterion narrative, and M★ was
-  provisionally demoted to M0 for trading policy. The live R16
+  In Phase 8, the kill criterion's pre-flight sanity gate fired a
+  warning. M2, the candidate that won the cross-validation log-loss
+  battery, beat M0 by 1.75 standard errors under one of two SE
+  conventions on disk, falling short of the pre-registered 2.0 SE bar
+  by 0.25 SE under that reading. Under the other reading, in
+  `data/calibration/champion_model.json`, the gap is 6.22 SE and the
+  bar is cleared decisively. The pre-registered consequence on a
+  sanity-gate firing was `pivot_paper_framing`, the procedural
+  obligation reflected in this essay. M2 stays as M★, sealed in
+  `champion_model.json` with `CHAMPION_LOCKED: true`. The live R16
   checkpoint, on cumulative tournament forecasts, is still ahead.
 </Dropcap>
 
-This page describes the criterion that fired, the inequality it encodes,
-the two stages at which it is evaluated, and what the firing has and has
-not changed about the project's operations. The procedural argument for
-why a pre-registered stopping rule is necessary at all sits at the
-bottom; the substantive event the rule produced sits at the top.
+This page describes the criterion that fired the warning, the
+inequality it encodes, the two SE conventions that produce different
+gap numbers from the same locked data, the two stages at which the
+criterion is evaluated, and what the firing has and has not changed
+about the project's operations. The procedural argument for why a
+pre-registered stopping rule is necessary at all sits at the bottom;
+the substantive event the rule produced sits at the top.
 
 <SectionRule />
 
@@ -48,12 +54,17 @@ The criterion fires when this inequality fails:
 
 <BlockMath math="\overline{d} \;<\; 2 \cdot \mathrm{SE}\!\big(\overline{d}\big)" />
 
-The firing condition is "M★ does not beat M0 by 2 SE." This can happen
-in two ways. M★ might beat M0 by less than 2 SE, which is what happened
-in Phase 8: the gap was 1.75 SE, falling 0.25 SE short of the bar.
-M★ might also fail to beat M0 at all, which would be a stronger
-failure mode. Both fail the criterion; both trigger the same
-pre-registered consequence.
+The firing condition is "M★ does not beat M0 by 2 SE." This can
+happen in two ways. M★ might beat M0 by less than 2 SE, which is what
+the paired-difference SE reading in
+`evaluation/cv_battery_result.json` reports for Phase 8: a 1.75 SE
+gap, falling 0.25 SE short of the bar. M★ might also fail to beat M0
+at all, which would be a stronger failure mode. Both fire the
+criterion under that reading; both trigger the same pre-registered
+consequence (`pivot_paper_framing`). The marginal-SE reading in
+`champion_model.json` reports 6.22 SE for the same comparison, which
+clears the bar. The two readings, and what they mean, are documented
+in the "Dual SE reading" subsection below.
 
 The threshold value is 2.0 standard errors, sealed in
 `pre_reg_constants.yaml::kill_criterion.threshold_standard_errors` and
@@ -86,6 +97,68 @@ the Diebold-Mariano comparisons described in
 
 <SectionRule />
 
+## Dual SE reading
+
+The same 0.041 log-loss gap between M2 and M0 produces two different
+SE numbers in the two locked CV files. Both files are signed; both are
+sealed; both are part of the OSF pre-registration record. They
+disagree because they use different standard-error conventions, not
+because the underlying data disagrees.
+
+### The marginal-SE reading
+
+`data/calibration/champion_model.json` reports
+<InlineMath math="\sigma_{CV} = 0.006587" />, M2's own marginal sigma
+over the five-fold cross-validation mean. Dividing the locked
+<InlineMath math="\Delta_{vs M_0} = -0.04096" /> by this sigma yields
+a gap of <InlineMath math="6.22" /> SE. The file carries
+`CHAMPION_LOCKED: true`. Under this convention the sanity bar is
+cleared decisively.
+
+The marginal-SE reading treats each model's CV-mean uncertainty as a
+property of that model alone, comparable to a confidence interval on
+the model's own log-loss. It does not directly model the per-fold
+correlation between M2 and M0 losses on the same matches.
+
+### The paired-difference SE reading
+
+`evaluation/cv_battery_result.json` reports
+<InlineMath math="\mathrm{m\_star\_vs\_m0\_gap\_se} = 1.7518" />,
+computed as a paired-difference SE on per-fold log-loss differences.
+The file carries `sanity_gate_passed: false` and a
+`decision_narrative` that contains the phrase
+"WARNING: sanity gate NOT passed". Under this convention the bar is
+not cleared and the sanity-gate warning fires.
+
+The paired-difference SE acknowledges that M2 and M0 are evaluated on
+the same per-fold match samples and that their per-match log-losses
+are correlated. It is the SE convention most commonly used in the
+forecast-evaluation literature (Diebold-Mariano and its descendants).
+The pre-registered Diebold-Mariano machinery described in
+[Evaluation](/vault/evaluation) is closer in spirit to this reading
+than to the marginal one.
+
+### How to read the two together
+
+Neither file is wrong. Both readings answer different questions about
+the same data. The marginal SE asks "how precisely do we know M2's
+own CV mean log-loss?" The paired-difference SE asks "how precisely
+do we know the gap between M2 and M0 on the same evaluation samples?"
+The paired-difference SE is almost always the smaller of the two when
+the two models are correlated on the per-match level, which they are
+here.
+
+The protocol seals both conventions implicitly by sealing both files.
+The pre-registration's primary criterion (lowest mean CV log-loss
+with adequate gap to runner-up) does not depend on the SE convention,
+and M2 wins under that criterion in both files. The 2.0-SE sanity
+gate does depend on the convention. The honest report is that the
+sanity-gate warning fired under the paired-difference reading and did
+not fire under the marginal reading. The locked file is
+`champion_model.json`; M2 is M★; the warning is documented here.
+
+<SectionRule />
+
 ## The two checkpoints
 
 The same 2-SE rule is applied at two stages of the project. The Phase 8
@@ -102,23 +175,32 @@ the cross-validation hold-out (calibration 2010 to 2021, hold-out 2022
 World Cup), before the 2026 tournament started. The full adjudication
 table:
 
-| Model | Mean CV LL | SE | Status |
-|---|---|---|---|
-| **M2_fifa** | 1.00016 | 0.01809 | Log-loss champion; failed 2-SE gate (1.75 SE) |
-| **M3_macro** | 1.02709 | 0.02062 | Eligible; below M0 in point estimate, did not survive SE bar |
-| **M0_elo** | 1.03184 | 0.02362 | Baseline |
-| **M1_form** | 1.06444 | 0.03293 | Disqualified (worse than M0) |
+| Model | Mean CV LL | Marginal SE | Δ vs M0 | DM p vs M0 | Status |
+|---|---|---|---|---|---|
+| **M2_fifa** | 0.99337 | 0.00659 | −0.04096 | 0.0032 | Champion (`CHAMPION_LOCKED: true`); sanity-gate warning under paired-difference SE |
+| **M3_macro** | 1.02694 | 0.02949 | −0.00739 | 0.3443 | Eligible; below M0 in point estimate |
+| **M0_elo** | 1.03433 | 0.03844 | 0.000 | 1.0000 | Baseline |
+| **M1_form** | 1.08110 | 0.07514 | +0.04677 | 0.0061 | Disqualified (significantly worse than M0) |
 
-M2_fifa cleared condition 1 by having the lowest mean log-loss across
-the candidate set. M2_fifa did not clear condition 2: the stratified-CV
-gap to M0 was 1.75 SE, short of the pre-registered 2.0 bar by 0.25 SE.
+Values are from the locked
+`data/calibration/cv_battery_results.json`. M2 cleared the primary
+criterion by having the lowest mean log-loss across the candidate
+set, with a 1.49 SE gap to the runner-up (M3_macro) and a
+Diebold-Mariano test against M0 returning
+<InlineMath math="p = 0.003" />.
 
-The pre-registered consequence (`kill.action: pivot_paper_framing`)
-took effect immediately. The paper's framing pivoted to the
-kill-criterion narrative, and M★ was provisionally demoted to M0 for
-trading policy. The pipeline did not abort; the engine continues to
-run, and the forecast log continues to record every model's
-probabilities and edges.
+The 2-SE sanity gate, applied with the paired-difference SE in
+`evaluation/cv_battery_result.json`, reports a 1.75 SE gap and
+`sanity_gate_passed: false`. The same gap measured with M2's marginal
+sigma in `champion_model.json` is 6.22 SE. The pre-registered
+consequence (`kill.action: pivot_paper_framing`) took effect under
+the paired-difference reading: the paper's framing pivoted to the
+sanity-gate-warning narrative, and the project committed to
+acknowledging the warning transparently in the public ledger and the
+vault essays. M★ was not demoted; the pre-registered action is a
+framing pivot, not an automatic identity change. The pipeline did not
+abort; the engine continues to run, and the forecast log continues to
+record every model's probabilities, edges, and divergences.
 
 ### The R16 live checkpoint
 
@@ -127,20 +209,21 @@ on cumulative match-level log-losses from the start of the tournament
 through the end of R16. The check fires once, after all eight R16
 matches are settled; it is not re-run weekly thereafter.
 
-With M★ provisionally set to M0 by the Phase 8 firing, the R16 live
-comparison reduces to M0 versus M0 by construction, and the inequality
-cannot fire while the demotion stands. The check remains wired in the
-pipeline because the pre-registration committed to it; it becomes
-meaningful again only if an OSF amendment restores a non-baseline
-candidate as M★ before R16 settles.
+The R16 live check is the kill criterion's first contact with live
+tournament data. M★ is M2_fifa, sealed in `champion_model.json`. The
+comparison is a real M2-versus-M0 head-to-head on live forecasts, not
+a degenerate self-comparison. The check will fire if M2 fails to
+beat M0 by at least 2 SE on cumulative match-level log-losses through
+the end of R16.
 
 The formal null-result publication track is reserved for the R16
-checkpoint. If an amendment-restored M★ is 2 SE worse than M0 on
-cumulative live log-losses at R16, the project publishes a null-result
-report within 72 hours of the firing, following the template committed
-in the pre-registration. The Phase 8 sanity gate firing caused the
-framing pivot only; the formal null-result track did not trigger and
-remains dormant.
+checkpoint. If M★ (M2_fifa) is less than 2 SE better than M0 on
+cumulative live log-losses at R16, the project publishes a
+null-result report within 72 hours of the firing, following the
+template committed in the pre-registration. The Phase 8 sanity gate
+firing caused the framing pivot only; the formal null-result track
+did not trigger at Phase 8 and remains the live tournament's
+contingency.
 
 <SectionRule />
 
@@ -154,15 +237,15 @@ make from its outputs have changed.
 **What changed:**
 
 1. The paper's framing pivoted from "we built a model that finds market mispricings" to the kill-criterion narrative described in [The 45% Problem](/vault/the-45-percent).
-2. M★ was provisionally demoted to M0 for trading policy. No Kelly stakes are placed against M2's edges, even where M2's point estimates suggest divergence from market prices.
-3. The recommended stake fraction in `forecast_log.jsonl` for the M★ row is forced to zero. Trading is suspended for the duration of the demotion.
+2. The vault essays, this page, and the live ledger acknowledge the sanity-gate warning under the paired-difference SE reading. The project's brand commitment is to acknowledge the warning visibly, not to bury it inside the locked file.
+3. The R16 live checkpoint is treated as a real test of M2 against M0 on live forecasts, not a procedural formality.
 
 **What did not change:**
 
-1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, edges, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
-2. The de-vigging machinery, edge calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged edges and gate decisions; only the M★ row's recommended stake fraction is forced to zero.
-3. CLV continues to be tracked on the M★ row as a hypothetical metric. With trading suspended, CLV measures whether M0's probabilities lead the market over time, even though no real money is at risk. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
-4. The R16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, even though the M★-versus-M0 comparison is currently degenerate.
+1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, divergences, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
+2. The de-vigging machinery, divergence calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged divergences and gate decisions against M★'s (M2_fifa) probabilities.
+3. CLV continues to be tracked on the M★ row, measuring whether M2's probabilities lead the market over time. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
+4. The R16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison.
 
 <MarginNote>
   An OSF amendment is the only path to changing M★'s identity during
@@ -190,12 +273,11 @@ the most recent snapshot. It updates nightly with each build.
 
 <KillCriteriaStatusBlock />
 
-The status block reads a boolean from the snapshot and renders the
-firing state as a red `FAILED: 1.75 SE / 2.0 SE` badge alongside the
-Phase 8 timestamp. The badge will remain in this state until the R16
-live checkpoint resolves (which can change the state through the formal
-null-result track, only under an amendment that restores a non-baseline
-M★) or until an OSF amendment formally records a different M★ identity.
+The status block reads from the snapshot and renders the dual
+reading: a `WARNING: 1.75 SE / 2.0 SE (paired-difference)` badge
+alongside a `CLEARED: 6.22 SE / 2.0 SE (marginal)` reference and the
+Phase 8 timestamp. The badge state will be re-evaluated when the R16
+live checkpoint resolves on live tournament data.
 
 The [Transparency Ledger](/ledger) shows the full kill-criteria check
 panel alongside the rolling calibration metrics (Brier, log-loss, RPS)
@@ -213,34 +295,39 @@ applies to post-hoc threshold tuning. With the 2 SE bar sealed before
 the cross-validation battery ran, there was no path to retroactively
 soften the bar to 1.75 SE in order to keep M2 as M★.
 
-Pre-registration also removes the option to quietly remove the project
-from public record if the criterion fires. The OSF DOI
-`10.17605/OSF.IO/8B5HD` and the signed Git tag `v1.0.0-mstar-lock` are
-public, time-stamped, and cryptographically verifiable. The Phase 8
-firing is now part of that permanent record. The model cards have been
-updated with the outcome; the terminal displays the firing badge; the
-forecast log carries the demotion in every row.
+Pre-registration also removes the option to quietly remove the
+project from public record if the criterion fires. The OSF DOI
+`10.17605/OSF.IO/8B5HD` and the signed Git tag `v1.0.0-mstar-lock`
+are public, time-stamped, and cryptographically verifiable. The
+Phase 8 sanity-gate warning is now part of that permanent record.
+The model cards have been updated with the dual SE reading; the
+terminal displays the warning badge alongside the cleared marginal
+reading; the forecast log carries every model's probabilities and
+divergences against M★ (M2_fifa) in every row.
 
 <PullQuote cite="this project's pre-registration, OSF 2026-04-22">
   Publishing a null result under a pre-registered stopping rule is not
   failure. It is the project working as designed.
 </PullQuote>
 
-The Phase 8 firing is the strongest available vindication of the
-pre-registration discipline. Without the 2-SE bar, the project would
-have launched a public website with M2 as M★, written a paper around
-its 1.75-SE advantage, and slowly discovered over the course of the
-tournament whether the advantage replicated. With it, the project
-reached a clean result on day one and a clear plan for the R16
-checkpoint that follows. The criterion was not theatre; it bound on
-the very first run.
+The Phase 8 sanity-gate warning is the strongest available
+vindication of the pre-registration discipline. Without the 2-SE bar,
+the project would have launched a public website with M2 as M★ and
+either quietly suppressed the paired-difference SE warning that one
+of the two locked files surfaces, or reported only the marginal
+reading that clears the bar without acknowledging the other.
+Pre-registration forces both readings into the public record. With
+the bar in place, the project published an honest dual reading on
+day one and a clear plan for the R16 checkpoint that follows on live
+tournament data. The criterion was not theatre; it bound on the very
+first run.
 
 <SectionRule />
 
 ## Where to go next
 
-* **[The 45% Problem](/vault/the-45-percent)**: the lead essay that frames the project's purpose and reads the Phase 8 firing as the project's central finding.
-* **[Models](/vault/models)**: the four-candidate ablation, the cross-validation battery, and the table that adjudicated the firing.
+* **[The 45% Problem](/vault/the-45-percent)**: the lead essay that frames the project's purpose and reads the Phase 8 sanity-gate warning as part of the project's brand commitment.
+* **[Models](/vault/models)**: the four-candidate ablation, the cross-validation battery, and the table that adjudicated champion selection.
 * **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, and the Diebold-Mariano machinery the kill criterion is built on.
 * **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed Git tag, the sealed `pre_reg_constants.yaml`, and the procedural commitments the criterion enforces.
 * **[Notation](/vault/notation)**: the symbol table for <InlineMath math="\mathcal{L}" />, <InlineMath math="d_i" />, <InlineMath math="\overline{d}" />, <InlineMath math="\mathrm{SE}" />, and related quantities.

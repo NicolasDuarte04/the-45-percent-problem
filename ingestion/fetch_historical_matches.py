@@ -109,6 +109,7 @@ TEAM_NAME_MAP: dict = {
     "Cote d'Ivoire":                "Côte d'Ivoire",
     "Cape Verde Islands":           "Cape Verde",
     "Cape Verde":                   "Cape Verde",
+    "Cabo Verde":                   "Cape Verde",
     "Congo DR":                     "DR Congo",
     "Democratic Republic of the Congo": "DR Congo",
     "DR Congo":                     "DR Congo",
@@ -127,6 +128,7 @@ TEAM_NAME_MAP: dict = {
     "FYR Macedonia":                "North Macedonia",
     "Eswatini":                     "Eswatini",
     "Swaziland":                    "Eswatini",
+    "Türkiye":                      "Turkey",
 }
 
 

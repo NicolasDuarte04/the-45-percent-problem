@@ -1,7 +1,7 @@
 """
 ingestion/fetch_fifa_rankings.py
 ================================
-Phase 2 · Task 2.3b — FIFA World Ranking Points
+Phase 2, Task 2.3b: FIFA World Ranking Points
 
 Fetches current FIFA Men's World Ranking points for all 48 WC 2026 qualifiers.
 FIFA points (not rank position) are the input to M2's shrinkage blend.
@@ -9,8 +9,8 @@ FIFA points (not rank position) are the input to M2's shrinkage blend.
 Strategy
 --------
 1. Attempt to scrape the FIFA website HTML for embedded ranking data.
-2. Fall back to the hardcoded March 2026 ranking snapshot (all 48 WC qualifiers
-   confirmed at time of script authorship — April 2026).
+2. Fall back to the hardcoded 2026-04-01 ranking snapshot (all 48 WC qualifiers
+   present; see the WC2026_FIFA_RANKINGS comment block for provenance).
 
 NOTE: The FIFA v3 API returns 403/404 without backend authentication. The HTML
 page is Next.js-rendered client-side and does not embed full point data in
@@ -20,15 +20,15 @@ exposes the data server-side again.
 
 Output
 ------
-  data/raw/fifa_rankings.parquet  — one row per WC 2026 qualified team
+  data/raw/fifa_rankings.parquet : one row per WC 2026 qualified team
 
 Columns
 -------
-  fifa_rank      int     — global rank position at snapshot date
-  team_name      str     — standardised name (matches TEAM_NAME_MAP)
-  fifa_points    float   — total FIFA ranking points (M2 model input)
-  confederation  str     — FIFA confederation
-  snapshot_date  date    — ranking publication date
+  fifa_rank      int     : global rank position at snapshot date
+  team_name      str     : standardised name (matches TEAM_NAME_MAP)
+  fifa_points    float   : total FIFA ranking points (M2 model input)
+  confederation  str     : FIFA confederation
+  snapshot_date  date    : ranking publication date
 
 Run
 ---
@@ -63,68 +63,87 @@ RAW_CACHE      = PROJECT_ROOT / "data" / "raw" / "_fifa_rankings_raw.json"
 SNAPSHOT_REG   = PROJECT_ROOT / "data" / "snapshots" / "snapshot_registry.jsonl"
 
 # =============================================================================
-# Hardcoded fallback — FIFA Men's Rankings, March 2026 publication
+# Hardcoded fallback - FIFA Men's Rankings, 2026-04-01 publication
 #
-# Source: FIFA World Ranking March 2026 (final ranking before WC 2026 draw
-#         seeding). Points values are from the published FIFA ranking table.
-# Only the 48 confirmed WC 2026 qualifiers are included.
+# Source: FIFA Men's World Ranking, publication of 2026-04-01 (the last
+# scheduled publication before the WC 2026 opening match on 2026-06-11;
+# next FIFA publication is 2026-06-10). The 48 WC 2026 qualifier rows
+# below were extracted from the published FIFA ranking table on
+# inside.fifa.com/fifa-world-ranking/men via a founder-supervised
+# automated browser transcription (the FIFA page is Next.js client-
+# rendered and not WebFetch-readable in HTML). The two transcription
+# CSVs that originated this list are kept on disk for audit:
+#   data/raw/fifa_rankings_2026-04-01_transcribed.csv            (ranks 1-80)
+#   data/raw/fifa_rankings_2026-04-01_transcribed_extension.csv  (ranks 81-133)
+# The data/raw/fifa_rankings.parquet.README.md documents the
+# provenance, the top-15 rank cross-reference against FIFA's own news
+# article, and the supersession of the prior synthetic snapshot.
+#
+# History note: the prior version of this list (sealed under the label
+# "March 2026 publication") did not correspond to any real FIFA
+# publication near the labelled date. The 2026-05-11 data-completeness
+# audit caught this and produced the present list. See osf/amendments/
+# amendment_v1.1_data_completeness.md (created in Section 2 of the
+# 2026-05-11 lockdown).
 #
 # Columns: (fifa_rank, team_name, fifa_points, confederation)
+# fifa_rank is the GLOBAL FIFA rank (not sequential within qualifiers).
+# Only the 48 confirmed WC 2026 qualifiers are listed.
 # =============================================================================
 
 WC2026_FIFA_RANKINGS: list[tuple[int, str, float, str]] = [
-    # rank  team                     points   confederation
-    (1,   "Argentina",               1898.17, "CONMEBOL"),
-    (2,   "France",                  1854.60, "UEFA"),
-    (3,   "Spain",                   1828.76, "UEFA"),
-    (4,   "England",                 1806.33, "UEFA"),
-    (5,   "Brazil",                  1784.49, "CONMEBOL"),
-    (6,   "Portugal",                1764.11, "UEFA"),
-    (7,   "Belgium",                 1742.56, "UEFA"),
-    (8,   "Netherlands",             1738.94, "UEFA"),
-    (9,   "Germany",                 1712.44, "UEFA"),
-    (10,  "Italy",                   1699.82, "UEFA"),
-    (11,  "Colombia",                1678.35, "CONMEBOL"),
-    (12,  "Croatia",                 1663.49, "UEFA"),
-    (13,  "Morocco",                 1659.77, "CAF"),
-    (14,  "Uruguay",                 1654.93, "CONMEBOL"),
-    (15,  "USA",                     1647.28, "CONCACAF"),
-    (16,  "Mexico",                  1640.12, "CONCACAF"),
-    (17,  "Japan",                   1636.58, "AFC"),
-    (18,  "Switzerland",             1621.74, "UEFA"),
-    (19,  "Senegal",                 1614.09, "CAF"),
-    (20,  "Denmark",                 1611.47, "UEFA"),
-    (21,  "Ecuador",                 1598.63, "CONMEBOL"),
-    (22,  "Canada",                  1592.88, "CONCACAF"),
-    (23,  "Iran",                    1589.41, "AFC"),
-    (24,  "South Korea",             1584.27, "AFC"),
-    (25,  "Austria",                 1577.03, "UEFA"),
-    (26,  "Nigeria",                 1569.88, "CAF"),
-    (27,  "Serbia",                  1554.76, "UEFA"),
-    (28,  "Australia",               1549.32, "AFC"),
-    (29,  "Turkey",                  1541.60, "UEFA"),
-    (30,  "Côte d'Ivoire",           1537.94, "CAF"),
-    (31,  "Hungary",                 1529.43, "UEFA"),
-    (32,  "Saudi Arabia",            1525.17, "AFC"),
-    (33,  "Ukraine",                 1518.82, "UEFA"),
-    (34,  "Egypt",                   1514.27, "CAF"),
-    (35,  "Algeria",                 1509.44, "CAF"),
-    (36,  "Poland",                  1501.93, "UEFA"),
-    (37,  "Cameroon",                1497.38, "CAF"),
-    (38,  "Venezuela",               1491.62, "CONMEBOL"),
-    (39,  "Peru",                    1484.17, "CONMEBOL"),
-    (40,  "Iraq",                    1479.56, "AFC"),
-    (41,  "Panama",                  1474.13, "CONCACAF"),
-    (42,  "Slovakia",                1468.84, "UEFA"),
-    (43,  "Ghana",                   1463.29, "CAF"),
-    (44,  "Scotland",                1458.77, "UEFA"),
-    (45,  "Jordan",                  1452.31, "AFC"),
-    (46,  "Costa Rica",              1447.63, "CONCACAF"),
-    (47,  "Uzbekistan",              1443.08, "AFC"),
-    (48,  "New Zealand",             1301.47, "OFC"),
+    # rank  team                       points    confederation
+    ( 1, "France",                     1877.32, "UEFA"),
+    ( 2, "Spain",                      1876.40, "UEFA"),
+    ( 3, "Argentina",                  1874.81, "CONMEBOL"),
+    ( 4, "England",                    1825.97, "UEFA"),
+    ( 5, "Portugal",                   1763.83, "UEFA"),
+    ( 6, "Brazil",                     1761.16, "CONMEBOL"),
+    ( 7, "Netherlands",                1757.87, "UEFA"),
+    ( 8, "Morocco",                    1755.87, "CAF"),
+    ( 9, "Belgium",                    1734.71, "UEFA"),
+    (10, "Germany",                    1730.37, "UEFA"),
+    (11, "Croatia",                    1717.07, "UEFA"),
+    (13, "Colombia",                   1693.09, "CONMEBOL"),
+    (14, "Senegal",                    1688.99, "CAF"),
+    (15, "Mexico",                     1681.03, "CONCACAF"),
+    (16, "USA",                        1673.13, "CONCACAF"),
+    (17, "Uruguay",                    1673.07, "CONMEBOL"),
+    (18, "Japan",                      1660.43, "AFC"),
+    (19, "Switzerland",                1649.40, "UEFA"),
+    (21, "Iran",                       1615.30, "AFC"),
+    (22, "Turkey",                     1599.04, "UEFA"),
+    (23, "Ecuador",                    1594.78, "CONMEBOL"),
+    (24, "Austria",                    1593.45, "UEFA"),
+    (25, "South Korea",                1588.66, "AFC"),
+    (27, "Australia",                  1580.67, "AFC"),
+    (28, "Algeria",                    1564.26, "CAF"),
+    (29, "Egypt",                      1563.24, "CAF"),
+    (30, "Canada",                     1556.48, "CONCACAF"),
+    (31, "Norway",                     1550.94, "UEFA"),
+    (33, "Panama",                     1540.64, "CONCACAF"),
+    (34, "Côte d'Ivoire",              1532.98, "CAF"),
+    (38, "Sweden",                     1514.77, "UEFA"),
+    (40, "Paraguay",                   1503.50, "CONMEBOL"),
+    (41, "Czechia",                    1501.38, "UEFA"),
+    (43, "Scotland",                   1498.35, "UEFA"),
+    (44, "Tunisia",                    1483.05, "CAF"),
+    (46, "DR Congo",                   1478.35, "CAF"),
+    (50, "Uzbekistan",                 1465.34, "AFC"),
+    (55, "Qatar",                      1454.96, "AFC"),
+    (57, "Iraq",                       1447.14, "AFC"),
+    (60, "South Africa",               1429.73, "CAF"),
+    (61, "Saudi Arabia",               1421.43, "AFC"),
+    (63, "Jordan",                     1391.45, "AFC"),
+    (65, "Bosnia & Herzegovina",       1385.84, "UEFA"),
+    (69, "Cape Verde",                 1366.13, "CAF"),
+    (74, "Ghana",                      1346.31, "CAF"),
+    (82, "Curaçao",                    1294.65, "CONCACAF"),
+    (83, "Haiti",                      1291.71, "CONCACAF"),
+    (85, "New Zealand",                1281.57, "OFC"),
 ]
 
-SNAPSHOT_DATE = date(2026, 3, 20)  # Official FIFA ranking publication date used
+SNAPSHOT_DATE = date(2026, 4, 1)  # FIFA publication date the list above reflects
 
 # =============================================================================
 # Fetch (scraping attempt + fallback)
@@ -180,7 +199,7 @@ def fetch_raw(force: bool = False) -> pd.DataFrame:
     df = _try_scrape_fifa()
     if df is None:
         log.info(
-            "Using hardcoded March 2026 FIFA ranking snapshot",
+            "Using hardcoded 2026-04-01 FIFA ranking snapshot",
             teams=len(WC2026_FIFA_RANKINGS),
             snapshot_date=str(SNAPSHOT_DATE),
         )
@@ -215,7 +234,7 @@ def clean_and_enrich(df: pd.DataFrame) -> pd.DataFrame:
 
     dupes = df.duplicated(subset="team_name")
     if dupes.any():
-        log.warning("Duplicate team names found — keeping first", teams=df[dupes]["team_name"].tolist())
+        log.warning("Duplicate team names found; keeping first", teams=df[dupes]["team_name"].tolist())
         df = df.drop_duplicates(subset="team_name", keep="first")
 
     log.success(
