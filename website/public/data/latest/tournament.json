@@ -36,7 +36,7 @@
         0.141959,
         0.15591
       ],
-      "elo_current": 2082.0,
+      "elo_current": 2081.0,
       "rank_change_7d": 0
     },
     {
@@ -652,8 +652,8 @@
       "rank_change_7d": 0
     },
     {
-      "fifa_code": "TUN",
-      "display_name": "Tunisia",
+      "fifa_code": "COD",
+      "display_name": "Congo DR",
       "confederation": "CAF",
       "seed": 37,
       "p_champion": 0.0001,
@@ -666,7 +666,7 @@
         1.8e-05,
         0.000566
       ],
-      "elo_current": 1636.0,
+      "elo_current": 1655.0,
       "rank_change_7d": 0
     },
     {
@@ -792,7 +792,7 @@
         0.0,
         0.000384
       ],
-      "elo_current": 1549.0,
+      "elo_current": 1594.0,
       "rank_change_7d": 0
     },
     {
@@ -828,7 +828,7 @@
         0.0,
         0.000384
       ],
-      "elo_current": 1690.0,
+      "elo_current": 1549.0,
       "rank_change_7d": 0
     },
     {

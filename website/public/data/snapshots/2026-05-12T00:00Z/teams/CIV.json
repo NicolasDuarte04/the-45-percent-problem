@@ -1,0 +1,28 @@
+{
+  "fifa_code": "CIV",
+  "display_name": "C\u00f4te d'Ivoire",
+  "group": "E",
+  "confederation": "CAF",
+  "elo_rating": 1676.0,
+  "progression": {
+    "p_group_qualification": 0.6707,
+    "p_r16": 0.4634,
+    "p_qf": 0.2022,
+    "p_sf": 0.0748,
+    "p_final": 0.0102,
+    "p_champion": 0.0018,
+    "ci_95_champion": [
+      0.001139,
+      0.002844
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M10",
+      "kickoff_utc": "2026-06-14T23:00:00+00:00",
+      "opponent": "Ecuador",
+      "is_home": true
+    }
+  ]
+}

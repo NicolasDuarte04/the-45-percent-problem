@@ -1,0 +1,28 @@
+{
+  "fifa_code": "SUI",
+  "display_name": "Switzerland",
+  "group": "B",
+  "confederation": "UEFA",
+  "elo_rating": 1889.0,
+  "progression": {
+    "p_group_qualification": 0.9058,
+    "p_r16": 0.5952,
+    "p_qf": 0.3692,
+    "p_sf": 0.1823,
+    "p_final": 0.0587,
+    "p_champion": 0.0228,
+    "ci_95_champion": [
+      0.020052,
+      0.025914
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M04",
+      "kickoff_utc": "2026-06-13T19:00:00+00:00",
+      "opponent": "Qatar",
+      "is_home": false
+    }
+  ]
+}

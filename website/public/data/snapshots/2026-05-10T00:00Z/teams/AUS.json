@@ -1,0 +1,28 @@
+{
+  "fifa_code": "AUS",
+  "display_name": "Australia",
+  "group": "D",
+  "confederation": "AFC",
+  "elo_rating": 1783.0,
+  "progression": {
+    "p_group_qualification": 0.5042,
+    "p_r16": 0.2353,
+    "p_qf": 0.1021,
+    "p_sf": 0.0491,
+    "p_final": 0.0116,
+    "p_champion": 0.0031,
+    "ci_95_champion": [
+      0.002185,
+      0.004397
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M08",
+      "kickoff_utc": "2026-06-14T04:00:00+00:00",
+      "opponent": "T\u00fcrkiye",
+      "is_home": true
+    }
+  ]
+}

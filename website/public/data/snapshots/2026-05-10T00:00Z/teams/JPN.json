@@ -1,0 +1,28 @@
+{
+  "fifa_code": "JPN",
+  "display_name": "Japan",
+  "group": "F",
+  "confederation": "AFC",
+  "elo_rating": 1904.0,
+  "progression": {
+    "p_group_qualification": 0.7787,
+    "p_r16": 0.4307,
+    "p_qf": 0.2124,
+    "p_sf": 0.0783,
+    "p_final": 0.0378,
+    "p_champion": 0.0112,
+    "ci_95_champion": [
+      0.009317,
+      0.013458
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M11",
+      "kickoff_utc": "2026-06-14T20:00:00+00:00",
+      "opponent": "Netherlands",
+      "is_home": false
+    }
+  ]
+}

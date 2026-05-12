@@ -1,0 +1,28 @@
+{
+  "fifa_code": "UZB",
+  "display_name": "Uzbekistan",
+  "group": "K",
+  "confederation": "AFC",
+  "elo_rating": 1727.0,
+  "progression": {
+    "p_group_qualification": 0.2562,
+    "p_r16": 0.0659,
+    "p_qf": 0.0137,
+    "p_sf": 0.0021,
+    "p_final": 0.0011,
+    "p_champion": 0.0005,
+    "ci_95_champion": [
+      0.000214,
+      0.00117
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M22",
+      "kickoff_utc": "2026-06-17T23:00:00+00:00",
+      "opponent": "Colombia",
+      "is_home": true
+    }
+  ]
+}

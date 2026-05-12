@@ -1,0 +1,28 @@
+{
+  "fifa_code": "NED",
+  "display_name": "Netherlands",
+  "group": "F",
+  "confederation": "UEFA",
+  "elo_rating": 1961.0,
+  "progression": {
+    "p_group_qualification": 0.8548,
+    "p_r16": 0.5194,
+    "p_qf": 0.3116,
+    "p_sf": 0.1218,
+    "p_final": 0.0685,
+    "p_champion": 0.0307,
+    "ci_95_champion": [
+      0.027495,
+      0.034265
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M11",
+      "kickoff_utc": "2026-06-14T20:00:00+00:00",
+      "opponent": "Japan",
+      "is_home": true
+    }
+  ]
+}

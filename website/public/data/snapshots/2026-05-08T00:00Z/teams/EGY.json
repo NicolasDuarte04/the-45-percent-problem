@@ -1,0 +1,28 @@
+{
+  "fifa_code": "EGY",
+  "display_name": "Egypt",
+  "group": "G",
+  "confederation": "CAF",
+  "elo_rating": 1689.0,
+  "progression": {
+    "p_group_qualification": 0.6905,
+    "p_r16": 0.3463,
+    "p_qf": 0.1334,
+    "p_sf": 0.0497,
+    "p_final": 0.0072,
+    "p_champion": 0.0019,
+    "ci_95_champion": [
+      0.001217,
+      0.002966
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M13",
+      "kickoff_utc": "2026-06-15T19:00:00+00:00",
+      "opponent": "Belgium",
+      "is_home": false
+    }
+  ]
+}

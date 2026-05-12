@@ -1,0 +1,28 @@
+{
+  "fifa_code": "SCO",
+  "display_name": "Scotland",
+  "group": "C",
+  "confederation": "UEFA",
+  "elo_rating": 1767.0,
+  "progression": {
+    "p_group_qualification": 0.7551,
+    "p_r16": 0.4911,
+    "p_qf": 0.2367,
+    "p_sf": 0.1136,
+    "p_final": 0.0242,
+    "p_champion": 0.0065,
+    "ci_95_champion": [
+      0.005103,
+      0.008276
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M06",
+      "kickoff_utc": "2026-06-14T00:00:00+00:00",
+      "opponent": "Haiti",
+      "is_home": false
+    }
+  ]
+}

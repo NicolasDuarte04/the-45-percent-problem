@@ -1,0 +1,28 @@
+{
+  "fifa_code": "CUW",
+  "display_name": "Cura\u00e7ao",
+  "group": "E",
+  "confederation": "CONCACAF",
+  "elo_rating": 1436.0,
+  "progression": {
+    "p_group_qualification": 0.1497,
+    "p_r16": 0.1141,
+    "p_qf": 0.0222,
+    "p_sf": 0.0028,
+    "p_final": 0.0,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.000384
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M09",
+      "kickoff_utc": "2026-06-14T17:00:00+00:00",
+      "opponent": "Germany",
+      "is_home": false
+    }
+  ]
+}

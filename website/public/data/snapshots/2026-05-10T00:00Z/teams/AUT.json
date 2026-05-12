@@ -1,0 +1,28 @@
+{
+  "fifa_code": "AUT",
+  "display_name": "Austria",
+  "group": "J",
+  "confederation": "UEFA",
+  "elo_rating": 1827.0,
+  "progression": {
+    "p_group_qualification": 0.5161,
+    "p_r16": 0.1686,
+    "p_qf": 0.0396,
+    "p_sf": 0.0134,
+    "p_final": 0.0072,
+    "p_champion": 0.0017,
+    "ci_95_champion": [
+      0.001062,
+      0.002721
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M20",
+      "kickoff_utc": "2026-06-17T04:00:00+00:00",
+      "opponent": "Jordan",
+      "is_home": true
+    }
+  ]
+}

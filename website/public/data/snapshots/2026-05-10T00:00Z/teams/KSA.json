@@ -1,0 +1,28 @@
+{
+  "fifa_code": "KSA",
+  "display_name": "Saudi Arabia",
+  "group": "H",
+  "confederation": "AFC",
+  "elo_rating": 1568.0,
+  "progression": {
+    "p_group_qualification": 0.1714,
+    "p_r16": 0.0856,
+    "p_qf": 0.0195,
+    "p_sf": 0.0047,
+    "p_final": 0.0005,
+    "p_champion": 0.0001,
+    "ci_95_champion": [
+      1.8e-05,
+      0.000566
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M16",
+      "kickoff_utc": "2026-06-15T22:00:00+00:00",
+      "opponent": "Uruguay",
+      "is_home": true
+    }
+  ]
+}
