@@ -1,8 +1,14 @@
 name: Nightly Simulation Pipeline
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  # Cron disabled 2026-05-12 by lockdown closure: script writes
+  # M0 snapshots that overwrite the M2 deploy under amendment
+  # v1.1. Re-enable after rewiring to
+  # scripts/regenerate_snapshot_from_batch.py per
+  # tomorrow morning's queue. See lockdown closure report,
+  # URGENT FOLLOW-UP section.
+  # schedule:
+  #   - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:
