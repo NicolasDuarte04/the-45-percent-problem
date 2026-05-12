@@ -34,7 +34,9 @@ a confidence interval the data cannot make narrow.
 
 M0 is the floor every richer model has to clear to earn its complexity.
 Phase 8 turned out to be a reminder that the floor is higher than it
-looks.
+looks. M2 cleared it on the primary criterion. The sanity gate fired
+a warning that the gap, on one of the two SE conventions on disk, was
+narrower than the pre-registered bar.
 
 ## M1: Elo + decayed form
 
@@ -60,13 +62,16 @@ means the form term was already trying to decay so slowly that it was
 indistinguishable from the long-run Elo it was meant to refine. The
 "recent" in "recent form" had no leverage to provide.
 
-The cross-validation result was unambiguous. M1's mean CV log-loss came
-in at 1.06444, against M0's 1.03184. This is an absolute increase of
-+0.033 in a metric where lower is better. M1 was disqualified for being
-actively worse than baseline. The eight-match form window, in this
-corpus, is the better part of a decade of high-stakes football per team.
-Most of the recency signal it was designed to capture has decayed beyond
-reach by the time the next World Cup arrives.
+The cross-validation result was unambiguous. M1's mean CV log-loss
+came in at 1.081 (locked
+`data/calibration/cv_battery_results.json`), against M0's 1.034. This
+is an absolute increase of +0.047 in a metric where lower is better,
+and the Diebold-Mariano test against M0 returned
+<InlineMath math="p = 0.0061" />. M1 is significantly worse than
+baseline. The eight-match form window, in this corpus, is the better
+part of a decade of high-stakes football per team. Most of the recency
+signal it was designed to capture has decayed beyond reach by the time
+the next World Cup arrives.
 
 ## M2: Elo + FIFA blend
 
@@ -93,14 +98,27 @@ calibrated on a corpus we trust, and chose not to use it. The signal in
 our 347-match Elo, at this corpus size, was less useful for predicting
 World Cup outcomes than FIFA's broad global ranking.
 
-M2's mean CV log-loss was 1.00016, against M0's 1.03184. This is an
-absolute improvement of 0.032, the largest of the four candidates. By
-log-loss alone, M2 was the champion.
+M2's mean CV log-loss was 0.993 against M0's 1.034 in the locked
+`data/calibration/cv_battery_results.json`. This is an absolute
+improvement of 0.041, the largest of the four candidates, with a
+Diebold-Mariano <InlineMath math="p = 0.003" />. By the protocol's
+primary criterion (lowest mean CV log-loss with adequate gap to the
+runner-up), M2 is the champion, and M2 is sealed as M★ in
+`data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`.
 
-Log-loss alone, however, was not the protocol. The pre-registered kill
-criterion required M★ to beat M0 not only by point estimate but by at
-least 2.0 standard errors of the difference. M2's stratified-CV gap to
-M0 was 1.75 SE, falling short of the pre-registered 2.0 bar by 0.25.
+The pre-registered protocol also carries a sanity gate: M★ should
+beat M0 by at least 2.0 standard errors of the difference. The two
+locked CV files compute that standard error differently and report
+different gaps. `data/calibration/champion_model.json` uses M2's
+marginal sigma (<InlineMath math="\sigma_{CV} = 0.0066" />) and
+reports a 6.22 SE gap. `evaluation/cv_battery_result.json` uses a
+paired-difference SE on per-fold losses and reports a 1.75 SE gap
+with `sanity_gate_passed: false`. The two readings coexist in the
+locked record; the dual reading is documented in
+[Kill criteria](/vault/kill-criteria). The pre-registered action on
+a sanity-gate firing is `pivot_paper_framing`, the procedural
+obligation reflected in this essay's transparent acknowledgement of
+the gap. M2 stays as M★ under the protocol's primary criterion.
 
 ## M3: Elo + macro prior
 
@@ -123,10 +141,13 @@ the macro signal explained roughly 40% of Elo variance
 <InlineMath math="\geq 0.30" /> threshold the project required to take
 the prior seriously at all.
 
-The result: M3 beat M0 in point estimate, with a CV log-loss of 1.02709
-against M0's 1.03184, representing an improvement of 0.005. The gap is
-real but small, and the standard error swallowed it. M3 did not survive
-the 2.0-SE bar.
+The result: M3 beat M0 in point estimate, with a CV log-loss of 1.027
+against M0's 1.034 in the locked
+`data/calibration/cv_battery_results.json`, representing an
+improvement of 0.007. The gap is real but small, the Diebold-Mariano
+test returned <InlineMath math="p = 0.34" />, and the sigma swallowed
+the gap. M3 did not clear the primary criterion against M2 and was
+ranked second behind M2.
 
 The replication note matters here. Klement and Hoffmann's macro thesis
 was a non-trivial claim in the literature, and it is the closest thing
@@ -178,85 +199,141 @@ calibration window, with 2022 World Cup matches held out as the final
 exam. The metric was per-match log-loss, averaged across folds, with the
 standard error of the cross-fold mean reported alongside.
 
-The pre-registered decision rule was a two-condition gate, not a
-single-criterion ranking:
-1. M★ is the candidate with the lowest mean CV log-loss.
-2. M★'s log-loss must beat M0's by at least 2.0 standard errors of the difference.
+The pre-registered decision rule was a primary criterion plus a
+sanity gate, not a single-criterion ranking:
+1. M★ is the candidate with the lowest mean CV log-loss, with an
+   adequate gap to the runner-up.
+2. As a sanity gate, M★'s log-loss should beat M0's by at least 2.0
+   standard errors of the difference.
 
-Both conditions had to hold. Failure on either condition fired the kill
-criterion. The 2.0-SE bar was sealed in the OSF registration before any
-2026 prediction was made.
+The primary criterion adjudicates champion selection. The sanity gate
+is a pre-flight check whose firing triggers
+`pivot_paper_framing`, the procedural obligation to acknowledge the
+gap honestly in the paper and on this site. The 2.0-SE bar was sealed
+in the OSF registration before any 2026 prediction was made.
 
 ### The result
 
-| Model | Mean CV LL | SE | Δ vs M0 | Status |
-|---|---|---|---|---|
-| **M2_fifa** | 1.00016 | 0.01809 | −0.03168 | Log-loss champion; failed 2.0-SE gate (1.75 SE) |
-| **M3_macro** | 1.02709 | 0.02062 | −0.00475 | Eligible; below M0 in point estimate, did not survive SE bar |
-| **M0_elo** | 1.03184 | 0.02362 | 0.000 | Baseline |
-| **M1_form** | 1.06444 | 0.03293 | +0.03260 | Disqualified (worse than M0) |
+The locked decision values live in
+`data/calibration/cv_battery_results.json`:
+
+| Model | Mean CV LL | Marginal SE | Δ vs M0 | DM p vs M0 | Status |
+|---|---|---|---|---|---|
+| **M2_fifa** | 0.99337 | 0.00659 | −0.04096 | 0.0032 | Champion (`CHAMPION_LOCKED: true`) |
+| **M3_macro** | 1.02694 | 0.02949 | −0.00739 | 0.3443 | Eligible; below M0 in point estimate |
+| **M0_elo** | 1.03433 | 0.03844 | 0.000 | 1.0000 | Baseline |
+| **M1_form** | 1.08110 | 0.07514 | +0.04677 | 0.0061 | Disqualified (significantly worse than M0) |
 
 Lower mean CV log-loss is better. Δ vs M0 is the absolute log-loss
-improvement against baseline; negative is better. Standard errors are
-calculated over the cross-fold means.
+improvement against baseline; negative is better. The marginal SE is
+each model's own sigma over cross-fold mean losses. The Diebold-Mariano
+p-value is the per-match log-loss test against M0.
 
-M2 cleared condition 1 by having the lowest log-loss of the four
-candidates. M2 did not clear condition 2. The stratified-CV
-standard-error gap to M0 was 1.75, short of the pre-registered 2.0 bar
-by 0.25.
+M2 cleared the primary criterion by having the lowest mean CV
+log-loss, with a 1.49 SE gap to the runner-up (M3_macro) and a
+significant Diebold-Mariano test against M0. M2 was sealed as M★
+under `champion_model.json::CHAMPION_LOCKED = true`.
 
-### The kill criterion firing
+A subsequent canonical scoring run, also locked, lives at
+`evaluation/cv_battery_result.json` (singular, 2026-04-23). It uses a
+different seed, recomputes per-match log-losses with hold-out
+evaluation, and reports a paired-difference SE on per-fold losses
+rather than each model's marginal sigma. Its M2-vs-M0 gap is
+<InlineMath math="1.75" /> SE, with `sanity_gate_passed: false` and a
+`decision_narrative` that includes "WARNING: sanity gate NOT
+passed". Both files are signed; they coexist; they agree that M2 is
+M★. Their SE numbers disagree because they were computed with
+different seeds and different SE conventions. The dual reading is
+documented in [Kill criteria](/vault/kill-criteria).
 
-The kill criterion is binary. M2 failed it by 0.25 SE. The
-pre-registered consequence took effect:
-* The paper's framing pivots from a purely predictive angle to the kill-criterion narrative described in [The 45% Problem](/vault/the-45-percent).
-* M★ is provisionally M0 for trading policy. No Kelly stakes are placed against M2's edges, even where M2's point estimates suggest divergence from market prices.
-* The pipeline does not abort. Forecasts continue to be logged, evaluated, and published.
+### The sanity-gate warning
 
-What changes is not the system's operation but the claims the project is
-willing to make.
+The sanity gate is a 2.0-SE pre-flight check. Under one of the two SE
+conventions on disk it fires, and under the other it does not.
 
-There is one further methodological finding worth surfacing. The Phase 4
-walk-forward preview (an earlier development CV scheme) had given M2 a
-6.2 SE gap over M0. The Phase 8 stratified scheme gave 1.75. The two
-schemes mix tournaments differently across folds. Walk-forward keeps
-matches grouped by chronological tournament block, so each fold contains
-relatively similar match composition and fold-level log-loss values
-cluster tightly. The stratified scheme distributes tournaments across
-folds, exposing each fold to between-tournament variance.
+* `data/calibration/champion_model.json` uses M2's marginal sigma
+  (<InlineMath math="\sigma_{CV} = 0.0066" />). The implied gap to
+  M0 is <InlineMath math="0.04096 / 0.0066 = 6.22" /> SE. The file
+  carries `CHAMPION_LOCKED: true`.
+* `evaluation/cv_battery_result.json` uses a paired-difference SE on
+  per-fold losses. The gap is <InlineMath math="1.75" /> SE; the file
+  carries `sanity_gate_passed: false` and a `decision_narrative`
+  containing "WARNING: sanity gate NOT passed".
 
-The walk-forward homogeneity inflated the apparent SE gap; the
-stratified scheme reflected the wider variability that any genuine
-cross-tournament prediction is exposed to. M2's true generalization
-quality is somewhere between the two, but only the stratified result is
-what the pre-registered protocol committed to. We surface this not as an
-excuse but as a piece of the protocol that did exactly what it was
-supposed to do. Different CV schemes can produce dramatically different
-SE gaps on the same models and the same data. Pre-registering the
-scheme is what makes the answer adjudicable. The 1.75 figure is the
-answer that counts.
+The pre-registered action on a sanity-gate firing is
+`pivot_paper_framing`, a procedural obligation. The action does not
+demote M★ automatically; it requires the project to acknowledge the
+gap in the paper and on the public site. This essay, the
+[Kill criteria](/vault/kill-criteria) page, and the lead essay at
+[The 45% Problem](/vault/the-45-percent) collectively carry that
+acknowledgement. M2 stays as M★ under the protocol's primary
+criterion. The pipeline does not abort; the engine continues to run;
+forecasts for all four shadow variants continue to be logged.
+
+There is one further methodological finding worth surfacing. The
+Phase 4 walk-forward preview gave M2 roughly a 6.2 SE gap over M0;
+the Phase 8 paired-difference reading gives 1.75. The two readings
+differ in how tournament structure enters the SE denominator.
+Walk-forward grouping keeps matches clustered by chronological
+tournament block, which tightens within-fold variance; paired
+differencing exposes between-tournament variance directly. M2's true
+generalisation quality is somewhere between the two readings. We
+surface this not as an excuse but as a piece of the protocol that did
+exactly what it was supposed to do. Different SE conventions can
+produce dramatically different gap numbers on the same models and the
+same data. Pre-registering the scheme, and committing to acknowledge
+the dual reading honestly, is what makes the answer adjudicable.
+
+A second piece of the record is amendment v1.1 (filed 2026-05-12), a
+data-completeness backfill against `data/raw/fifa_rankings.parquet`.
+The prior snapshot had 16 of the 48 World Cup 2026 qualifier teams
+missing under their canonical names; M2 reads `w_star = 1.0` (FIFA
+only), so those 16 teams had been running on a fallback strength
+during simulation. The diagnostic CV re-score against corrected data
+confirmed champion invariance: M2 remains the winner under the
+primary criterion. The diagnostic's absolute log-loss gap to M0 is
+smaller (roughly 0.012 in the diagnostic, against the locked 0.041),
+which is informational only; the locked CV statistics are
+procedurally pinned at OSF lock. The full amendment record lives at
+`osf/amendments/amendment_v1.1_data_completeness.md` and the
+diagnostic at `osf/amendments/amendment_v1.1_diagnostic_cv_rescore.json`.
 
 ## M★: the pre-registered champion
 
-M2 was the log-loss champion. M2 failed the kill criterion.
+M2 won the log-loss battery. M2 is M★, sealed in
+`data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`.
+The sanity-gate warning fired under the paired-difference SE reading
+and is documented transparently; no automatic demotion took place,
+because the pre-registered action was `pivot_paper_framing`, not
+`auto_demote`.
 
-Per the pre-registered protocol, M★ is **provisionally M0** for trading
-policy. No Kelly stakes are placed, no edge claims are published, and no
-betting recommendations follow from M2's point estimates.
+Under M★ (M2_fifa), the divergence terminal displays M2's
+probabilities against de-vigged Pinnacle and Betfair lines. Forecasts
+for all four shadow variants (M0, M1, M2, M3) continue to be logged in
+`forecast_log.jsonl` alongside M★ so that the ablation remains
+auditable through the tournament.
 
 During the tournament, M★'s strength matrix continues to update. Elo
 drifts as group-stage matches finish, with <InlineMath math="K = 20" />
 for group play and <InlineMath math="K = 32" /> for knockouts, applied
-through the same walk-forward update rule used during calibration.
+through the same walk-forward update rule used during calibration. The
+FIFA component of M2's blend updates only when FIFA publishes a new
+ranking snapshot.
 
 M★ is a live model, not a frozen prediction. What is frozen is its
-identity: the assignment of M★ to M0, sealed in the OSF pre-registration
-and locked by the signed git tag `v1.0.0-mstar-lock`. The only path to
-changing M★'s identity during the tournament is an OSF amendment with a
-corresponding registry record. That record is public. There is no quiet
-substitution available, and no version of the live site where the
-displayed model can shift between M0, M2, or any other candidate
-without leaving an audit trail.
+identity: the assignment of M★ to M2_fifa, sealed in the OSF
+pre-registration, anchored by `champion_model.json` and locked by the
+signed Git tag `v1.0.0-mstar-lock`. The only path to changing M★'s
+identity during the tournament is an OSF amendment with a corresponding
+registry record. That record is public. There is no quiet substitution
+available, and no version of the live site where the displayed model
+can shift between M0, M2, or any other candidate without leaving an
+audit trail. Amendment v1.1 (filed 2026-05-12) is itself the worked
+example: a data-completeness backfill on `fifa_rankings.parquet` that
+re-fit M2 against corrected inputs, confirmed champion invariance, and
+produced a new `matrix_sha256` recorded under
+`champion_model.json::amendment_v = "v1.1"` with the prior hash pinned
+at `matrix_sha256_prior`.
 
 ## What the models do not do
 

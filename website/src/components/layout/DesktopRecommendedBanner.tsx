@@ -17,8 +17,12 @@
  *     mobile and desktop.
  *   • Dismiss persists for the session via
  *     sessionStorage["45pct.banner.dismissed"] = "1". A short inline
- *     pre-paint script flips data-dismissed before React hydrates so
- *     there is no flash-of-banner-then-dismiss.
+ *     pre-paint script (rendered by `(quant)/layout.tsx` so it sits
+ *     in the SSR document, not in a Client Component) flips
+ *     data-dismissed before React hydrates so there is no
+ *     flash-of-banner-then-dismiss on initial load. See
+ *     DESKTOP_BANNER_DOM_ID below — the layout's pre-hydrate script
+ *     looks the wrapper up by this id.
  *
  * Accessibility:
  *   • role="status", aria-live="polite" — informational, not an alert.
@@ -33,20 +37,12 @@
  */
 
 import { useSyncExternalStore } from "react";
+import {
+  DESKTOP_BANNER_DOM_ID,
+  DESKTOP_BANNER_STORAGE_KEY,
+} from "./desktopRecommendedBannerConstants";
 
-const STORAGE_KEY = "45pct.banner.dismissed";
-
-// Inline pre-hydration script: flips data-dismissed on the wrapper
-// before React paints, so the banner never flashes for users who
-// already dismissed it this session.
-const PRE_HYDRATE_SCRIPT = `(function(){
-  try {
-    if (sessionStorage.getItem(${JSON.stringify(STORAGE_KEY)}) === "1") {
-      var el = document.currentScript && document.currentScript.previousElementSibling;
-      if (el) el.setAttribute("data-dismissed", "1");
-    }
-  } catch (e) { /* sessionStorage may be blocked — render the banner */ }
-})();`;
+const STORAGE_KEY = DESKTOP_BANNER_STORAGE_KEY;
 
 // Module-level subscriber set so useSyncExternalStore can be notified
 // from the dismiss handler. sessionStorage doesn't fire `storage`
@@ -90,60 +86,53 @@ export function DesktopRecommendedBanner() {
   }
 
   return (
-    <>
-      <aside
-        role="status"
-        aria-live="polite"
-        data-dismissed={dismissed ? "1" : undefined}
-        // md:hidden hides the banner above 768px. The
-        // [&[data-dismissed='1']]:hidden selector hides it once
-        // dismiss is flipped (either by the pre-hydration script or
-        // by React state).
-        className="md:hidden [&[data-dismissed='1']]:hidden flex items-center gap-3 border-b px-4 py-2.5"
+    <aside
+      id={DESKTOP_BANNER_DOM_ID}
+      role="status"
+      aria-live="polite"
+      data-dismissed={dismissed ? "1" : undefined}
+      // md:hidden hides the banner above 768px. The
+      // [&[data-dismissed='1']]:hidden selector hides it once
+      // dismiss is flipped (either by the pre-hydration script or
+      // by React state).
+      className="md:hidden [&[data-dismissed='1']]:hidden flex items-center gap-3 border-b px-4 py-2.5"
+      style={{
+        backgroundColor: "var(--bg-panel)",
+        borderColor: "var(--border-subtle)",
+        color: "var(--text-tertiary)",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        className="inline-block w-1 h-1 shrink-0"
+        style={{ backgroundColor: "var(--prism-sun)" }}
+      />
+      <span
+        className="flex-1 mono"
         style={{
-          backgroundColor: "var(--bg-panel)",
-          borderColor: "var(--border-subtle)",
-          color: "var(--text-tertiary)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 12,
+          letterSpacing: "0.04em",
         }}
       >
-        <span
-          aria-hidden="true"
-          className="inline-block w-1 h-1 shrink-0"
-          style={{ backgroundColor: "var(--prism-sun)" }}
-        />
-        <span
-          className="flex-1 mono"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 12,
-            letterSpacing: "0.04em",
-          }}
-        >
-          Optimized for desktop viewing.
-        </span>
-        <button
-          type="button"
-          onClick={handleDismiss}
-          aria-label="Dismiss notice"
-          // 44×44 hit area with a small visual glyph centered. Extends
-          // the touch target without growing the visual footprint.
-          className="-mr-2 inline-flex h-11 w-11 shrink-0 items-center justify-center focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
-          style={{
-            color: "var(--text-quiet)",
-            fontFamily: "var(--font-mono)",
-            fontSize: 14,
-            lineHeight: 1,
-          }}
-        >
-          ✕
-        </button>
-      </aside>
-      <script
-        // Pre-paint dismiss check. Inline to avoid a network request.
-        // dangerouslySetInnerHTML so the script runs at parse time,
-        // before React hydrates.
-        dangerouslySetInnerHTML={{ __html: PRE_HYDRATE_SCRIPT }}
-      />
-    </>
+        Optimized for desktop viewing.
+      </span>
+      <button
+        type="button"
+        onClick={handleDismiss}
+        aria-label="Dismiss notice"
+        // 44×44 hit area with a small visual glyph centered. Extends
+        // the touch target without growing the visual footprint.
+        className="-mr-2 inline-flex h-11 w-11 shrink-0 items-center justify-center focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+        style={{
+          color: "var(--text-quiet)",
+          fontFamily: "var(--font-mono)",
+          fontSize: 14,
+          lineHeight: 1,
+        }}
+      >
+        ✕
+      </button>
+    </aside>
   );
 }

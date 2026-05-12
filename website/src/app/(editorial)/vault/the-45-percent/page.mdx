@@ -79,11 +79,13 @@ A signed Git tag (`v1.0.0-mstar-lock`) locks the code. Anything that
 changes after lockdown is either a data ingestion (new matches as they
 happen) or an OSF-amended hotfix with a corresponding registry record.
 
-That commitment includes an exit clause. The kill criterion was registered
-alongside everything else: if M★ does not beat **M0** in cross-validated
-log-loss by at least 2.0 standard errors, M★ is demoted to M0 and the
-project's framing changes. We wrote it down before we ran the battery so
-we could not move the goalposts after seeing the result.
+That commitment includes a sanity gate. The kill criterion was registered
+alongside everything else: M★ must beat **M0** in cross-validated
+log-loss by at least 2.0 standard errors. The pre-registered consequence
+on a sanity-gate firing is `pivot_paper_framing`, an obligation to
+acknowledge the gap honestly in the paper and on this site. We wrote it
+down before we ran the battery so we could not move the goalposts after
+seeing the result.
 
 ## What this project is not
 
@@ -105,68 +107,115 @@ intervals on every ranking signal are wider than we wished.
 
 ## What happened
 
-When we ran the final cross-validation battery in Phase 8, the kill
-criterion fired. The two-sentence version: M1 collapsed and was
-disqualified, and M2 (the FIFA-blend model that had been the leading
-candidate through Phase 4's preview battery) beat the M0 baseline by 1.75
-standard errors, falling short of the 2.0 the protocol required. M★ was
-provisionally demoted to M0.
+When we ran the final cross-validation battery in Phase 8, the result
+was a clean adjudication and an honest warning. The two-sentence
+version: M1 collapsed and was disqualified, and M2 (the FIFA-blend
+model) won the log-loss battery at <InlineMath math="L_{CV} = 0.993" />
+against M0's <InlineMath math="1.034" />. M2 was sealed as M★ in
+`data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`.
+The pre-registered sanity gate fired a warning under one of the two
+SE conventions on disk; the locked artifact stands.
 
-A few things to make explicit about that result. M1's collapse is not
-surprising in retrospect, even if it was a surprise to us at the start.
-Decayed form over a team's last 8 matches is a sensible idea in a league
-context where teams play 38 matches a season. In the corpus this project
-actually has (347 high-stakes matches spread across roughly four years of
-major tournaments per team) eight games is the better part of a decade
-of football. Most of the signal the form-decay term was designed to
-capture has already washed out by the time the next World Cup arrives.
+A few things to make explicit. M1's collapse is not surprising in
+retrospect, even if it was a surprise to us at the start. Decayed form
+over a team's last 8 matches is a sensible idea in a league context
+where teams play 38 matches a season. In the corpus this project
+actually has (347 high-stakes matches spread across roughly four years
+of major tournaments per team), eight games is the better part of a
+decade of football. Most of the signal the form-decay term was designed
+to capture has already washed out by the time the next World Cup
+arrives. The Diebold-Mariano test against M0 returned
+<InlineMath math="p = 0.0061" />: M1 is significantly worse than the
+baseline, not better.
 
-M2's near-miss is the more interesting result. The FIFA blend was the
-model the Phase 4 preview leaned hardest on. The cross-validation
-optimizer in that earlier pass had assigned a weight
-<InlineMath math="w = 1.0" /> to the FIFA component, essentially
-borrowing FIFA's much larger global dataset to patch our own Elo
-sparsity. M2 beat baseline. It just did not beat baseline by enough. It
-was 0.25 standard errors short on a hold-out that already has wide
-intervals because the corpus is small.
+M2's result is the interesting one. The cross-validation optimizer
+assigned a blend weight <InlineMath math="w^{\star} = 1.0" /> to the
+FIFA component, essentially borrowing FIFA's much larger global dataset
+to patch our own Elo sparsity. M2's 0.041 log-loss gap to M0 is
+significant by the Diebold-Mariano test (<InlineMath math="p = 0.003" />),
+and M2 was selected as M★ under the protocol's primary criterion
+(lowest mean CV log-loss with adequate gap to the runner-up). Two
+standard-error conventions exist in the locked files. Under the
+marginal-SE reading used by `champion_model.json`
+(<InlineMath math="\sigma_{CV} = 0.0066" />), the gap to M0 is
+<InlineMath math="6.22" /> SE; under the paired-difference SE reading
+used by `evaluation/cv_battery_result.json`, the gap is
+<InlineMath math="1.75" /> SE. The pre-registered sanity threshold was
+<InlineMath math="2.0" /> SE. The first reading clears the bar
+decisively; the second does not, and the sanity-gate warning fired.
 
-We expected the protocol to be theatre. It turned out not to be.
+The pre-registered action on a sanity-gate firing was
+`pivot_paper_framing`, a procedural obligation to acknowledge the gap
+in the paper and on this site rather than to demote M★ automatically.
+M2 stays as M★ under the protocol's primary criterion; the warning is
+documented here transparently; the live R16 checkpoint, run on
+cumulative tournament forecasts after the Round of 16 settles, is the
+next adjudication moment at which the kill criterion can fire on real
+World Cup data. We expected the protocol to be theatre. It turned out
+not to be.
 
 ## What it means
 
-**Markets price near-efficiently for the variables we tested.**
-International football betting markets (the Pinnacle and Betfair lines we
-use as benchmarks) already absorb the structural information that Elo,
-FIFA rankings, and Klement-Hoffmann-style macro priors provide. There may
-well be edge to be found in player-level injury data, in-match Bayesian
-updates, or other axes we did not test. We did not find edge in the axes
-we did test at the threshold we pre-committed to.
+**The FIFA signal carries real information at this corpus size.**
+The cross-validation optimizer chose to drop our walk-forward Elo
+entirely in favour of FIFA's broader global denominator, and the
+resulting blend (M2) cleared the primary log-loss criterion against M0
+by 0.041 log-loss units (Diebold-Mariano <InlineMath math="p = 0.003" />).
+On a 347-match corpus, the FIFA component patched the sparsity our
+own Elo could not. That is not a claim that FIFA's ranking method is
+methodologically superior; it is a claim that, at our corpus size, the
+information FIFA aggregates was the most useful single signal we
+tested.
 
-**Complexity exacts a tax.** Each parameter we add to the strength matrix
-burns degrees of freedom in confidence intervals that were already wide
-because of the corpus size. M2 and M3 both beat M0 in point estimates.
-Neither survived the standard-error bar. The simplest model, pure Elo on
-our walk-forward calibration, won by being modest enough to fit inside
-the data we had.
+**Complexity exacts a tax.** Each parameter we add to the strength
+matrix burns degrees of freedom in confidence intervals that were
+already wide because of the corpus size. M3 (macro prior) beat M0 in
+point estimate by only 0.007 log-loss units; the sigma swallowed it.
+M1 (decayed form) was significantly worse than M0. M2 cleared the
+primary criterion, but only one of the two SE conventions on disk
+clears the 2.0-SE sanity bar that the project sealed in April. The
+sanity-gate warning is a real signal that the gap is not as wide as
+the marginal SE makes it look.
 
 **Pre-registration earned its keep.** This is the reading we are most
-certain about. Without the kill criterion, we would have launched a
-public website with M2 as M★, written a paper around its 1.75-SE
-advantage, and slowly discovered over the course of the tournament
-whether the advantage replicated. With the kill criterion, we have a
-clean result on day one. We are publishing what we found, not what we
-hoped.
+certain about. Without the protocol, we would have launched a public
+website with M2 as M★ and quietly suppressed the sanity-gate warning
+that one of the two on-disk SE conventions surfaces. With the
+protocol, the warning is in the locked file
+`evaluation/cv_battery_result.json` as
+`sanity_gate_passed: false`, and it is in the prose on this site. M2
+is M★ under the protocol's primary criterion; the dual reading is
+documented; the R16 live checkpoint is the next test on real
+tournament data. We are publishing what we found, not what we hoped.
 
-A note we owe the reader. The Phase 8 outcome does not prove markets are
-efficient. It says, narrowly, that on a corpus of 347 matches, with a
-2.0-SE threshold, on the four ranking signals we tested, complexity did
-not beat simplicity. A larger corpus might tell a different story. A
-different threshold might tell a different story. A different metric,
-such as calibration on knockout-only matches, might tell a different
-story.
+A note we owe the reader. The Phase 8 outcome is not a strong claim
+about market efficiency, nor a clean validation of the FIFA-blend
+hypothesis. It is, narrowly, that on a corpus of 347 matches, with a
+2.0-SE sanity threshold, on the four ranking signals we tested, M2
+won the log-loss race and triggered a sanity-gate warning under the
+paired-difference SE convention. A larger corpus might tell a
+different story. A different threshold might tell a different story.
+A different metric, such as calibration on knockout-only matches,
+might tell a different story.
 
-The honest claim is: under our protocol, on our data, with the constants
-we sealed in April, M★ is M0.
+A second amendment is also part of the record. On 2026-05-12 we filed
+amendment v1.1 against `data/raw/fifa_rankings.parquet`, a
+data-completeness backfill that restored the 16 World Cup 2026
+qualifier teams the prior snapshot had silently dropped. The
+diagnostic CV re-score against corrected data confirmed champion
+invariance: M2 remains the winner, by a smaller absolute log-loss
+margin against M0 (roughly 0.012 in the diagnostic, against the
+locked 0.041). The locked CV statistics are procedurally pinned at
+OSF lock per pre-registration discipline; the diagnostic is
+informational only. The amendment record lives at
+`osf/amendments/amendment_v1.1_data_completeness.md`.
+
+The honest claim is: under our protocol, on our data, with the
+constants we sealed in April and the data-completeness amendment we
+filed in May, M★ is M2_fifa, sealed in
+`data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`,
+and the sanity-gate warning under the paired-difference SE reading is
+acknowledged transparently.
 
 ## What you'll see during the tournament
 
@@ -179,23 +228,28 @@ for every upcoming match, and updates the public ledger. You will see:
 * The Volatility Gate's running judgment on whether the market is in price discovery, in news shock, or quiet enough to be measured.
 * Closing Line Value, computed when each match closes, as the running test of whether M★'s probabilities led the market in either direction.
 
-Brier score, log-loss, and ranked probability score are computed on every
-completed match. Once the Round of 16 is done, we re-run the kill check.
-If M★ (currently M0) is still failing to beat itself, the situation is
-what it is. We publish that too.
+Brier score, log-loss, and ranked probability score are computed on
+every completed match. Once the Round of 16 is done, we re-run the
+kill check on cumulative live tournament forecasts. If M★ (M2_fifa)
+fails to beat M0 by 2.0 SE on that live sample, the kill criterion
+fires for real, and a null-result publication follows within 72 hours
+per the pre-registered template. If M2 holds, the warning stays
+documented and the protocol stays in force.
 
 There is no place on the site where the displayed model can quietly
-change between M0, M2, or anything else without an OSF amendment record.
-The signed Git tag prevents it.
+change between M0, M2, or anything else without an OSF amendment
+record. The signed Git tag and the locked champion artifact prevent
+it.
 
 ## Where to go next
 
 * **[Models](/vault/models)**: The full M0 to M3 ablation, including the cross-validation tables and the M1 collapse.
-* **[Kill criteria](/vault/kill-criteria)**: The formal statement and the live status block. Yes, it has fired.
-* **[Pre-registration](/vault/preregistration)**: The OSF DOI, the signed Git tag, the sealed constants file.
+* **[Kill criteria](/vault/kill-criteria)**: The formal statement, the dual SE reading, and the live status block. The sanity-gate warning fired; the R16 live checkpoint is still ahead.
+* **[Pre-registration](/vault/preregistration)**: The OSF DOI, the signed Git tag, the sealed constants file, and the amendment v1.1 record.
 * **[Why probabilities](/vault/why-probabilities)**: Why we built around a probability distribution rather than a point prediction, and why that decision is the reason the kill criterion was even possible to define.
 * **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, CLV, and the Diebold-Mariano and Nyberg tests we use to grade ourselves.
 
 The project's motto, lifted from the margin of an early notebook page:
 *honest uncertainty > false precision*. We meant it then. The Phase 8
-outcome makes us mean it harder.
+sanity-gate warning and the amendment v1.1 record both make us mean it
+harder.

@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.0",
+  "diagnostic_run_at": "2026-05-12T01:16:14Z",
+  "diagnostic_run_purpose": "amendment_v1.1 sensitivity analysis; informational only; does NOT replace the sealed CV battery; sealed files at data/calibration/cv_battery_results.json and evaluation/cv_battery_result.json remain authoritative.",
+  "amendment_id": "v1.1_data_completeness",
+  "inputs": {
+    "fifa_rankings_parquet_sha256_new": "cc67b40323b96db904392a8f53843566eb05f186d4e7b12e4b84b0f680fc5843",
+    "data_snapshot_sha": "94389c17ff6ba2a980337b1f2f08efa774aeeefc39d8712cf4ab8953c80033fc",
+    "cv_folds_sha": "0120bf43e2c4a56cbe92928a2ef3112cccafbf4b2a83c03e2e096906bb252b06",
+    "seed": 20260422,
+    "n_folds": 5,
+    "tau_used": 180.0,
+    "w_used": 1.0,
+    "lambda_params": {
+      "c": 0.580386,
+      "mu": 1.715874,
+      "lam3": 0.1,
+      "rho": -0.05
+    }
+  },
+  "models": {
+    "M0_elo": {
+      "mean_log_loss": 1.031841,
+      "se_log_loss": 0.023622,
+      "mean_brier": 0.619333,
+      "se_brier": 0.015915,
+      "mean_rps": 0.219717,
+      "se_rps": 0.003493,
+      "fold_log_losses": [
+        1.021299,
+        1.091899,
+        1.028029,
+        0.952496,
+        1.065481
+      ],
+      "holdout_log_loss": 1.018142,
+      "holdout_brier": 0.606144,
+      "holdout_rps": 0.214878
+    },
+    "M1_form": {
+      "mean_log_loss": 1.064436,
+      "se_log_loss": 0.032932,
+      "mean_brier": 0.642635,
+      "se_brier": 0.023338,
+      "mean_rps": 0.230145,
+      "se_rps": 0.00815,
+      "fold_log_losses": [
+        1.054644,
+        1.152273,
+        1.104834,
+        0.954062,
+        1.056366
+      ],
+      "holdout_log_loss": 1.101231,
+      "holdout_brier": 0.659206,
+      "holdout_rps": 0.239592
+    },
+    "M2_fifa": {
+      "mean_log_loss": 1.019901,
+      "se_log_loss": 0.015361,
+      "mean_brier": 0.612284,
+      "se_brier": 0.01066,
+      "mean_rps": 0.215252,
+      "se_rps": 0.006594,
+      "fold_log_losses": [
+        1.019407,
+        1.033479,
+        1.057963,
+        0.964511,
+        1.024144
+      ],
+      "holdout_log_loss": 0.992792,
+      "holdout_brier": 0.585364,
+      "holdout_rps": 0.20474
+    },
+    "M3_macro": {
+      "mean_log_loss": 1.027087,
+      "se_log_loss": 0.020617,
+      "mean_brier": 0.615974,
+      "se_brier": 0.014151,
+      "mean_rps": 0.217827,
+      "se_rps": 0.004256,
+      "fold_log_losses": [
+        1.014522,
+        1.082924,
+        1.030216,
+        0.958395,
+        1.049379
+      ],
+      "holdout_log_loss": 0.997438,
+      "holdout_brier": 0.591745,
+      "holdout_rps": 0.207235
+    }
+  },
+  "diagnostic_champion_selection": {
+    "primary_criterion": "mean_cv_log_loss",
+    "ranking": [
+      "M2_fifa",
+      "M3_macro",
+      "M0_elo",
+      "M1_form"
+    ],
+    "winner_mean_ll": 1.0199007433212144,
+    "runner_up_id": "M3_macro",
+    "runner_up_mean_ll": 1.0270870691751084,
+    "ll_gap_vs_runner_up": 0.0071863258538940045,
+    "winner_se": 0.015361179045864428,
+    "ll_gap_in_se": 0.467823845580963,
+    "sanity_gate_passed": false,
+    "m_star_vs_m0_gap_se": 0.7772940783348276,
+    "tiebreak_used": true,
+    "decision_narrative": "Per \u00a71.3.5, M\u2605 = M2_fifa was selected because its calibration log-loss was 0.47 SE below the runner-up (M3_macro). Tie-break (hold-out LL) was invoked. WARNING: sanity gate NOT passed \u2014 M\u2605 only 0.78 SE better than M0 (threshold \u2265 2.0 SE)."
+  },
+  "comparison_to_locked": {
+    "M0_elo": {
+      "locked_LL": 1.03433,
+      "diagnostic_LL": 1.031841,
+      "delta_LL": -0.002489
+    },
+    "M1_form": {
+      "locked_LL": 1.081097,
+      "diagnostic_LL": 1.064436,
+      "delta_LL": -0.016661
+    },
+    "M2_fifa": {
+      "locked_LL": 0.99337,
+      "diagnostic_LL": 1.019901,
+      "delta_LL": 0.026531
+    },
+    "M3_macro": {
+      "locked_LL": 1.026943,
+      "diagnostic_LL": 1.027087,
+      "delta_LL": 0.000144
+    }
+  },
+  "champion_invariance_check": {
+    "locked_champion": "M2_fifa",
+    "diagnostic_champion": "M2_fifa",
+    "invariant": true
+  }
+}

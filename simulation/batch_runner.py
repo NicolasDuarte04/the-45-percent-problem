@@ -1,21 +1,29 @@
 """
 simulation/batch_runner.py
 ===========================
-Phase 5 — Deliverable 5: Batch Orchestrator
+Phase 5, Deliverable 5: Batch Orchestrator
 
 Implements §7 of Phase5_Simulation_Engine_Design.md.
 
-Runs N simulations × M model variants → timestamped Parquet snapshots.
+Runs N simulations across M model variants and writes timestamped Parquet
+snapshots.
   - Variants run sequentially (audit-clean determinism).
   - Simulations within a variant are parallelised via joblib.
   - Checkpoint every 500 runs; atomic rename on completion.
-  - On any per-run exception: log and continue; corrupt runs → manifest.failed_runs.
-  - Accepts --resume <batch_dir> to restart a partial batch from run 0 of any
-    incomplete variant (simpler and still deterministic, per §7.3).
+  - On any per-run exception: log and continue; corrupt runs are recorded
+    under manifest.failed_runs.
+  - If a variant's failure rate reaches or exceeds 0.1% the batch raises
+    RuntimeError; the threshold is pre-registered (§7.4) and the runner
+    must not soft-pass it.
+  - Accepts --resume <batch_dir> to restart a partial batch from run 0 of
+    any incomplete variant (simpler and still deterministic, per §7.3).
 
-Seed discipline (§7.1):
-  seed_base = int(sha256(f"{model_id}|{data_hash}|{batch_timestamp}"), 16) % 2**32
-  seeds = [seed_base, seed_base+1, …, seed_base+N-1]
+Seed discipline (§7.1, with the pre-registered sim.seed_master constant
+from evaluation/pre_reg_constants.yaml as an additional hash ingredient):
+  seed_base = int(
+      sha256(f"{seed_master}|{model_id}|{data_hash}|{batch_timestamp}"), 16
+  ) % 2**32
+  seeds = [seed_base, seed_base+1, ..., seed_base+N-1]
 
 Output layout (§7.2):
   outputs/phase5/batches/batch_<YYYYMMDD_HHMMSSz>/
@@ -60,13 +68,22 @@ class BatchManifest:
     variants: list[str]
     n_runs_per_variant: int
     code_sha: str
-    data_hashes: dict[str, str]           # variant → sha256 of input data
-    seed_bases: dict[str, int]            # variant → seed_base
+    data_hashes: dict[str, str]           # variant -> sha256 of input data
+    seed_bases: dict[str, int]            # variant -> seed_base
     start_time_utc: str
     end_time_utc: str = ""
     completed_variants: list[str] = field(default_factory=list)
     failed_runs: dict[str, list[dict]] = field(default_factory=dict)
     status: str = "in_progress"
+    # Provenance for the pre-registered seed_master constant
+    # (evaluation/pre_reg_constants.yaml::sim.seed_master). Persisted at the
+    # batch level so a forensic reviewer can confirm the seed derivation
+    # consumed the locked value without re-reading the YAML.
+    seed_master: int = 0
+    # Per-variant sha256 of the strength matrix at run time, recorded via
+    # the canonical hash convention in models/model_registry.py:561
+    # (hashlib.sha256(S.tobytes()).hexdigest()). Variant -> hex digest.
+    matrix_sha256_runs: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -95,9 +112,42 @@ def _get_code_sha() -> str:
     return "no_git_sha"
 
 
-def _compute_seed_base(model_id: str, data_hash: str, batch_timestamp: str) -> int:
-    """Derive seed_base from (model_id, data_hash, batch_timestamp) per §7.1."""
-    raw = f"{model_id}|{data_hash}|{batch_timestamp}"
+def _load_seed_master() -> int:
+    """Read the pre-registered sim.seed_master constant.
+
+    The constant lives in evaluation/pre_reg_constants.yaml at the path
+    `sim.seed_master`. It is sealed at OSF lock and MUST be consumed by
+    the seed derivation; running the batch without it is a spec-vs-code
+    drift (see LOCKDOWN_PLAN_2026-05-11 Section 8). The function raises
+    KeyError if the constant is missing so the drift cannot reappear.
+    """
+    import yaml as _yaml  # local to keep the top-level import surface minimal
+    path = PROJECT_ROOT / "evaluation" / "pre_reg_constants.yaml"
+    with open(path) as fh:
+        cfg = _yaml.safe_load(fh)
+    try:
+        return int(cfg["sim"]["seed_master"])
+    except (KeyError, TypeError) as exc:
+        raise KeyError(
+            "sim.seed_master missing from evaluation/pre_reg_constants.yaml; "
+            "the pre-registered constant is required by the seed derivation"
+        ) from exc
+
+
+def _compute_seed_base(
+    seed_master: int,
+    model_id: str,
+    data_hash: str,
+    batch_timestamp: str,
+) -> int:
+    """Derive seed_base from (seed_master, model_id, data_hash, batch_timestamp).
+
+    Per §7.1 plus LOCKDOWN_PLAN_2026-05-11 Section 8 Item 8.1: the
+    pre-registered sim.seed_master constant is consumed as an additional
+    hash ingredient so the derivation is anchored to the OSF lock. The
+    function is deterministic in its four inputs.
+    """
+    raw = f"{seed_master}|{model_id}|{data_hash}|{batch_timestamp}"
     return int(hashlib.sha256(raw.encode()).hexdigest(), 16) % (2 ** 32)
 
 
@@ -119,8 +169,18 @@ def _compute_data_hash(variant: str) -> str:
     return hasher.hexdigest()[:32]
 
 
-def _build_runner(variant: str, code_sha: str) -> "MonteCarloRunner":
-    """Build a MonteCarloRunner for the given model variant."""
+def _build_runner(variant: str, code_sha: str) -> tuple["MonteCarloRunner", str]:
+    """Build a MonteCarloRunner for the given model variant.
+
+    Returns
+    -------
+    (runner, matrix_sha256) : the runner and the sha256 of the strength
+        matrix consumed by it, computed via the canonical convention in
+        models/model_registry.py:561
+        (hashlib.sha256(S.tobytes()).hexdigest()). Captured here so the
+        manifest can stamp matrix_sha256_run_<variant> per LOCKDOWN_PLAN
+        Section 8 Item 8.3.
+    """
     import json as _json
     from simulation.match_model import MatchModel
     from simulation.shootout_model import ShootoutModel
@@ -167,8 +227,11 @@ def _build_runner(variant: str, code_sha: str) -> "MonteCarloRunner":
     model_id = variant_to_model.get(variant, "M2_fifa")
     model = build_model(model_id, data, cfg)
 
+    strength_matrix = model.get_strength_matrix()
+    matrix_sha256_run = hashlib.sha256(strength_matrix.tobytes()).hexdigest()
+
     sp = ModelStrengthProvider(
-        strength_matrix=model.get_strength_matrix(),
+        strength_matrix=strength_matrix,
         team_index=team_index,
         elo_ratings=elo_ratings,
     )
@@ -178,7 +241,7 @@ def _build_runner(variant: str, code_sha: str) -> "MonteCarloRunner":
     sm = ShootoutModel(match_model=mm, rng=rng)
     be = BracketEncoder()
 
-    return MonteCarloRunner(
+    runner = MonteCarloRunner(
         match_model=mm,
         shootout_model=sm,
         bracket_encoder=be,
@@ -186,6 +249,7 @@ def _build_runner(variant: str, code_sha: str) -> "MonteCarloRunner":
         code_sha=code_sha,
         tournament_variant="wc2026",
     )
+    return runner, matrix_sha256_run
 
 
 def _run_one_safe(
@@ -198,7 +262,7 @@ def _run_one_safe(
 ) -> tuple[Optional[pd.DataFrame], Optional[pd.DataFrame], Optional[str]]:
     """Run one simulation; return (team_df, match_df, error_str).
 
-    Returns (None, None, error_str) on failure — batch continues.
+    Returns (None, None, error_str) on failure; batch continues.
     """
     try:
         team_df, match_df = runner.run_one(
@@ -222,7 +286,7 @@ def run_batch(
     n_jobs: int = -2,
     checkpoint_every: int = 500,
 ) -> BatchManifest:
-    """Run the full batch (§7.1–7.3).
+    """Run the full batch (§7.1 to 7.3).
 
     Args:
         variants:            Model variants to run. Defaults to M0, M1, M2, M3, Mstar.
@@ -241,6 +305,7 @@ def run_batch(
     output_root.mkdir(parents=True, exist_ok=True)
 
     code_sha = _get_code_sha()
+    seed_master = _load_seed_master()
     now_utc = datetime.now(timezone.utc)
     batch_timestamp = now_utc.strftime("%Y%m%d_%H%M%SZ")
 
@@ -253,7 +318,7 @@ def run_batch(
         manifest = BatchManifest.from_dict(json.loads(manifest_path.read_text()))
         log.info("Resuming batch", batch_id=manifest.batch_id,
                  completed=manifest.completed_variants)
-        # Re-run variants not yet completed (from run 0 — simpler and deterministic)
+        # Re-run variants not yet completed (from run 0; simpler and deterministic)
         variants_to_run = [v for v in variants if v not in manifest.completed_variants]
     else:
         batch_id = f"batch_{batch_timestamp}"
@@ -262,7 +327,7 @@ def run_batch(
 
         data_hashes = {v: _compute_data_hash(v) for v in variants}
         seed_bases  = {
-            v: _compute_seed_base(v, data_hashes[v], batch_timestamp)
+            v: _compute_seed_base(seed_master, v, data_hashes[v], batch_timestamp)
             for v in variants
         }
 
@@ -275,6 +340,7 @@ def run_batch(
             data_hashes=data_hashes,
             seed_bases=seed_bases,
             start_time_utc=now_utc.isoformat(),
+            seed_master=seed_master,
         )
         manifest_path = batch_dir / "manifest.json"
         manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
@@ -284,7 +350,7 @@ def run_batch(
     batch_timestamp_for_seed = now_utc.strftime("%Y%m%d_%H%M%SZ")
 
     for variant in variants_to_run:
-        log.stage(f"Batch — variant {variant}")
+        log.stage(f"Batch variant {variant}")
         t0_variant = time.time()
 
         data_hash = manifest.data_hashes.get(variant, "unknown")
@@ -292,7 +358,11 @@ def run_batch(
         seeds = [(seed_base + i) % (2 ** 32) for i in range(n_runs_per_variant)]
         timestamp_utc = pd.Timestamp(now_utc)
 
-        runner = _build_runner(variant, code_sha)
+        runner, matrix_sha256_run = _build_runner(variant, code_sha)
+        manifest.matrix_sha256_runs[variant] = matrix_sha256_run
+        manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
+        log.info("Strength matrix hashed",
+                 variant=variant, matrix_sha256_run=matrix_sha256_run[:16])
         failed_this_variant: list[dict] = []
 
         team_frames: list[pd.DataFrame] = []
@@ -362,11 +432,22 @@ def run_batch(
         manifest.failed_runs[variant] = failed_this_variant
         manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
 
-        # Fail-rate check
+        # Fail-rate check. Pre-registered threshold is 0.1% (§7.4); a soft
+        # warning was the pre-Section-8 behaviour. The lockdown converts
+        # this to a hard halt so a degraded run cannot quietly produce a
+        # parquet that downstream code would treat as valid.
         fail_rate = len(failed_this_variant) / n_runs_per_variant
         if fail_rate >= 0.001:
-            log.warning("Fail rate exceeds 0.1% threshold",
-                        variant=variant, fail_rate=round(fail_rate, 4))
+            manifest.status = "failed_acceptance"
+            manifest.end_time_utc = datetime.now(timezone.utc).isoformat()
+            manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
+            raise RuntimeError(
+                f"Variant {variant} failure rate {fail_rate:.4f} "
+                f"reaches or exceeds the pre-registered 0.1% threshold; "
+                f"halting batch ({len(failed_this_variant)}/{n_runs_per_variant} runs failed). "
+                f"Manifest written with status='failed_acceptance' at "
+                f"{manifest_path}."
+            )
 
     manifest.end_time_utc = datetime.now(timezone.utc).isoformat()
     manifest.status = "complete"

@@ -339,19 +339,26 @@ That constraint is what makes the comparison interpretable.
 
 What pseudo-CLV does not answer. It is still bound to the small sample
 size that makes CLV inference noisy in the first place. A WEAK_EDGE
-label on a shadow book at the kill-criterion-fired tournament does not
-mean that shadow book would have survived the kill criterion's
-structural bar; the kill criterion is a log-loss-based two-condition
-gate, and pseudo-CLV is a market-edge-based bootstrap. They answer
-different questions.
+label on a shadow book under the sanity-gate-warning regime does not
+mean that shadow book would have cleared the kill criterion's
+structural bar; the kill criterion is a log-loss-based primary
+criterion plus a 2-SE sanity gate, and pseudo-CLV is a market-edge-based
+bootstrap. They answer different questions.
 
-A note on the current state. With M★ provisionally demoted to M0 for
-trading policy, no real Kelly stakes are placed against any model's
-edges. Pseudo-CLV continues to grade us anyway, because it is the same
-math run on hypothetical bets logged in `forecast_log`: a paper
-portfolio that the metric tracks even when no real money is at risk. M0
-in pseudo-CLV is identical to M★ in CLV by construction; pseudo-CLV for
-M1, M2, and M3 remains an interesting counterfactual.
+A note on the current state. M★ is M2_fifa, sealed in
+`data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`;
+the paired-difference SE convention in
+`evaluation/cv_battery_result.json` reads a 1.75 SE gap and the
+sanity-gate warning fired, while the marginal-SE convention in
+`champion_model.json` reads 6.22 SE and clears the bar (see
+[Kill criteria](/vault/kill-criteria) for the dual reading). No real
+Kelly stakes are placed against any model's edges, because the project
+does not place real bets at any time; pseudo-CLV continues to grade
+us anyway, because it is the same math run on hypothetical bets logged
+in `forecast_log`: a paper portfolio that the metric tracks even when
+no real money is at risk. CLV on M★ tracks M2's hypothetical
+performance against the closing market; pseudo-CLV for M0, M1, and M3
+remains an interesting counterfactual.
 
 ## What the metrics do not do
 

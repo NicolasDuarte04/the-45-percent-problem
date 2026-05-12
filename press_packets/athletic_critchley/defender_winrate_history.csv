@@ -1,0 +1,24 @@
+# defender_winrate_history.csv
+# Scope: World Cups from 1962 (first WC after a defender was eligible to compete since 1958 expansion)
+#        through 2022. War-year gap (1942, 1946) excluded.
+# Rule: defender = winner of the immediately preceding WC.
+# Aggregate: defender-wins-next rate = sum(defender_won_next) / sum(defender_competed).
+# Computed rate = 1/16 = 6.2500%
+# Note: hand-curated. Subject to founder review for scope choices before press use.
+year,defender,defender_competed,defender_won_next,defender_exit_round,notes
+1962,Brazil,True,True,Champion,Brazil successfully defends; last successive WC title to date
+1966,Brazil,True,False,Group,Eliminated in group stage
+1970,England,True,False,QF,Eliminated in QF by West Germany
+1974,Brazil,True,False,3rd,Fourth place in the second group stage
+1978,West Germany,True,False,Second-Group,Eliminated in the second group stage
+1982,Argentina,True,False,Second-Group,Eliminated in the second group stage
+1986,Italy,True,False,R16,Eliminated in R16 by France
+1990,Argentina,True,False,Runner-up,Lost final to West Germany
+1994,West Germany,True,False,QF,Eliminated in QF by Bulgaria; competed as unified Germany
+1998,Brazil,True,False,Runner-up,Lost final to France
+2002,France,True,False,Group,"Eliminated in group stage, zero goals scored"
+2006,Brazil,True,False,QF,Eliminated in QF by France
+2010,Italy,True,False,Group,Eliminated in group stage
+2014,Spain,True,False,Group,Eliminated in group stage
+2018,Germany,True,False,Group,Eliminated in group stage
+2022,France,True,False,Runner-up,Lost final to Argentina

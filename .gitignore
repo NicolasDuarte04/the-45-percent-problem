@@ -51,6 +51,12 @@ logs/
 *.swo
 Thumbs.db
 
+# ─── Claude Code session memory (per-machine; never tracked) ────────────────────
+.claude/
+
+# ─── Scratch / temporary work (per-machine; never tracked) ──────────────────────
+tmp/
+
 # ─── Testing & linting ──────────────────────────────────────────────────────────
 .pytest_cache/
 .coverage

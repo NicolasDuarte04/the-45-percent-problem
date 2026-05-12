@@ -112,7 +112,7 @@ the-45-percent-problem/
 
 ---
 
-## What Is Already Built (Phase 1 + Phase 2.1)
+## What Is Already Built
 
 **Phase 1 — System Design: 100% COMPLETE (locked)**
 
@@ -126,6 +126,36 @@ the-45-percent-problem/
 
 **Phase 2.2 — Historical Match Results: COMPLETE**
 - `ingestion/fetch_historical_matches.py` — downloads Mart Jürisoo dataset, filters to 11 tournament windows (WC 2010/14/18 calibration + WC 2022 hold-out + 6 continental tournaments), standardises team names, validates against `Match` schema, writes `data/raw/historical_matches.parquet`, registers SHA snapshot
+
+**Phase 2.3–2.7 — Remaining Ingestion: COMPLETE**
+- All eight ingestion scripts written and run; outputs in `data/raw/`: `elo_ratings.parquet`, `fifa_rankings.parquet`, `recent_form.parquet`, `macro_data.parquet`, `wc2026_fixtures.parquet`, `odds_{pinnacle,polymarket,betfair}.parquet`
+- `ingestion/data_loader.py` — unified `DataLoader` interface
+
+**Phase 3 — Elo Engine & Calibration: COMPLETE (locked 2026-04-21)**
+- `models/elo_calculator.py` — Elo update + walk-forward
+- `models/calibrate_elo_lambda.py` — fit `c, μ, λ₃, ρ`. Output: `data/calibration/elo_lambda_params.json`
+- M1 form half-life calibrated, M2 FIFA blend weight calibrated, M3 macro θ fit. Outputs: `m1_form_params.json`, `m2_fifa_params.json`, `m3_macro_theta.json` in `data/calibration/`
+- 5-fold walk-forward CV battery executed (`data/snapshots/cv_battery_2026-04.parquet`)
+
+**Phase 4 — Models M0-M3 + Champion Selection: COMPLETE (locked 2026-04-21)**
+- `models/model_m{0,1,2,3}_*.py` — all four variants implementing `BaseModel`
+- `models/model_registry.py` — fits all variants, runs CV battery, selects champion per pre-registered protocol
+- **CHAMPION LOCKED**: `data/calibration/champion_model.json` — `M2_fifa`, `L_CV = 0.99337`, `Δ_vs_M0 = -0.04096`, `CHAMPION_LOCKED: true`
+- CV log-loss table (locked, `data/calibration/cv_battery_results.json`):
+  - M0_elo:   1.034330
+  - M1_form:  1.081097  (DM p=0.0061 vs M0 — disqualified, significantly worse)
+  - **M2_fifa: 0.993370 ← champion**
+  - M3_macro: 1.026943
+- Subsequent canonical scoring run with hold-out evaluation: `evaluation/cv_battery_result.json` (2026-04-23). Includes `holdout_log_loss` per model — used for downstream reliability/calibration analysis. Note: this run has slightly different CV numbers from the calibration-folder file because it was a separate run with different seed; the locked champion-decision values are the calibration-folder file.
+
+**Phase 5 — Simulation Engine: PARTIAL**
+- `simulation/{match_model,shootout_model,bracket_encoder,monte_carlo_runner,batch_runner}.py` exist
+- `outputs/phase5/batches/batch_20260422_180255Z/` has a smoke-test M2 batch (50 runs)
+- Full 10k/100k production runs not yet executed against the 2026 fixtures
+
+**Phase 7 — Evaluation Framework: PARTIAL**
+- `evaluation/{accuracy_metrics,clv_tracker,evaluation_dashboard,forecast_log,pseudo_clv}.py` exist
+- `evaluation/score_on_2022_holdout.py` — written 2026-05-07 to materialise per-match (predicted_prob, outcome) tuples for the 2022 hold-out, used by the Burn-Murdoch reliability chart. Outputs `data/processed/holdout_probs_m{0,1,2,3}.parquet`
 
 ---
 
@@ -205,6 +235,32 @@ All models implement the same interface: `get_strength_matrix() -> np.ndarray` o
 - `models/model_m2_fifa.py`
 - `models/model_m3_macro.py`
 - `models/model_registry.py` — M★ selection protocol
+
+**Holdout probability artifact** — produced by `evaluation/score_on_2022_holdout.py` and consumed by `scripts/generate_burn_murdoch_chart.py` and any other reliability-diagram consumer:
+
+```
+data/processed/holdout_probs_m0.parquet
+data/processed/holdout_probs_m1.parquet
+data/processed/holdout_probs_m2.parquet
+data/processed/holdout_probs_m3.parquet
+```
+
+Schema (192 rows per file = 64 hold-out matches × 3 outcomes):
+
+| column           | dtype   | notes                                                    |
+|------------------|---------|----------------------------------------------------------|
+| match_id         | string  | matches `Match.match_id` from `historical_matches.parquet` |
+| outcome_class    | string  | one of `home_win`, `draw`, `away_win`                     |
+| predicted_prob   | float64 | model's probability for this outcome class                |
+| outcome          | int8    | 1 if this class realised, 0 otherwise                     |
+
+Aggregate hold-out log-loss from these files must match the canonical `evaluation/cv_battery_result.json` `holdout_log_loss` values to ≤ 1e-6:
+- M0: 1.018142
+- M1: 1.101231
+- M2: 0.987659
+- M3: 0.997438
+
+If they don't match, do not regenerate the press chart — the locked params or training split has drifted.
 
 ### Phase 5 — Simulation Engine
 
