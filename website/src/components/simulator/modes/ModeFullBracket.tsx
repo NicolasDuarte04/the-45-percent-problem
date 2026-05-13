@@ -47,6 +47,8 @@ import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { teamsByGroupSortedByElo } from "@/lib/sim/elo";
+import { getRarityBand } from "@/lib/sim/getRarityBand";
+import { track, claimFirstPick } from "@/lib/analytics/track";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import type { FullBracketScenario, TeamCode } from "@/lib/sim/types";
 
@@ -308,6 +310,7 @@ export function ModeFullBracket({
 
   useEffect(() => {
     if (hydratedRef.current) return;
+    track("simulator_opened", { mode: "full_bracket" });
     const hydrated = hydrate();
     setState(hydrated);
     // Phase E §6 (B.3) — groups already complete on hydrate render dim
@@ -396,6 +399,9 @@ export function ModeFullBracket({
 
   function handleGroupClick(g: GroupLetter, code: TeamCode) {
     setErrorKind(null);
+    if (claimFirstPick("full_bracket")) {
+      track("first_pick", { mode: "full_bracket" });
+    }
     // Phase E §6 (B.3) — re-activating a completed (dimmed) group lifts
     // dim and pins focus to it. While the user is mid-picking in an
     // incomplete group, leave focus to the natural next-alphabetical
@@ -612,6 +618,11 @@ export function ModeFullBracket({
     );
     if (result.kind === "ok") {
       clearInflight();
+      const { band } = getRarityBand(
+        result.prediction.countCurrent,
+        result.prediction.total,
+      );
+      track("submit_success", { mode: "full_bracket", rarity_band: band });
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }

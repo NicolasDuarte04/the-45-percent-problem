@@ -46,6 +46,8 @@ import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { renderStoryLine } from "@/lib/sim/renderStoryLine";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
+import { getRarityBand } from "@/lib/sim/getRarityBand";
+import { track, claimFirstPick } from "@/lib/analytics/track";
 import type { ChampionsPathScenario, TeamCode } from "@/lib/sim/types";
 
 interface ModeChampionsPathProps {
@@ -270,6 +272,7 @@ export function ModeChampionsPath({
     if (hydratedRef.current) return;
     setState(hydrate());
     hydratedRef.current = true;
+    track("simulator_opened", { mode: "champions_path" });
   }, []);
 
   useEffect(() => {
@@ -293,6 +296,11 @@ export function ModeChampionsPath({
     // Any pick change can invalidate downstream stages → reset the
     // manual-expand flag so the next resolved flip auto-collapses.
     setManuallyExpanded(false);
+    const isRemoval =
+      state.team === code || STAGE_KEYS.some((s) => state[s].opponent === code);
+    if (!isRemoval && claimFirstPick("champions_path")) {
+      track("first_pick", { mode: "champions_path" });
+    }
     setState((prev) => {
       if (prev.team === code) {
         return emptyState();
@@ -418,6 +426,11 @@ export function ModeChampionsPath({
     });
     if (result.kind === "ok") {
       clearInflight();
+      const { band } = getRarityBand(
+        result.prediction.countCurrent,
+        result.prediction.total,
+      );
+      track("submit_success", { mode: "champions_path", rarity_band: band });
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }

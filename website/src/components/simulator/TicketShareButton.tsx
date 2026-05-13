@@ -22,6 +22,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics/track";
 
 interface TicketShareButtonProps {
   predictionId: string;
@@ -115,6 +116,7 @@ export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
       } finally {
         URL.revokeObjectURL(url);
       }
+      track("share_action", { type: "png" });
       setDownloadState("idle");
     } catch (err) {
       console.error("[ticket-share] download failed", err);
@@ -137,6 +139,7 @@ export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
           title: "45analytics — Scenario Prediction",
           url: permalinkUrl,
         });
+        track("share_action", { type: "native" });
         return;
       } catch {
         // User cancelled (AbortError) or share failed — fall through to copy.
@@ -146,6 +149,7 @@ export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
     // Clipboard fallback.
     try {
       await navigator.clipboard.writeText(permalinkUrl);
+      track("share_action", { type: "copy" });
       setCopyLabel("Copied!");
       setTimeout(() => setCopyLabel("Share"), 2000);
     } catch {

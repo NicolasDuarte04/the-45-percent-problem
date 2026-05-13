@@ -46,6 +46,8 @@ import {
 import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
+import { getRarityBand } from "@/lib/sim/getRarityBand";
+import { track, claimFirstPick } from "@/lib/analytics/track";
 import type { TeamCode } from "@/lib/sim/types";
 
 interface ModeFinalFourProps {
@@ -188,6 +190,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
     if (hydratedRef.current) return;
     setSlots(hydrate());
     hydratedRef.current = true;
+    track("simulator_opened", { mode: "final_four" });
   }, []);
 
   // Persist on every change once hydrated.
@@ -243,6 +246,9 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
         next[t] = next[t] + 1;
         return next;
       });
+      if (claimFirstPick("final_four")) {
+        track("first_pick", { mode: "final_four" });
+      }
     }
     setActiveSlotIdx(null);
     setErrorKind(null);
@@ -316,6 +322,11 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
     });
     if (result.kind === "ok") {
       clearInflight();
+      const { band } = getRarityBand(
+        result.prediction.countCurrent,
+        result.prediction.total,
+      );
+      track("submit_success", { mode: "final_four", rarity_band: band });
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }
