@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AlertArmedBeacon } from "./AlertArmedBeacon";
 
 export const metadata: Metadata = {
   title: "Subscription confirmed · 45analytics",
   robots: { index: false, follow: false },
 };
 
-export default function ConfirmedPage() {
+interface ConfirmedPageProps {
+  searchParams: Promise<{ source?: string }>;
+}
+
+export default async function ConfirmedPage({ searchParams }: ConfirmedPageProps) {
+  const { source } = await searchParams;
   return (
+    <>
+      {source === "alert" && <AlertArmedBeacon />}
     <main
       data-surface="brief"
       style={{
@@ -125,5 +133,6 @@ export default function ConfirmedPage() {
         </Link>
       </div>
     </main>
+    </>
   );
 }

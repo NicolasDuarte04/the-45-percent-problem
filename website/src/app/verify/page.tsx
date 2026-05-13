@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertArmedBeacon } from "./AlertArmedBeacon";
 
 export const metadata: Metadata = {
   title: "Verifying your subscription · 45analytics",
@@ -83,7 +82,6 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
           </>
         ) : (
           <>
-            <AlertArmedBeacon />
             <h1
               style={{
                 fontFamily: "var(--brief-font-serif)",

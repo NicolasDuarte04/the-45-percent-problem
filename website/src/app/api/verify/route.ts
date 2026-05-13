@@ -49,7 +49,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         gt(subscribers.verificationSentAt, earliestSent),
       ),
     )
-    .returning({ id: subscribers.id });
+    .returning({ id: subscribers.id, subscriptionTypes: subscribers.subscriptionTypes });
 
   if (matched.length === 0) {
     // Idempotent path: token may already have been consumed and the user
@@ -71,5 +71,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return redirectTo("/verify?state=expired");
   }
 
-  return redirectTo("/confirmed");
+  const isAlert = matched[0].subscriptionTypes.includes("prediction_tracking");
+  return redirectTo(isAlert ? "/confirmed?source=alert" : "/confirmed");
 }
