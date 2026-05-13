@@ -60,7 +60,7 @@ export default function RootLayout({
       }
     >
       <body className="min-h-screen antialiased" style={{ overflowX: "clip" }}>
-        <Script src="https://plausible.io/js/script.js" data-domain="45analytics.com" strategy="afterInteractive" />
+        <Script src="https://plausible.io/js/script.tagged-events.js" data-domain="45analytics.com" strategy="afterInteractive" />
         <TooltipProvider>
           {children}
         </TooltipProvider>
