@@ -53,6 +53,7 @@ import type { TeamCode } from "@/lib/sim/types";
 interface ModeFinalFourProps {
   modelSha: string;
   snapshotSha: string;
+  modalSemifinalists?: TeamCode[];
 }
 
 const SLOT_COUNT = 4;
@@ -60,18 +61,31 @@ const SLOT_LABELS = ["SF1", "SF2", "SF3", "SF4"] as const;
 
 interface InflightFinalFour {
   semifinalists: ReadonlyArray<TeamCode | null>;
+  // Sticky once the user engages with the mode in any way (manual pick,
+  // drag-drop, or ghost-fill). Persisted so a return visit does not
+  // re-show the ghost-fill button after the user has already shown
+  // they know how to interact. See P0.5.
+  interacted?: boolean;
 }
 
-function hydrate(): (TeamCode | null)[] {
+interface HydratedInflight {
+  slots: (TeamCode | null)[];
+  interacted: boolean;
+}
+
+function hydrate(): HydratedInflight {
   const cached = readInflightForMode("final_four") as InflightFinalFour | null;
   if (!cached || !Array.isArray(cached.semifinalists)) {
-    return Array(SLOT_COUNT).fill(null);
+    return { slots: Array(SLOT_COUNT).fill(null), interacted: false };
   }
   const slice = cached.semifinalists.slice(0, SLOT_COUNT);
   while (slice.length < SLOT_COUNT) slice.push(null);
-  return slice.map((c) =>
+  const slots = slice.map((c) =>
     typeof c === "string" && /^[A-Z]{3}$/.test(c) ? c : null,
   );
+  const interacted =
+    Boolean(cached.interacted) || slots.some((s) => s !== null);
+  return { slots, interacted };
 }
 
 // ── Droppable SF slot ─────────────────────────────────────────────────────────
@@ -158,7 +172,11 @@ function FFSlot({
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
+export function ModeFinalFour({
+  modelSha,
+  snapshotSha,
+  modalSemifinalists,
+}: ModeFinalFourProps) {
   const router = useRouter();
   const [slots, setSlots] = useState<(TeamCode | null)[]>(() =>
     Array(SLOT_COUNT).fill(null),
@@ -176,6 +194,10 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   const [pulseKeys, setPulseKeys] = useState<number[]>(() =>
     Array(SLOT_COUNT).fill(0),
   );
+  // Sticky once any interaction occurs in this session (or in an earlier
+  // session whose inflight state survived). Drives ghost-fill visibility.
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const hydratedRef = useRef(false);
   const layoutTransition = useReducedMotionAware("layout");
 
@@ -188,16 +210,22 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
   // Hydrate from inflight on mount (client-only — guarded by useEffect).
   useEffect(() => {
     if (hydratedRef.current) return;
-    setSlots(hydrate());
+    const cached = hydrate();
+    setSlots(cached.slots);
+    setHasInteracted(cached.interacted);
     hydratedRef.current = true;
+    setHydrated(true);
     track("simulator_opened", { mode: "final_four" });
   }, []);
 
   // Persist on every change once hydrated.
   useEffect(() => {
     if (!hydratedRef.current) return;
-    writeInflight("final_four", { semifinalists: slots });
-  }, [slots]);
+    writeInflight("final_four", {
+      semifinalists: slots,
+      interacted: hasInteracted,
+    });
+  }, [slots, hasInteracted]);
 
   const filled = slots.filter((c): c is TeamCode => Boolean(c));
   const allFilled = filled.length === SLOT_COUNT;
@@ -246,6 +274,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
         next[t] = next[t] + 1;
         return next;
       });
+      setHasInteracted(true);
       if (claimFirstPick("final_four")) {
         track("first_pick", { mode: "final_four" });
       }
@@ -284,6 +313,7 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
       next[idx] = next[idx] + 1;
       return next;
     });
+    setHasInteracted(true);
     setErrorKind(null);
     setManuallyExpanded(false);
   }
@@ -299,6 +329,20 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
     const idx = parseInt(over.id as string, 10);
     if (!isNaN(idx) && idx >= 0 && idx < SLOT_COUNT) {
       handleDropToSlot(idx, code);
+    }
+  }
+
+  function handleGhostFill() {
+    if (!modalSemifinalists || modalSemifinalists.length !== 4) return;
+    const codes = modalSemifinalists.slice(0, SLOT_COUNT) as TeamCode[];
+    setSlots(codes);
+    setPulseKeys((prev) => prev.map((k) => k + 1));
+    setHasInteracted(true);
+    setActiveSlotIdx(null);
+    setErrorKind(null);
+    setManuallyExpanded(false);
+    if (claimFirstPick("final_four")) {
+      track("first_pick", { mode: "final_four" });
     }
   }
 
@@ -384,6 +428,28 @@ export function ModeFinalFour({ modelSha, snapshotSha }: ModeFinalFourProps) {
             </li>
           ))}
         </ol>
+
+        {/* Ghost-fill (P0.5). Endowed-progress nudge for first-time
+            visitors: one click loads the model's modal SF so the user
+            reaches the reveal without first having to commit four
+            picks. Sticky-hidden once any interaction occurs in this
+            (or a prior, via inflight) session. */}
+        {hydrated &&
+        !hasInteracted &&
+        filled.length === 0 &&
+        Array.isArray(modalSemifinalists) &&
+        modalSemifinalists.length === 4 ? (
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleGhostFill}
+              aria-label="Start from the model's call: pre-fill all four slots with the model's modal semifinalists"
+              className="flex h-10 w-full items-center justify-center border border-[var(--border-default)] bg-transparent font-mono text-[12px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] transition-colors duration-100 hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
+            >
+              [ Start from the model&apos;s call ]
+            </button>
+          </div>
+        ) : null}
 
         {/* Team grid — Phase E §6 (B.1) auto-collapse.
             When all 4 slots are filled, the grid collapses to a thin
