@@ -223,7 +223,12 @@ export default async function PredictionPermalinkPage(props: {
               as the primary surface. The 6s nudge-once pulse
               (§3.1.E) is wired inside TicketShareButton. */}
           <StaggeredRevealItem index={2} className="mt-6 flex justify-end">
-            <TicketShareButton predictionId={view.id} />
+            <TicketShareButton
+              predictionId={view.id}
+              count={view.countCurrent}
+              total={view.total}
+              storyLine={view.storyLine}
+            />
           </StaggeredRevealItem>
 
           {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Sits inside
