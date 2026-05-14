@@ -1,35 +1,42 @@
 "use client";
 
 /**
- * RealityScoreReveal — Phase E §9 (E.2).
+ * RealityScoreReveal. Phase E §9 (E.2) plus Checkpoint 3 (P0.4).
  *
- * Client wrapper that owns the post-submit reveal entrance. Composes:
+ * Two-phase reveal:
  *
- *   1. The whole panel fades up from `y: 24, opacity: 0` to `y: 0,
- *      opacity: 1` over 400ms via `motion.entry`.
- *   2. A new 5-band rarity bar (the post-submit equivalent of the
- *      live gauge segments — but rendered with the *scientific*
- *      vocabulary in `aria-label`, never the live-gauge viral hook).
- *      Active segment fills via `motion.gaugeFill` (450ms) with a
- *      100ms post-entry delay so the verdict lands after the panel
- *      settles.
- *   3. The existing static `RealityScorePanel` with its hero number,
- *      denominator, rarity band serif label, and 1-in-N sentence —
- *      the 1-in-N integer is overridden via the `oneInNTarget` prop
- *      so OneInNCountUp can animate it from 1 → final over 700ms
- *      cubic-out (Q3: integer only, fractional % static).
+ *   1. anticipating: a quiet mono italic typewriter line types out
+ *      "Counting matches across 10,000 simulated tournaments..." for
+ *      roughly 900ms. Nothing else renders during this phase: no hero,
+ *      no rarity bar, no count-up. The copy is descriptive of an actual
+ *      computational step, not a marketing flourish.
+ *   2. revealing: the existing entry transition runs unchanged. The
+ *      5-band rarity bar fills, RealityScorePanel mounts, the hero
+ *      decrypts, the .reveal-band and .reveal-one-in-n CSS animations
+ *      fire from t=0 of mount, and OneInNCountUp counts up.
  *
- * After the entrance lands, no further motion. The reveal is the
- * dignified verdict; let it sit (Phase E §3 Rule 5 + §9 (E.2)).
+ * SSR and the initial client render both render the anticipating
+ * shell with an empty typewriter string. The effect below flips
+ * `typeActive` true to start typing, then transitions to "revealing"
+ * after ANTICIPATION_MS. No hydration mismatch.
  *
- * Reduced motion: useReducedMotionAware collapses every preset to
- * { duration: 0 }, so the entrance + bar fill snap and the count-up
- * (handled inside OneInNCountUp) renders the final value immediately.
+ * Reduced motion: the effect detects `prefers-reduced-motion: reduce`
+ * via matchMedia and flips straight to "revealing" on mount. The
+ * typewriter never activates; the (reduced-motion-aware) entry and
+ * gauge-fill transitions collapse to `{ duration: 0 }` and the
+ * reveal renders effectively instantly. A single-frame flicker of
+ * the empty anticipating shell is acceptable per spec.
+ *
+ * Layout-jump avoidance: the wrapper carries a min-height that
+ * comfortably accommodates the eventual reveal at both mobile and
+ * sm+ sizes, so the page does not shift when the phase advances.
  */
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { RealityScorePanel } from "@/components/simulator/RealityScorePanel";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
+import { useTypewriter } from "@/lib/motion/useTypewriter";
 import type { PublicPredictionView } from "@/lib/sim/types";
 
 interface RealityScoreRevealProps {
@@ -40,6 +47,23 @@ interface RealityScoreRevealProps {
 }
 
 const SEGMENT_COUNT = 5;
+
+/** Anticipation window in ms. Sits inside the 600..1200ms band from
+ * the Checkpoint 3 brief. Tuned so the 55-char typewriter (at 16ms
+ * per char, roughly 880ms total) lands a beat before the phase
+ * flips. */
+const ANTICIPATION_MS = 900;
+
+/** Locked copy. Descriptive of the actual marginal-probability
+ * lookup the reveal renders. Do not rephrase. */
+const ANTICIPATION_COPY =
+  "Counting matches across 10,000 simulated tournaments...";
+
+/** Faster than the default useTypewriter tick (22ms) so the full
+ * line completes within ANTICIPATION_MS. 16ms x 55 chars is about
+ * 880ms; the remaining 20ms gives the eye a beat on the complete
+ * string before the phase flips. */
+const TYPEWRITER_TICK_MS = 16;
 
 /** Same threshold geometry as LiveAgreementGauge.activeSegmentIndex —
  * but here the segment carries the *scientific* rarity vocabulary in
@@ -61,6 +85,8 @@ const RARITY_LABELS = [
   "Vanishingly rare",
 ] as const;
 
+type Phase = "anticipating" | "revealing";
+
 export function RealityScoreReveal({
   count,
   total,
@@ -73,54 +99,105 @@ export function RealityScoreReveal({
   const oneInNTarget =
     count <= 0 ? total : Math.max(1, Math.round(total / count));
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={entryTransition}
-    >
-      {/* 5-band rarity bar — post-submit, vocabulary intentionally
-          scientific (Common, Plausible, Uncommon, Rare, Vanishingly
-          rare). Never the live-gauge viral hook. */}
-      <ul
-        aria-label={`Rarity band: ${RARITY_LABELS[activeIdx]}`}
-        className="mt-2 grid h-2 w-full max-w-[320px] grid-cols-5 gap-px"
-      >
-        {Array.from({ length: SEGMENT_COUNT }, (_, i) => {
-          const active = i === activeIdx;
-          return (
-            <li
-              key={i}
-              className={[
-                "relative overflow-hidden border",
-                active
-                  ? "border-[var(--accent-warm)]"
-                  : "border-[var(--text-tertiary)]",
-              ].join(" ")}
-            >
-              <motion.span
-                aria-hidden="true"
-                className="absolute inset-0 bg-[var(--accent-warm)]"
-                initial={{ opacity: 0, scaleX: 0 }}
-                animate={{
-                  opacity: active ? 1 : 0,
-                  scaleX: active ? 1 : 0,
-                }}
-                style={{ transformOrigin: "left center" }}
-                transition={{ ...gaugeFillTransition, delay: 0.1 }}
-              />
-            </li>
-          );
-        })}
-      </ul>
+  // SSR + initial client render both start in "anticipating" with
+  // `typeActive` false (so useTypewriter returns ""). Hydration is
+  // therefore identical on both sides.
+  const [phase, setPhase] = useState<Phase>("anticipating");
+  const [typeActive, setTypeActive] = useState(false);
+  const typedLine = useTypewriter(ANTICIPATION_COPY, {
+    active: typeActive,
+    tickMs: TYPEWRITER_TICK_MS,
+  });
 
-      <RealityScorePanel
-        count={count}
-        total={total}
-        state={state}
-        variant={variant}
-        oneInNTarget={oneInNTarget}
-      />
-    </motion.div>
+  useEffect(() => {
+    // matchMedia (not framer-motion's useReducedMotion) so the
+    // detection is synchronous and the effect runs exactly once. The
+    // same pattern is used at PredictionAlertConfigurator.tsx:178.
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ??
+        false);
+
+    if (prefersReduced) {
+      setPhase("revealing");
+      return;
+    }
+
+    setTypeActive(true);
+    const id = window.setTimeout(
+      () => setPhase("revealing"),
+      ANTICIPATION_MS,
+    );
+    return () => window.clearTimeout(id);
+  }, []);
+
+  // The min-height reserves vertical space for the eventual reveal
+  // so the page does not jump when the phase advances. The values
+  // are tuned to the reveal block's intrinsic height (5-band bar +
+  // peach rule + hero + denominator + rarity band + caption +
+  // optional resolution-floor caveat + 1-in-N) at mobile and sm+.
+  return (
+    <div className="relative min-h-[280px] sm:min-h-[340px]">
+      {phase === "anticipating" ? (
+        <div
+          // aria-hidden so the typewriter does not double-announce
+          // each character to screen readers. The reveal panel
+          // carries its own aria-labelledby once it mounts.
+          aria-hidden="true"
+          className="font-mono italic text-[12px] leading-[1.4] text-[var(--text-tertiary)]"
+        >
+          {typedLine}
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={entryTransition}
+        >
+          {/* 5-band rarity bar. Post-submit, vocabulary intentionally
+              scientific (Common, Plausible, Uncommon, Rare, Vanishingly
+              rare). Never the live-gauge viral hook. */}
+          <ul
+            aria-label={`Rarity band: ${RARITY_LABELS[activeIdx]}`}
+            className="mt-2 grid h-2 w-full max-w-[320px] grid-cols-5 gap-px"
+          >
+            {Array.from({ length: SEGMENT_COUNT }, (_, i) => {
+              const active = i === activeIdx;
+              return (
+                <li
+                  key={i}
+                  className={[
+                    "relative overflow-hidden border",
+                    active
+                      ? "border-[var(--accent-warm)]"
+                      : "border-[var(--text-tertiary)]",
+                  ].join(" ")}
+                >
+                  <motion.span
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-[var(--accent-warm)]"
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    animate={{
+                      opacity: active ? 1 : 0,
+                      scaleX: active ? 1 : 0,
+                    }}
+                    style={{ transformOrigin: "left center" }}
+                    transition={{ ...gaugeFillTransition, delay: 0.1 }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+
+          <RealityScorePanel
+            count={count}
+            total={total}
+            state={state}
+            variant={variant}
+            oneInNTarget={oneInNTarget}
+          />
+        </motion.div>
+      )}
+    </div>
   );
 }
