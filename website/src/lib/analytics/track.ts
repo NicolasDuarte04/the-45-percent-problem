@@ -17,7 +17,7 @@ interface EventMap {
   simulator_opened: { mode: SimulatorMode };
   first_pick: { mode: SimulatorMode };
   submit_success: { mode: SimulatorMode; rarity_band: RarityBand };
-  share_action: { type: "copy" | "png" | "native" };
+  share_action: { type: "copy" | "png" | "native" | "copy_post" };
   alert_armed: undefined;
 }
 

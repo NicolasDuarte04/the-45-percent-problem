@@ -23,12 +23,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics/track";
+import { getOneInN } from "@/lib/sim/getOneInN";
 
 interface TicketShareButtonProps {
   predictionId: string;
+  count: number;
+  total: number;
+  storyLine: string;
 }
 
 type DownloadState = "idle" | "loading" | "error";
+type CopyPostState = "idle" | "copied" | "error";
 
 const DOWNLOAD_LABEL: Record<DownloadState, string> = {
   idle:    "PNG",
@@ -36,9 +41,80 @@ const DOWNLOAD_LABEL: Record<DownloadState, string> = {
   error:   "Failed, retry",
 };
 
-export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
+const COPY_POST_LABEL: Record<CopyPostState, string> = {
+  idle:   "Copy as post",
+  copied: "Copied!",
+  error:  "Failed, retry",
+};
+
+const COMPOSER_MAX_CHARS = 280;
+
+/**
+ * Robust clipboard write with a synchronous fallback. The modern
+ * `navigator.clipboard.writeText` is denied (NotAllowedError) when the
+ * document does not have focus at the moment of the click; the legacy
+ * textarea + `document.execCommand("copy")` path tolerates that, so we
+ * try it second. Returns true on success, false otherwise.
+ */
+async function writeClipboardText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn("[ticket-share] clipboard.writeText denied, falling back", err);
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    ta.style.pointerEvents = "none";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (err) {
+    console.warn("[ticket-share] execCommand copy fallback failed", err);
+    return false;
+  }
+}
+
+/**
+ * Assemble the one-tap composer string: `1 in N. {storyLine}. {permalink}`.
+ * If the composed string would exceed 280 characters (X's hard limit),
+ * truncate the storyLine with a single ellipsis (U+2026) so the full
+ * string fits.
+ */
+export function buildComposerString(
+  count: number,
+  total: number,
+  storyLine: string,
+  permalink: string,
+): string {
+  const oneInN = getOneInN(count, total);
+  const trimmedStory = storyLine.replace(/\.+\s*$/, "").trim();
+  const fixedLen = oneInN.length + 2 + 2 + permalink.length; // "1 in N" + ". " + ". " + permalink
+  const availableForStory = COMPOSER_MAX_CHARS - fixedLen;
+  let story = trimmedStory;
+  if (availableForStory > 1 && story.length > availableForStory) {
+    story = story.slice(0, availableForStory - 1) + "…";
+  }
+  return `${oneInN}. ${story}. ${permalink}`;
+}
+
+export function TicketShareButton({
+  predictionId,
+  count,
+  total,
+  storyLine,
+}: TicketShareButtonProps) {
   const [copyLabel, setCopyLabel] = useState<"Share" | "Copied!">("Share");
   const [downloadState, setDownloadState] = useState<DownloadState>("idle");
+  const [copyPostState, setCopyPostState] = useState<CopyPostState>("idle");
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const ogHref = `/api/og/scenario/${predictionId}`;
@@ -127,6 +203,23 @@ export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
     }
   }, [ogHref, downloadName, downloadState]);
 
+  const handleCopyPost = useCallback(async () => {
+    // VIRAL_LOOP §3.1.G (Checkpoint 5, P0.8). Assemble a platform-agnostic
+    // social post string the user can paste directly into X, LinkedIn,
+    // Threads, or Mastodon. No emoji, no hashtags, no "via" attribution.
+    const permalinkUrl = `${window.location.origin}/scenario/p/${predictionId}`;
+    const composed = buildComposerString(count, total, storyLine, permalinkUrl);
+    const wrote = await writeClipboardText(composed);
+    if (wrote) {
+      track("share_action", { type: "copy_post" });
+      setCopyPostState("copied");
+      setTimeout(() => setCopyPostState("idle"), 1500);
+    } else {
+      setCopyPostState("error");
+      setTimeout(() => setCopyPostState("idle"), 3000);
+    }
+  }, [predictionId, count, total, storyLine]);
+
   const handleShare = useCallback(async () => {
     // Construct the absolute permalink. `window.location.origin` is safe here
     // because this is a client component and will only run in the browser.
@@ -160,6 +253,38 @@ export function TicketShareButton({ predictionId }: TicketShareButtonProps) {
 
   return (
     <div ref={wrapperRef} className="flex items-center gap-2">
+      {/* Copy as post (Checkpoint 5, P0.8). Assembled "1 in N. story. URL"
+          string, one tap, one paste. Sits leftmost as the most actionable
+          option for text-platform shares; PNG is the visual artifact, and
+          the Web Share API (mobile-native) stays rightmost. */}
+      <button
+        type="button"
+        onClick={handleCopyPost}
+        className={[
+          "inline-flex items-center gap-1.5",
+          "border border-[var(--border-default)]",
+          "bg-[var(--bg-panel)]",
+          "px-3 py-1.5",
+          "font-mono text-[11px] uppercase tracking-[0.10em]",
+          copyPostState === "copied"
+            ? "text-[var(--edge-positive)]"
+            : copyPostState === "error"
+            ? "text-[var(--state-dead,#E76E8A)]"
+            : "text-[var(--text-tertiary)]",
+          "transition-colors duration-100",
+          "hover:bg-[var(--bg-panel-elev)] hover:text-[var(--text-primary)]",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-focus)]",
+          "cursor-pointer",
+        ].join(" ")}
+        aria-live="polite"
+        aria-label="Copy assembled social post to clipboard"
+      >
+        <span aria-hidden>
+          {copyPostState === "copied" ? "✓" : copyPostState === "error" ? "!" : "↗"}
+        </span>
+        {COPY_POST_LABEL[copyPostState]}
+      </button>
+
       {/* Download PNG — typed fetch + content-type validation. The button
           replaces the prior `<a download>` so a non-PNG response (JSON 4xx /
           HTML 5xx) is detected and surfaced as "Failed, retry" instead of
