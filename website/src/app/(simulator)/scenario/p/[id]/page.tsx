@@ -9,6 +9,7 @@ import {
   TrackedFootnote,
 } from "@/components/simulator/PredictionAlertConfigurator";
 import { Flag } from "@/components/primitives/Flag";
+import { ModelCallPanel } from "@/components/simulator/ModelCallPanel";
 import { RealityScoreReveal } from "@/components/simulator/reality/RealityScoreReveal";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
 import {
@@ -208,10 +209,20 @@ export default async function PredictionPermalinkPage(props: {
             </div>
           </StaggeredRevealItem>
 
+          {/* You vs the model panel (Checkpoint 4, P0.2). Set-theoretic
+              comparison between the user's scenario and the model's
+              modal call. Inserted between the hero and the share strip
+              so the user lands on the comparison before any next-step
+              affordance. The 180ms cascade between items is preserved
+              by incrementing the indices below. */}
+          <StaggeredRevealItem index={1} className="mt-8">
+            <ModelCallPanel view={view} />
+          </StaggeredRevealItem>
+
           {/* Share / download strip — right-aligned so the hero reads
               as the primary surface. The 6s nudge-once pulse
               (§3.1.E) is wired inside TicketShareButton. */}
-          <StaggeredRevealItem index={1} className="mt-6 flex justify-end">
+          <StaggeredRevealItem index={2} className="mt-6 flex justify-end">
             <TicketShareButton predictionId={view.id} />
           </StaggeredRevealItem>
 
@@ -220,7 +231,7 @@ export default async function PredictionPermalinkPage(props: {
               for the nested-terminal feel. When the row already
               carries a subscriber_id, render the quiet
               TrackedFootnote acknowledgement instead. */}
-          <StaggeredRevealItem index={2} className="mt-8">
+          <StaggeredRevealItem index={3} className="mt-8">
             {view.hasTracking ? (
               <TrackedFootnote />
             ) : (
