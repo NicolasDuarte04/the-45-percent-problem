@@ -47,7 +47,7 @@ import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
-import { track, claimFirstPick } from "@/lib/analytics/track";
+import { track, claimFirstPick, claimPromoLanded } from "@/lib/analytics/track";
 import type { TeamCode } from "@/lib/sim/types";
 
 interface ModeFinalFourProps {
@@ -64,6 +64,21 @@ interface ModeFinalFourProps {
    * Added for P0.1.
    */
   variant?: "page" | "inline";
+  /**
+   * Pre-fill the four slots with this scenario on mount, overriding any
+   * inflight buffer for this session. Added for P0.7 (promo cards). Set
+   * by the page when a `?card=<slug>` resolves to a catalog entry. The
+   * picker auto-collapses (all slots filled) and the ghost-fill button
+   * does not render. `hasInteracted` stays false; the user can submit
+   * immediately or click a slot to edit.
+   */
+  initialScenario?: TeamCode[];
+  /**
+   * Slug of the promo card whose scenario seeded `initialScenario`. Used
+   * only to attribute the `promo_card_landed` analytics event. Ignored
+   * when `initialScenario` is absent.
+   */
+  promoSlug?: string;
 }
 
 const SLOT_COUNT = 4;
@@ -187,6 +202,8 @@ export function ModeFinalFour({
   snapshotSha,
   modalSemifinalists,
   variant = "page",
+  initialScenario,
+  promoSlug,
 }: ModeFinalFourProps) {
   const isInline = variant === "inline";
   const router = useRouter();
@@ -219,18 +236,35 @@ export function ModeFinalFour({
     useSensor(KeyboardSensor),
   );
 
-  // Hydrate from inflight on mount (client-only — guarded by useEffect).
+  // Hydrate from inflight on mount (client-only, guarded by useEffect).
   useEffect(() => {
     if (hydratedRef.current) return;
     const cached = hydrate();
-    setSlots(cached.slots);
-    setHasInteracted(cached.interacted);
+    // Promo card pre-fill (P0.7). When `initialScenario` is present and
+    // shaped correctly, it overrides the inflight buffer for this
+    // session. `hasInteracted` stays false; since all four slots are
+    // filled, the picker auto-collapses and the ghost-fill button rules
+    // continue to apply (i.e. nothing renders the ghost-fill because the
+    // slots are already full). The persist-on-change effect below will
+    // write these slots to inflight on the next render, so a reload
+    // without `?card=` rehydrates the same scenario.
+    const isValidInitial =
+      Array.isArray(initialScenario) && initialScenario.length === SLOT_COUNT;
+    const hydratedSlots = isValidInitial
+      ? [...(initialScenario as TeamCode[])]
+      : cached.slots;
+    const hydratedInteracted = isValidInitial ? false : cached.interacted;
+    setSlots(hydratedSlots);
+    setHasInteracted(hydratedInteracted);
     hydratedRef.current = true;
     setHydrated(true);
     track("simulator_opened", {
       mode: "final_four",
       surface: isInline ? "inline" : "page",
     });
+    if (isValidInitial && promoSlug && claimPromoLanded(promoSlug)) {
+      track("promo_card_landed", { slug: promoSlug });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
