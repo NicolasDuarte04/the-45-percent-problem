@@ -188,8 +188,8 @@ export default async function Home() {
           title="Most likely bracket"
           rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
         />
-        {/* MostLikelyBracket declares min-width: 1100px — the largest
-            offender. Wrapper traps the overflow inside the section
+        {/* MostLikelyBracket declares min-width: 1100px (the largest
+            offender). Wrapper traps the overflow inside the section
             instead of forcing the document horizontal scrollbar.
             Per Mobile Optimization Plan §4 Phase 1 task 4. */}
         <div className="overflow-x-auto">

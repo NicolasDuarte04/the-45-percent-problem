@@ -27,7 +27,7 @@ import type {
 
 export const dynamic = "force-dynamic";
 
-/** Mirror of TradeTicket.flagsForView — re-implemented at the page layer
+/** Mirror of TradeTicket.flagsForView, re-implemented at the page layer
  *  so the hero can render the flag tile without re-importing private helpers. */
 function heroFlags(view: PublicPredictionView): string[] {
   switch (view.mode) {
@@ -46,7 +46,7 @@ function heroFlags(view: PublicPredictionView): string[] {
  * Public permalink page for a submitted prediction.
  *
  * Per IMPL_PROMPT §14 + handoff §3 addition (c):
- *   - Server-rendered from Postgres (not from /api/predictions/[id] —
+ *   - Server-rendered from Postgres (not from /api/predictions/[id];
  *     direct DB read avoids a same-origin fetch on every page load).
  *   - Sanitized via toPublicPredictionView before rendering. Email and
  *     subscriberId never enter the page tree.
@@ -62,15 +62,15 @@ function heroFlags(view: PublicPredictionView): string[] {
  *   - getPrediction (react/cache) is called once and reused by both
  *     generateMetadata and Page so the DB is never hit twice per request.
  *
- * Page composition (top to bottom) — VIRAL_LOOP §3.1.D:
- *   - SimulatorChrome  — masthead with eyebrow + submission timestamp
- *   - Hero stack       — flag tile, story line, Reality Score block
+ * Page composition (top to bottom). VIRAL_LOOP §3.1.D:
+ *   - SimulatorChrome  · masthead with eyebrow + submission timestamp
+ *   - Hero stack       · flag tile, story line, Reality Score block
  *                          (lifted out of TradeTicket so the user does not
  *                          have to scroll past the receipt to act)
- *   - Share strip      — ↓ PNG · Share (lifted up under the hero)
- *   - Email gate /     — soft "want to track this?" prompt, lifted up
+ *   - Share strip      · ↓ PNG · Share (lifted up under the hero)
+ *   - Email gate /     · soft "want to track this?" prompt, lifted up
  *     TrackedFootnote     above the receipt
- *   - TradeTicket      — compact mode: scenario detail + ID strip +
+ *   - TradeTicket      · compact mode: scenario detail + ID strip +
  *                          provenance footer only (the canonical receipt
  *                          card, demoted below the fold)
  */
@@ -86,7 +86,7 @@ export async function generateMetadata({
 
   const base: Metadata = {
     robots: { index: false, follow: false },
-    title: "Scenario — 45analytics",
+    title: "Scenario · 45analytics",
   };
 
   if (!isValidPredictionId(id)) return base;
@@ -104,10 +104,10 @@ export async function generateMetadata({
 
   return {
     ...base,
-    title: `${row.storyLine} — 45analytics`,
+    title: `${row.storyLine} · 45analytics`,
     description,
     openGraph: {
-      title: `${row.storyLine} — 45analytics`,
+      title: `${row.storyLine} · 45analytics`,
       description,
       url: `/scenario/p/${id}`,
       siteName: "45analytics",
@@ -123,7 +123,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${row.storyLine} — 45analytics`,
+      title: `${row.storyLine} · 45analytics`,
       description,
       images: [ogImageUrl],
     },
@@ -138,13 +138,13 @@ export default async function PredictionPermalinkPage(props: {
   const { id } = await props.params;
   if (!isValidPredictionId(id)) notFound();
 
-  // getPrediction is memoised by react/cache — the same request that called
+  // getPrediction is memoised by react/cache; the same request that called
   // generateMetadata above reuses the cached result; no second DB round-trip.
   const row = await getPrediction(id);
   if (!row) notFound();
 
   // Sanitize before any field crosses the network boundary into the page tree
-  // (defense in depth — the page renderer never sees email or subscriberId).
+  // (defense in depth; the page renderer never sees email or subscriberId).
   const view = toPublicPredictionView(row);
 
   // Submission timestamp formatted for the right-aligned masthead meta strip
@@ -158,28 +158,28 @@ export default async function PredictionPermalinkPage(props: {
 
   return (
     <SimulatorChrome width="narrow" rightMeta={submittedMeta}>
-      {/* Result + Next-Steps dossier — unified container that groups
+      {/* Result + Next-Steps dossier. Unified container that groups
           the hero, share strip, and alert configurator on a single
           elevated surface. The outer card uses --bg-panel (#151A21)
           against the root --bg-root (#0F1216), with a 1px
           --border-default rule. The inner alert configurator is
           further elevated to --bg-panel-elev (#1C222B) so it reads
           as a distinct config terminal sitting on the dossier
-          surface — three depth tiers: root → dossier → terminal.
+          surface: three depth tiers: root → dossier → terminal.
           Per the post-launch UX feedback: the previous floating
           layout looked too brutalist-stealth on the dark canvas. */}
       <section
         aria-labelledby="hero-story"
         className="mt-8 mb-12 border border-[var(--border-default)] bg-[var(--bg-panel)] p-6 sm:p-8"
       >
-        {/* MOTION_SPEC.md §2 — page-level cascade. Three children fade
+        {/* MOTION_SPEC.md §2 · page-level cascade. Three children fade
             and lift 8px in turn: hero (240ms), share strip (+180ms),
             alert configurator (+180ms). The .reveal-* CSS classes stay
             on the inner elements as a no-JS fallback; once mounted, the
             cascade takes over and the CSS ones are no-ops. */}
         <StaggeredReveal>
           <StaggeredRevealItem index={0}>
-            {/* Hero stack — flag tile + story line + Reality Score block.
+            {/* Hero stack: flag tile + story line + Reality Score block.
                 Lifted out of TradeTicket per VIRAL_LOOP §3.1.D so the
                 share + alert actions can sit immediately below without
                 the user scrolling past the entire receipt. */}
@@ -219,7 +219,7 @@ export default async function PredictionPermalinkPage(props: {
             <ModelCallPanel view={view} />
           </StaggeredRevealItem>
 
-          {/* Share / download strip — right-aligned so the hero reads
+          {/* Share / download strip, right-aligned so the hero reads
               as the primary surface. The 6s nudge-once pulse
               (§3.1.E) is wired inside TicketShareButton. */}
           <StaggeredRevealItem index={2} className="mt-6 flex justify-end">
@@ -231,7 +231,7 @@ export default async function PredictionPermalinkPage(props: {
             />
           </StaggeredRevealItem>
 
-          {/* Alert configurator — VIRAL_LOOP §2 (PR 3). Sits inside
+          {/* Alert configurator. VIRAL_LOOP §2 (PR 3). Sits inside
               the dossier card and elevates further to bg-panel-elev
               for the nested-terminal feel. When the row already
               carries a subscriber_id, render the quiet
@@ -246,7 +246,7 @@ export default async function PredictionPermalinkPage(props: {
         </StaggeredReveal>
       </section>
 
-      {/* Trade Ticket card — demoted below the fold. Compact mode renders
+      {/* Trade Ticket card, demoted below the fold. Compact mode renders
           only the scenario detail + ID strip + provenance footer; the
           flag, story line, and Reality Score now live in the hero above. */}
       <div className="mb-12">
