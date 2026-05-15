@@ -54,6 +54,16 @@ interface ModeFinalFourProps {
   modelSha: string;
   snapshotSha: string;
   modalSemifinalists?: TeamCode[];
+  /**
+   * Render variant. "page" (default) is the dedicated /scenario/final-four
+   * surface; the component owns its own h1 and top-right Reset link.
+   * "inline" is the home-page section embed: the page-level h1 and the
+   * top Reset chip are suppressed because the surrounding SectionHead
+   * supplies the heading. Reset relocates to a quiet footer link below
+   * the submit button, shown only once the user has filled a slot.
+   * Added for P0.1.
+   */
+  variant?: "page" | "inline";
 }
 
 const SLOT_COUNT = 4;
@@ -176,7 +186,9 @@ export function ModeFinalFour({
   modelSha,
   snapshotSha,
   modalSemifinalists,
+  variant = "page",
 }: ModeFinalFourProps) {
+  const isInline = variant === "inline";
   const router = useRouter();
   const [slots, setSlots] = useState<(TeamCode | null)[]>(() =>
     Array(SLOT_COUNT).fill(null),
@@ -215,7 +227,11 @@ export function ModeFinalFour({
     setHasInteracted(cached.interacted);
     hydratedRef.current = true;
     setHydrated(true);
-    track("simulator_opened", { mode: "final_four" });
+    track("simulator_opened", {
+      mode: "final_four",
+      surface: isInline ? "inline" : "page",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist on every change once hydrated.
@@ -380,32 +396,36 @@ export function ModeFinalFour({
 
   return (
     <DndContext
+      id="ff-dnd"
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <section
-        aria-labelledby="ff-heading"
+        aria-labelledby={isInline ? undefined : "ff-heading"}
+        aria-label={isInline ? "Final Four scenario" : undefined}
         data-canvas="simulator"
-        className="pt-10 pb-12"
+        className={isInline ? "pb-2" : "pt-10 pb-12"}
       >
-        <div className="flex items-baseline justify-between gap-4">
-          <h1
-            id="ff-heading"
-            className="font-serif text-[28px] leading-[1.1] sm:text-[40px] text-[var(--text-primary)]"
-          >
-            Who makes the final four?
-          </h1>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)]"
-          >
-            [ Reset ]
-          </button>
-        </div>
+        {isInline ? null : (
+          <div className="flex items-baseline justify-between gap-4">
+            <h1
+              id="ff-heading"
+              className="font-serif text-[28px] leading-[1.1] sm:text-[40px] text-[var(--text-primary)]"
+            >
+              Who makes the final four?
+            </h1>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)]"
+            >
+              [ Reset ]
+            </button>
+          </div>
+        )}
 
-        <p className="mt-3 font-sans text-[14px] text-[var(--text-tertiary)]">
+        <p className={`${isInline ? "" : "mt-3 "}font-sans text-[14px] text-[var(--text-tertiary)]`}>
           We compare your scenario against 10,000 simulations of the tournament.
         </p>
 
@@ -521,6 +541,15 @@ export function ModeFinalFour({
               Pick {SLOT_COUNT - filled.length} more team
               {SLOT_COUNT - filled.length === 1 ? "" : "s"} to submit.
             </p>
+          ) : null}
+          {isInline && filled.length > 0 ? (
+            <button
+              type="button"
+              onClick={handleReset}
+              className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-primary)]"
+            >
+              [ Reset ]
+            </button>
           ) : null}
         </div>
       </section>

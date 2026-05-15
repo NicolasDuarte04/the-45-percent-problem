@@ -310,7 +310,7 @@ export function ModeFullBracket({
 
   useEffect(() => {
     if (hydratedRef.current) return;
-    track("simulator_opened", { mode: "full_bracket" });
+    track("simulator_opened", { mode: "full_bracket", surface: "page" });
     const hydrated = hydrate();
     setState(hydrated);
     // Phase E §6 (B.3) — groups already complete on hydrate render dim
