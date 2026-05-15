@@ -25,6 +25,12 @@ interface EventMap {
   submit_success: { mode: SimulatorMode; rarity_band: RarityBand };
   share_action: { type: "copy" | "png" | "native" | "copy_post" };
   alert_armed: undefined;
+  // Fires once per session per slug when the Final Four page hydrates with
+  // a valid `initialScenario` derived from a promo card slug (`?card=`).
+  // Added for P0.7. The slug attributes social-channel conversions per
+  // curated scenario; deduped via sessionStorage so a reload on the same
+  // URL does not re-fire.
+  promo_card_landed: { slug: string };
 }
 
 declare global {
@@ -57,6 +63,17 @@ export function track<K extends keyof EventMap>(
 export function claimFirstPick(mode: SimulatorMode): boolean {
   if (typeof window === "undefined") return false;
   const key = `45a:track:first_pick:${mode}`;
+  if (sessionStorage.getItem(key)) return false;
+  sessionStorage.setItem(key, "1");
+  return true;
+}
+
+/** Session-scoped dedup guard for promo_card_landed. Returns true on the
+ * first hydration of a given slug in this session; subsequent calls with
+ * the same slug return false. Mirrors `claimFirstPick`. */
+export function claimPromoLanded(slug: string): boolean {
+  if (typeof window === "undefined") return false;
+  const key = `45a:track:promo_landed:${slug}`;
   if (sessionStorage.getItem(key)) return false;
   sessionStorage.setItem(key, "1");
   return true;
