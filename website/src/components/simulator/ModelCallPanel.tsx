@@ -7,6 +7,10 @@ import {
   type ModalBracket,
   type TeamReachLookup,
 } from "@/lib/sim/modalBracket";
+import {
+  detectFullBracketStage,
+  type FullBracketStage,
+} from "@/lib/sim/types";
 import type {
   ChampionsPathScenario,
   FinalFourScenario,
@@ -371,13 +375,26 @@ function FullBracketBody({
   // top-k sorts (round by round), so set membership is the meaningful
   // comparison; index alignment is not (the snapshot does not encode
   // fixed bracket pairings). Sum across rounds becomes the panel header.
+  //
+  // Checkpoint 9 (P1.1): the panel renders only the stages the user
+  // actually picked. The header total adjusts to the count of picks
+  // made; the champion comparison only renders when the user picked a
+  // champion. A groups-only submission shows the GROUPS row alone.
+  const stage = detectFullBracketStage(scenario);
+  const userGroupWinners = new Set<string>(scenario.groupWinners);
   const userR32 = new Set(scenario.koAdvancers.slice(0, 16));
   const userR16 = new Set(scenario.koAdvancers.slice(16, 24));
   const userQF = new Set(scenario.koAdvancers.slice(24, 28));
   const userSF = new Set(scenario.koAdvancers.slice(28, 30));
   const userChamp = scenario.koAdvancers[30];
 
-  const modelR32 = new Set<string>(modal.r32Winners);
+  // The model's modal call for "group winners" is the top 12 teams by
+  // qualify-from-group probability. modal.r32Winners is the top-16
+  // qualifiers (everything reaching R32), which is a superset. The
+  // groups row intersects against the modal r32Winners set: if the
+  // user picked teams that the model lists among its top-16 to reach
+  // the knockouts, the call agrees.
+  const modelR32Set = new Set<string>(modal.r32Winners);
   const modelR16 = new Set<string>(modal.r16Winners);
   const modelQF = new Set<string>(modal.qfWinners);
   const modelSF = new Set<string>(modal.sfWinners);
@@ -388,58 +405,75 @@ function FullBracketBody({
     return n;
   }
 
-  const rounds: RoundOverlap[] = [
-    { label: "R32", matchCount: intersect(userR32, modelR32), total: 16 },
-    { label: "R16", matchCount: intersect(userR16, modelR16), total: 8 },
-    { label: "QF", matchCount: intersect(userQF, modelQF), total: 4 },
-    { label: "SF", matchCount: intersect(userSF, modelSF), total: 2 },
-    {
+  const stagesIncluded: FullBracketStage[] = (() => {
+    switch (stage) {
+      case "groups":
+        return ["groups"];
+      case "r32":
+        return ["groups", "r32"];
+      case "r16":
+        return ["groups", "r32", "r16"];
+      case "qf":
+        return ["groups", "r32", "r16", "qf"];
+      case "sf":
+        return ["groups", "r32", "r16", "qf", "sf"];
+      case "final":
+        return ["groups", "r32", "r16", "qf", "sf", "final"];
+    }
+  })();
+
+  const ROUND_BY_STAGE: Record<FullBracketStage, RoundOverlap> = {
+    groups: {
+      label: "GROUPS",
+      matchCount: intersect(userGroupWinners, modelR32Set),
+      total: 12,
+    },
+    r32: { label: "R32", matchCount: intersect(userR32, modelR32Set), total: 16 },
+    r16: { label: "R16", matchCount: intersect(userR16, modelR16), total: 8 },
+    qf: { label: "QF", matchCount: intersect(userQF, modelQF), total: 4 },
+    sf: { label: "SF", matchCount: intersect(userSF, modelSF), total: 2 },
+    final: {
       label: "F",
       matchCount: userChamp && modal.champion === userChamp ? 1 : 0,
       total: 1,
     },
-  ];
+  };
 
+  const rounds: RoundOverlap[] = stagesIncluded.map((s) => ROUND_BY_STAGE[s]);
   const totalMatches = rounds.reduce((acc, r) => acc + r.matchCount, 0);
+  const totalPossible = rounds.reduce((acc, r) => acc + r.total, 0);
   const championMatch = userChamp && modal.champion === userChamp;
 
   return (
     <>
       <PanelHeader
-        text={`${totalMatches} of 31 advancements match the model's modal bracket`}
+        text={`${totalMatches} of ${totalPossible} advancements match the model's modal call`}
       />
 
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <ColumnLabel>Your champion</ColumnLabel>
-          {userChamp ? (
+      {userChamp ? (
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <ColumnLabel>Your champion</ColumnLabel>
             <TeamChip code={userChamp} matched={Boolean(championMatch)} />
-          ) : (
-            <div
-              className="mono text-[12px]"
-              style={{ color: "var(--text-quiet)" }}
-            >
-              not set
-            </div>
-          )}
+          </div>
+          <div>
+            <ColumnLabel>Model&apos;s modal champion</ColumnLabel>
+            {modal.champion ? (
+              <TeamChip
+                code={modal.champion}
+                matched={Boolean(championMatch)}
+              />
+            ) : (
+              <div
+                className="mono text-[12px]"
+                style={{ color: "var(--text-quiet)" }}
+              >
+                not set
+              </div>
+            )}
+          </div>
         </div>
-        <div>
-          <ColumnLabel>Model&apos;s modal champion</ColumnLabel>
-          {modal.champion ? (
-            <TeamChip
-              code={modal.champion}
-              matched={Boolean(championMatch)}
-            />
-          ) : (
-            <div
-              className="mono text-[12px]"
-              style={{ color: "var(--text-quiet)" }}
-            >
-              not set
-            </div>
-          )}
-        </div>
-      </div>
+      ) : null}
 
       <div className="mt-6">
         <ColumnLabel>Per-round overlap</ColumnLabel>
@@ -463,7 +497,7 @@ function FullBracketBody({
                   className="mono text-[12px]"
                   style={{
                     color: "var(--text-primary)",
-                    minWidth: 36,
+                    minWidth: 60,
                   }}
                 >
                   {r.label}

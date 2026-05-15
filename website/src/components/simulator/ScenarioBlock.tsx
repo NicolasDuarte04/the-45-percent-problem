@@ -105,7 +105,10 @@ function ChampionsPathBlock({ scenario }: { scenario: ChampionsPathScenario }) {
 
 function FullBracketBlock({ scenario }: { scenario: FullBracketScenario }) {
   // R32 schema layout: [0..15]=R32 winners, [16..23]=R16, [24..27]=QF,
-  // [28..29]=SF finalists, [30]=champion.
+  // [28..29]=SF finalists, [30]=champion. Checkpoint 9 (P1.1) allows
+  // partial scenarios; each row is rendered only when its slice is
+  // non-empty so a groups-only ticket reads cleanly without trailing
+  // blank rows.
   const r32 = scenario.koAdvancers.slice(0, 16);
   const r16 = scenario.koAdvancers.slice(16, 24);
   const qf = scenario.koAdvancers.slice(24, 28);
@@ -122,30 +125,42 @@ function FullBracketBlock({ scenario }: { scenario: FullBracketScenario }) {
         <Label>Runners-up</Label>
         <Row>{scenario.groupRunnersUp.join("  ")}</Row>
       </div>
-      <div>
-        <Label>Best 3rd-place</Label>
-        <Row>{scenario.bestThirds.join("  ")}</Row>
-      </div>
-      <div>
-        <Label>R16 qualifiers</Label>
-        <Row>{r32.join("  ")}</Row>
-      </div>
-      <div>
-        <Label>Quarterfinalists</Label>
-        <Row>{r16.join("  ")}</Row>
-      </div>
-      <div>
-        <Label>Semifinalists</Label>
-        <Row>{qf.join("  ")}</Row>
-      </div>
-      <div>
-        <Label>Finalists</Label>
-        <Row>{sf.join("  ")}</Row>
-      </div>
-      <div>
-        <Label>Champion</Label>
-        <Row>{champion}</Row>
-      </div>
+      {scenario.bestThirds.length > 0 ? (
+        <div>
+          <Label>Best 3rd-place</Label>
+          <Row>{scenario.bestThirds.join("  ")}</Row>
+        </div>
+      ) : null}
+      {r32.length > 0 ? (
+        <div>
+          <Label>R16 qualifiers</Label>
+          <Row>{r32.join("  ")}</Row>
+        </div>
+      ) : null}
+      {r16.length > 0 ? (
+        <div>
+          <Label>Quarterfinalists</Label>
+          <Row>{r16.join("  ")}</Row>
+        </div>
+      ) : null}
+      {qf.length > 0 ? (
+        <div>
+          <Label>Semifinalists</Label>
+          <Row>{qf.join("  ")}</Row>
+        </div>
+      ) : null}
+      {sf.length > 0 ? (
+        <div>
+          <Label>Finalists</Label>
+          <Row>{sf.join("  ")}</Row>
+        </div>
+      ) : null}
+      {champion ? (
+        <div>
+          <Label>Champion</Label>
+          <Row>{champion}</Row>
+        </div>
+      ) : null}
     </div>
   );
 }

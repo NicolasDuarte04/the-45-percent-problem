@@ -75,44 +75,120 @@ export const ChampionsPathScenarioSchema = z
 export type ChampionsPathScenario = z.infer<typeof ChampionsPathScenarioSchema>;
 
 // ─── Full Bracket ────────────────────────────────────────────────────────────
-// WC 2026 real bracket: 12 groups → 24 qualifiers (12 winners + 12 runners-up)
-// + 8 best 3rd-place teams = 32 KO entrants.
+// WC 2026 real bracket: 12 groups produce 24 qualifiers (12 winners + 12
+// runners-up) plus 8 best 3rd-place teams = 32 KO entrants.
 //
-// KO stages: R32 (16 matches) → R16 (8) → QF (4) → SF (2) → F (1) = 31 advancers.
+// KO stages: R32 (16 matches), R16 (8), QF (4), SF (2), F (1) = 31 advancers.
 // koAdvancers layout (flat, bracket order):
 //   [0..15]  = R32 winners  (16 teams that won their R32 match)
 //   [16..23] = R16 winners  (8 teams that won their R16 match)
 //   [24..27] = QF winners   (4 teams that won their QF match)
 //   [28..29] = SF winners   (2 teams that won their SF match)
 //   [30]     = F winner     (tournament champion)
+//
+// Checkpoint 9 (P1.1) loosens this so users can submit at any natural
+// stage boundary. The valid (koAdvancers.length, bestThirds.length) pairs are:
+//   groups: (0,  0 or 8)   r32:   (16, 8)   r16: (24, 8)
+//   qf:    (28, 8)         sf:    (30, 8)   final: (31, 8)
+// bestThirds is only structurally required once any KO picks exist, since
+// R32 pairings cannot be resolved without it. Backward-compatibility note:
+// existing complete-bracket records (koAdvancers.length === 31, bestThirds
+// length 8) deserialize unchanged with zero migration.
+
+const VALID_KO_LENGTHS = new Set([0, 16, 24, 28, 30, 31]);
 
 export const FullBracketScenarioSchema = z
   .object({
     groupWinners: z.array(TeamCodeSchema).length(12),
     groupRunnersUp: z.array(TeamCodeSchema).length(12),
-    bestThirds: z.array(TeamCodeSchema).length(8),
-    koAdvancers: z.array(TeamCodeSchema).length(31),
+    bestThirds: z.array(TeamCodeSchema).max(8),
+    koAdvancers: z.array(TeamCodeSchema).max(31),
   })
   .superRefine((s, ctx) => {
-    const r32Teams = [...s.groupWinners, ...s.groupRunnersUp, ...s.bestThirds];
-    if (new Set(r32Teams).size !== 32) {
+    if (!VALID_KO_LENGTHS.has(s.koAdvancers.length)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "r32_team_collision",
+        path: ["koAdvancers"],
+        message: "ko_advancers_length_invalid",
       });
+      return;
     }
-    const r32Set = new Set(r32Teams);
-    for (const adv of s.koAdvancers) {
-      if (!r32Set.has(adv)) {
+    if (s.bestThirds.length !== 0 && s.bestThirds.length !== 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["bestThirds"],
+        message: "best_thirds_length_invalid",
+      });
+      return;
+    }
+    if (s.koAdvancers.length > 0 && s.bestThirds.length !== 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["bestThirds"],
+        message: "best_thirds_required_for_ko",
+      });
+      return;
+    }
+    const groupTeams = [...s.groupWinners, ...s.groupRunnersUp];
+    if (new Set(groupTeams).size !== 24) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "group_team_collision",
+      });
+      return;
+    }
+    if (s.bestThirds.length === 8) {
+      const r32Teams = [...groupTeams, ...s.bestThirds];
+      if (new Set(r32Teams).size !== 32) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "advancer_not_in_r32",
+          message: "r32_team_collision",
         });
         return;
+      }
+      const r32Set = new Set(r32Teams);
+      for (const adv of s.koAdvancers) {
+        if (!r32Set.has(adv)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "advancer_not_in_r32",
+          });
+          return;
+        }
       }
     }
   });
 export type FullBracketScenario = z.infer<typeof FullBracketScenarioSchema>;
+
+// The submission stage encoded by a Full Bracket scenario's koAdvancers length.
+// "final" is the legacy fully-committed bracket; the earlier stages are P1.1.
+export type FullBracketStage =
+  | "groups"
+  | "r32"
+  | "r16"
+  | "qf"
+  | "sf"
+  | "final";
+
+export function detectFullBracketStage(
+  s: FullBracketScenario,
+): FullBracketStage {
+  switch (s.koAdvancers.length) {
+    case 0:
+      return "groups";
+    case 16:
+      return "r32";
+    case 24:
+      return "r16";
+    case 28:
+      return "qf";
+    case 30:
+      return "sf";
+    case 31:
+    default:
+      return "final";
+  }
+}
 
 // ─── Discriminated payload ───────────────────────────────────────────────────
 

@@ -62,8 +62,14 @@ function teamCodesForView(view: PublicPredictionView): string[] {
       return [(view.scenario as ChampionsPathScenario).team];
     case "full_bracket": {
       // R32 schema: koAdvancers[30] is the champion (31 total advancers).
-      const champ = (view.scenario as FullBracketScenario).koAdvancers[30];
-      return champ ? [champ] : [];
+      // Checkpoint 9 (P1.1): partial scenarios fall back to the
+      // alphabetically-first group winner so the watchlist strip is
+      // never empty.
+      const fb = view.scenario as FullBracketScenario;
+      const champ = fb.koAdvancers[30];
+      if (champ) return [champ];
+      const fallback = [...fb.groupWinners].sort()[0];
+      return fallback ? [fallback] : [];
     }
   }
 }
@@ -77,8 +83,11 @@ function flagCodesForView(view: PublicPredictionView): string[] {
     case "champions_path":
       return [(view.scenario as ChampionsPathScenario).team];
     case "full_bracket": {
-      const champ = (view.scenario as FullBracketScenario).koAdvancers[30];
-      return champ ? [champ] : [];
+      const fb = view.scenario as FullBracketScenario;
+      const champ = fb.koAdvancers[30];
+      if (champ) return [champ];
+      const fallback = [...fb.groupWinners].sort()[0];
+      return fallback ? [fallback] : [];
     }
   }
 }

@@ -1,4 +1,5 @@
 import { teamName } from "@/lib/data/wc2026-official-draw";
+import { detectFullBracketStage } from "./types";
 import type {
   AnyScenario,
   ChampionsPathScenario,
@@ -66,12 +67,41 @@ function renderChampionsPath(s: ChampionsPathScenario): string {
 
 function renderFullBracket(s: FullBracketScenario): string {
   // R32 schema layout: [0..15]=R32 winners, [16..23]=R16, [24..27]=QF,
-  // [28..29]=SF winners (the two finalists), [30]=champion.
-  const champ = s.koAdvancers[30];
-  const finalistA = s.koAdvancers[28];
-  const finalistB = s.koAdvancers[29];
-  const champName = teamName(champ);
-  const loser = champ === finalistA ? finalistB : finalistA;
-  const loserName = teamName(loser);
-  return `${champName} wins the World Cup, beating ${loserName} in the final.`;
+  // [28..29]=SF winners (the two finalists), [30]=champion. Partial
+  // submissions (Checkpoint 9, P1.1) truncate koAdvancers at a stage
+  // boundary; the story line collapses to the commitment depth so the
+  // headline reflects what the user actually called.
+  const stage = detectFullBracketStage(s);
+  switch (stage) {
+    case "groups": {
+      const first = teamName(s.groupWinners[0]);
+      return `Twelve group winners called. ${first} leads the table.`;
+    }
+    case "r32": {
+      const top = s.koAdvancers.slice(0, 3).map(teamName).join(", ");
+      return `Sixteen teams into the Round of 16. ${top} headline the call.`;
+    }
+    case "r16": {
+      const qf = s.koAdvancers.slice(16, 24);
+      const top = qf.slice(0, 3).map(teamName).join(", ");
+      return `Eight quarterfinalists called. ${top} headline the call.`;
+    }
+    case "qf": {
+      const sf = s.koAdvancers.slice(24, 28).map(teamName);
+      return `Four semifinalists: ${sf.join(", ")}.`;
+    }
+    case "sf": {
+      const finalists = s.koAdvancers.slice(28, 30).map(teamName);
+      return `Two finalists: ${finalists[0]} and ${finalists[1]}.`;
+    }
+    case "final": {
+      const champ = s.koAdvancers[30];
+      const finalistA = s.koAdvancers[28];
+      const finalistB = s.koAdvancers[29];
+      const champName = teamName(champ);
+      const loser = champ === finalistA ? finalistB : finalistA;
+      const loserName = teamName(loser);
+      return `${champName} wins the World Cup, beating ${loserName} in the final.`;
+    }
+  }
 }

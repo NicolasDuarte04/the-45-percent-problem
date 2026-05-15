@@ -9,7 +9,7 @@
  * window.plausible() calls; the layout.tsx script tag must use that variant.
  */
 
-import type { RarityBand } from "@/lib/sim/types";
+import type { FullBracketStage, RarityBand } from "@/lib/sim/types";
 
 type SimulatorMode = "final_four" | "champions_path" | "full_bracket";
 type SimulatorSurface = "page" | "inline";
@@ -22,7 +22,15 @@ interface EventMap {
   // page-view event). Added for P0.1.
   simulator_opened: { mode: SimulatorMode; surface: SimulatorSurface };
   first_pick: { mode: SimulatorMode };
-  submit_success: { mode: SimulatorMode; rarity_band: RarityBand };
+  // `stage` is set only for full_bracket submissions and reports the
+  // commitment depth (groups, r32, r16, qf, sf, final). Added in
+  // Checkpoint 9 (P1.1) so analytics can tell whether the partial-
+  // submit affordance is being used or users still mostly go deep.
+  submit_success: {
+    mode: SimulatorMode;
+    rarity_band: RarityBand;
+    stage?: FullBracketStage;
+  };
   share_action: { type: "copy" | "png" | "native" | "copy_post" };
   alert_armed: undefined;
   // Fires once per session per slug when the Final Four page hydrates with
