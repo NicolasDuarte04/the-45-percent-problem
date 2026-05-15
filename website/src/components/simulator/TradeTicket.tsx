@@ -63,9 +63,14 @@ function flagsForView(view: PublicPredictionView): string[] {
       return [(view.scenario as ChampionsPathScenario).team];
     case "full_bracket": {
       // R32 schema: koAdvancers[30] is the champion (31 total advancers).
+      // Checkpoint 9 (P1.1) admits partial scenarios where the champion is
+      // not set; fall back to the alphabetically-first group winner so the
+      // hero tile renders a representative flag from the user's call.
       const fb = view.scenario as FullBracketScenario;
       const champ = fb.koAdvancers[30];
-      return champ ? [champ] : [];
+      if (champ) return [champ];
+      const fallback = [...fb.groupWinners].sort()[0];
+      return fallback ? [fallback] : [];
     }
   }
 }

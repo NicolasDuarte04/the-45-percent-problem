@@ -1,5 +1,5 @@
 /**
- * Phase C — real Reality Score computation using M0 snapshot marginal
+ * Phase C real Reality Score computation using M0 snapshot marginal
  * probabilities from snapshotProbs.ts.
  *
  * All three modes use independence approximations over team-level marginals.
@@ -8,21 +8,27 @@
  * require a full simulation run query.
  *
  * Approximation strategy:
- *   Final Four  — ∏(p_sf[team]) × MC_RUNS. Independence assumption is
- *                 reasonable for teams in different brackets.
- *   Champion's Path — stage-boundary differences: P(team exits at stage S)
- *                 = P(reach S) − P(reach S+1). The path's probability is
+ *   Final Four: product of p_sf over the four teams times MC_RUNS.
+ *                 Independence is reasonable for teams in different bracket
+ *                 halves.
+ *   Champion's Path: stage-boundary differences. P(team exits at stage S)
+ *                 = P(reach S) minus P(reach S+1). The path's probability is
  *                 the outcome probability at the last resolved stage.
- *   Full Bracket — champion probability scaled by a bracket-joint factor
- *                 that reflects how improbable the full 31-outcome joint
- *                 event is. Scale = 0.0025 calibrated to put a strong
- *                 bracket in the Uncommon/Rare bands.
+ *   Full Bracket: stage-aware (Checkpoint 9, P1.1). The submitted scenario
+ *                 names its commitment depth via koAdvancers.length; we
+ *                 multiply the marginal at the deepest stage's next-round
+ *                 reach probability across the picks, then apply a per-stage
+ *                 depth scale. See scoreFullBracket for the tuning rationale.
  *
- * Returns { count, total } where total = 10,000 and count ≥ 1.
+ * Returns { count, total } where total = 10,000 and count >= 1.
  */
 
-import { TEAM_PROBS } from "./snapshotProbs";
+import { TEAM_PROBS, type TeamProbs } from "./snapshotProbs";
 import { computeRealityScoreMock, fnv1a32 } from "./computeRealityScoreMock";
+import {
+  detectFullBracketStage,
+  type FullBracketStage,
+} from "./types";
 import type {
   AnyScenario,
   ChampionsPathScenario,
@@ -131,24 +137,102 @@ function scoreChampionsPath(
 }
 
 // ── Full Bracket ──────────────────────────────────────────────────────────────
-// The champion's marginal p_champion is the primary signal. We scale it by
-// a joint-probability factor (BRACKET_SCALE = 0.0025) to represent the
-// improbability of getting all 31 KO results correct. This puts strong
-// brackets (e.g. ESP champion) in the Rare range (≈ 7–8 / 10,000) and weak
-// picks (deep underdogs) in Vanishingly rare.
+// Stage-aware scoring (Checkpoint 9, P1.1). The user may submit at any of
+// six commitment depths: groups (12 group winners), r32 (16 R32 winners),
+// r16 (24 advancers), qf (28), sf (30), final (full 31 incl. champion).
+//
+// At each stage we compute the joint marginal probability of the user's
+// picks at that stage using the per-team "reach next stage" probability,
+// then apply a per-stage scale. The scale compensates for the shrinking
+// joint as more marginals multiply together and anchors each stage in a
+// sensible rarity band for the favourites case (modal-call picks).
+//
+// Per-stage marginals (snapshotProbs.TeamProbs):
+//   groups: pG (P(qualify from group = reach R32))
+//   r32:    pR (P(reach R16))
+//   r16:    pQ (P(reach QF))
+//   qf:     pS (P(reach SF))
+//   sf:     pF (P(reach Final))
+//   final:  pC (P(champion))
+//
+// Tuning anchor: the top-pG team per group joint product is ~0.260; the
+// existing complete-bracket scale BRACKET_SCALE = 0.0025 is preserved at
+// the final stage so legacy records continue to render the same count.
+// Counts for the modal-favourites pick at each stage (rounded):
+//   groups: 10,000 * 0.260 * 0.4    ~= 1040  (Plausible, 10.4%)
+//   r32:    10,000 * 8.83e-5 * 200  ~=  177  (Uncommon, 1.77%)
+//   r16:    10,000 * 7.41e-4 * 8    ~=   59  (Rare, 0.59%)
+//   qf:     10,000 * 0.0124 * 0.25  ~=   31  (Rare, 0.31%)
+//   sf:     10,000 * 0.1096 * 0.015 ~=   16  (Rare, 0.16%)
+//   final:  10,000 * 0.3091 * 0.0025 ~=   8  (Vanishingly rare, 0.08%)
+// The chain is strictly monotone (deeper stage produces a rarer count for
+// the same set of teams), which satisfies the "intermediate stages produce
+// rarity strictly between groups-only and full-bracket" constraint.
 
-const BRACKET_SCALE = 0.0025;
+const STAGE_SCALES: Record<FullBracketStage, number> = {
+  groups: 0.4,
+  r32: 200,
+  r16: 8,
+  qf: 0.25,
+  sf: 0.015,
+  final: 0.0025,
+};
+
+function reachField(stage: FullBracketStage): keyof TeamProbs {
+  switch (stage) {
+    case "groups":
+      return "pG";
+    case "r32":
+      return "pR";
+    case "r16":
+      return "pQ";
+    case "qf":
+      return "pS";
+    case "sf":
+      return "pF";
+    case "final":
+      return "pC";
+  }
+}
+
+function stagePicks(
+  stage: FullBracketStage,
+  s: FullBracketScenario,
+): readonly string[] {
+  switch (stage) {
+    case "groups":
+      return s.groupWinners;
+    case "r32":
+      return s.koAdvancers.slice(0, 16);
+    case "r16":
+      return s.koAdvancers.slice(16, 24);
+    case "qf":
+      return s.koAdvancers.slice(24, 28);
+    case "sf":
+      return s.koAdvancers.slice(28, 30);
+    case "final":
+      return [s.koAdvancers[30]];
+  }
+}
 
 function scoreFullBracket(
   canonical: string,
   s: FullBracketScenario,
 ): { count: number; total: number } {
-  const champion = s.koAdvancers[30];
-  if (!champion) return computeRealityScoreMock("full_bracket", canonical);
-
-  const prob = TEAM_PROBS[champion];
-  if (!prob) return computeRealityScoreMock("full_bracket", canonical);
-
-  const count = Math.max(1, Math.round(MC_RUNS * prob.pC * BRACKET_SCALE));
+  const stage = detectFullBracketStage(s);
+  const picks = stagePicks(stage, s);
+  if (picks.length === 0) {
+    return computeRealityScoreMock("full_bracket", canonical);
+  }
+  const field = reachField(stage);
+  let jointP = 1;
+  for (const team of picks) {
+    const prob = TEAM_PROBS[team];
+    if (!prob) {
+      return computeRealityScoreMock("full_bracket", canonical);
+    }
+    jointP *= prob[field];
+  }
+  const count = Math.max(1, Math.round(MC_RUNS * jointP * STAGE_SCALES[stage]));
   return { count, total: MC_RUNS };
 }

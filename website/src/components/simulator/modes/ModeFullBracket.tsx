@@ -50,7 +50,11 @@ import { teamsByGroupSortedByElo } from "@/lib/sim/elo";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
 import { track, claimFirstPick } from "@/lib/analytics/track";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
-import type { FullBracketScenario, TeamCode } from "@/lib/sim/types";
+import type {
+  FullBracketScenario,
+  FullBracketStage,
+  TeamCode,
+} from "@/lib/sim/types";
 
 interface ModeFullBracketProps {
   modelSha: string;
@@ -190,9 +194,248 @@ function r32Available(s: BuildState): boolean {
   return allGroupsComplete(s) && allBestThirdsComplete(s);
 }
 
-function isResolved(s: BuildState): boolean {
-  if (!r32Available(s)) return false;
-  return s.koAdvancers.every((a) => a !== null);
+// Checkpoint 9 (P1.1) submit-stage detection. The user can submit at any
+// natural boundary: groups (12 W + 12 RU), r32 (16 KO winners), r16 (24),
+// qf (28), sf (30), final (31 incl. champion). Anything between two
+// boundaries is mid-stage and keeps submit disabled.
+type SubmitReadiness =
+  | { kind: "blocked"; reason: BlockedReason; nextLabel: SubmitLabel }
+  | { kind: "ready"; stage: FullBracketStage; nextHint: string | null };
+
+type BlockedReason =
+  | { kind: "needGroupWinner"; missing: number }
+  | { kind: "needGroupRunnerUp"; missing: number }
+  | { kind: "needThirds"; missing: number; stepBackToGroups: boolean }
+  | { kind: "needR32"; missing: number }
+  | { kind: "needR16"; missing: number; stepBackToR32: boolean }
+  | { kind: "needQF"; missing: number; stepBackToR16: boolean }
+  | { kind: "needSF"; missing: number; stepBackToQF: boolean }
+  | { kind: "needFinal"; stepBackToSF: boolean };
+
+// The locked stage-specific submit button labels. Brand spec is exact.
+type SubmitLabel =
+  | "[ Submit groups ]"
+  | "[ Submit R32 ]"
+  | "[ Submit R16 ]"
+  | "[ Submit QF ]"
+  | "[ Submit SF ]"
+  | "[ Submit full bracket ]";
+
+const STAGE_LABELS: Record<FullBracketStage, SubmitLabel> = {
+  groups: "[ Submit groups ]",
+  r32: "[ Submit R32 ]",
+  r16: "[ Submit R16 ]",
+  qf: "[ Submit QF ]",
+  sf: "[ Submit SF ]",
+  final: "[ Submit full bracket ]",
+};
+
+function countFilled<T>(arr: ReadonlyArray<T | null>, max?: number): number {
+  const slice = max === undefined ? arr : arr.slice(0, max);
+  return slice.filter((v) => v !== null).length;
+}
+
+function detectReadiness(s: BuildState): SubmitReadiness {
+  const winnersDone = GROUPS.every((g) => s.groupSelections[g].winner);
+  const runnersUpDone = GROUPS.every((g) => s.groupSelections[g].runnerUp);
+  if (!winnersDone) {
+    const missing = GROUPS.filter((g) => !s.groupSelections[g].winner).length;
+    return {
+      kind: "blocked",
+      reason: { kind: "needGroupWinner", missing },
+      nextLabel: STAGE_LABELS.groups,
+    };
+  }
+  if (!runnersUpDone) {
+    const missing = GROUPS.filter((g) => !s.groupSelections[g].runnerUp).length;
+    return {
+      kind: "blocked",
+      reason: { kind: "needGroupRunnerUp", missing },
+      nextLabel: STAGE_LABELS.groups,
+    };
+  }
+  const thirdsCount = countFilled(s.bestThirds);
+  const r32Count = countFilled(s.koAdvancers, 16);
+  const r16Count = countFilled(s.koAdvancers.slice(16, 24));
+  const qfCount = countFilled(s.koAdvancers.slice(24, 28));
+  const sfCount = countFilled(s.koAdvancers.slice(28, 30));
+  const champion = s.koAdvancers[30];
+
+  // From the groups-complete state onward, every "ready" state is anchored
+  // at the deepest cleanly-completed boundary; "blocked" carries a hint
+  // back to the user about what they still need or what they can drop.
+  if (thirdsCount === 0 && r32Count === 0) {
+    return {
+      kind: "ready",
+      stage: "groups",
+      nextHint: "Or continue: pick 8 best 3rd-place teams.",
+    };
+  }
+  if (thirdsCount < 8 && r32Count === 0) {
+    return {
+      kind: "blocked",
+      reason: {
+        kind: "needThirds",
+        missing: 8 - thirdsCount,
+        stepBackToGroups: true,
+      },
+      nextLabel: STAGE_LABELS.r32,
+    };
+  }
+  if (thirdsCount === 8 && r32Count === 0) {
+    return {
+      kind: "ready",
+      stage: "groups",
+      nextHint: "Or continue: pick R32 winners.",
+    };
+  }
+  if (r32Count < 16) {
+    return {
+      kind: "blocked",
+      reason: { kind: "needR32", missing: 16 - r32Count },
+      nextLabel: STAGE_LABELS.r32,
+    };
+  }
+  if (r16Count === 0) {
+    return {
+      kind: "ready",
+      stage: "r32",
+      nextHint: "Or continue: pick R16 winners.",
+    };
+  }
+  if (r16Count < 8) {
+    return {
+      kind: "blocked",
+      reason: {
+        kind: "needR16",
+        missing: 8 - r16Count,
+        stepBackToR32: true,
+      },
+      nextLabel: STAGE_LABELS.r16,
+    };
+  }
+  if (qfCount === 0) {
+    return {
+      kind: "ready",
+      stage: "r16",
+      nextHint: "Or continue: pick QF winners.",
+    };
+  }
+  if (qfCount < 4) {
+    return {
+      kind: "blocked",
+      reason: {
+        kind: "needQF",
+        missing: 4 - qfCount,
+        stepBackToR16: true,
+      },
+      nextLabel: STAGE_LABELS.qf,
+    };
+  }
+  if (sfCount === 0) {
+    return {
+      kind: "ready",
+      stage: "qf",
+      nextHint: "Or continue: pick SF winners.",
+    };
+  }
+  if (sfCount < 2) {
+    return {
+      kind: "blocked",
+      reason: {
+        kind: "needSF",
+        missing: 2 - sfCount,
+        stepBackToQF: true,
+      },
+      nextLabel: STAGE_LABELS.sf,
+    };
+  }
+  if (!champion) {
+    return {
+      kind: "ready",
+      stage: "sf",
+      nextHint: "Or continue: pick the champion.",
+    };
+  }
+  return { kind: "ready", stage: "final", nextHint: null };
+}
+
+function describeBlocked(reason: BlockedReason): string {
+  const word = (n: number, singular: string, plural: string): string =>
+    n === 1 ? singular : plural;
+  switch (reason.kind) {
+    case "needGroupWinner":
+      return `Pick ${reason.missing} more group ${word(reason.missing, "winner", "winners")}.`;
+    case "needGroupRunnerUp":
+      return `Pick ${reason.missing} more group ${word(reason.missing, "runner-up", "runners-up")}.`;
+    case "needThirds": {
+      const base = `Pick ${reason.missing} more 3rd-place ${word(reason.missing, "team", "teams")}.`;
+      return reason.stepBackToGroups
+        ? `${base} Or step back to submit groups only.`
+        : base;
+    }
+    case "needR32":
+      return `Pick ${reason.missing} more R32 ${word(reason.missing, "winner", "winners")}. Or step back to submit groups only.`;
+    case "needR16":
+      return `Pick ${reason.missing} more R16 ${word(reason.missing, "winner", "winners")}. Or step back to submit R32 only.`;
+    case "needQF":
+      return `Pick ${reason.missing} more QF ${word(reason.missing, "winner", "winners")}. Or step back to submit R16 only.`;
+    case "needSF":
+      return `Pick ${reason.missing} more SF ${word(reason.missing, "winner", "winners")}. Or step back to submit QF only.`;
+    case "needFinal":
+      return "Pick the champion. Or step back to submit SF only.";
+  }
+}
+
+// While the user is mid-stage, the live gauge anchors on the last clean
+// stage boundary so the number does not jitter as they fill the in-progress
+// stage. Returns null when not even groups are complete (gauge stays empty).
+function lastReadyStage(s: BuildState): FullBracketStage | null {
+  const winnersDone = GROUPS.every((g) => s.groupSelections[g].winner);
+  const runnersUpDone = GROUPS.every((g) => s.groupSelections[g].runnerUp);
+  if (!winnersDone || !runnersUpDone) return null;
+  const r32Count = countFilled(s.koAdvancers, 16);
+  const r16Count = countFilled(s.koAdvancers.slice(16, 24));
+  const qfCount = countFilled(s.koAdvancers.slice(24, 28));
+  const sfCount = countFilled(s.koAdvancers.slice(28, 30));
+  const champion = s.koAdvancers[30];
+  if (champion) return "final";
+  if (sfCount === 2) return "sf";
+  if (qfCount === 4) return "qf";
+  if (r16Count === 8) return "r16";
+  if (r32Count === 16) return "r32";
+  return "groups";
+}
+
+function buildScenarioForStage(
+  state: BuildState,
+  stage: FullBracketStage,
+): FullBracketScenario {
+  const groupWinners = GROUPS.map((g) => state.groupSelections[g].winner!) as TeamCode[];
+  const groupRunnersUp = GROUPS.map((g) => state.groupSelections[g].runnerUp!) as TeamCode[];
+  const bestThirds = (state.bestThirds.filter((t) => t !== null) as TeamCode[]);
+  const koLengthByStage: Record<FullBracketStage, number> = {
+    groups: 0,
+    r32: 16,
+    r16: 24,
+    qf: 28,
+    sf: 30,
+    final: 31,
+  };
+  const len = koLengthByStage[stage];
+  const koAdvancers = state.koAdvancers.slice(0, len) as TeamCode[];
+  // bestThirds is only structurally meaningful once a KO pick exists; for
+  // a groups submission we still surface whatever the user happens to
+  // have selected (0 or 8). Below 8 we drop down to 0 so the schema
+  // refinement passes (length must be 0 or 8).
+  const bestThirdsOut: TeamCode[] =
+    stage === "groups" && bestThirds.length !== 8 ? [] : bestThirds;
+  return {
+    groupWinners,
+    groupRunnersUp,
+    bestThirds: bestThirdsOut,
+    koAdvancers,
+  };
 }
 
 /**
@@ -382,20 +625,22 @@ export function ModeFullBracket({
 
   const groupTeams = useMemo(() => teamsByGroup(), []);
 
-  // Live Reality Score: shown as partial percentage once groups + thirds done.
+  const readiness = useMemo(() => detectReadiness(state), [state]);
+
+  // Live Reality Score is computed from the current deepest-completed
+  // stage. While the user is mid-stage (readiness.kind === "blocked"),
+  // the score shows what they would land on if they submitted at the
+  // last clean boundary, so the gauge does not flicker as they pick.
   const liveScore = useMemo(() => {
-    if (!r32Available(state)) return null;
-    const champion = state.koAdvancers[30];
-    if (!champion) return null;
-    const scenario: FullBracketScenario = {
-      groupWinners: GROUPS.map((g) => state.groupSelections[g].winner!),
-      groupRunnersUp: GROUPS.map((g) => state.groupSelections[g].runnerUp!),
-      bestThirds: state.bestThirds as TeamCode[],
-      koAdvancers: state.koAdvancers.map((a) => a ?? champion) as TeamCode[],
-    };
+    const stage =
+      readiness.kind === "ready"
+        ? readiness.stage
+        : lastReadyStage(state);
+    if (!stage) return null;
+    const scenario = buildScenarioForStage(state, stage);
     const canonical = canonicalizeScenario("full_bracket", scenario);
     return computeRealityScore("full_bracket", canonical, scenario);
-  }, [state]);
+  }, [state, readiness]);
 
   function handleGroupClick(g: GroupLetter, code: TeamCode) {
     setErrorKind(null);
@@ -589,11 +834,9 @@ export function ModeFullBracket({
   }
 
   async function handleSubmit() {
-    if (!isResolved(state) || submitting) return;
-    const groupWinners = GROUPS.map((g) => state.groupSelections[g].winner!);
-    const groupRunnersUp = GROUPS.map((g) => state.groupSelections[g].runnerUp!);
-    const bestThirds = state.bestThirds as TeamCode[];
-    const koAdvancers = state.koAdvancers as TeamCode[];
+    if (readiness.kind !== "ready" || submitting) return;
+    const stage = readiness.stage;
+    const scenario = buildScenarioForStage(state, stage);
 
     setSubmitting(true);
     setErrorKind(null);
@@ -610,7 +853,7 @@ export function ModeFullBracket({
     const result = await submitPrediction(
       {
         mode: "full_bracket",
-        scenario: { groupWinners, groupRunnersUp, bestThirds, koAdvancers },
+        scenario,
         modelSha,
         snapshotSha,
       },
@@ -622,7 +865,14 @@ export function ModeFullBracket({
         result.prediction.countCurrent,
         result.prediction.total,
       );
-      track("submit_success", { mode: "full_bracket", rarity_band: band });
+      // Checkpoint 9 (P1.1) extends submit_success with `stage` so analytics
+      // can measure where users actually submit (groups vs deeper). Helps
+      // calibrate whether the partial-submit affordance is being used.
+      track("submit_success", {
+        mode: "full_bracket",
+        rarity_band: band,
+        stage,
+      });
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }
@@ -636,11 +886,18 @@ export function ModeFullBracket({
   }
 
   const groupsDone = allGroupsComplete(state);
-  const thirdsDone = allBestThirdsComplete(state);
   const koUnlocked = r32Available(state);
-  const resolved = isResolved(state);
   const candidatesByGroup = useMemo(() => thirdsCandidatesByGroup(state), [state]);
   const selectedThirds = new Set(state.bestThirds.filter(Boolean) as TeamCode[]);
+  const submitLabel: SubmitLabel =
+    readiness.kind === "ready"
+      ? STAGE_LABELS[readiness.stage]
+      : readiness.nextLabel;
+  const submitDisabled = readiness.kind !== "ready" || submitting;
+  const helperText: string | null =
+    readiness.kind === "blocked"
+      ? describeBlocked(readiness.reason)
+      : readiness.nextHint;
 
   // Phase E §6 (B.3): focused group: manual override else next
   // alphabetical incomplete group.
@@ -844,7 +1101,10 @@ export function ModeFullBracket({
         {/* Step 2 · Best 3rd-place teams. Phase E §6 (B.4) restructure:
             a single horizontal row of 12 chips (one per group) with a
             "Pick 8 of 12" counter. Q4: fully toggleable, no commit
-            moment, picks lock only when the user advances to Step 3. */}
+            moment, picks lock only when the user advances to Step 3.
+            Checkpoint 9 (P1.1): visible once group winners and runners-up
+            are picked; the user may still submit at the groups boundary
+            without advancing here. */}
         {groupsDone ? (
           <div className="mt-10">
             <h2 className="font-serif text-[20px] leading-[1.3] text-[var(--text-primary)] sm:text-[22px]">
@@ -902,16 +1162,15 @@ export function ModeFullBracket({
               })}
             </ol>
           </div>
-        ) : (
-          <p className="mt-8 font-sans text-[12px] text-[var(--text-quiet)]">
-            Complete all 12 groups to unlock Step 2.
-          </p>
-        )}
+        ) : null}
 
         {/* Step 3 · Knockout bracket. Phase E §7 (C.1-C.4): absolute-
             positioned tournament tree with right-angle SVG connectors,
             winner highlight + loser fade, layoutId chip propagation,
-            mobile horizontal scroll + round breadcrumb. */}
+            mobile horizontal scroll + round breadcrumb.
+            Checkpoint 9 (P1.1): activates as soon as the 8 best 3rd-place
+            teams are in. Below that, the user can still submit groups
+            and they see the picker is waiting once they pick thirds. */}
         {koUnlocked ? (
           <div className="mt-10">
             <h2 className="font-serif text-[20px] leading-[1.3] text-[var(--text-primary)] sm:text-[22px]">
@@ -947,39 +1206,50 @@ export function ModeFullBracket({
               }}
             />
           </div>
-        ) : groupsDone && !thirdsDone ? (
-          <p className="mt-8 font-sans text-[12px] text-[var(--text-quiet)]">
-            Pick all 8 best 3rd-place teams above to unlock the knockout bracket.
-          </p>
         ) : null}
 
-        {/* Live Agreement Gauge. Show-threshold per Phase D §4.2:
-            once the champion is named, the gauge activates. Other
-            knockout cells can still be partial. */}
+        {/* Live Agreement Gauge. Phase D §4.2: activates once the user
+            has reached a clean stage boundary. Checkpoint 9 (P1.1)
+            broadens "stage boundary" from "champion only" to any of the
+            six submit-ready depths so the user sees the score the moment
+            their groups call lands, not only after they pick the full
+            bracket. */}
         <div className="mt-8 max-w-md">
           <LiveAgreementGauge
             count={liveScore?.count ?? 0}
             total={liveScore?.total ?? 10000}
-            isComplete={Boolean(state.koAdvancers[30])}
+            isComplete={readiness.kind === "ready"}
             variant="compact"
           />
         </div>
 
-        {/* Submit + error */}
+        {/* Submit + error.
+            Checkpoint 9 (P1.1): the button label adapts to the current
+            commitment depth ("[ Submit groups ]" through
+            "[ Submit full bracket ]") and only enables at the six clean
+            stage boundaries. Mid-stage states keep submit disabled and
+            surface a helper line beneath the button telling the user what
+            they still need to pick (or how to step back to the prior
+            boundary). */}
         <div className="mt-10 flex flex-col items-start gap-3">
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!resolved || submitting}
+            disabled={submitDisabled}
             className={[
               "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-              resolved && !submitting
+              !submitDisabled
                 ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
                 : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
             ].join(" ")}
           >
-            {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
+            {submitting ? "[ Submitting... ]" : submitLabel}
           </button>
+          {helperText ? (
+            <p className="font-sans text-[12px] text-[var(--text-quiet)]">
+              {helperText}
+            </p>
+          ) : null}
           {errorKind ? (
             <SubmitErrorPanel
               kind={errorKind}

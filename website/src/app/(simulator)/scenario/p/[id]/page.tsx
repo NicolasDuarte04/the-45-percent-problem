@@ -36,8 +36,14 @@ function heroFlags(view: PublicPredictionView): string[] {
     case "champions_path":
       return [(view.scenario as ChampionsPathScenario).team];
     case "full_bracket": {
-      const champ = (view.scenario as FullBracketScenario).koAdvancers[30];
-      return champ ? [champ] : [];
+      // Mirrors TradeTicket.flagsForView: a partial-bracket call (no
+      // champion picked yet) falls back to the alphabetically-first group
+      // winner so the hero tile still has a flag to render.
+      const fb = view.scenario as FullBracketScenario;
+      const champ = fb.koAdvancers[30];
+      if (champ) return [champ];
+      const fallback = [...fb.groupWinners].sort()[0];
+      return fallback ? [fallback] : [];
     }
   }
 }
