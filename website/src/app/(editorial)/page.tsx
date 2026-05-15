@@ -12,15 +12,14 @@ import { TerminalDashboard } from "@/components/compositions/TerminalDashboard";
 import { TournamentCalibrationStrip } from "@/components/compositions/TournamentCalibrationStrip";
 import { RecentWritingList } from "@/components/compositions/RecentWritingList";
 import { TerminalCTA } from "@/components/compositions/TerminalCTA";
-import {
-  TrailerSection,
-  WatchTrailerButton,
-} from "@/components/compositions/TrailerSection";
+import { TrailerSection } from "@/components/compositions/TrailerSection";
 import { HeroGraphic, HERO_TROPHY_CAPTION } from "@/components/ui/HeroGraphic";
 import {
   SectionHead,
   GhostLink,
 } from "@/components/compositions/SectionHead";
+import { ModeFinalFour } from "@/components/simulator/modes/ModeFinalFour";
+import { getModalSemifinalists } from "@/lib/sim/modalBracket";
 
 export const dynamic = "force-static";
 
@@ -30,6 +29,9 @@ export default async function Home() {
   const tournament = mergeTournament(snap.tournament, maps);
   const divergence = mergeDivergence(snap.divergence, maps);
   const { evaluation, meta } = snap;
+  const modalSemifinalists = getModalSemifinalists(tournament);
+  const modelSha = process.env.MODEL_SHA ?? "phaseA-mock";
+  const snapshotSha = process.env.SNAPSHOT_SHA ?? "phaseA-mock";
 
   return (
     <div
@@ -120,7 +122,26 @@ export default async function Home() {
           className="md:col-span-2 flex flex-wrap items-center gap-3"
           style={{ marginTop: -32 }}
         >
-          <WatchTrailerButton />
+          <Link
+            href="/scenario"
+            aria-label="Skip the inline simulator and choose another mode at /scenario"
+            className="no-underline inline-flex items-center"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              fontWeight: 500,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--text-primary)",
+              border: "1px solid rgb(31 31 31 / 0.28)",
+              borderRadius: 6,
+              padding: "6px 12px",
+              gap: 4,
+              background: "transparent",
+            }}
+          >
+            [ Skip to all three modes ]
+          </Link>
           <Link
             href="/brief"
             className="no-underline inline-flex items-center"
@@ -144,6 +165,20 @@ export default async function Home() {
           style={{ marginTop: 32, borderTop: "1px solid var(--rule)" }}
         />
       </header>
+
+      {/* ── § 0 · Scenario (inline Final Four, P0.1) ──────────────────────── */}
+      <section style={{ marginBottom: 56 }}>
+        <SectionHead
+          eyebrow="§ 0 · Scenario"
+          title="Who makes the final four?"
+        />
+        <ModeFinalFour
+          modelSha={modelSha}
+          snapshotSha={snapshotSha}
+          modalSemifinalists={modalSemifinalists}
+          variant="inline"
+        />
+      </section>
 
       {/* ── § 1 · Championship pricing ─────────────────────────────────────── */}
       <section style={{ marginBottom: 56 }}>

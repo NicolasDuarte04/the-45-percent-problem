@@ -64,6 +64,25 @@ export interface TeamReachLookup {
   pC: number;
 }
 
+/**
+ * The four teams the model most likely places in the semifinals, sorted
+ * by p_semifinal descending. Same source the Final Four ghost-fill
+ * button consumes on the dedicated page and on the home page inline
+ * surface. Returns an empty array if the snapshot is missing teams or
+ * the top four are not all valid TeamCodes; consumers should treat
+ * `[]` as "ghost-fill not available" and degrade gracefully.
+ */
+export function getModalSemifinalists(
+  tournament: TournamentSnapshot,
+): TeamCode[] {
+  const top4 = [...tournament.teams]
+    .sort((a, b) => b.p_semifinal - a.p_semifinal)
+    .slice(0, 4)
+    .map((t) => t.fifa_code)
+    .filter(isTeamCode);
+  return top4.length === 4 ? top4 : [];
+}
+
 export function buildTeamReachLookup(
   tournament: TournamentSnapshot,
 ): Record<string, TeamReachLookup> {

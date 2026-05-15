@@ -12,9 +12,15 @@
 import type { RarityBand } from "@/lib/sim/types";
 
 type SimulatorMode = "final_four" | "champions_path" | "full_bracket";
+type SimulatorSurface = "page" | "inline";
 
 interface EventMap {
-  simulator_opened: { mode: SimulatorMode };
+  // `surface` discriminates between the dedicated /scenario/* mode pages
+  // ("page") and the inline Final Four section embedded on the home page
+  // ("inline"). Lets us count engaged simulator opens separately from
+  // home-page passive views (the home view is already a Plausible
+  // page-view event). Added for P0.1.
+  simulator_opened: { mode: SimulatorMode; surface: SimulatorSurface };
   first_pick: { mode: SimulatorMode };
   submit_success: { mode: SimulatorMode; rarity_band: RarityBand };
   share_action: { type: "copy" | "png" | "native" | "copy_post" };

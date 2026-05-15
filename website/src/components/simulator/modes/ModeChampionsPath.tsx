@@ -272,7 +272,7 @@ export function ModeChampionsPath({
     if (hydratedRef.current) return;
     setState(hydrate());
     hydratedRef.current = true;
-    track("simulator_opened", { mode: "champions_path" });
+    track("simulator_opened", { mode: "champions_path", surface: "page" });
   }, []);
 
   useEffect(() => {
