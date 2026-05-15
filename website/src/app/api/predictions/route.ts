@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { desc, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { predictions } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/ratelimit";
@@ -8,11 +8,9 @@ import { ScenarioPayloadSchema } from "@/lib/sim/types";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { generateUniquePredictionId } from "@/lib/sim/generatePredictionId";
+import { getUserPredictions } from "@/lib/sim/getUserPredictions";
 import { renderStoryLine } from "@/lib/sim/renderStoryLine";
-import {
-  toOwnerPredictionView,
-  toPublicPredictionView,
-} from "@/lib/sim/predictionViews";
+import { toPublicPredictionView } from "@/lib/sim/predictionViews";
 import {
   COOKIE_NAME as OWNER_COOKIE_NAME,
   slidingRenewHeader,
@@ -222,15 +220,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   if (!owner) return empty;
   if (owner.email.toLowerCase() !== email) return empty;
 
-  const rows = await db
-    .select()
-    .from(predictions)
-    .where(eq(sql`lower(${predictions.email})`, email))
-    .orderBy(desc(predictions.submittedAt));
+  const ownerPredictions = await getUserPredictions(email);
 
   const response = NextResponse.json({
     ok: true,
-    predictions: rows.map(toOwnerPredictionView),
+    predictions: ownerPredictions,
   });
   response.headers.set("Set-Cookie", slidingRenewHeader(owner));
   return response;

@@ -1,5 +1,6 @@
 import { EditorialMasthead } from "@/components/layout/EditorialMasthead";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { getOperatorSession } from "@/lib/sim/getOperatorSession";
 
 /**
  * Route-group layout for the Tournament Scenario Simulator.
@@ -13,14 +14,16 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
  * the simulator is a sibling route group to (editorial) and (quant),
  * not a parallel app.
  */
-export default function SimulatorLayout({
+export default async function SimulatorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const operator = await getOperatorSession();
+
   return (
     <div data-canvas="simulator">
-      <EditorialMasthead />
+      <EditorialMasthead isOperator={operator !== null} />
       <main className="flex-1 w-full">{children}</main>
       <SiteFooter />
     </div>
