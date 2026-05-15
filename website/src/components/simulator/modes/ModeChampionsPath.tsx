@@ -474,6 +474,7 @@ export function ModeChampionsPath({
 
   return (
     <DndContext
+      id="cp-dnd"
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

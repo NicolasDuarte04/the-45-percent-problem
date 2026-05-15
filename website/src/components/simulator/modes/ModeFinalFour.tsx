@@ -396,6 +396,7 @@ export function ModeFinalFour({
 
   return (
     <DndContext
+      id="ff-dnd"
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
