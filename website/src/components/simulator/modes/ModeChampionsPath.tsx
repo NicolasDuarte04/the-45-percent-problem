@@ -3,7 +3,7 @@
 /**
  * Champion's Path build mode per IMPL_PROMPT §2.2 + design v2 §5.4.
  *
- * Phase C: DnD upgrade — teams can be dragged from the grid onto the
+ * Phase C: DnD upgrade. Teams can be dragged from the grid onto the
  * team slot or any stage opponent slot. CPTeamSlot and CPOpponentSlot
  * are inline sub-components that use useDroppable. Click interaction
  * still works alongside DnD.
@@ -248,13 +248,13 @@ export function ModeChampionsPath({
   const [submitting, setSubmitting] = useState(false);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
-  // Phase E §6 (B.2) — stage focus. When set, picks route to this stage
+  // Phase E §6 (B.2): stage focus. When set, picks route to this stage
   // and only its presence guides the picker's "you are here" beacon.
   // null defaults to nextEmptyOpponentSlot for natural forward progression.
   const [activeStage, setActiveStage] = useState<StageKey | null>(null);
-  // Phase E §6 (B.1)/Q1 — picker collapses once the path is fully resolved.
+  // Phase E §6 (B.1)/Q1: picker collapses once the path is fully resolved.
   const [manuallyExpanded, setManuallyExpanded] = useState(false);
-  // Phase E §8 (D.3) — per-stage pulse counter, bumped on stage advance
+  // Phase E §8 (D.3): per-stage pulse counter, bumped on stage advance
   // (when the W/L result lands), one shot per stage advance.
   const [stagePulseKeys, setStagePulseKeys] = useState<Record<StageKey, number>>(
     () => ({ r16: 0, qf: 0, sf: 0, f: 0 }),
@@ -280,7 +280,7 @@ export function ModeChampionsPath({
     writeInflight("champions_path", state);
   }, [state]);
 
-  // Codes already used somewhere in the build — disable in the picker.
+  // Codes already used somewhere in the build; disable in the picker.
   const usedCodes = useMemo(() => {
     const set = new Set<TeamCode>();
     if (state.team) set.add(state.team);
@@ -319,7 +319,7 @@ export function ModeChampionsPath({
       if (!prev.team) {
         return { ...prev, team: code };
       }
-      // Phase E §6 (B.2) — route to the focused stage if one is active and
+      // Phase E §6 (B.2): route to the focused stage if one is active and
       // its slot is empty (or equal to nextEmpty). Otherwise fall back to
       // nextEmptyOpponentSlot for forward progression.
       const candidate =
@@ -339,7 +339,7 @@ export function ModeChampionsPath({
     setErrorKind(null);
     // Setting an L invalidates later stages → re-arm auto-collapse.
     setManuallyExpanded(false);
-    // §8 (D.3) — fire the accent pulse on this stage card.
+    // §8 (D.3): fire the accent pulse on this stage card.
     setStagePulseKeys((prev) => ({ ...prev, [stage]: prev[stage] + 1 }));
     setState((prev) => {
       const next = { ...prev, [stage]: { ...prev[stage], result } };
@@ -444,11 +444,11 @@ export function ModeChampionsPath({
     : "";
   const resolved = isResolved(state);
 
-  // Phase E §6 (B.2) — derive the effective focus stage. Falls back to the
+  // Phase E §6 (B.2): derive the effective focus stage. Falls back to the
   // next-empty slot for natural progression when the user hasn't tapped
   // a stage card explicitly.
   const focusStage: StageKey | null = activeStage ?? nextEmptyOpponentSlot(state);
-  // Q1 — picker is expanded whenever the path is unresolved, OR when the
+  // Q1: picker is expanded whenever the path is unresolved, OR when the
   // user explicitly tapped "Edit story" while resolved. Reset of
   // the manual flag is handled inline in handlers that mutate state.
   const pickerExpanded = !resolved || manuallyExpanded;
@@ -465,7 +465,7 @@ export function ModeChampionsPath({
     setErrorKind(null);
   }
 
-  // Live Reality Score — only percentage, no band / 1-in-N per v2.1 §3.
+  // Live Reality Score: only percentage, no band / 1-in-N per v2.1 §3.
   const liveScore = useMemo(() => {
     if (!submissionScenario) return null;
     const canonical = canonicalizeScenario("champions_path", submissionScenario);
@@ -503,7 +503,7 @@ export function ModeChampionsPath({
         <p className="mt-3 font-sans text-[14px] text-[var(--text-tertiary)]">
           {state.team
             ? "Pick an opponent for each stage, then call the result."
-            : "First, pick the team you are tracing — click or drag from the grid."}
+            : "First, pick the team you are tracing. Click or drag from the grid."}
         </p>
 
         {/* Team slot */}
@@ -523,7 +523,7 @@ export function ModeChampionsPath({
           ) : null}
         </div>
 
-        {/* Stage row — vertical on mobile, horizontal at sm+. Phase E
+        {/* Stage row (vertical on mobile, horizontal at sm+). Phase E
             §6 (B.2): tappable to set focus; active stage gets the
             accent-warm border; completed stages dim to ~60%; dead
             stages stay at the existing 40%. */}
@@ -571,14 +571,14 @@ export function ModeChampionsPath({
                   {/* Team's code, fixed left. */}
                   <span className="inline-flex items-center gap-1.5 font-mono text-[18px] tabular-nums text-[var(--text-primary)] sm:text-[20px]">
                     {state.team ? <Flag code={state.team} size={24} /> : null}
-                    <span>{state.team ?? "—"}</span>
+                    <span>{state.team ?? "·"}</span>
                   </span>
 
                   <span className="font-mono text-[14px] text-[var(--text-quiet)]">
                     vs
                   </span>
 
-                  {/* Opponent slot — droppable. */}
+                  {/* Opponent slot: droppable. */}
                   <CPOpponentSlot
                     stageKey={s}
                     code={stage.opponent}
@@ -620,7 +620,7 @@ export function ModeChampionsPath({
           })}
         </ol>
 
-        {/* Narrative line — assembles in serif as scenario fills. */}
+        {/* Narrative line: assembles in serif as scenario fills. */}
         {narrative ? (
           <p className="mt-8 font-serif text-[18px] leading-[1.45] text-[var(--text-primary)] sm:text-[22px]">
             {narrative}
@@ -650,7 +650,7 @@ export function ModeChampionsPath({
           )}
         </motion.div>
 
-        {/* Live Agreement Gauge — show-threshold per Phase D §4.2: the
+        {/* Live Agreement Gauge. Show-threshold per Phase D §4.2: the
             entire path must be resolved (all 4 stages with W/L set, or
             the first L). Until then, the gauge stays in ghost state to
             avoid premature rarity claims. */}

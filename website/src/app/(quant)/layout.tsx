@@ -18,7 +18,7 @@ const DESKTOP_BANNER_PRE_HYDRATE = `(function(){
       var el = document.getElementById(${JSON.stringify(DESKTOP_BANNER_DOM_ID)});
       if (el) el.setAttribute("data-dismissed", "1");
     }
-  } catch (e) { /* sessionStorage may be blocked — render the banner */ }
+  } catch (e) { /* sessionStorage may be blocked; render the banner */ }
 })();`;
 
 export default async function QuantLayout({

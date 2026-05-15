@@ -10,8 +10,8 @@ import { getOperatorSession } from "@/lib/sim/getOperatorSession";
  * canvas; overrides only the simulator-specific tokens (--accent-warm,
  * --state-dead, --state-promoted, --radius: 0).
  *
- * The masthead and footer are reused from the existing site chrome —
- * the simulator is a sibling route group to (editorial) and (quant),
+ * The masthead and footer are reused from the existing site chrome.
+ * The simulator is a sibling route group to (editorial) and (quant),
  * not a parallel app.
  */
 export default async function SimulatorLayout({

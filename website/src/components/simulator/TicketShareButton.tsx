@@ -2,21 +2,21 @@
  * Share / Download affordance for the Trade Ticket.
  *
  * Two actions exposed on the simulator canvas:
- *   1. "↓ PNG"   — fetches /api/og/scenario/[id], validates Content-Type
+ *   1. "↓ PNG"   · fetches /api/og/scenario/[id], validates Content-Type
  *                   begins with `image/png`, then triggers a blob save.
  *                   Refuses to write the response to disk if the route
  *                   fell through to a JSON/HTML error path. Cycles
  *                   `↓ PNG` → `Generating…` → `↓ PNG` (or `Failed, retry`
  *                   on error).
- *   2. "Share"   — tries the Web Share API (supported on iOS Safari, Chrome
+ *   2. "Share"   · tries the Web Share API (supported on iOS Safari, Chrome
  *                   on Android, macOS Ventura+). Falls back to copying the
  *                   permalink to the clipboard if Web Share is unavailable.
  *                   Shows a transient "Copied!" confirmation on the button.
  *
- * Design tokens: matches simulator canvas — sharp corners (radius 0),
- * mono labels, border-default stroke, bg-panel fill.
+ * Design tokens: matches simulator canvas (sharp corners (radius 0),
+ * mono labels, border-default stroke, bg-panel fill).
  *
- * Client component — uses navigator.share / navigator.clipboard.
+ * Client component: uses navigator.share / navigator.clipboard.
  */
 
 "use client";
@@ -120,7 +120,7 @@ export function TicketShareButton({
   const ogHref = `/api/og/scenario/${predictionId}`;
   const downloadName = `45analytics-${predictionId}.png`;
 
-  // VIRAL_LOOP §3.1.E — single 1.6s opacity cycle once the buttons have
+  // VIRAL_LOOP §3.1.E: single 1.6s opacity cycle once the buttons have
   // been visible for 6 s without user action. The IntersectionObserver
   // guards "in the viewport"; the 6 s timer is the "user did not act"
   // signal. A second-and-final fire never happens (animation is `once`),
@@ -175,7 +175,7 @@ export function TicketShareButton({
       const ct = res.headers.get("content-type") ?? "";
       // Strict prefix match: any non-PNG response (JSON error, HTML error
       // page, plain-text 5xx) is rejected here rather than written to disk
-      // under a `.png` filename — that mismatch is the original bug.
+      // under a `.png` filename (that mismatch is the original bug).
       if (!ct.toLowerCase().startsWith("image/png")) {
         throw new Error("not_png");
       }
@@ -225,17 +225,17 @@ export function TicketShareButton({
     // because this is a client component and will only run in the browser.
     const permalinkUrl = `${window.location.origin}/scenario/p/${predictionId}`;
 
-    // Web Share API — available on modern mobile browsers + macOS Ventura+.
+    // Web Share API: available on modern mobile browsers + macOS Ventura+.
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({
-          title: "45analytics — Scenario Prediction",
+          title: "45analytics · Scenario Prediction",
           url: permalinkUrl,
         });
         track("share_action", { type: "native" });
         return;
       } catch {
-        // User cancelled (AbortError) or share failed — fall through to copy.
+        // User cancelled (AbortError) or share failed; fall through to copy.
       }
     }
 
@@ -247,7 +247,7 @@ export function TicketShareButton({
       setTimeout(() => setCopyLabel("Share"), 2000);
     } catch {
       // Clipboard unavailable (rare: non-secure context or denied permission).
-      // Silent fail — the user can still copy the URL from the address bar.
+      // Silent fail; the user can still copy the URL from the address bar.
     }
   }, [predictionId]);
 
@@ -285,7 +285,7 @@ export function TicketShareButton({
         {COPY_POST_LABEL[copyPostState]}
       </button>
 
-      {/* Download PNG — typed fetch + content-type validation. The button
+      {/* Download PNG: typed fetch + content-type validation. The button
           replaces the prior `<a download>` so a non-PNG response (JSON 4xx /
           HTML 5xx) is detected and surfaced as "Failed, retry" instead of
           being written to disk under a .png filename. */}

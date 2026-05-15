@@ -65,7 +65,7 @@ const ANTICIPATION_COPY =
  * string before the phase flips. */
 const TYPEWRITER_TICK_MS = 16;
 
-/** Same threshold geometry as LiveAgreementGauge.activeSegmentIndex —
+/** Same threshold geometry as LiveAgreementGauge.activeSegmentIndex,
  * but here the segment carries the *scientific* rarity vocabulary in
  * its aria-label, NOT the live-gauge viral hook. */
 function activeSegmentIndex(count: number, total: number): number {

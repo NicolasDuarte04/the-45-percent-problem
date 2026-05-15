@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Full Bracket build mode — Phase C (R32 migration + DnD).
+ * Full Bracket build mode. Phase C (R32 migration + DnD).
  *
  * WC 2026 real bracket:
  *   Group stage → 24 direct qualifiers (12 winners + 12 runners-up)
@@ -9,8 +9,8 @@
  *   R32 (16 matches) → R16 (8) → QF (4) → SF (2) → F (1) = 31 advancers.
  *
  * UI flow:
- *   1. Pick winner + runner-up for each of the 12 groups (24 picks) — click only.
- *   2. Pick 8 best 3rd-place teams — click or drag to T1–T8 slots.
+ *   1. Pick winner + runner-up for each of the 12 groups (24 picks). Click only.
+ *   2. Pick 8 best 3rd-place teams. Click or drag to T1-T8 slots.
  *   3. Click-to-advance through R32 → R16 → QF → SF → F (31 picks).
  *   Submit when all 63 picks are filled.
  *
@@ -62,9 +62,9 @@ const GROUPS: GroupLetter[] = [
   "G", "H", "I", "J", "K", "L",
 ];
 
-// Official FIFA WC 2026 R32 bracket (M73–M88, corrected for two data typos
+// Official FIFA WC 2026 R32 bracket (M73-M88, corrected for two data typos
 // in wc2026-official-draw.ts: M76 home was "2C" → "2G"; M79 home was "1A" → "2K").
-// T1–T8 map to bestThirds[0..7] in match-date order.
+// T1-T8 map to bestThirds[0..7] in match-date order.
 const R32_PAIRINGS: ReadonlyArray<readonly [string, string]> = [
   ["1A", "T1"],   // M73
   ["1L", "T2"],   // M74
@@ -157,7 +157,7 @@ function writeShowAllPreference(showAll: boolean): void {
     if (showAll) window.localStorage.setItem(SHOW_ALL_STORAGE_KEY, "1");
     else window.localStorage.removeItem(SHOW_ALL_STORAGE_KEY);
   } catch {
-    /* swallow — quota errors / privacy mode */
+    /* swallow: quota errors / privacy mode */
   }
 }
 
@@ -196,7 +196,7 @@ function isResolved(s: BuildState): boolean {
 }
 
 /**
- * Phase E §6 (B.4) — 12 group-3rd-place candidates.
+ * Phase E §6 (B.4): 12 group-3rd-place candidates.
  *
  * For each of the 12 groups, after the user has named winner + runner-up,
  * exactly two teams remain. We deterministically nominate one of those
@@ -265,14 +265,14 @@ export function ModeFullBracket({
   const [rateLimitRetrySeconds, setRateLimitRetrySeconds] = useState<
     number | undefined
   >(undefined);
-  // Phase E §6 (B.3) — per-group dim state and manual-focus override.
+  // Phase E §6 (B.3): per-group dim state and manual-focus override.
   // dimmedGroups holds the set of groups currently dimmed (50% opacity);
   // a fresh group-completion schedules a 700ms timer before adding to
   // the set so the user sees their work land before it dims. Manual
   // focus overrides "next alphabetical incomplete" and lifts dim.
   const [dimmedGroups, setDimmedGroups] = useState<Set<GroupLetter>>(new Set());
   const [manualFocusGroup, setManualFocusGroup] = useState<GroupLetter | null>(null);
-  // Mission 2 — carousel state. `showAll` flips Step 1 between the
+  // Mission 2: carousel state. `showAll` flips Step 1 between the
   // single-group "stadium" carousel (default) and the legacy 12-group
   // wall (escape hatch). Hydrated from localStorage on mount; written
   // back on toggle.
@@ -294,7 +294,7 @@ export function ModeFullBracket({
     new Set(),
   );
   const carouselTransition = useReducedMotionAware("layout");
-  // Phase E §8 (D.3) — per-group pulse counter. Bumped when a group
+  // Phase E §8 (D.3): per-group pulse counter. Bumped when a group
   // transitions incomplete → complete; <AccentPulse> re-mounts and
   // fires the 250ms warm-tint flash.
   const [groupPulseKeys, setGroupPulseKeys] = useState<Record<GroupLetter, number>>(
@@ -313,7 +313,7 @@ export function ModeFullBracket({
     track("simulator_opened", { mode: "full_bracket", surface: "page" });
     const hydrated = hydrate();
     setState(hydrated);
-    // Phase E §6 (B.3) — groups already complete on hydrate render dim
+    // Phase E §6 (B.3): groups already complete on hydrate render dim
     // immediately, no transition. Seed prevCompleteRef so the watcher
     // effect below doesn't fire 700ms timers for hydrated groups.
     const initialComplete = new Set<GroupLetter>();
@@ -323,7 +323,7 @@ export function ModeFullBracket({
     }
     setDimmedGroups(initialComplete);
     prevCompleteRef.current = initialComplete;
-    // Mission 2 — restore "Show all 12" preference and park the
+    // Mission 2: restore "Show all 12" preference and park the
     // carousel on the first incomplete group (or A if everything
     // is already complete from the cached scenario).
     setShowAll(readShowAllPreference());
@@ -338,7 +338,7 @@ export function ModeFullBracket({
     writeInflight("full_bracket", state);
   }, [state]);
 
-  // Phase E §6 (B.3) — watch group completions. A fresh transition from
+  // Phase E §6 (B.3): watch group completions. A fresh transition from
   // incomplete → complete schedules a per-group 700ms timer before
   // dimming. A transition the other way (user changed a pick) un-dims
   // immediately AND cancels any pending dim timer for that group.
@@ -382,7 +382,7 @@ export function ModeFullBracket({
 
   const groupTeams = useMemo(() => teamsByGroup(), []);
 
-  // Live Reality Score — shown as partial percentage once groups + thirds done.
+  // Live Reality Score: shown as partial percentage once groups + thirds done.
   const liveScore = useMemo(() => {
     if (!r32Available(state)) return null;
     const champion = state.koAdvancers[30];
@@ -402,7 +402,7 @@ export function ModeFullBracket({
     if (claimFirstPick("full_bracket")) {
       track("first_pick", { mode: "full_bracket" });
     }
-    // Phase E §6 (B.3) — re-activating a completed (dimmed) group lifts
+    // Phase E §6 (B.3): re-activating a completed (dimmed) group lifts
     // dim and pins focus to it. While the user is mid-picking in an
     // incomplete group, leave focus to the natural next-alphabetical
     // progression so completing a group cleanly hands off to the next.
@@ -414,11 +414,11 @@ export function ModeFullBracket({
         return next;
       });
     } else if (manualFocusGroup && manualFocusGroup !== g) {
-      // User pivoted to a different group — clear the manual override so
+      // User pivoted to a different group; clear the manual override so
       // auto-focus tracks the new group naturally.
       setManualFocusGroup(null);
     }
-    // Mission 2 — record that the user has personally touched this
+    // Mission 2: record that the user has personally touched this
     // group. "Auto-fill remaining" hides until at least one entry is
     // present, so it never appears unprompted.
     setManuallyTouched((prev) => {
@@ -442,7 +442,7 @@ export function ModeFullBracket({
       } else {
         nextSel = { ...sel, runnerUp: code };
       }
-      // Mission 2 — if this click landed the second pick (winner +
+      // Mission 2: if this click landed the second pick (winner +
       // runner-up), auto-advance the carousel to the next incomplete
       // group. The render-time effect below would do this too, but
       // doing it here keeps the slide direction = forward.
@@ -601,7 +601,7 @@ export function ModeFullBracket({
     setRateLimitRetrySeconds(undefined);
     // `?debug=1` opts the submit into requesting structured Zod issues
     // from the route. Read inline (post-hydration, only on user click)
-    // rather than via `useSearchParams()` — the hook would force the
+    // rather than via `useSearchParams()`; the hook would force the
     // page out of static rendering and the build error Vercel caught
     // (`useSearchParams() should be wrapped in a suspense boundary`).
     const debug =
@@ -642,7 +642,7 @@ export function ModeFullBracket({
   const candidatesByGroup = useMemo(() => thirdsCandidatesByGroup(state), [state]);
   const selectedThirds = new Set(state.bestThirds.filter(Boolean) as TeamCode[]);
 
-  // Phase E §6 (B.3) — focused group: manual override else next
+  // Phase E §6 (B.3): focused group: manual override else next
   // alphabetical incomplete group.
   const nextIncompleteGroup =
     GROUPS.find((g) => {
@@ -678,7 +678,7 @@ export function ModeFullBracket({
           Twelve group winners, twelve runners-up, eight best 3rd-place teams, then the full knockout bracket.
         </p>
 
-        {/* Step 1 — Groups. Mission 2 refactor: single-group carousel
+        {/* Step 1 · Groups. Mission 2 refactor: single-group carousel
             with peek slivers + 12-dot progress strip + Auto-fill from
             Elo + Show-all-12 escape hatch. The legacy 12-grid wall is
             still rendered when `showAll` is true (toggle persisted in
@@ -722,7 +722,7 @@ export function ModeFullBracket({
             Auto-fill uses pre-tournament Elo. The model&rsquo;s call appears after you submit.
           </p>
 
-          {/* Mini-progress strip — 12 dots, A through L. Filled = pair
+          {/* Mini-progress strip: 12 dots, A through L. Filled = pair
               complete, ringed = current, plain = incomplete. Tap-to-jump
               centers the carousel on that group (and lifts dim if it
               was a completed-and-dimmed pick). Hidden in the wall view
@@ -841,7 +841,7 @@ export function ModeFullBracket({
           )}
         </div>
 
-        {/* Step 2 — Best 3rd-place teams. Phase E §6 (B.4) restructure:
+        {/* Step 2 · Best 3rd-place teams. Phase E §6 (B.4) restructure:
             a single horizontal row of 12 chips (one per group) with a
             "Pick 8 of 12" counter. Q4: fully toggleable, no commit
             moment, picks lock only when the user advances to Step 3. */}
@@ -852,7 +852,7 @@ export function ModeFullBracket({
             </h2>
             <p className="mt-1 font-sans text-[12px] text-[var(--text-quiet)]">
               {selectedThirds.size === 8
-                ? "8 of 12 selected — knockout bracket unlocked."
+                ? "8 of 12 selected. Knockout bracket unlocked."
                 : `Pick ${8 - selectedThirds.size} of ${12 - selectedThirds.size} remaining 3rd-place teams to advance.`}
             </p>
 
@@ -894,7 +894,7 @@ export function ModeFullBracket({
                           <span>{candidate}</span>
                         </span>
                       ) : (
-                        <span className="text-[var(--text-quiet)]">—</span>
+                        <span className="text-[var(--text-quiet)]">·</span>
                       )}
                     </button>
                   </li>
@@ -908,7 +908,7 @@ export function ModeFullBracket({
           </p>
         )}
 
-        {/* Step 3 — Knockout bracket. Phase E §7 (C.1–C.4) — absolute-
+        {/* Step 3 · Knockout bracket. Phase E §7 (C.1-C.4): absolute-
             positioned tournament tree with right-angle SVG connectors,
             winner highlight + loser fade, layoutId chip propagation,
             mobile horizontal scroll + round breadcrumb. */}
@@ -953,7 +953,7 @@ export function ModeFullBracket({
           </p>
         ) : null}
 
-        {/* Live Agreement Gauge — show-threshold per Phase D §4.2:
+        {/* Live Agreement Gauge. Show-threshold per Phase D §4.2:
             once the champion is named, the gauge activates. Other
             knockout cells can still be partial. */}
         <div className="mt-8 max-w-md">
@@ -998,7 +998,7 @@ export function ModeFullBracket({
 // ── Carousel helpers ─────────────────────────────────────────────────────────
 //
 // The carousel wraps A↔L. Going "previous" from A lands on L; going "next"
-// from L lands on A. This matches the progress strip's ring shape — the
+// from L lands on A. This matches the progress strip's ring shape; the
 // user can spin around the alphabet rather than dead-ending at the edges.
 
 function prevGroupLetter(g: GroupLetter): GroupLetter {
@@ -1030,7 +1030,7 @@ interface GroupCardProps {
 }
 
 /**
- * One group's card — winner + runner-up picker. Extracted from the
+ * One group's card: winner + runner-up picker. Extracted from the
  * Phase E inline implementation so the carousel and the wall view can
  * share the same render path.
  */
@@ -1051,7 +1051,7 @@ function GroupCard({
       aria-label={`Group ${g}`}
       style={{
         opacity: isDimmed ? 0.5 : 1,
-        // Mission 3 — `--ui-guidance` (deep teal) signals "active step / focus"
+        // Mission 3: `--ui-guidance` (deep teal) signals "active step / focus"
         // wherever a step or pick is the user's current attention.
         borderColor: isFocused ? "var(--ui-guidance)" : "var(--border-default)",
       }}
@@ -1060,11 +1060,11 @@ function GroupCard({
         emphasized ? "p-5" : "p-3",
       ].join(" ")}
     >
-      {/* `tone="success"` per the rebind table — this pulse fires when a
+      {/* `tone="success"` per the rebind table. This pulse fires when a
           group's winner+runner-up pair just landed, which is a completion
           moment rather than a generic accent. */}
       <AccentPulse triggerKey={pulseKey} tone="success" />
-      {/* Polish — emphasize the group label so the carousel always tells
+      {/* Polish: emphasize the group label so the carousel always tells
           the user where they are. The emphasized (carousel) variant lifts
           the weight, jumps a size, and routes through `--ui-guidance` so
           the label semantically reads as "you are here". The compact
@@ -1080,7 +1080,7 @@ function GroupCard({
         Group {g}
       </div>
       {isComplete ? (
-        // Mission 3 — `--ui-success` (deep mint) is the role token for
+        // Mission 3: `--ui-success` (deep mint) is the role token for
         // completion. Re-uses the same dereference as the mini-progress
         // filled dot so the two surfaces stay visually consistent.
         <span className="pointer-events-none absolute right-2 top-2 font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--ui-success)]">
@@ -1106,7 +1106,7 @@ function GroupCard({
                 ].join(" ")}
               >
                 <span className="inline-flex items-center gap-2">
-                  {/* Polish — restore the visual language: every team
+                  {/* Polish: restore the visual language: every team
                       pick shows its national flag next to the FIFA code,
                       matching `TeamGrid` and the best-3rds row. Larger
                       flag in the carousel (emphasized) variant, smaller

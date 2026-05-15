@@ -160,8 +160,8 @@ export function EditorialMasthead({
           {!onTerminal && (
             <Link
               href="/terminal"
-              // Hidden on mobile — redundant with the "Matches" tab in
-              // the nav, which also points at /terminal. Visible from
+              // Hidden on mobile (redundant with the "Matches" tab in
+              // the nav, which also points at /terminal). Visible from
               // md+ onwards where horizontal real estate allows it.
               className="no-underline hidden md:inline-flex items-center gap-1.5 shrink-0 md:order-4"
               style={{

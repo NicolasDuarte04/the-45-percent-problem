@@ -26,7 +26,7 @@ const sourceSerif4 = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "The 45% Problem — Probabilistic Pricing for FIFA World Cup 2026",
+  title: "The 45% Problem · Probabilistic Pricing for FIFA World Cup 2026",
   description:
     "An institutional quantitative terminal publishing nightly M★ probability distributions and their divergence from market-implied probabilities for the 2026 FIFA World Cup.",
   metadataBase: new URL(
@@ -45,8 +45,8 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable}`}
       // overflowX: "clip" prevents horizontal page-level scroll on
       // narrow viewports (Mobile Optimization Plan §6.1 acceptance
-      // criterion #1) without establishing a new scroll container —
-      // critical for preserving position: sticky on filter bars and
+      // criterion #1) without establishing a new scroll container.
+      // Critical for preserving position: sticky on filter bars and
       // the vault sidebar (which `overflow-x: hidden` would break).
       // Inlined here rather than in globals.css because Tailwind v4's
       // PostCSS pipeline strips the `clip` keyword from compiled CSS.

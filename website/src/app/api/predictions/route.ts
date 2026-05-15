@@ -21,8 +21,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Per handoff §3 addition (b): /api/predictions rate limit is 30 per hour
-// per IP — looser than /api/subscribe's 10/min, since users may legitimately
-// submit a few scenarios in one session.
+// per IP (looser than /api/subscribe's 10/min, since users may legitimately
+// submit a few scenarios in one session).
 const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
@@ -63,8 +63,8 @@ function summarizeZodIssues(
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // `?debug=1` opts the response into surfacing structured Zod issues
-  // alongside the `invalid` error code. Off by default — including in
-  // production — so the wire stays sparse on the happy path.
+  // alongside the `invalid` error code. Off by default (including in
+  // production) so the wire stays sparse on the happy path.
   const debug = req.nextUrl.searchParams.get("debug") === "1";
 
   let body: unknown;
@@ -187,7 +187,7 @@ const EmailQuery = z.object({
  * Authentication is the signed `45a:sim:owner` cookie set by /api/verify
  * after a simulator subscriber confirms their address. The query
  * `?email=` must equal the cookie's email exactly (case-insensitive
- * after lowercasing) — this prevents cookie holders from enumerating
+ * after lowercasing). This prevents cookie holders from enumerating
  * other users' predictions.
  *
  * Behavior:

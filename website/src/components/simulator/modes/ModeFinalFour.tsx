@@ -3,7 +3,7 @@
 /**
  * Final Four build mode per IMPL_PROMPT §2.1 + design v2 §5.3.
  *
- * Phase C: DnD upgrade — teams can be dragged from the grid onto the
+ * Phase C: DnD upgrade. Teams can be dragged from the grid onto the
  * four SF slots in addition to the existing click-to-fill interaction.
  * Each slot is a DroppableSlot (via inline FFSlot sub-component).
  *
@@ -214,11 +214,11 @@ export function ModeFinalFour({
   const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
   const [activeSlotIdx, setActiveSlotIdx] = useState<number | null>(null);
-  // Phase E §6 (B.1) — picker auto-collapses to a thin bar once all slots
+  // Phase E §6 (B.1): picker auto-collapses to a thin bar once all slots
   // are filled. User can re-expand via the bar; clearing any slot
   // auto-expands again per Q1.
   const [manuallyExpanded, setManuallyExpanded] = useState(false);
-  // Phase E §8 (D.3) — per-slot pulse counter. Bumping a slot's value
+  // Phase E §8 (D.3): per-slot pulse counter. Bumping a slot's value
   // re-mounts its <AccentPulse>, firing a single 250ms warm-tint pulse.
   const [pulseKeys, setPulseKeys] = useState<number[]>(() =>
     Array(SLOT_COUNT).fill(0),
@@ -280,12 +280,12 @@ export function ModeFinalFour({
   const filled = slots.filter((c): c is TeamCode => Boolean(c));
   const allFilled = filled.length === SLOT_COUNT;
   const selectedSet = useMemo(() => new Set(filled), [filled]);
-  // Q1 — picker is expanded whenever any slot is empty, OR when the user
+  // Q1: picker is expanded whenever any slot is empty, OR when the user
   // explicitly tapped "Edit teams" while complete. Reset of the
   // manual flag is handled inline in handlers that cause a slot to clear.
   const pickerExpanded = !allFilled || manuallyExpanded;
 
-  // Live Reality Score — recomputed only when slots change (drop, click,
+  // Live Reality Score: recomputed only when slots change (drop, click,
   // clear). Used by LiveAgreementGauge once allFilled triggers
   // isComplete; until then the gauge renders in ghost state.
   const liveScore = useMemo(() => {
@@ -300,7 +300,7 @@ export function ModeFinalFour({
     setSlots((prev) => {
       const at = prev.indexOf(code);
       if (at !== -1) {
-        // Removing a selected team frees a slot — reset the manual-expand
+        // Removing a selected team frees a slot; reset the manual-expand
         // flag so the next allFilled flip auto-collapses again.
         setManuallyExpanded(false);
         const next = [...prev];
@@ -341,7 +341,7 @@ export function ModeFinalFour({
     });
     setActiveSlotIdx(null);
     setErrorKind(null);
-    // Q1 — clearing should auto-expand and re-arm auto-collapse next time.
+    // Q1: clearing should auto-expand and re-arm auto-collapse next time.
     setManuallyExpanded(false);
   }
 
@@ -505,7 +505,7 @@ export function ModeFinalFour({
           </div>
         ) : null}
 
-        {/* Team grid — Phase E §6 (B.1) auto-collapse.
+        {/* Team grid. Phase E §6 (B.1) auto-collapse.
             When all 4 slots are filled, the grid collapses to a thin
             "EDIT TEAMS" bar via the layout preset (320ms). The
             gauge below slides up smoothly because the wrapper's height
@@ -534,9 +534,9 @@ export function ModeFinalFour({
           )}
         </motion.div>
 
-        {/* Live Agreement Gauge — Phase D Workstream 3 (Option C).
+        {/* Live Agreement Gauge. Phase D Workstream 3 (Option C).
             Ghost state until all 4 SF slots are filled per the per-mode
-            show-threshold table. Viral hook only — no scientific rarity
+            show-threshold table. Viral hook only; no scientific rarity
             words; that vocabulary is reserved for the post-submit
             RealityScorePanel. */}
         <div className="mt-8 max-w-md">
