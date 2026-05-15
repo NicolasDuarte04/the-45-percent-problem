@@ -10,9 +10,9 @@
  * model evolves.
  *
  * Rarity coverage at the current snapshot (M0 marginals, 2026-05-04):
- *   favorites  Rare              the model's top tier holds the semifinals
- *   euro-four  Rare              UEFA dominance scenario
- *   conmebol   Vanishingly rare  a South American sweep
+ *   favorites  Uncommon          the model's top tier holds the semifinals
+ *   conmebol   Rare              a South American sweep
+ *   euro-four  Vanishingly rare  UEFA dominance scenario
  *   host-trio  Vanishingly rare  all three 2026 hosts plus a favourite
  *
  * Note: Final Four joint probabilities top out around 1.2% under the
