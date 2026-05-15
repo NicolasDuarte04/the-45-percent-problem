@@ -31,6 +31,11 @@ interface EventMap {
   // curated scenario; deduped via sessionStorage so a reload on the same
   // URL does not re-fire.
   promo_card_landed: { slug: string };
+  // Fires once per session for cookie-valid /me page loads (P0.3,
+  // Checkpoint 8). Counts engaged returning-user visits to the
+  // Forecast Desk. Deduped via `claimDeskViewed`. The unauthenticated
+  // empty state must not emit this event.
+  desk_viewed: undefined;
 }
 
 declare global {
@@ -74,6 +79,17 @@ export function claimFirstPick(mode: SimulatorMode): boolean {
 export function claimPromoLanded(slug: string): boolean {
   if (typeof window === "undefined") return false;
   const key = `45a:track:promo_landed:${slug}`;
+  if (sessionStorage.getItem(key)) return false;
+  sessionStorage.setItem(key, "1");
+  return true;
+}
+
+/** Session-scoped dedup guard for desk_viewed. Returns true the first
+ * time the cookie-valid /me page mounts in a session; subsequent visits
+ * within the same session return false. Mirrors `claimFirstPick`. */
+export function claimDeskViewed(): boolean {
+  if (typeof window === "undefined") return false;
+  const key = "45a:track:desk_viewed";
   if (sessionStorage.getItem(key)) return false;
   sessionStorage.setItem(key, "1");
   return true;

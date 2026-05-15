@@ -52,6 +52,17 @@ const TABS: Tab[] = [
   },
 ];
 
+// The Desk tab is conditionally appended at render time when the
+// `isOperator` prop is true. It is kept out of the TABS constant so a
+// non-operator render never includes the tab in the DOM (no hidden
+// element, no flicker).
+const DESK_TAB: Tab = {
+  id: "desk",
+  label: "Desk",
+  href: "/me",
+  match: (p) => p.startsWith("/me"),
+};
+
 const TERMINAL_PREFIXES = [
   "/terminal",
   "/ledger",
@@ -64,9 +75,23 @@ function isTerminalRoute(pathname: string): boolean {
   return TERMINAL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-export function EditorialMasthead() {
+interface EditorialMastheadProps {
+  /**
+   * When true, render an additional `Desk` nav tab pointing at /me.
+   * The flag is resolved server-side from the signed `45a:sim:owner`
+   * cookie inside each route-group layout (Pattern A in the spec).
+   * Defaults to false so server callers that have not been migrated
+   * yet still render correctly.
+   */
+  isOperator?: boolean;
+}
+
+export function EditorialMasthead({
+  isOperator = false,
+}: EditorialMastheadProps = {}) {
   const pathname = usePathname() ?? "/";
   const onTerminal = isTerminalRoute(pathname);
+  const tabs = isOperator ? [...TABS, DESK_TAB] : TABS;
 
   return (
     <header
@@ -166,7 +191,7 @@ export function EditorialMasthead() {
           className="flex min-w-0 flex-1 items-baseline gap-4 md:gap-6 overflow-x-auto no-scrollbar whitespace-nowrap md:order-2"
           aria-label="Primary"
         >
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const active = tab.match(pathname);
             return (
               <Link
