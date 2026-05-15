@@ -18,9 +18,6 @@ import {
   SectionHead,
   GhostLink,
 } from "@/components/compositions/SectionHead";
-import { ModeFinalFour } from "@/components/simulator/modes/ModeFinalFour";
-import { getModalSemifinalists } from "@/lib/sim/modalBracket";
-
 export const dynamic = "force-static";
 
 export default async function Home() {
@@ -29,10 +26,6 @@ export default async function Home() {
   const tournament = mergeTournament(snap.tournament, maps);
   const divergence = mergeDivergence(snap.divergence, maps);
   const { evaluation, meta } = snap;
-  const modalSemifinalists = getModalSemifinalists(tournament);
-  const modelSha = process.env.MODEL_SHA ?? "phaseA-mock";
-  const snapshotSha = process.env.SNAPSHOT_SHA ?? "phaseA-mock";
-
   return (
     <div
       className="mx-auto"
@@ -123,26 +116,6 @@ export default async function Home() {
           style={{ marginTop: -32 }}
         >
           <Link
-            href="/scenario"
-            aria-label="Skip the inline simulator and choose another mode at /scenario"
-            className="no-underline inline-flex items-center"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: "var(--text-primary)",
-              border: "1px solid rgb(31 31 31 / 0.28)",
-              borderRadius: 6,
-              padding: "6px 12px",
-              gap: 4,
-              background: "transparent",
-            }}
-          >
-            [ Skip to all three modes ]
-          </Link>
-          <Link
             href="/brief"
             className="no-underline inline-flex items-center"
             style={{
@@ -166,18 +139,30 @@ export default async function Home() {
         />
       </header>
 
-      {/* ── § 0 · Scenario (inline Final Four, P0.1) ──────────────────────── */}
+      {/* ── § 0 · Scenario ────────────────────────────────────────────────── */}
       <section style={{ marginBottom: 56 }}>
         <SectionHead
           eyebrow="§ 0 · Scenario"
-          title="Who makes the final four?"
+          title="Call the final four."
+          rightSlot={
+            <GhostLink href="/scenario/final-four">
+              Enter the simulator →
+            </GhostLink>
+          }
         />
-        <ModeFinalFour
-          modelSha={modelSha}
-          snapshotSha={snapshotSha}
-          modalSemifinalists={modalSemifinalists}
-          variant="inline"
-        />
+        <p
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: 14,
+            lineHeight: 1.65,
+            color: "var(--text-tertiary)",
+            margin: 0,
+            maxWidth: 540,
+          }}
+        >
+          Pick four semifinalists. The model has run 10,000 simulated
+          tournaments. See where your scenario lands.
+        </p>
       </section>
 
       {/* ── § 1 · Championship pricing ─────────────────────────────────────── */}
