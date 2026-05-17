@@ -5,6 +5,7 @@ import {
   mergeDivergence,
   mergeTournament,
 } from "@/lib/db/structuralMerge";
+import { resolveSnapshotPickerState } from "@/lib/data/snapshotPicker";
 import { TournamentLeaderboard } from "@/components/compositions/TournamentLeaderboard";
 import { MostLikelyBracket } from "@/components/compositions/MostLikelyBracket";
 import { FeaturedDivergences } from "@/components/compositions/FeaturedDivergences";
@@ -18,11 +19,24 @@ import {
   SectionHead,
   GhostLink,
 } from "@/components/compositions/SectionHead";
-export const dynamic = "force-static";
+import {
+  SnapshotPicker,
+  SnapshotBanner,
+} from "@/components/compositions/SnapshotPicker";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const rawSnapshot = params.snapshot;
+  const requestedSnapshot = Array.isArray(rawSnapshot) ? rawSnapshot[0] : rawSnapshot;
+  const picker = resolveSnapshotPickerState(requestedSnapshot);
+  const snapshotId = picker.selected.id === "latest" ? undefined : picker.selected.id;
+
   const maps = await loadStructuralMaps();
-  const snap = loadSnapshot();
+  const snap = loadSnapshot(snapshotId);
   const tournament = mergeTournament(snap.tournament, maps);
   const divergence = mergeDivergence(snap.divergence, maps);
   const { evaluation, meta } = snap;
@@ -170,8 +184,25 @@ export default async function Home() {
         <SectionHead
           eyebrow="§ 1 · Championship pricing"
           title="Tournament leaderboard"
-          rightSlot={<GhostLink href="/bracket">All 48 teams →</GhostLink>}
+          rightSlot={
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <SnapshotPicker
+                current={picker.current}
+                weekAgo={picker.weekAgo}
+                selectedId={picker.selected.id}
+                basePath="/"
+              />
+              <GhostLink href="/bracket">All 48 teams →</GhostLink>
+            </div>
+          }
         />
+        <div style={{ marginBottom: 12 }}>
+          <SnapshotBanner
+            selected={picker.selected}
+            current={picker.current}
+            basePath="/"
+          />
+        </div>
         {/* TournamentLeaderboard declares min-width: 640px on its
             internal table; the wrapper isolates that overflow so the
             page never horizontally scrolls on a 375px mobile viewport.

@@ -53,6 +53,10 @@ interface EventMap {
   // code list (e.g. "ARG,BRA,ESP,FRA") so downstream analytics can
   // join clicks to the canonical scenario.
   explore_card_clicked: { band: RarityBand; teams: string };
+  // Fires on every snapshot picker toggle click (Checkpoint 10, P1.3).
+  // Not deduped: each click is a discrete signal; toggling back and
+  // forth is part of the behaviour we want to measure.
+  snapshot_toggle: { id: string };
 }
 
 declare global {

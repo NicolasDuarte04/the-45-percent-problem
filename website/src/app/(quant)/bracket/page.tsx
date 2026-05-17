@@ -5,14 +5,17 @@ import {
   loadTournament,
 } from "@/lib/data/loadSnapshot";
 import { loadStructuralMaps, mergeTournament } from "@/lib/db/structuralMerge";
+import { resolveSnapshotPickerState } from "@/lib/data/snapshotPicker";
 import { BracketBoard } from "@/components/compositions/BracketBoard";
 import { RoundProbabilityLegend } from "@/components/compositions/RoundProbabilityLegend";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
+import {
+  SnapshotPicker,
+  SnapshotBanner,
+} from "@/components/compositions/SnapshotPicker";
 import { BRACKET_STEPS, BRACKET_DURATION_SEC } from "./_steps";
-
-export const dynamic = "force-static";
 
 export const metadata = {
   title: "Bracket — The 45% Problem",
@@ -20,11 +23,21 @@ export const metadata = {
     "Single-page bracket with per-round marginal probabilities drawn from the Monte Carlo ensemble.",
 };
 
-export default async function BracketPage() {
+export default async function BracketPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const rawSnapshot = params.snapshot;
+  const requestedSnapshot = Array.isArray(rawSnapshot) ? rawSnapshot[0] : rawSnapshot;
+  const picker = resolveSnapshotPickerState(requestedSnapshot);
+  const snapshotId = picker.selected.id === "latest" ? undefined : picker.selected.id;
+
   const maps = await loadStructuralMaps();
-  const bracket = loadBracket();
-  const tournament = mergeTournament(loadTournament(), maps);
-  const meta = loadSnapshotMeta();
+  const bracket = loadBracket(snapshotId);
+  const tournament = mergeTournament(loadTournament(snapshotId), maps);
+  const meta = loadSnapshotMeta(snapshotId);
 
   return (
     <div
@@ -56,16 +69,29 @@ export default async function BracketPage() {
               <span className="mono">{meta.tournament_phase.replace(/_/g, " ")}</span>
             </p>
           </div>
-          <Suspense fallback={null}>
-            <TourTriggerButton
-              steps={BRACKET_STEPS}
-              durationSeconds={BRACKET_DURATION_SEC}
+          <div className="flex items-center gap-3 flex-wrap">
+            <SnapshotPicker
+              current={picker.current}
+              weekAgo={picker.weekAgo}
+              selectedId={picker.selected.id}
+              basePath="/bracket"
             />
-          </Suspense>
+            <Suspense fallback={null}>
+              <TourTriggerButton
+                steps={BRACKET_STEPS}
+                durationSeconds={BRACKET_DURATION_SEC}
+              />
+            </Suspense>
+          </div>
         </div>
       </div>
 
       <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6 flex flex-col gap-6">
+        <SnapshotBanner
+          selected={picker.selected}
+          current={picker.current}
+          basePath="/bracket"
+        />
         <BracketBoard bracket={bracket} tournament={tournament} />
 
         <RoundProbabilityLegend />
