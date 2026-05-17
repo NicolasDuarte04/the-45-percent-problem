@@ -44,8 +44,8 @@ const DEFAULT_ODDS = [2.1, 3.5, 3.8];
 const OUTCOME_LABELS = ["Home", "Draw", "Away"];
 
 /**
- * §8.4 — DevigDemo.
- * Interactive slider — reader adjusts raw decimal odds and watches proportional
+ * §8.4: DevigDemo.
+ * Interactive slider: reader adjusts raw decimal odds and watches proportional
  * vs power-method de-vigging diverge in real time. Pure client component; no
  * snapshot data required.
  */

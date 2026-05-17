@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  * existing admin token (renamed from the IMPL_PROMPT's
  * `ADMIN_DISPATCH_TOKEN` during the dispatch→brief rename); see the
  * commit message for the call. If a separate per-endpoint secret is
- * preferred, swap this constant — no other plumbing changes.
+ * preferred, swap this constant: no other plumbing changes.
  *
  * Purpose: visual QA of the dashboard's three state variants until the
  * Phase B/C eval cron arrives. Not surfaced in any UI.

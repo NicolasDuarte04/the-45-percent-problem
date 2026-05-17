@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * §8.4 — CLVBridge.
+ * §8.4: CLVBridge.
  * Scatter plot of p_model vs q_market (de-vigged) for every settled M★
  * forecast. Color encodes edge sign: mint = positive, rose = negative, peach
  * = near-zero. The 45° reference line marks p_model = q_market. Closing
@@ -34,13 +34,13 @@ export function CLVBridge({ snapshotId = "latest", mode = "interactive" }: Props
   const noscriptRows = points
     .map(
       (p) =>
-        `  ${p.matchId}: p_model ${(p.pModel * 100).toFixed(2)}%  q_market ${(p.qMarket * 100).toFixed(2)}%  E ${p.edgeE >= 0 ? "+" : ""}${(p.edgeE * 100).toFixed(2)}pp  CLV ${p.clvBps != null ? `${p.clvBps > 0 ? "+" : ""}${p.clvBps}bps` : "—"}  ${p.hitMiss}`
+        `  ${p.matchId}: p_model ${(p.pModel * 100).toFixed(2)}%  q_market ${(p.qMarket * 100).toFixed(2)}%  E ${p.edgeE >= 0 ? "+" : ""}${(p.edgeE * 100).toFixed(2)}pp  CLV ${p.clvBps != null ? `${p.clvBps > 0 ? "+" : ""}${p.clvBps}bps` : "-"}  ${p.hitMiss}`
     )
     .join("\n");
 
   return (
     <Figure
-      caption={`p_model vs q_market (de-vigged) for all settled M★ forecasts (n=${points.length}). Each point is one forecast; color encodes edge direction. The dashed diagonal is perfect model–market agreement. Snapshot ${meta.snapshot_id}.`}
+      caption={`p_model vs q_market (de-vigged) for all settled M★ forecasts (n=${points.length}). Each point is one forecast; color encodes edge direction. The dashed diagonal is perfect model-market agreement. Snapshot ${meta.snapshot_id}.`}
       cite={{ href: "/vault/evaluation", label: "§ Evaluation" }}
       ariaLabel="Scatter plot of M★ p_model vs market implied probability for all settled forecasts"
       bleed
@@ -61,7 +61,7 @@ export function CLVBridge({ snapshotId = "latest", mode = "interactive" }: Props
           }}
         >
           {points.length
-            ? `CLV Bridge — snapshot ${meta.snapshot_id}\n${noscriptRows}`
+            ? `CLV Bridge; snapshot ${meta.snapshot_id}\n${noscriptRows}`
             : "No settled M★ forecasts yet."}
         </pre>
       </noscript>

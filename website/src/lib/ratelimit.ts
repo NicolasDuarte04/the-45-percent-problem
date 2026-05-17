@@ -1,7 +1,7 @@
 /**
  * Lightweight in-memory sliding-window rate limiter.
  *
- * Phase 1 stand-in for Upstash Redis. Single-process only — fine for the
+ * Phase 1 stand-in for Upstash Redis. Single-process only: fine for the
  * subscribe form on Vercel during early traffic, but it does **not** survive
  * function recycles or share state across regions. Swap for an Upstash-backed
  * implementation in Phase 5 (search for TODO(rate-limit-upstash)).

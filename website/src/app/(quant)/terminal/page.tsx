@@ -9,7 +9,7 @@ import { TERMINAL_STEPS, TERMINAL_DURATION_SEC } from "./_steps";
 export const dynamic = "force-static";
 
 export const metadata = {
-  title: "Divergence Terminal — The 45% Problem",
+  title: "Divergence Terminal · The 45% Problem",
   description:
     "Screener for model-vs-market divergence across all upcoming World Cup 2026 markets. Sorted by absolute edge magnitude.",
 };
@@ -79,7 +79,7 @@ export default async function TerminalPage({
         }}
       >
         <div className="max-w-[1152px] mx-auto px-0 md:px-12">
-          Research publication. Divergences are descriptive statistics — model-implied
+          Research publication. Divergences are descriptive statistics: model-implied
           probability minus de-vigged market-implied probability. No content on this
           terminal constitutes investment or gambling advice. Methodology pre-registered
           at{" "}
@@ -111,7 +111,7 @@ export default async function TerminalPage({
         >
           <div className="max-w-[1152px] mx-auto px-0 md:px-12">
             ◆ Volatility Gate tripped on all {divergence.rows.length} rows in this snapshot.
-            All rows remain visible — the gate annotates, it does not filter. Gate rules
+            All rows remain visible: the gate annotates, it does not filter. Gate rules
             are shown in the Gate column tooltip.
           </div>
         </div>
@@ -138,17 +138,17 @@ export default async function TerminalPage({
         <div className="max-w-[1152px] mx-auto px-0 md:px-12 space-y-1">
           <p>
             <span className="mono" style={{ color: "var(--data-neutral)" }}>p (model)</span>{" "}
-            — M&#9733; model-implied probability for the outcome.{" "}
+. M&#9733; model-implied probability for the outcome.{" "}
             <span className="mono" style={{ color: "var(--data-neutral)" }}>q (mkt)</span>{" "}
-            — de-vigged market-implied probability from{" "}
+; de-vigged market-implied probability from{" "}
             <span className="mono">source_book</span>.{" "}
             <span className="mono" style={{ color: "var(--data-neutral)" }}>E</span>{" "}
-            — edge: p(model) − q(market). Positive = model implies higher probability than market.
+; edge: p(model) − q(market). Positive = model implies higher probability than market.
           </p>
           <p>
             Rows where the Volatility Gate tripped are annotated with a{" "}
             <span style={{ color: "var(--gate-fired)" }}>◆</span> dot and remain
-            visible — the gate annotates, it does not filter. Gate rules are shown
+            visible: the gate annotates, it does not filter. Gate rules are shown
             in the Gate column hover-card.{" "}
             <span className="mono">ε</span> is the pre-registered edge threshold (3% mainline /
             5% longshot).
@@ -156,7 +156,7 @@ export default async function TerminalPage({
           <p>
             Click any row to expand the model breakdown and{" "}
             <span className="mono">edge_E</span> history sparkline. URL encodes all active
-            filters — copy the address bar to share a specific view.
+            filters: copy the address bar to share a specific view.
           </p>
           <p>
             <Suspense fallback={null}>

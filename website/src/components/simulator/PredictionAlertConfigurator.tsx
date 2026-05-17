@@ -3,7 +3,7 @@
 /**
  * Alert configurator for the Tournament Scenario Simulator.
  *
- * VIRAL_LOOP_PIVOT.md §2 — replaces the old PredictionEmailGate. The pivot
+ * VIRAL_LOOP_PIVOT.md §2: replaces the old PredictionEmailGate. The pivot
  * is tonal: the user is not subscribing to a newsletter, they are arming
  * a position monitor. The component is rendered as a single bordered
  * panel with a key/value config grid: WATCH, TRIGGER, NOTIFY. Submitting
@@ -130,21 +130,21 @@ export function PredictionAlertConfigurator({
 
   const codes = watchCodes(view);
   const sep = watchSeparator(view.mode);
-  const watchFull = codes.length > 0 ? codes.join(sep) : "—";
-  const watchShort = codes.length > 0 ? truncatedWatch(codes, sep, 2) : "—";
+  const watchFull = codes.length > 0 ? codes.join(sep) : "-";
+  const watchShort = codes.length > 0 ? truncatedWatch(codes, sep, 2) : "-";
 
-  // MOTION_SPEC.md §3 — typewriter for the WATCH row. Two parallel hook
+  // MOTION_SPEC.md §3: typewriter for the WATCH row. Two parallel hook
   // instances keep the desktop and mobile-truncated strings on
   // independent typer states, so a viewport resize does not mid-animate
   // one of them. useInView triggers once at 50% visibility.
-  // MOTION_SPEC.md §3 — typewriter trigger. Spec called for an
+  // MOTION_SPEC.md §3: typewriter trigger. Spec called for an
   // IntersectionObserver gate, but on this surface the configurator
   // is reached immediately after the share strip in 95%+ of sessions,
   // and both framer-motion's useInView and a hand-rolled
   // IntersectionObserver failed to flip to "intersecting" under
   // Next 16 + React 19 + RSC streaming (probable same-cause as the
   // StaggeredRevealItem framer issue). Fire unconditionally 540ms
-  // after mount instead — that is the page-level stagger budget
+  // after mount instead: that is the page-level stagger budget
   // (item index 2 = 360ms + 180ms post-cascade buffer), so typing
   // begins exactly as the panel finishes its entrance.
   const [typeActive, setTypeActive] = useState(false);
@@ -160,7 +160,7 @@ export function PredictionAlertConfigurator({
   // 240ms (per-item duration) = 600ms; firing at 640ms lands focus right
   // after the panel settles, so the lit-cyan caret begins blinking
   // without the user clicking. Guards:
-  //   - only fire on touch-free pointers — auto-focusing on mobile would
+  //   - only fire on touch-free pointers; auto-focusing on mobile would
   //     also unroll the soft keyboard before the user has read the score.
   //   - only fire if no other element has already taken focus.
   //   - prefers-reduced-motion: drop the 640ms delay; the panel already
@@ -187,7 +187,7 @@ export function PredictionAlertConfigurator({
     return () => window.clearTimeout(id);
   }, []);
 
-  // §2.3 (3) — submit lock for 1.2s after click regardless of network result.
+  // §2.3 (3); submit lock for 1.2s after click regardless of network result.
   // Prevents the "did it work?" double-submit loop responsible for half of
   // bounce in newsletter forms.
   const handleSubmit = useCallback(
@@ -233,7 +233,7 @@ export function PredictionAlertConfigurator({
     [email, state.kind, submitLockedUntil, view.id],
   );
 
-  // §2.3 (2) — validate on blur (and Enter handled implicitly by submit).
+  // §2.3 (2); validate on blur (and Enter handled implicitly by submit).
   const handleBlur = useCallback(() => {
     if (email.length === 0) return;
     setTouched(true);
@@ -262,7 +262,7 @@ export function PredictionAlertConfigurator({
         emailHint={emailHint(email)}
         title="ALERT · ARMED"
         // The body inverts the user's mental model: instead of "we sent you
-        // an email", it is "the alert is not active yet" — a final step the
+        // an email", it is "the alert is not active yet"; a final step the
         // user wants to complete.
         line1={`Verification email sent to ${emailHint(email)}.`}
         line2="Click the link inside to finalize. The alert is not active until you confirm."
@@ -329,20 +329,20 @@ export function PredictionAlertConfigurator({
         aria-busy={isSubmitting}
       >
         <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 sm:gap-x-8">
-          {/* WATCH — read-only echo of the user's prediction. */}
+          {/* WATCH: read-only echo of the user's prediction. */}
           <dt className="font-mono text-[12px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] leading-[1.6]">
             WATCH
           </dt>
           <dd className="min-w-0 font-mono text-[14px] tabular-nums text-[var(--text-primary)] leading-[1.6]">
             {/* Truncate on mobile (<sm); show the full chain on sm+.
                 Both strings are typed out independently per
-                MOTION_SPEC.md §3 — a resize never mid-animates the
+                MOTION_SPEC.md §3: a resize never mid-animates the
                 wrong one because each hook owns its own state. */}
             <span className="sm:hidden" title={watchFull}>{watchTypedShort}</span>
             <span className="hidden sm:inline">{watchTypedFull}</span>
           </dd>
 
-          {/* TRIGGER — fixed string. Reads as terminal config, not a knob. */}
+          {/* TRIGGER: fixed string. Reads as terminal config, not a knob. */}
           <dt className="font-mono text-[12px] uppercase tracking-[0.10em] text-[var(--text-tertiary)] leading-[1.6]">
             TRIGGER
           </dt>
@@ -350,7 +350,7 @@ export function PredictionAlertConfigurator({
             state change only
           </dd>
 
-          {/* NOTIFY — the only input. The original VIRAL_LOOP §2.2 spec
+          {/* NOTIFY: the only input. The original VIRAL_LOOP §2.2 spec
               called for no placeholder ("WATCH and TRIGGER establish
               purpose"). The CRO follow-up overrides that: a single
               terminal-style example string ("operator@domain.com") in
@@ -400,7 +400,7 @@ export function PredictionAlertConfigurator({
           </dd>
         </dl>
 
-        {/* CTA row — ARM ALERT button + skip link. */}
+        {/* CTA row. ARM ALERT button + skip link. */}
         <div className="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-3">
           <button
             type="submit"
@@ -414,7 +414,7 @@ export function PredictionAlertConfigurator({
               // Filled-bone CTA at rest. Inverting from outline to a
               // solid bone-white block makes the button unmistakably
               // the primary action against the elevated terminal
-              // surface — the post-launch UX feedback flagged the
+              // surface: the post-launch UX feedback flagged the
               // previous outline-on-dark version as too stealth.
               // Hover transitions to peach (the simulator's signature
               // accent reserved for hover / promoted / flag border per
@@ -431,7 +431,7 @@ export function PredictionAlertConfigurator({
             {isSubmitting ? "[ ARMING… ]" : "[ ARM ALERT ]"}
           </button>
 
-          {/* Skip — half the visual weight of the CTA. The chevron is the
+          {/* Skip: half the visual weight of the CTA. The chevron is the
               affordance; no underline. */}
           <button
             type="button"
@@ -513,7 +513,7 @@ function SkippedPanel({ onUnskip }: { onUnskip: () => void }) {
           ALERT · NOT ARMED
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)]">
-          STATUS: —
+          STATUS:. 
         </span>
       </header>
       <div className="flex items-center justify-between gap-4 px-5 py-5 sm:px-6 sm:py-6">
@@ -541,7 +541,7 @@ function emailHint(value: string): string {
   return v.length > 36 ? `${v.slice(0, 33)}…` : v;
 }
 
-// ── TrackedFootnote — quiet acknowledgement when the row already has email ────
+// ── TrackedFootnote: quiet acknowledgement when the row already has email ────
 // Rendered by the parent when `view.hasTracking === true` on the first server
 // render. The export name is preserved from the previous PredictionEmailGate
 // module so the page consumer changes remain minimal.

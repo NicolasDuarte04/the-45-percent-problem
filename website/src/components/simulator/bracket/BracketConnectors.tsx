@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * BracketConnectors — Phase E §7 (C.2).
+ * BracketConnectors · Phase E §7 (C.2).
  *
  * Single SVG overlay that renders 30 right-angle connector paths from
  * each parent match's right edge to its child match's left edge. Two
@@ -18,7 +18,7 @@
  * is the team propagated into the child, the connector strokes in
  * `--accent-warm`. Otherwise it strokes in `--text-tertiary`.
  *
- * Draw-in animation (Q2 — first session load only):
+ * Draw-in animation (Q2: first session load only):
  *   - Each path is rendered with `stroke-dasharray = pathLength` and
  *     `stroke-dashoffset = pathLength` initially, then animated to 0.
  *   - Stagger by round level so R32→R16 lines fire first, then
@@ -62,7 +62,7 @@ interface ConnectorSeg {
 interface BracketConnectorsProps {
   /**
    * Map of "is the parent's winner the chip currently sitting in this
-   * child's slot" — keyed `${parentLevel}-${parentMatchIdx}`. The
+   * child's slot": keyed `${parentLevel}-${parentMatchIdx}`. The
    * caller computes this from koAdvancers so the connector highlight
    * matches the cell highlight.
    */
@@ -76,7 +76,7 @@ export function BracketConnectors({
   mobile = false,
 }: BracketConnectorsProps) {
   const prefersReduced = useReducedMotion();
-  // Q2 — first session load only. Lazy initial state computes once on
+  // Q2: first session load only. Lazy initial state computes once on
   // mount: probes sessionStorage, sets the seen flag if absent. SSR
   // returns false (no window), client mount returns true on first nav,
   // false on subsequent navs in the same session.
@@ -90,7 +90,7 @@ export function BracketConnectors({
         return true;
       }
     } catch {
-      // sessionStorage unavailable (Safari private mode etc.) — skip
+      // sessionStorage unavailable (Safari private mode etc.); skip
       // the animation rather than break the bracket.
     }
     return false;
@@ -168,7 +168,7 @@ interface ConnectorPathProps {
 
 function ConnectorPath({ seg, shouldAnimate, prefersReduced }: ConnectorPathProps) {
   const ref = useRef<SVGPathElement | null>(null);
-  // Stagger by round level — R32→R16 lines (parentLevel 0) start at 0,
+  // Stagger by round level. R32→R16 lines (parentLevel 0) start at 0,
   // R16→QF (parentLevel 1) at 100ms, and so on.
   const delayMs = shouldAnimate && !prefersReduced ? seg.parentLevel * 100 : 0;
   const durationMs = 600;

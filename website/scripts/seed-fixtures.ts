@@ -31,12 +31,12 @@ import * as schema from "../src/lib/db/schema";
 
 // Allow running with .env.local without forcing the user to source it.
 try {
-  // process.loadEnvFile is Node 20+ stable — drizzle.config.ts uses the same.
+  // process.loadEnvFile is Node 20+ stable; drizzle.config.ts uses the same.
   (process as { loadEnvFile?: (p: string) => void }).loadEnvFile?.(
     ".env.local",
   );
 } catch {
-  /* no .env.local — fall through to ambient env. */
+  /* no .env.local; fall through to ambient env. */
 }
 
 function getUrl(): string {
@@ -185,7 +185,7 @@ async function main() {
     for (const e of errors) console.error("  -", e);
     process.exit(1);
   }
-  console.log("[seed-fixtures] OK — all sanity checks passed.");
+  console.log("[seed-fixtures] OK; all sanity checks passed.");
 }
 
 main().catch((err) => {

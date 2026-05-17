@@ -3,12 +3,12 @@
  * have something to render in dev / preview before Phase 4's cron is live.
  *
  * Inputs:
- * - public/sample-brief.json — the canonical "today" brief
+ * - public/sample-brief.json; the canonical "today" brief
  *
  * Outputs (all under the briefs/ prefix in Vercel Blob):
- * - briefs/<today>.json     — full divergences, full movers, one suppression
- * - briefs/<yesterday>.json — different lead, no suppressions
- * - briefs/<day-before>.json — quiet day, empty top_divergences
+ * - briefs/<today>.json; full divergences, full movers, one suppression
+ * - briefs/<yesterday>.json; different lead, no suppressions
+ * - briefs/<day-before>.json; quiet day, empty top_divergences
  *
  * Usage (from `website/` with BLOB_READ_WRITE_TOKEN populated in .env.local):
  *   pnpm tsx scripts/seed-briefs-blob.ts
@@ -19,7 +19,7 @@
  *
  * Phase 4's Python pipeline replaces this seed entirely. The script lives
  * in scripts/ rather than src/ because (a) it is dev-only and (b) the §6.6
- * forbidden-words check skips scripts/ — keeps the seed copy free to use
+ * forbidden-words check skips scripts/: keeps the seed copy free to use
  * realistic team names without contortion.
  */
 
@@ -32,7 +32,7 @@ import {
 } from "../src/lib/blob";
 import type { BriefSample } from "../src/lib/brief";
 
-// Tiny .env.local loader — the project doesn't depend on `dotenv`, and
+// Tiny .env.local loader; the project doesn't depend on `dotenv`, and
 // adding it just for one dev script would be unscoped infra creep. This
 // parser handles KEY=value, KEY="value", and KEY='value' lines plus
 // blanks and `#` comments. Existing process.env entries take priority.
@@ -176,7 +176,7 @@ function yesterdayBrief(): BriefSample {
 }
 
 function dayBeforeBrief(): BriefSample {
-  // Quiet day — no divergences exceeded threshold. Used to test the empty
+  // Quiet day: no divergences exceeded threshold. Used to test the empty
   // state in the email template and the archive row.
   const date = shiftDate(SAMPLE.brief_date, -2);
   return {
@@ -253,7 +253,7 @@ async function main() {
     }
   }
 
-  console.log("[seed-briefs] done — 3 issues seeded.");
+  console.log("[seed-briefs] done. 3 issues seeded.");
 }
 
 main().catch((err) => {

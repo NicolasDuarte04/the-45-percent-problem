@@ -6,7 +6,7 @@ interface DropcapProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * First-paragraph dropcap. §2.8 — first glyph at display-md, floated left
+ * First-paragraph dropcap. §2.8: first glyph at display-md, floated left
  * four lines deep, --ink. Rendered as a <div> so MDX can nest its own <p>
  * inside without producing invalid <p> inside <p> markup.
  */

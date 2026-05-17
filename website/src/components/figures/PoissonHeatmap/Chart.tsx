@@ -10,7 +10,7 @@ export interface GoalMatrix {
   lambdaAway: number;
 }
 
-const MAX_GOALS = 6; // show 0–5 for readability
+const MAX_GOALS = 6; // show 0-5 for readability
 
 function interpolate(t: number): string {
   // cream → prism-peach → prism-coral
@@ -59,7 +59,7 @@ function Cell({
   return (
     <div
       role="gridcell"
-      aria-label={`${homeTeam} ${homeGoals}–${awayGoals} ${awayTeam}: ${(value * 100).toFixed(2)}%`}
+      aria-label={`${homeTeam} ${homeGoals}-${awayGoals} ${awayTeam}: ${(value * 100).toFixed(2)}%`}
       style={{
         position: "relative",
         background: bg,
@@ -108,7 +108,7 @@ function Cell({
           }}
         >
           <div>
-            {homeTeam} {homeGoals}–{awayGoals} {awayTeam}
+            {homeTeam} {homeGoals}-{awayGoals} {awayTeam}
           </div>
           <div style={{ color: "var(--prism-peach)", fontWeight: 500 }}>
             {(value * 100).toFixed(3)}%

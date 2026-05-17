@@ -8,11 +8,11 @@ import type {
 import { Flag } from "@/components/primitives/Flag";
 
 /**
- * Terminal Dashboard — two compact, terminal-style read-outs from the
+ * Terminal Dashboard: two compact, terminal-style read-outs from the
  * nightly M★ snapshot. Replaces the old Prism-hue colour legend.
  *
- *   Card A · Top divergences  — divergence rows ranked by |E|
- *   Card B · Biggest movers   — 7-day Δ rank, split into risers / fallers
+ *   Card A · Top divergences; divergence rows ranked by |E|
+ *   Card B · Biggest movers. 7-day Δ rank, split into risers / fallers
  *
  * Movers fall back to a small preview list while we are pre-tournament and
  * every rank_change_7d is still zero. Once the field becomes live in the
@@ -265,7 +265,7 @@ function DivergencePP({ value }: { value: number }) {
       style={{
         fontSize: 13.5,
         lineHeight: 1,
-        // Low-luminance high-chroma ink — mirrors the HTML prototype's
+        // Low-luminance high-chroma ink: mirrors the HTML prototype's
         // div-pos / div-neg pair. Stays legible on both editorial cream
         // and quant slate (oklch lightness 33% reads on either canvas).
         color: value >= 0 ? "oklch(33% .12 140)" : "oklch(33% .15 28)",
@@ -407,7 +407,7 @@ function MoversCard({
       <CardTitle id="td-movers-title">Biggest movers</CardTitle>
       <Dek>
         Largest 7-day shifts in <span className="mono">Δ rank</span>. Reported
-        descriptively — pre-registered §7.2.
+        descriptively: pre-registered §7.2.
       </Dek>
 
       <Shelf />
@@ -507,10 +507,10 @@ function MoversSection({
                 </span>
               </Td>
               <Td align="right">
-                <NumCell value="—" dim />
+                <NumCell value="-" dim />
               </Td>
               <Td align="right">
-                <NumCell value="—" dim />
+                <NumCell value="-" dim />
               </Td>
             </tr>
           ) : (
@@ -537,7 +537,7 @@ function MoversSection({
 // ── Selection helpers ────────────────────────────────────────────────────
 
 function pickTopDivergences(rows: DivergenceRow[], n: number) {
-  // Pick rows where the outcome cleanly maps to one team — this card shows a
+  // Pick rows where the outcome cleanly maps to one team; this card shows a
   // single flag per row, so a Draw outcome would have no natural team to
   // display. Sorted by |edge_E| desc so the most disagreement floats to top.
   return rows
@@ -578,7 +578,7 @@ function pickMovers(teams: TournamentTeam[], n: number) {
       const team = lookup.get(code);
       return team ? [{ team, delta }] : [];
     }).slice(0, n);
-    return { risers, fallers, baseline: "—", isPreview: true };
+    return { risers, fallers, baseline: "-", isPreview: true };
   }
 
   const sorted = [...teams].sort(

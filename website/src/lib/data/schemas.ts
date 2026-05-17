@@ -1,6 +1,6 @@
 /**
  * Zod schemas for Phase 9 snapshot artifacts (§4 of Phase9_Website_Architecture.md).
- * Each schema is the authoritative validator — build fails on mismatch.
+ * Each schema is the authoritative validator; build fails on mismatch.
  */
 import { z } from "zod";
 

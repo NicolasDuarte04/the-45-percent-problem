@@ -68,7 +68,7 @@ export function ReliabilityDiagram({ bins }: ReliabilityDiagramProps) {
         }}
         aria-label="Reliability diagram: no data available"
       >
-        No settled forecasts — diagram available after first matches settle.
+        No settled forecasts: diagram available after first matches settle.
       </div>
     );
   }

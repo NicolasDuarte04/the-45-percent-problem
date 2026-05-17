@@ -172,7 +172,7 @@ describe("POST /api/predictions", () => {
     // Simulate the production failure mode that motivated this fix:
     // the `predictions` table does not exist (42P01), so the SELECT
     // inside `existsCheck` rejects. Pre-fix, this was logged as
-    // "id generation exhausted" — misleading ops; now it surfaces as
+    // "id generation exhausted": misleading ops; now it surfaces as
     // a `server` 500 with the real cause logged.
     mockDb.select.mockImplementation(() => {
       throw new Error('relation "predictions" does not exist');

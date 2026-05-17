@@ -5,7 +5,7 @@
  * intentional negative space. No trophy, no bracket animation, no
  * image, no icon.
  *
- * Phase E §8 (D.2) — the redundant `[ START YOUR PREDICTION ]` button
+ * Phase E §8 (D.2): the redundant `[ START YOUR PREDICTION ]` button
  * is removed. The three mode cards below are themselves the call to
  * action; the button added a click without adding meaning.
  *

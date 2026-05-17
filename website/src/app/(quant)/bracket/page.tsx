@@ -18,7 +18,7 @@ import {
 import { BRACKET_STEPS, BRACKET_DURATION_SEC } from "./_steps";
 
 export const metadata = {
-  title: "Bracket — The 45% Problem",
+  title: "Bracket · The 45% Problem",
   description:
     "Single-page bracket with per-round marginal probabilities drawn from the Monte Carlo ensemble.",
 };

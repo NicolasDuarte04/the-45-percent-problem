@@ -185,7 +185,7 @@ function MarketRow({ row }: { row: Row }) {
             className="mono text-[13px]"
             style={{ color: "var(--text-quiet)" }}
           >
-            —
+. 
           </span>
         )}
         <div
@@ -200,7 +200,7 @@ function MarketRow({ row }: { row: Row }) {
           className="mono text-[13px]"
           style={{ color: "var(--text-secondary)" }}
         >
-          {row.book ?? "—"}
+          {row.book ?? "-"}
         </div>
         <div
           className="mono text-[10px]"
@@ -211,7 +211,7 @@ function MarketRow({ row }: { row: Row }) {
       </div>
       <div className="text-right">
         {row.edge !== undefined ? <EdgeBadge edge={row.edge} /> : (
-          <span className="mono text-[12px]" style={{ color: "var(--text-quiet)" }}>—</span>
+          <span className="mono text-[12px]" style={{ color: "var(--text-quiet)" }}>-</span>
         )}
       </div>
     </div>

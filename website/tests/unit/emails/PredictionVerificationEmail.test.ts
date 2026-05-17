@@ -11,7 +11,7 @@ const SAMPLE_PROPS = {
   expiresInHours: 24,
 };
 
-describe("<PredictionVerificationEmail /> — IMPL_PROMPT §18 snapshot", () => {
+describe("<PredictionVerificationEmail />: IMPL_PROMPT §18 snapshot", () => {
   it("renders an HTML output that matches the committed snapshot", async () => {
     const html = await render(PredictionVerificationEmail(SAMPLE_PROPS));
     expect(html).toMatchSnapshot();
@@ -26,7 +26,7 @@ describe("<PredictionVerificationEmail /> — IMPL_PROMPT §18 snapshot", () => 
   });
 });
 
-describe("<PredictionVerificationEmail /> — content invariants", () => {
+describe("<PredictionVerificationEmail />: content invariants", () => {
   // Content-text invariants are checked against the plain-text render.
   // Plain-text strips the DOCTYPE declaration (whose `<!` legitimately
   // contains `!`), the React-email server-rendering comments
@@ -64,7 +64,7 @@ describe("<PredictionVerificationEmail /> — content invariants", () => {
 
   it("uses the existing email design system (cream background, JetBrains Mono, Source Serif 4)", async () => {
     const html = await render(PredictionVerificationEmail(SAMPLE_PROPS));
-    // Brutalist palette anchors — same as <VerificationEmail />.
+    // Brutalist palette anchors: same as <VerificationEmail />.
     expect(html).toContain("#F4F1EA"); // cream body / container background
     expect(html).toContain("#0E0E0E"); // ink primary text
     expect(html).toContain("#C4BEB0"); // hairline rule + context-block border

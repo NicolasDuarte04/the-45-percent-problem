@@ -2,7 +2,7 @@ import Image from "next/image";
 
 /**
  * Static Monte Carlo trophy point cloud. Pre-rendered SVG served from
- * /public/assets — intentionally not a dynamic chart. See
+ * /public/assets: intentionally not a dynamic chart. See
  * _design_handoff/trophy_point_cloud.svg for the source.
  *
  * Caption lives in the parent layout so it can span the full hero width
@@ -17,7 +17,7 @@ export function HeroGraphic() {
     >
       <Image
         src="/assets/trophy_point_cloud.svg"
-        alt="Quantitative World Cup Trophy — 10,000 Monte Carlo samples from the M★ posterior."
+        alt="Quantitative World Cup Trophy. 10,000 Monte Carlo samples from the M★ posterior."
         width={260}
         height={384}
         priority

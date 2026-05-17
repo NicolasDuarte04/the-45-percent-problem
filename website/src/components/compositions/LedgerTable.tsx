@@ -340,7 +340,7 @@ export function LedgerTable({ records }: LedgerTableProps) {
                   />
                 </td>
 
-                {/* CLV bps — M★ only */}
+                {/* CLV bps · M★ only */}
                 <td
                   className="py-1.5 px-2 text-right"
                   aria-label={
@@ -364,12 +364,12 @@ export function LedgerTable({ records }: LedgerTableProps) {
                     </span>
                   ) : (
                     <span className="mono" style={{ color: "var(--text-tertiary)" }}>
-                      —
+. 
                     </span>
                   )}
                 </td>
 
-                {/* Label — the ONLY visual delta between HIT and MISS */}
+                {/* Label: the ONLY visual delta between HIT and MISS */}
                 <td className="py-1.5 px-2 text-center">
                   <LabelChip label={r.hit_miss_label} />
                 </td>
@@ -401,7 +401,7 @@ export function LedgerTable({ records }: LedgerTableProps) {
         className="mt-3 text-[11px]"
         style={{ color: "var(--text-tertiary)" }}
       >
-        Default sort: reverse-chronological. HIT / MISS / NEUTRAL rows share identical grid, padding, and type size — §7.2 invariant.
+        Default sort: reverse-chronological. HIT / MISS / NEUTRAL rows share identical grid, padding, and type size. §7.2 invariant.
         No &ldquo;win rate&rdquo; or ROI sorting is exposed.{" "}
         <Link
           href="/vault/glossary"

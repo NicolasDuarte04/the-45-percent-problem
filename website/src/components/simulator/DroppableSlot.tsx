@@ -11,7 +11,7 @@ import { useDroppable } from "@dnd-kit/core";
 import type { ReactNode } from "react";
 
 interface DroppableSlotProps {
-  /** Unique droppable id — must not collide with draggable ids. */
+  /** Unique droppable id: must not collide with draggable ids. */
   id: string;
   /** Descriptive label for aria-label. */
   label: string;

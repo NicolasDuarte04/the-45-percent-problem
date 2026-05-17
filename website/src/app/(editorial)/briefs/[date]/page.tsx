@@ -6,7 +6,7 @@ import { loadBriefByDate } from "@/lib/brief";
 import { DailyBriefEmail } from "@/emails/DailyBriefEmail";
 
 // Past briefs are immutable once written; long ISR window (1 day) keeps them
-// hot in the CDN. Live "today" view is served from the same route — the
+// hot in the CDN. Live "today" view is served from the same route; the
 // revalidate window matches the cron cadence so a freshly written brief
 // surfaces within 10 minutes of dispatch even before Phase 4's targeted
 // revalidation webhook lands.
@@ -23,7 +23,7 @@ export async function generateMetadata({
     return { title: `Brief ${date} not found | 45analytics` };
   }
   return {
-    title: `Brief — ${brief.brief_date} (Issue ${String(brief.issue_number).padStart(3, "0")}) | 45analytics`,
+    title: `Brief. ${brief.brief_date} (Issue ${String(brief.issue_number).padStart(3, "0")}) | 45analytics`,
     description: brief.headline.summary_line,
   };
 }

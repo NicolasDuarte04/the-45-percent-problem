@@ -21,13 +21,13 @@ export interface VaultArticleProps {
     bibtex: string;
     apa?: string;
   };
-  /** What to read next — rendered as a small outbound list beneath citation. */
+  /** What to read next: rendered as a small outbound list beneath citation. */
   readNext?: Array<{ href: string; title: string; blurb?: string }>;
   children: ReactNode;
 }
 
 /**
- * §8.3 — VaultArticle layout. Applies the editorial canvas and enforces
+ * §8.3: VaultArticle layout. Applies the editorial canvas and enforces
  * the 68ch reading column / 220px side rail grid.
  *
  * MDX pages under app/(editorial)/vault/[slug]/page.mdx render inside this
@@ -148,7 +148,7 @@ export function VaultArticle({
         </div>
       </div>
 
-      {/* ── Footer — footnotes, citation, what to read next ──────────────── */}
+      {/* ── Footer: footnotes, citation, what to read next ──────────────── */}
       <footer
         className="mx-auto"
         style={{

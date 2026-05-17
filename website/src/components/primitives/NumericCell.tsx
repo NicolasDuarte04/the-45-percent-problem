@@ -13,7 +13,7 @@ interface NumericCellProps<T = number> {
 
 /**
  * Unified numeric/tabular cell. Replaces MonoNumber, ProbabilityCell, OddsCell,
- * and ConfidenceInterval — all four previously returned the same
+ * and ConfidenceInterval: all four previously returned the same
  * `<span class="mono inline-block text-right">` with a different formatter.
  */
 export function NumericCell<T = number>({

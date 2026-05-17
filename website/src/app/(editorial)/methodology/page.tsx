@@ -1,9 +1,9 @@
 /**
- * /methodology — research-product entry point.
+ * /methodology: research-product entry point.
  *
  * Phase 2 had this route as a thin redirect to `/vault/methodology` (the
  * long-form essay). Per the Phase 3 implementation prompt, the daily-brief
- * <LiveDataBlock /> should also surface here — visitors landing on the
+ * <LiveDataBlock /> should also surface here; visitors landing on the
  * methodology surface get a "today's number" reference alongside the link
  * into the vault essay. The redirect was preserving link rot from a Phase 1
  * URL move; we keep the URL alive but no longer auto-redirect.
@@ -22,7 +22,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Methodology | 45analytics",
   description:
-    "The 45analytics model in one sentence — and a link into the long-form Phase 1 framework essay. Today's daily brief shown above for reference.",
+    "The 45analytics model in one sentence; and a link into the long-form Phase 1 framework essay. Today's daily brief shown above for reference.",
 };
 
 export default async function MethodologyEntryPage({
@@ -81,8 +81,8 @@ export default async function MethodologyEntryPage({
           10,000 Monte Carlo simulations per night. Bookmaker odds de-vigged
           via the power method. Edges flagged above a 3% mainline threshold
           (5% for derivatives). Suppressed when the volatility gate triggers.
-          The full specification — every parameter, every calibration step,
-          every kill criterion — lives in the vault.
+          The full specification: every parameter, every calibration step,
+          every kill criterion: lives in the vault.
         </p>
       </header>
 

@@ -8,8 +8,8 @@
  * Probabilities here are synthetic-but-plausible (derived from an Elo seed
  * dictionary, then forward-rolled into match 1X2 and tournament-progression
  * estimates). They are placeholders until the M0/M★ snapshot pipeline runs
- * with the real fixture list. The STRUCTURE — which teams exist, which
- * fixtures are real — matches the canonical Postgres seed exactly.
+ * with the real fixture list. The STRUCTURE: which teams exist, which
+ * fixtures are real: matches the canonical Postgres seed exactly.
  *
  * Usage:
  *   pnpm tsx scripts/regenerate-snapshots.ts
@@ -28,7 +28,7 @@ import {
   type Team,
 } from "../src/lib/data/wc2026-official-draw";
 
-// Use fileURLToPath, not new URL(...).pathname — the latter keeps spaces
+// Use fileURLToPath, not new URL(...).pathname; the latter keeps spaces
 // percent-encoded, which silently routes writes to a ghost "Claude%20.../"
 // directory on macOS install paths that contain spaces.
 const HERE = path.dirname(fileURLToPath(import.meta.url));

@@ -12,7 +12,7 @@ interface CiteChipProps {
 }
 
 /**
- * §8.11 — click-to-copy BibTeX chip for the foot of any Vault article.
+ * §8.11: click-to-copy BibTeX chip for the foot of any Vault article.
  * "Cite this snapshot" wording is supplied by the article so the snapshot id
  * is baked into the citation body itself.
  */

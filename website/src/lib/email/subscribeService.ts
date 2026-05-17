@@ -56,7 +56,7 @@ export async function subscribeService(
     throw new Error("subscribeService: simulator path requires predictionId");
   }
 
-  // Suppression check — applies to both paths. Hard stop, never bypassed.
+  // Suppression check: applies to both paths. Hard stop, never bypassed.
   const sup = await db
     .select({ email: suppressionList.email })
     .from(suppressionList)
@@ -162,7 +162,7 @@ export async function subscribeService(
     outcome = "created";
   }
 
-  // Dispatch verification email — template depends on path.
+  // Dispatch verification email: template depends on path.
   try {
     if (kind === "simulator") {
       await sendPredictionVerificationEmail({

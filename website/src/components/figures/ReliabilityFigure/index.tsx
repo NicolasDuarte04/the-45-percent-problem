@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * §8.4 — ReliabilityFigure.
+ * §8.4: ReliabilityFigure.
  * Calibration reliability diagram with current snapshot's bins, 45° reference
  * line, and sample-size halo on each dot. Hover reveals raw counts (interactive
  * mode only).
@@ -49,7 +49,7 @@ export function ReliabilityFigure({
             whiteSpace: "pre-wrap",
           }}
         >
-          {`Reliability diagram — ${metrics.snapshot_id}\n${noscriptRows || "No settled forecasts yet."}`}
+          {`Reliability diagram. ${metrics.snapshot_id}\n${noscriptRows || "No settled forecasts yet."}`}
         </pre>
       </noscript>
     </Figure>

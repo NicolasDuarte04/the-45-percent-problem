@@ -10,7 +10,7 @@ interface Props {
 }
 
 /**
- * §8.4 — PoissonHeatmap.
+ * §8.4: PoissonHeatmap.
  * Goal-score probability matrix for a featured match, derived from the bivariate
  * Poisson parameters (λ_home, λ_away) in the 10k Monte Carlo draw.
  */
@@ -24,7 +24,7 @@ export function PoissonHeatmap({
 
   if (!matches.length) {
     return (
-      <Figure caption="Goal probability matrix — no match data in this snapshot.">
+      <Figure caption="Goal probability matrix: no match data in this snapshot.">
         <div
           style={{
             height: 240,
@@ -62,7 +62,7 @@ export function PoissonHeatmap({
     lambdaAway: featured.lambda.away,
   };
 
-  const caption = `Bivariate Poisson goal-score matrix for ${featured.home.display_name} vs ${featured.away.display_name}. Each cell is the joint probability of that exact scoreline. Showing goals 0–5; rows = home, columns = away.`;
+  const caption = `Bivariate Poisson goal-score matrix for ${featured.home.display_name} vs ${featured.away.display_name}. Each cell is the joint probability of that exact scoreline. Showing goals 0-5; rows = home, columns = away.`;
 
   const noscriptRows = featured.p_model_goals
     .slice(0, 5)
@@ -97,7 +97,7 @@ export function PoissonHeatmap({
             whiteSpace: "pre-wrap",
           }}
         >
-          {`Goal matrix — ${featured.home.display_name} vs ${featured.away.display_name}\n${noscriptRows}`}
+          {`Goal matrix. ${featured.home.display_name} vs ${featured.away.display_name}\n${noscriptRows}`}
         </pre>
       </noscript>
     </Figure>

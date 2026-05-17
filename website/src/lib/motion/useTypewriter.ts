@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * useTypewriter — MOTION_SPEC.md §3.
+ * useTypewriter · MOTION_SPEC.md §3.
  *
  * Reveal `text` one character at a time once `active` flips to true.
  * Returns the currently-typed substring. Designed for the WATCH row
- * in PredictionAlertConfigurator — when the panel scrolls into view
+ * in PredictionAlertConfigurator: when the panel scrolls into view
  * the prediction chain (e.g. "ARG > AUT > AUS > BEL") types out
  * left-to-right at terminal speed.
  *
  * Brutalist tone: 22ms per character is faster than mainstream
- * typewriter effects (40–60ms) — reads as command-line echo, not
+ * typewriter effects (40-60ms): reads as command-line echo, not
  * as a person typing. No caret; the eyebrow's STATUS: ▍ already
  * owns the blinking-cursor role.
  *
@@ -75,12 +75,12 @@ export function useTypewriter(
     }
 
     const key = `${text}::${tickMs}`;
-    // Already typed this string to completion — no work, no restart.
+    // Already typed this string to completion; no work, no restart.
     if (completedKeyRef.current === key) {
       setOut(text);
       return;
     }
-    // Already typing this string — let it finish; do not reset.
+    // Already typing this string: let it finish; do not reset.
     if (intervalRef.current !== null) {
       return;
     }

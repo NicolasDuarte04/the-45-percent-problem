@@ -67,7 +67,7 @@ function scoreFinalFour(
   for (const team of s.semifinalists) {
     const prob = TEAM_PROBS[team];
     if (!prob) {
-      // Unknown team — fall back to mock for robustness.
+      // Unknown team: fall back to mock for robustness.
       return computeRealityScoreMock("final_four", canonical);
     }
     jointP *= prob.pS;
@@ -114,7 +114,7 @@ function scoreChampionsPath(
   }
 
   if (lastFilledIdx === -1) {
-    // No stage set — use group qualification probability.
+    // No stage set: use group qualification probability.
     return { count: Math.max(1, Math.round(MC_RUNS * prob.pG)), total: MC_RUNS };
   }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getLiveHook } from "@/lib/sim/getLiveHook";
 
-describe("getLiveHook (Phase D Workstream 3 — Option C)", () => {
+describe("getLiveHook (Phase D Workstream 3. Option C)", () => {
   it("returns REALISTIC at p ≥ 5%", () => {
     expect(getLiveHook(500, 10000)).toBe("REALISTIC");
     expect(getLiveHook(2500, 10000)).toBe("REALISTIC");
@@ -20,7 +20,7 @@ describe("getLiveHook (Phase D Workstream 3 — Option C)", () => {
     expect(getLiveHook(0, 10000)).toBe("LONG SHOT");
   });
 
-  it("treats vanishingly rare (< 0.1%) as LONG SHOT — no fourth tier", () => {
+  it("treats vanishingly rare (< 0.1%) as LONG SHOT; no fourth tier", () => {
     expect(getLiveHook(5, 10000)).toBe("LONG SHOT");
     expect(getLiveHook(1, 100000)).toBe("LONG SHOT");
   });

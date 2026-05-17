@@ -10,7 +10,7 @@
  * The simulator exists so users can stake a scenario *independently* of
  * the model's prediction (M0 through M★), and then see how their pick
  * compares. If Auto-fill secretly seeded from M★, the user's "scenario"
- * would just be the model talking to itself — and the eventual Nyberg
+ * would just be the model talking to itself; and the eventual Nyberg
  * test would lose its statistical bite.
  *
  * So this file ships only Elo. No form, no FIFA points, no macro prior,
@@ -22,7 +22,7 @@
  * snapshot SHA can be surfaced through the existing `snapshotSha` flow.
  *
  * Stability: keys are FIFA 3-letter codes from `wc2026-official-draw.ts`.
- * Update those codes here and there together — a missing code returns 0
+ * Update those codes here and there together; a missing code returns 0
  * from `eloFor`, which sorts last (the worst tiebreak the user will see
  * is alphabetical-via-stable-sort, which is acceptable for a stub).
  */
@@ -37,7 +37,7 @@ import type { TeamCode } from "./types";
  * not a forecast.
  */
 export const WC2026_ELO_SNAPSHOT: Record<string, number> = {
-  // Tier 1 — established top-six contenders
+  // Tier 1: established top-six contenders
   ESP: 2068,
   ARG: 2061,
   FRA: 2042,
@@ -46,7 +46,7 @@ export const WC2026_ELO_SNAPSHOT: Record<string, number> = {
   POR: 1985,
   GER: 1972,
   NED: 1955,
-  // Tier 2 — strong outsiders
+  // Tier 2: strong outsiders
   BEL: 1928,
   CRO: 1911,
   COL: 1899,
@@ -55,7 +55,7 @@ export const WC2026_ELO_SNAPSHOT: Record<string, number> = {
   SUI: 1862,
   ECU: 1850,
   SEN: 1843,
-  // Tier 3 — middle of the pack
+  // Tier 3: middle of the pack
   JPN: 1830,
   USA: 1820,
   KOR: 1810,
@@ -68,7 +68,7 @@ export const WC2026_ELO_SNAPSHOT: Record<string, number> = {
   CIV: 1740,
   PAR: 1735,
   NOR: 1730,
-  // Tier 4 — solid but unlikely to advance deep
+  // Tier 4: solid but unlikely to advance deep
   SWE: 1720,
   TUN: 1712,
   ALG: 1705,
@@ -80,7 +80,7 @@ export const WC2026_ELO_SNAPSHOT: Record<string, number> = {
   BIH: 1660,
   GHA: 1652,
   IRQ: 1645,
-  // Tier 5 — long-shots
+  // Tier 5: long-shots
   KSA: 1635,
   UZB: 1628,
   PAN: 1620,
@@ -101,7 +101,7 @@ export function eloFor(code: TeamCode): number {
 }
 
 /**
- * For each group letter A–L, return the four team codes sorted by Elo
+ * For each group letter A-L, return the four team codes sorted by Elo
  * descending. Stable: ties (none expected at this granularity) fall
  * back to TEAMS-array order, which is FIFA pot order.
  *

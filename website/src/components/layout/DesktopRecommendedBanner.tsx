@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * DesktopRecommendedBanner — Mobile Optimization Plan §3.
+ * DesktopRecommendedBanner · Mobile Optimization Plan §3.
  *
  * A thin chrome strip below the masthead that informs mobile visitors
  * that the dense quant surfaces (Terminal, Ledger, Bracket, Match,
  * Team) were designed for desktop. Sits between FreshnessBanner (info)
- * and KillCriteriaBanner (alert) in tone — quiet, non-blocking,
+ * and KillCriteriaBanner (alert) in tone; quiet, non-blocking,
  * dismissible.
  *
  * Display rules:
@@ -21,15 +21,15 @@
  *     in the SSR document, not in a Client Component) flips
  *     data-dismissed before React hydrates so there is no
  *     flash-of-banner-then-dismiss on initial load. See
- *     DESKTOP_BANNER_DOM_ID below — the layout's pre-hydrate script
+ *     DESKTOP_BANNER_DOM_ID below: the layout's pre-hydrate script
  *     looks the wrapper up by this id.
  *
  * Accessibility:
- *   • role="status", aria-live="polite" — informational, not an alert.
+ *   • role="status", aria-live="polite": informational, not an alert.
  *   • Dismiss is a real <button> with aria-label="Dismiss notice".
  *   • 44 × 44 px touch target (the dismiss glyph itself is small;
  *     padding extends the hit area).
- *   • prefers-reduced-motion: nothing to disable — there is no
+ *   • prefers-reduced-motion: nothing to disable: there is no
  *     animation. Honouring the rule by *not* introducing one.
  *
  * Visual: brutalist. No animation. No icon library. The status dot
@@ -79,7 +79,7 @@ export function DesktopRecommendedBanner() {
     try {
       sessionStorage.setItem(STORAGE_KEY, "1");
     } catch {
-      // sessionStorage blocked — fall through to in-memory notify so
+      // sessionStorage blocked: fall through to in-memory notify so
       // the banner still hides for this page lifetime.
     }
     for (const cb of subscribers) cb();

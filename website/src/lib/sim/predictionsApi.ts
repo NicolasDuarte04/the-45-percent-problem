@@ -101,7 +101,7 @@ export async function submitPrediction(
       if (Array.isArray(json?.issues)) issues = json.issues;
       if (typeof json?.reason === "string") reason = json.reason;
     } catch {
-      /* swallow — the route only ships these under ?debug=1 */
+      /* swallow: the route only ships these under ?debug=1 */
     }
     return { kind: "invalid", issues, reason };
   }

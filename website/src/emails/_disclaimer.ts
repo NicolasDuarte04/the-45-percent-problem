@@ -5,13 +5,13 @@
  * is reproduced verbatim on every email dispatch and on every page where it
  * appears (`/confirmed`, `/brief`, the `/briefs/[date]` archive view). It
  * must not be abbreviated, paraphrased, hidden behind "click to expand", or
- * otherwise modified — it is a credibility commitment.
+ * otherwise modified: it is a credibility commitment.
  *
  * ─── §6.6 forbidden-phrase check: deliberate evasion ───────────────────────
  *
  * The disclaimer ends with a sentence that EXPLICITLY DISCLAIMS several of
  * the activities the §6.6 check (`scripts/check-forbidden-words.mjs`) bans
- * from marketing copy — the whole point of that sentence is to distinguish
+ * from marketing copy: the whole point of that sentence is to distinguish
  * the model output from those activities. The check does a byte-level
  * substring scan with no allowlist mechanism, so a naïve string literal
  * here trips it.

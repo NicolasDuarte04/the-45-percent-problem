@@ -1,5 +1,5 @@
 /**
- * axe-core accessibility audit — §10.1 / §12.9
+ * axe-core accessibility audit · §10.1 / §12.9
  *
  * Audits the five primary routes for WCAG 2.2 AA compliance.
  * Any serious or critical violation fails the build.
@@ -20,7 +20,7 @@ const AUDITED_ROUTES = [
 ];
 
 for (const route of AUDITED_ROUTES) {
-  test(`${route.label} (${route.path}) — no serious axe violations`, async ({ page }) => {
+  test(`${route.label} (${route.path}); no serious axe violations`, async ({ page }) => {
     const response = await page.goto(route.path);
 
     // Guard: page must load successfully before we audit it.

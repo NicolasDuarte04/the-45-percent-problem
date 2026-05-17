@@ -1,5 +1,5 @@
 /**
- * Contract test runner — works around the vitest % URI issue.
+ * Contract test runner: works around the vitest % URI issue.
  * Runs all contract tests by directly importing and executing them.
  *
  * Usage: pnpm exec tsx tests/contracts/run_contracts.ts
@@ -397,7 +397,7 @@ describe("cross-artifact consistency", () => {
 // ── Runner ────────────────────────────────────────────────────────────────────
 
 async function runAll() {
-  console.log(`\nContract test suite — ${tests.length} tests\n${"─".repeat(60)}`);
+  console.log(`\nContract test suite. ${tests.length} tests\n${"─".repeat(60)}`);
   for (const { suite, name, fn } of tests) {
     try {
       await fn();

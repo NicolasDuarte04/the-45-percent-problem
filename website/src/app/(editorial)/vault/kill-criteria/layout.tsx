@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Kill criteria — Research Vault",
+  title: "Kill criteria · Research Vault",
   description:
     "The pre-registered conditions under which this project publishes a null result and the terminal is frozen.",
 };

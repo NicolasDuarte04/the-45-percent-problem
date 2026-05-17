@@ -140,7 +140,7 @@ export function ReliabilityFigureChart({ bins, mode }: Props) {
           isAnimationActive={false}
         />
 
-        {/* Calibration scatter — radius encodes sample size */}
+        {/* Calibration scatter: radius encodes sample size */}
         <Scatter
           data={populated.map((b) => ({
             ...b,

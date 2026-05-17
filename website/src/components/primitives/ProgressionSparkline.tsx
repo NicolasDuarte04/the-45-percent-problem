@@ -1,7 +1,7 @@
 interface ProgressionSparklineProps {
   /** Six probabilities in GRP → R16 → QF → SF → FIN → CHA order, each in [0, 1]. */
   values: [number, number, number, number, number, number];
-  /** Accent color for the stroke and area — defaults to prism-peach (M★ lineage). */
+  /** Accent color for the stroke and area; defaults to prism-peach (M★ lineage). */
   stroke?: string;
   width?: number;
   height?: number;
@@ -63,7 +63,7 @@ export function ProgressionSparkline({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Head-dot — anchors the rightmost value so the eye lands on the champion bucket. */}
+      {/* Head-dot: anchors the rightmost value so the eye lands on the champion bucket. */}
       <circle
         cx={xs[n - 1]}
         cy={ys[n - 1]}

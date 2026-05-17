@@ -10,7 +10,7 @@ interface Props {
 }
 
 /**
- * §8.4 — GateTimeline.
+ * §8.4: GateTimeline.
  * Historical price path (p_model vs q_market_devigged) for a featured market,
  * annotated at any gate trips. Shows how the volatility gate accumulates evidence
  * across consecutive snapshots.
@@ -21,7 +21,7 @@ export function GateTimeline({ snapshotId = "latest", mode = "interactive", rowI
 
   if (!divergence.rows.length) {
     return (
-      <Figure caption="Gate timeline — no divergence rows in this snapshot.">
+      <Figure caption="Gate timeline: no divergence rows in this snapshot.">
         <div
           style={{
             height: 200,
@@ -82,7 +82,7 @@ export function GateTimeline({ snapshotId = "latest", mode = "interactive", rowI
       ? ` Gate tripped: ${featured.gate_rules_tripped.join(", ")}.`
       : " Gate open.";
 
-  const caption = `Price path for ${featured.home.display_name} vs ${featured.away.display_name} — ${featured.market} ${featured.outcome}. Solid line: M★ p_model. Dashed: de-vigged market probability. ◆ marks gate trips.${gateNote}`;
+  const caption = `Price path for ${featured.home.display_name} vs ${featured.away.display_name}. ${featured.market} ${featured.outcome}. Solid line: M★ p_model. Dashed: de-vigged market probability. ◆ marks gate trips.${gateNote}`;
 
   return (
     <Figure
@@ -105,7 +105,7 @@ export function GateTimeline({ snapshotId = "latest", mode = "interactive", rowI
             whiteSpace: "pre-wrap",
           }}
         >
-          {`Gate timeline — ${featured.market} ${featured.outcome}\n` +
+          {`Gate timeline. ${featured.market} ${featured.outcome}\n` +
             points
               .map(
                 (p) =>

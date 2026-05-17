@@ -6,7 +6,7 @@ interface PullQuoteProps {
 }
 
 /**
- * §2.8 / §8.3 — left-hang pull quote in serif, 96px opening " in peach.
+ * §2.8 / §8.3: left-hang pull quote in serif, 96px opening " in peach.
  * Opacity-only reveal motion is applied via the global motion rules.
  */
 export function PullQuote({ children, cite }: PullQuoteProps) {
@@ -17,7 +17,7 @@ export function PullQuote({ children, cite }: PullQuoteProps) {
       >
         {children}
       </blockquote>
-      {cite ? <figcaption className="vault-pullquote-cite">— {cite}</figcaption> : null}
+      {cite ? <figcaption className="vault-pullquote-cite">. {cite}</figcaption> : null}
     </figure>
   );
 }

@@ -17,7 +17,7 @@ import type {
  *  - Full Bracket: groupWinners and groupRunnersUp are sorted; KO
  *    advancers preserve bracket order (their position is meaningful).
  *
- * Team codes are uppercased (defensive — they should already be).
+ * Team codes are uppercased (defensive; they should already be).
  */
 export function canonicalizeScenario(mode: Mode, scenario: AnyScenario): string {
   switch (mode) {

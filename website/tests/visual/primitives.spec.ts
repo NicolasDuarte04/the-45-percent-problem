@@ -2,7 +2,7 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
 
 const PAGE = "/dev/primitives";
 
-test.describe("Primitives showcase — render correctness", () => {
+test.describe("Primitives showcase; render correctness", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(PAGE);
     await page.waitForLoadState("networkidle");
@@ -34,7 +34,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(section.getByText("-42.5", { exact: true })).toBeVisible();
     });
 
-    test("screenshot — all MonoNumber variants", async ({ page }) => {
+    test("screenshot: all MonoNumber variants", async ({ page }) => {
       await expect(sectionFor(page, "NumericCell · mono")).toHaveScreenshot("mono-number.png");
     });
   });
@@ -71,7 +71,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(section.locator("[aria-label='41.2 percent']")).toBeVisible();
     });
 
-    test("screenshot — all ProbabilityCell variants", async ({ page }) => {
+    test("screenshot: all ProbabilityCell variants", async ({ page }) => {
       await expect(sectionFor(page, "NumericCell · probability")).toHaveScreenshot("probability-cell.png");
     });
   });
@@ -98,7 +98,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(section.getByText("250.000", { exact: true })).toBeVisible();
     });
 
-    test("screenshot — all OddsCell variants", async ({ page }) => {
+    test("screenshot: all OddsCell variants", async ({ page }) => {
       await expect(sectionFor(page, "NumericCell · decimal odds")).toHaveScreenshot("odds-cell.png");
     });
   });
@@ -135,7 +135,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(section.getByText("−0.8pp", { exact: true })).toBeVisible();
     });
 
-    test("screenshot — all EdgeBadge variants", async ({ page }) => {
+    test("screenshot: all EdgeBadge variants", async ({ page }) => {
       await expect(sectionFor(page, "EdgeBadge")).toHaveScreenshot("edge-badge.png");
     });
   });
@@ -168,7 +168,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(bar).toBeVisible();
     });
 
-    test("screenshot — all DivergenceBar variants", async ({ page }) => {
+    test("screenshot: all DivergenceBar variants", async ({ page }) => {
       await expect(sectionFor(page, "DivergenceBar")).toHaveScreenshot("divergence-bar.png");
     });
   });
@@ -195,7 +195,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(section.getByText("2026-04-23T00:00Z", { exact: true }).first()).toBeVisible();
     });
 
-    test("screenshot — all SnapshotTimestamp variants", async ({ page }) => {
+    test("screenshot: all SnapshotTimestamp variants", async ({ page }) => {
       await expect(sectionFor(page, "SnapshotTimestamp")).toHaveScreenshot("snapshot-timestamp.png");
     });
   });
@@ -216,7 +216,7 @@ test.describe("Primitives showcase — render correctness", () => {
 
     test("FIRED with rules shows tooltip on hover", async ({ page }) => {
       const section = sectionFor(page, "GateStatusPill");
-      // The FIRED pill with rulesTripped — last FIRED pill in the section
+      // The FIRED pill with rulesTripped; last FIRED pill in the section
       const firedWithRules = section
         .locator("[aria-label*='named_event']");
       await firedWithRules.hover();
@@ -224,7 +224,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(page.getByText(/named_event/)).toBeVisible();
     });
 
-    test("screenshot — all GateStatusPill variants", async ({ page }) => {
+    test("screenshot: all GateStatusPill variants", async ({ page }) => {
       await expect(sectionFor(page, "GateStatusPill")).toHaveScreenshot("gate-status-pill.png");
     });
   });
@@ -248,7 +248,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(btn).toBeVisible();
     });
 
-    test("screenshot — HashChip variants", async ({ page }) => {
+    test("screenshot. HashChip variants", async ({ page }) => {
       await expect(sectionFor(page, "HashChip")).toHaveScreenshot("hash-chip.png");
     });
   });
@@ -272,7 +272,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(el).toBeVisible();
     });
 
-    test("screenshot — all ConfidenceInterval variants", async ({ page }) => {
+    test("screenshot: all ConfidenceInterval variants", async ({ page }) => {
       await expect(sectionFor(page, "NumericCell · confidence interval")).toHaveScreenshot("confidence-interval.png");
     });
   });
@@ -298,7 +298,7 @@ test.describe("Primitives showcase — render correctness", () => {
       await expect(link.first()).toHaveAttribute("href", "/vault/kill-criteria");
     });
 
-    test("screenshot — KillCriteriaBanner variants", async ({ page }) => {
+    test("screenshot. KillCriteriaBanner variants", async ({ page }) => {
       await expect(sectionFor(page, "KillCriteriaBanner")).toHaveScreenshot(
         "kill-criteria-banner.png"
       );

@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
  * Vercel Blob first; the bundled sample serves as a local-dev convenience
  * for that one date.
  *
- * 400 — invalid date format
- * 404 — no brief for that date
- * 503 — backend failure
+ * 400: invalid date format
+ * 404: no brief for that date
+ * 503: backend failure
  */
 export async function GET(
   _req: NextRequest,

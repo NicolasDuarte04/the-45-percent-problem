@@ -33,7 +33,7 @@ export default function PrimitivesShowcase() {
           /dev/primitives
         </h1>
         <p className="text-[11px] mt-1" style={{ color: "var(--text-tertiary)" }}>
-          §12.3 — Institutional Tech primitive showcase. Dev-only. Not rendered in production.
+          §12.3: Institutional Tech primitive showcase. Dev-only. Not rendered in production.
         </p>
       </header>
 
@@ -143,7 +143,7 @@ export default function PrimitivesShowcase() {
         <Row label="gate FIRED (no rules)">
           <GateStatusPill status="FIRED" />
         </Row>
-        <Row label="gate FIRED (with rules — hover for tooltip)">
+        <Row label="gate FIRED (with rules; hover for tooltip)">
           <GateStatusPill
             status="FIRED"
             rulesTripped={["named_event", "price_discovery", "liquidity_threshold"]}
@@ -191,7 +191,7 @@ export default function PrimitivesShowcase() {
       <Section title="KillCriteriaBanner">
         <Row label="not active (renders nothing)">
           <span className="mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-            [no output — active=false]
+            [no output: active=false]
           </span>
           <KillCriteriaBanner active={false} />
         </Row>

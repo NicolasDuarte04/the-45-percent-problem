@@ -7,7 +7,7 @@ interface SectionHeadProps {
 }
 
 /**
- * Editorial section header — eyebrow (mono, § marked in accent) above a
+ * Editorial section header: eyebrow (mono, § marked in accent) above a
  * serif title, with an optional right-slot pill/link.
  */
 export function SectionHead({ eyebrow, title, rightSlot }: SectionHeadProps) {

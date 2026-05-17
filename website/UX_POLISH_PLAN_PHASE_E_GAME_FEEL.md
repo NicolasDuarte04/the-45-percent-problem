@@ -1,4 +1,4 @@
-# UX/UI Polish Plan — Tournament Scenario Simulator (Phase E: Game Feel)
+# UX/UI Polish Plan. Tournament Scenario Simulator (Phase E: Game Feel)
 
 **Project:** 45analytics / The 45% Problem
 **Branch base:** `main` (Phase D merged and deployed)
@@ -10,7 +10,7 @@
 
 ## 0. The Problem in One Paragraph
 
-Phase D shipped the foundation: flags everywhere, tactile empty slots, a punchy 3-state live gauge. Phase D was correct. It is also *quiet to the point of being inert*. Nothing moves. The picker grid sits below the slots forever, even after you've filled every slot. The Full Bracket is a column of stacked match cells with no tree geometry, no bracket lines, no sense that the tournament is converging toward a champion. The stage labels (`STEP 1 — GROUP STAGE`, `ROUND OF 32`) read like section headings in a research paper. And the submit flow currently surfaces "Something went wrong on our side" without a recovery affordance, which is where the entire dopamine arc dies. The simulator is structurally sound. It needs *life*, applied with discipline.
+Phase D shipped the foundation: flags everywhere, tactile empty slots, a punchy 3-state live gauge. Phase D was correct. It is also *quiet to the point of being inert*. Nothing moves. The picker grid sits below the slots forever, even after you've filled every slot. The Full Bracket is a column of stacked match cells with no tree geometry, no bracket lines, no sense that the tournament is converging toward a champion. The stage labels (`STEP 1. GROUP STAGE`, `ROUND OF 32`) read like section headings in a research paper. And the submit flow currently surfaces "Something went wrong on our side" without a recovery affordance, which is where the entire dopamine arc dies. The simulator is structurally sound. It needs *life*, applied with discipline.
 
 ---
 
@@ -18,7 +18,7 @@ Phase D shipped the foundation: flags everywhere, tactile empty slots, a punchy 
 
 Before we change anything, hold the line on these:
 
-- The Option C live gauge — `REALISTIC` / `BOLD CALL` / `LONG SHOT` plus the segmented bar plus the percentage. Punchy, clean, no scientific words leaking in. This is the right register for live play.
+- The Option C live gauge. `REALISTIC` / `BOLD CALL` / `LONG SHOT` plus the segmented bar plus the percentage. Punchy, clean, no scientific words leaking in. This is the right register for live play.
 - The post-submit `RealityScorePanel` reserving the 5-band rarity vocabulary (Common, Plausible, Uncommon, Rare, Vanishingly rare). This is the right register for the shareable artifact.
 - The brand language on the landing: *"Call the World Cup. See if the model agrees."* This is the simulator's thesis statement. Don't touch it.
 - The tactile `EmptySlot` component with its dashed border and `+` glyph. This is the single best affordance in the whole product right now.
@@ -28,17 +28,17 @@ Phase E builds *on top of* these. Anything in this plan that contradicts the abo
 
 ---
 
-## 2. Diagnosis — Where the Tax-Form Feeling Comes From
+## 2. Diagnosis. Where the Tax-Form Feeling Comes From
 
 Six concrete failure modes are visible in the current product. Each has a specific fix.
 
 ### 2.1 The picker grid never gets out of the way
 
-In Final Four, after you fill all 4 SF slots, the 48-team picker grid still occupies the entire viewport below. Same in Champion's Path — you've made all your stage picks, the picker grid is still there, full size, dominating the page. The user has to scroll past their own work to find the live gauge and submit button. **The kitchen never gets cleared after the meal is plated.**
+In Final Four, after you fill all 4 SF slots, the 48-team picker grid still occupies the entire viewport below. Same in Champion's Path: you've made all your stage picks, the picker grid is still there, full size, dominating the page. The user has to scroll past their own work to find the live gauge and submit button. **The kitchen never gets cleared after the meal is plated.**
 
 ### 2.2 The Full Bracket is not a bracket
 
-What ships today is three vertically stacked sections: a group-stage table, an auto-qualifiers band, and a knockout column. The knockout rounds are rendered as columns of match cells with no connecting lines, no convergence geometry, nothing that visually says "this winner advances to here." A real bracket — the universally legible bracket-tree shape — is missing. Without it, the user doesn't *feel* the tournament narrowing. They feel like they're filling out a form.
+What ships today is three vertically stacked sections: a group-stage table, an auto-qualifiers band, and a knockout column. The knockout rounds are rendered as columns of match cells with no connecting lines, no convergence geometry, nothing that visually says "this winner advances to here." A real bracket (the universally legible bracket-tree shape) is missing. Without it, the user doesn't *feel* the tournament narrowing. They feel like they're filling out a form.
 
 ### 2.3 The "Start Your Prediction" button is dead weight
 
@@ -46,11 +46,11 @@ The landing has three mode cards (Final Four, Champion's Path, Full Bracket) tha
 
 ### 2.4 The stage copy reads like a document outline
 
-`STEP 1 — GROUP STAGE`, `STEP 2 — AUTO QUALIFIERS`, `STEP 3 — KNOCKOUT BRACKET`, `ROUND OF 32`, `QUARTERFINALS`. These are honest labels. They are also bone-dry. They tell the user *what section they're in*, not *what to do or feel*. The Champion's Path mode already has the right voice (*"Tell us your team's story to the final."*) — that voice never makes it into Full Bracket.
+`STEP 1 · GROUP STAGE`, `STEP 2 · AUTO QUALIFIERS`, `STEP 3. KNOCKOUT BRACKET`, `ROUND OF 32`, `QUARTERFINALS`. These are honest labels. They are also bone-dry. They tell the user *what section they're in*, not *what to do or feel*. The Champion's Path mode already has the right voice (*"Tell us your team's story to the final."*); that voice never makes it into Full Bracket.
 
 ### 2.5 No motion = no feedback = no game
 
-When you drop a team into a slot, nothing animates. The chip just appears. When the gauge transitions from ghost to active, it just snaps. When you complete the scenario, the submit button just becomes available. There is zero kinaesthetic feedback that the system *registered your action*. Phase D's no-JS-animation rule was the right call for the foundation phase — get the structure right, then polish the motion. The structure is right. Time to polish.
+When you drop a team into a slot, nothing animates. The chip just appears. When the gauge transitions from ghost to active, it just snaps. When you complete the scenario, the submit button just becomes available. There is zero kinaesthetic feedback that the system *registered your action*. Phase D's no-JS-animation rule was the right call for the foundation phase; get the structure right, then polish the motion. The structure is right. Time to polish.
 
 ### 2.6 The submit flow has a broken state with no recovery
 
@@ -58,23 +58,23 @@ The screenshot shows `Something went wrong on our side. Try again in a moment.` 
 
 ---
 
-## 3. Design Philosophy Update — The JS-Animation Ban Is Lifted, with New Rules
+## 3. Design Philosophy Update. The JS-Animation Ban Is Lifted, with New Rules
 
 Phase D §7 forbade JavaScript animation libraries. That was correct *for Phase D* because the structure wasn't settled and motion would have hidden structural mistakes. Phase E formally repeals that ban and adopts Framer Motion as the single approved motion library, **subject to the following non-negotiable rules.**
 
-**Rule 1 — Tasteful is a hard ceiling, not a vibe.** Concrete bounds:
+**Rule 1. Tasteful is a hard ceiling, not a vibe.** Concrete bounds:
 
 - **Durations:** 150-300ms for micro-interactions (hover, drop, fade). 300-500ms for layout transitions (collapse, expand, stage advance). Never above 600ms for any single transition. The gauge fill on completion is the longest animation in the product at 450ms.
-- **Easings:** `ease-out` for entries (things appearing or arriving). `ease-in` for exits (things leaving). Spring physics only on object drops and slot fills, with `stiffness: 300, damping: 28` as the default — that's a single mild settle, not a bounce.
+- **Easings:** `ease-out` for entries (things appearing or arriving). `ease-in` for exits (things leaving). Spring physics only on object drops and slot fills, with `stiffness: 300, damping: 28` as the default: that's a single mild settle, not a bounce.
 - **Amplitude:** No motion exceeds ~6px of secondary movement (overshoots, bounces, wiggles). If you can describe it as "perky" or "playful," it's too much.
 
-**Rule 2 — Motion serves feedback, not decoration.** Every animation in the product must answer one of three questions: *Did the system register my action?* *Where did this thing come from / go to?* *What just changed?* If an animation doesn't answer one of these, it's noise. Kill it.
+**Rule 2. Motion serves feedback, not decoration.** Every animation in the product must answer one of three questions: *Did the system register my action?* *Where did this thing come from / go to?* *What just changed?* If an animation doesn't answer one of these, it's noise. Kill it.
 
-**Rule 3 — `prefers-reduced-motion: reduce` is honored everywhere, no exceptions.** Every Framer Motion `motion.*` element wraps its transitions in a media-query-aware variant. The fallback for reduced motion is the *current Phase D static state* — instant snap, no transition. This is non-negotiable for accessibility and for users on low-spec mobile.
+**Rule 3. `prefers-reduced-motion: reduce` is honored everywhere, no exceptions.** Every Framer Motion `motion.*` element wraps its transitions in a media-query-aware variant. The fallback for reduced motion is the *current Phase D static state*; instant snap, no transition. This is non-negotiable for accessibility and for users on low-spec mobile.
 
-**Rule 4 — Performance budget.** No animation may cause a layout thrash over 16ms. Framer Motion's `layout` prop is permitted but only on elements with stable identities (use `layoutId` for shared-element transitions). Drag-and-drop interactions still update the gauge only on `onDragEnd`, not on drag-move (Phase D §4.4 still applies).
+**Rule 4 · Performance budget.** No animation may cause a layout thrash over 16ms. Framer Motion's `layout` prop is permitted but only on elements with stable identities (use `layoutId` for shared-element transitions). Drag-and-drop interactions still update the gauge only on `onDragEnd`, not on drag-move (Phase D §4.4 still applies).
 
-**Rule 5 — The post-submit `RealityScorePanel` stays still.** Phase D's separation of registers — playful during build, rigorous on reveal — survives Phase E intact. The reveal panel can have a single dignified entrance animation (fade-up over 400ms) but the rarity band itself does not bounce, pulse, or jiggle. The 5-band scientific vocabulary stays text-only and motion-free, exactly as today.
+**Rule 5. The post-submit `RealityScorePanel` stays still.** Phase D's separation of registers (playful during build, rigorous on reveal) survives Phase E intact. The reveal panel can have a single dignified entrance animation (fade-up over 400ms) but the rarity band itself does not bounce, pulse, or jiggle. The 5-band scientific vocabulary stays text-only and motion-free, exactly as today.
 
 If a Workstream below proposes an animation that violates any of Rules 1-5, the animation is rejected, not the rule.
 
@@ -94,7 +94,7 @@ Workstreams A and D are independent and can ship in parallel. B depends on A (fo
 
 ---
 
-## 5. Workstream A — Motion System
+## 5. Workstream A · Motion System
 
 ### A.1 Install Framer Motion
 
@@ -114,13 +114,13 @@ This file exports the *only* motion presets the rest of the codebase is allowed 
 import type { Transition } from "framer-motion";
 
 export const motion = {
-  // Micro-interactions — hover, focus, small visual responses
+  // Micro-interactions: hover, focus, small visual responses
   micro: {
     duration: 0.18,
     ease: [0.22, 1, 0.36, 1], // standard ease-out
   } satisfies Transition,
 
-  // Item drops, slot fills — the satisfying "clack" of a piece landing
+  // Item drops, slot fills: the satisfying "clack" of a piece landing
   drop: {
     type: "spring",
     stiffness: 320,
@@ -128,25 +128,25 @@ export const motion = {
     mass: 0.8,
   } satisfies Transition,
 
-  // Layout transitions — collapse, expand, stage advance
+  // Layout transitions: collapse, expand, stage advance
   layout: {
     duration: 0.32,
     ease: [0.32, 0.72, 0, 1], // smooth ease for layout
   } satisfies Transition,
 
-  // Entry — components appearing for the first time
+  // Entry: components appearing for the first time
   entry: {
     duration: 0.4,
     ease: [0.22, 1, 0.36, 1],
   } satisfies Transition,
 
-  // Exit — components leaving permanently
+  // Exit: components leaving permanently
   exit: {
     duration: 0.22,
     ease: [0.7, 0, 0.84, 0],
   } satisfies Transition,
 
-  // The gauge fill — the single longest animation we permit
+  // The gauge fill: the single longest animation we permit
   gaugeFill: {
     duration: 0.45,
     ease: [0.22, 1, 0.36, 1],
@@ -179,11 +179,11 @@ Every `motion.*` component in the simulator passes its transition through this h
 
 Three components get motion now, before any new structural work:
 
-**`EmptySlot`** — when `isOver=true`, the border color and fill animate via Framer Motion's `animate` prop using the `micro` preset. When the user drops into the slot and it transitions to filled, the `+` glyph fades and the team chip drops in via the `drop` preset (spring). When the user clears a filled slot, the chip exits via the `exit` preset and the `+` returns via `entry`.
+**`EmptySlot`**: when `isOver=true`, the border color and fill animate via Framer Motion's `animate` prop using the `micro` preset. When the user drops into the slot and it transitions to filled, the `+` glyph fades and the team chip drops in via the `drop` preset (spring). When the user clears a filled slot, the chip exits via the `exit` preset and the `+` returns via `entry`.
 
-**`LiveAgreementGauge`** — when `isComplete` flips from false to true, the active segment fills using `gaugeFill` (450ms). The viral hook label (`REALISTIC` / `BOLD CALL` / `LONG SHOT`) crossfades on change using `micro`. Reduced-motion: instant snap, no fill animation.
+**`LiveAgreementGauge`**: when `isComplete` flips from false to true, the active segment fills using `gaugeFill` (450ms). The viral hook label (`REALISTIC` / `BOLD CALL` / `LONG SHOT`) crossfades on change using `micro`. Reduced-motion: instant snap, no fill animation.
 
-**`FFSlot` / stage cells / bracket cells** — when a team chip lands, it animates from its source position in the picker grid to the slot using `motion.div` with a shared `layoutId={`team-${code}`}`. This is the single most important micro-interaction in the product: the team chip flies to its slot. Framer Motion handles the FLIP automatically.
+**`FFSlot` / stage cells / bracket cells**; when a team chip lands, it animates from its source position in the picker grid to the slot using `motion.div` with a shared `layoutId={`team-${code}`}`. This is the single most important micro-interaction in the product: the team chip flies to its slot. Framer Motion handles the FLIP automatically.
 
 ### A.5 Acceptance for Workstream A
 
@@ -197,11 +197,11 @@ Three components get motion now, before any new structural work:
 
 ---
 
-## 6. Workstream B — Progressive Disclosure
+## 6. Workstream B · Progressive Disclosure
 
 This is the workstream that pays back the most "feel" per line of code. The principle: **after the user demonstrates readiness, the kitchen disappears and the plate moves to their thumbs.**
 
-### B.1 Auto-collapsing picker — Final Four
+### B.1 Auto-collapsing picker. Final Four
 
 **File:** `src/components/simulator/modes/ModeFinalFour.tsx`
 
@@ -211,7 +211,7 @@ Implementation: wrap the existing `<TeamPickerGrid />` in `<motion.div>` with `a
 
 The collapse takes ~320ms (`layout` preset). During the collapse, the live gauge and the submit button slide up to occupy the freed vertical space. This is the moment the user sees "their work" become the focus of the screen. Done well, it's a small revelation. Done badly, it's nauseating. Use the `layout` preset, no spring, no overshoot.
 
-### B.2 Stage focus — Champion's Path
+### B.2 Stage focus. Champion's Path
 
 **File:** `src/components/simulator/modes/ModeChampionsPath.tsx`
 
@@ -219,11 +219,11 @@ Today: all 4 stage cards (R16, QF, SF, F) are visible at once with their picker 
 
 After: only the *currently active* stage's picker is visible below the row of stage cards. The active stage card has `--accent-warm` border treatment. Completed stages dim to ~60% opacity. Tapping a completed stage card re-activates that stage and reveals its picker (and the previously active stage dims).
 
-This is the "stage focus" pattern from card games like Hearthstone's deckbuilder — only one decision is presented at a time, but the user can always go back.
+This is the "stage focus" pattern from card games like Hearthstone's deckbuilder; only one decision is presented at a time, but the user can always go back.
 
 When all 4 stages have an opponent picked AND all 4 W/L states set, the picker collapses fully (same affordance as B.1) and the live gauge surfaces.
 
-### B.3 Group dimming — Full Bracket Step 1
+### B.3 Group dimming. Full Bracket Step 1
 
 **File:** `src/components/simulator/modes/ModeFullBracket.tsx`
 
@@ -231,13 +231,13 @@ Today: 12 group cards, all rendered at full intensity, no progression cue. The u
 
 After: groups the user has fully ranked (1st and 2nd assigned) dim to ~50% opacity with a small `[ DONE ]` label in the top-right corner. The currently focused group (the next one in alphabetical order without a complete ranking) gets a subtle `--accent-warm` border. Groups beyond the focused one stay at default opacity.
 
-Dimming is instant — no animation on initial state — but the dim transition fires when a user completes a group (700ms after the second-place pick lands, to give them a moment to see their work before it dims).
+Dimming is instant: no animation on initial state; but the dim transition fires when a user completes a group (700ms after the second-place pick lands, to give them a moment to see their work before it dims).
 
 The user can re-activate any completed group by tapping it. The dim lifts, the accent border moves to that group, the previously-active group reverts to default.
 
 **Don't dim everything completed at once.** If the user races through groups A-F, those six dim in sequence as they complete, not in a wave. Each group dims when *that group* hits the `[1] + [2]` complete state.
 
-### B.4 Auto-qualifiers band — restructured
+### B.4 Auto-qualifiers band; restructured
 
 **File:** same as B.3.
 
@@ -258,9 +258,9 @@ This converts a confusing read-only-looking display into an active 8-of-12 selec
 
 ---
 
-## 7. Workstream C — Real Bracket Geometry
+## 7. Workstream C · Real Bracket Geometry
 
-This is the single most game-feel-y change in Phase E. Today the Full Bracket knockout looks like a column of stacked match cards. After this workstream, it looks like a **tournament bracket tree** — the universal visual language of every World Cup poster ever printed.
+This is the single most game-feel-y change in Phase E. Today the Full Bracket knockout looks like a column of stacked match cards. After this workstream, it looks like a **tournament bracket tree**; the universal visual language of every World Cup poster ever printed.
 
 ### C.1 The geometry
 
@@ -281,7 +281,7 @@ A single SVG that overlays the bracket grid and renders 1px stroke connector lin
 
 Classic right-angle bracket-tree geometry. Stroke color: `var(--text-tertiary)` at default, `var(--accent-warm)` for the path of teams the user has picked as winners (the "your champion's path" highlight).
 
-Lines render with a `pathLength` animation — when the bracket first loads, the lines draw in from left to right over 600ms, staggered per round (R32 lines first, then R16, then QF, etc.). This is the only place we exceed the 500ms layout cap, and it's an entry-only animation that fires once per page load. Add it to the motion vocabulary as `motion.bracketDraw`.
+Lines render with a `pathLength` animation; when the bracket first loads, the lines draw in from left to right over 600ms, staggered per round (R32 lines first, then R16, then QF, etc.). This is the only place we exceed the 500ms layout cap, and it's an entry-only animation that fires once per page load. Add it to the motion vocabulary as `motion.bracketDraw`.
 
 ### C.3 The match cells get a subtle redesign
 
@@ -308,21 +308,21 @@ Add a small "Round of 32 → → Final" breadcrumb above the bracket on mobile t
 
 ---
 
-## 8. Workstream D — Copy & Color Pass
+## 8. Workstream D · Copy & Color Pass
 
 ### D.1 Stage labels
 
-Replace the `STEP N — X` headers with conversational micro-copy in serif. Each one fits in a single line, sits at the start of its section with the same hairline divider treatment as today.
+Replace the `STEP N. X` headers with conversational micro-copy in serif. Each one fits in a single line, sits at the start of its section with the same hairline divider treatment as today.
 
 | Today | After |
 |-------|-------|
-| `STEP 1 — GROUP STAGE` | *First, rank the groups.* |
-| `STEP 2 — AUTO QUALIFIERS` | *Pick the eight 3rd-place teams that move on.* |
-| `STEP 3 — KNOCKOUT BRACKET` | *Now play the knockouts.* |
+| `STEP 1. GROUP STAGE` | *First, rank the groups.* |
+| `STEP 2. AUTO QUALIFIERS` | *Pick the eight 3rd-place teams that move on.* |
+| `STEP 3. KNOCKOUT BRACKET` | *Now play the knockouts.* |
 | `ROUND OF 32` | (keep as-is, but smaller, set inline at the top of its bracket column rather than as a section header) |
-| `ROUND OF 16`, `QUARTERFINALS`, `SEMIFINALS`, `FINAL` | (same — keep, set inline as bracket column labels) |
+| `ROUND OF 16`, `QUARTERFINALS`, `SEMIFINALS`, `FINAL` | (same; keep, set inline as bracket column labels) |
 
-The serif voice matches the landing page (*"Call the World Cup. See if the model agrees."*) and the existing Champion's Path subhead (*"Tell us your team's story to the final."*). It's already there — Phase E just extends it consistently.
+The serif voice matches the landing page (*"Call the World Cup. See if the model agrees."*) and the existing Champion's Path subhead (*"Tell us your team's story to the final."*). It's already there. Phase E just extends it consistently.
 
 ### D.2 Mode card cleanup
 
@@ -331,11 +331,11 @@ The serif voice matches the landing page (*"Call the World Cup. See if the model
 Remove the `[ START YOUR PREDICTION ]` button on the landing. The mode cards themselves are the call to action. Each card on click routes directly to that mode. The card receives the existing `--accent-warm` border treatment on hover and on the route transition.
 
 The serif sub-copy on each card stays:
-- Final Four — *"Who makes the semifinals?"* / `30 seconds.`
-- Champion's Path — *"Tell us your team's story to the final."* / `About a minute.`
-- Full Bracket — *"Call the whole tournament."* / `A few minutes. For the obsessives.`
+- Final Four. *"Who makes the semifinals?"* / `30 seconds.`
+- Champion's Path. *"Tell us your team's story to the final."* / `About a minute.`
+- Full Bracket. *"Call the whole tournament."* / `A few minutes. For the obsessives.`
 
-These are already good. The duration line in mono at the bottom is great — it sets expectations and respects the user's time. Keep all of this.
+These are already good. The duration line in mono at the bottom is great; it sets expectations and respects the user's time. Keep all of this.
 
 ### D.3 Color: deepen accent usage
 
@@ -352,7 +352,7 @@ Completed states (used in B.3 group dimming and B.2 stage cards): no color chang
 
 The current header `HOW THE MODEL READS YOUR CALL` is good but a touch literal. Soften to `HOW THE MODEL READS THIS` or `THE MODEL'S READ`. Either reads more conversational without changing meaning. Pick one in PR review.
 
-The `[ SEE HOW THE MODEL REACTS ]` submit button copy is fine. Don't change it. It's the most important button in the product and "see how the model reacts" is exactly the right verb — passive voice on the user's part, active on the model's, which is the intended dynamic.
+The `[ SEE HOW THE MODEL REACTS ]` submit button copy is fine. Don't change it. It's the most important button in the product and "see how the model reacts" is exactly the right verb; passive voice on the user's part, active on the model's, which is the intended dynamic.
 
 ### D.5 Acceptance for Workstream D
 
@@ -365,13 +365,13 @@ The `[ SEE HOW THE MODEL REACTS ]` submit button copy is fine. Don't change it. 
 
 ---
 
-## 9. Workstream E — Submit Recovery & Reveal Polish
+## 9. Workstream E. Submit Recovery & Reveal Polish
 
 ### E.1 Fix the broken-state bug
 
 **Files:** wherever the submit handler lives (likely `src/app/scenario/[mode]/page.tsx` or a server action route).
 
-The current rendered state shows: *"Something went wrong on our side. Try again in a moment."* under the submit button. There is no retry. There is no diagnostic information for the user. There is no indication of *why* — was it network? Was it the API route? Was it a validation error? The user is stuck.
+The current rendered state shows: *"Something went wrong on our side. Try again in a moment."* under the submit button. There is no retry. There is no diagnostic information for the user. There is no indication of *why*; was it network? Was it the API route? Was it a validation error? The user is stuck.
 
 Fix:
 - Replace the inline error string with an error component that includes:
@@ -410,15 +410,15 @@ Phase D Option C separation holds: the post-submit panel renders the scientific 
 
 ## 10. Sequencing & Dependencies
 
-Day 1 — **Workstream A** (motion system) ships solo. Single PR. The Phase D static UI continues to work; A only adds the motion layer on top.
+Day 1. **Workstream A** (motion system) ships solo. Single PR. The Phase D static UI continues to work; A only adds the motion layer on top.
 
-Day 2 — **Workstream B** (progressive disclosure) and **Workstream D** (copy/color) ship in parallel. They touch different concerns. Two PRs.
+Day 2. **Workstream B** (progressive disclosure) and **Workstream D** (copy/color) ship in parallel. They touch different concerns. Two PRs.
 
-Day 3 — **Workstream C** (real bracket geometry) ships. This is the largest single PR; allow time for review.
+Day 3. **Workstream C** (real bracket geometry) ships. This is the largest single PR; allow time for review.
 
-Day 4 — **Workstream E** (submit recovery + reveal). Ships last because the reveal animation depends on Workstream A's motion vocabulary, and the submit fix should land *anchored* to the polish work that makes the rest of the flow worth submitting to.
+Day 4. **Workstream E** (submit recovery + reveal). Ships last because the reveal animation depends on Workstream A's motion vocabulary, and the submit fix should land *anchored* to the polish work that makes the rest of the flow worth submitting to.
 
-Day 5 — Final QA pass: visual regression, performance, a11y, vocab grep, mobile manual test.
+Day 5 · Final QA pass: visual regression, performance, a11y, vocab grep, mobile manual test.
 
 Total wall-clock: ~5 days for a focused agent. Work can compress with parallel agents on Days 2-3.
 
@@ -430,7 +430,7 @@ The following do not change in Phase E. If an agent feels tempted to touch them,
 
 - The M0 predictive engine and all probability data.
 - The `predictions` table schema and any API route signature.
-- The post-submit `RealityScorePanel` *content* — the scientific rarity vocabulary, the 1-in-N display, the share artifact. Phase E adds *entrance motion only*. The vocabulary and structure are locked from Phase D.
+- The post-submit `RealityScorePanel` *content*: the scientific rarity vocabulary, the 1-in-N display, the share artifact. Phase E adds *entrance motion only*. The vocabulary and structure are locked from Phase D.
 - The `LiveAgreementGauge` Option C vocabulary. `REALISTIC` / `BOLD CALL` / `LONG SHOT` only. No scientific rarity words leak in.
 - The dark slate color palette. No new colors. Use `--accent-warm` more deliberately, but introduce nothing new.
 - The brutalist aesthetic posture. Sharp corners, no drop shadows, no gradients, no glow. Motion is allowed, decoration is not.
@@ -440,7 +440,7 @@ The following do not change in Phase E. If an agent feels tempted to touch them,
 
 ---
 
-## 12. Definition of Done — Phase E
+## 12. Definition of Done · Phase E
 
 Phase E is shippable when:
 
@@ -455,20 +455,20 @@ Phase E is shippable when:
 
 ---
 
-## 13. Open Questions — RESOLVED
+## 13. Open Questions · RESOLVED
 
 All four resolved by Nicolás on approval. Implementation must follow exactly:
 
-**Q1 — Picker auto-expand on slot clear: YES.**
-When the user clicks the `×` on a filled slot in Final Four (or any equivalent clear action in Champion's Path / Full Bracket), the collapsed picker grid must auto-expand immediately using the same 320ms `motion.layout` preset. The picker stays expanded until the user has refilled the cleared slot AND all other slots remain filled — at which point the auto-collapse rule from §6 (B.1) re-applies. The user must never have to tap "Edit your picks" themselves after a clear.
+**Q1: Picker auto-expand on slot clear: YES.**
+When the user clicks the `×` on a filled slot in Final Four (or any equivalent clear action in Champion's Path / Full Bracket), the collapsed picker grid must auto-expand immediately using the same 320ms `motion.layout` preset. The picker stays expanded until the user has refilled the cleared slot AND all other slots remain filled; at which point the auto-collapse rule from §6 (B.1) re-applies. The user must never have to tap "Edit your picks" themselves after a clear.
 
-**Q2 — Bracket connector draw-in animation: FIRST LOAD ONLY (sessionStorage-gated).**
-The 600ms staggered line-draw animation in §7 (C.2) fires only on the first navigation to `/scenario/full-bracket` within a browser session. Implementation: set a `sessionStorage` key (e.g. `bracket-connectors-seen`) on first render. On subsequent renders within the same session, the connector lines render in their final state without animation. The session boundary is intentional — a fresh tab earns a fresh reveal. Reduced-motion users skip the animation regardless.
+**Q2: Bracket connector draw-in animation: FIRST LOAD ONLY (sessionStorage-gated).**
+The 600ms staggered line-draw animation in §7 (C.2) fires only on the first navigation to `/scenario/full-bracket` within a browser session. Implementation: set a `sessionStorage` key (e.g. `bracket-connectors-seen`) on first render. On subsequent renders within the same session, the connector lines render in their final state without animation. The session boundary is intentional; a fresh tab earns a fresh reveal. Reduced-motion users skip the animation regardless.
 
-**Q3 — Count-up animation on reveal: INTEGER 1-in-N ONLY.**
+**Q3: Count-up animation on reveal: INTEGER 1-in-N ONLY.**
 The 700ms cubic-out count-up in §9 (E.2) animates the integer 1-in-N number only. The fractional percentage (e.g. `1.84%`) renders at its final value immediately, no animation. Counting up a percentage with two decimal places looks fussy and undercuts the quant credibility the reveal exists to deliver. The 1-in-N is the shareable, narrative number; that's the one that earns the count-up moment.
 
-**Q4 — Auto-qualifiers re-picking: FULLY RE-PICKABLE.**
-The 8-of-12 selection in §6 (B.4) is freely toggleable. The user can deselect any chosen 3rd-place team and pick another at any point before advancing to the knockout stage. The "Pick 8 of 12" counter updates live as picks toggle. There is no commit moment — the picks lock only when the user advances out of Step 2 by interacting with Step 3. This matches the freedom model used by every other slot in the simulator.
+**Q4: Auto-qualifiers re-picking: FULLY RE-PICKABLE.**
+The 8-of-12 selection in §6 (B.4) is freely toggleable. The user can deselect any chosen 3rd-place team and pick another at any point before advancing to the knockout stage. The "Pick 8 of 12" counter updates live as picks toggle. There is no commit moment; the picks lock only when the user advances out of Step 2 by interacting with Step 3. This matches the freedom model used by every other slot in the simulator.
 
 **All four answers are locked. Workstream A may dispatch.**

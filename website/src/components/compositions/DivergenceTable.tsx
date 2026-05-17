@@ -28,7 +28,7 @@ import { MARKET_LABELS } from "@/lib/markets";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-// CSS grid template columns — shared by header row and every data row so columns align.
+// CSS grid template columns: shared by header row and every data row so columns align.
 // 95% CI and Age columns are omitted from the main view (available in row disclosure)
 // so the table fits the 1056px container without horizontal scroll.
 const COL_GRID =
@@ -181,7 +181,7 @@ function FilterBar({
         <option value="5">|E| ≥ 5%</option>
       </select>
 
-      {/* Team autocomplete (debounced — URL syncs after TEAM_SEARCH_DEBOUNCE_MS). */}
+      {/* Team autocomplete (debounced · URL syncs after TEAM_SEARCH_DEBOUNCE_MS). */}
       <input
         type="search"
         className={selectCls}
@@ -487,7 +487,7 @@ export function DivergenceTable({
   }, []);
 
   // ── URL update helpers ─────────────────────────────────────────────────────
-  // Single-key change — used by all filter <select>s.
+  // Single-key change: used by all filter <select>s.
   const onParamChange = useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -503,7 +503,7 @@ export function DivergenceTable({
     [searchParams, router, pathname]
   );
 
-  // Atomic clear — one URLSearchParams rebuild, one router.replace. Prevents
+  // Atomic clear: one URLSearchParams rebuild, one router.replace. Prevents
   // the race where five sequential onParamChange calls clobber each other.
   const clearAllFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -617,7 +617,7 @@ export function DivergenceTable({
         setSortDir("asc");
         return;
       }
-      // Third click on the same column — reset.
+      // Third click on the same column; reset.
       setSortKey(DEFAULT_SORT.key);
       setSortDir(DEFAULT_SORT.dir);
     },
@@ -649,7 +649,7 @@ export function DivergenceTable({
           style={{ color: "var(--gate-fired)", backgroundColor: "var(--bg-panel)" }}
           role="alert"
         >
-          Snapshot stale — re-render pending. Data may be more than 26h old.
+          Snapshot stale: re-render pending. Data may be more than 26h old.
         </div>
       )}
 
@@ -717,23 +717,23 @@ export function DivergenceTable({
           style={{ color: "var(--gate-fired)", backgroundColor: "var(--bg-panel)" }}
         >
           ◆ All {filteredRows.length} visible rows have gate status{" "}
-          <span className="mono">FIRED</span>. No row is hidden — the gate annotates.
+          <span className="mono">FIRED</span>. No row is hidden: the gate annotates.
         </div>
       )}
 
       {/* ── Grid table ──────────────────────────────────────────────────── */}
       {!isEmpty && (
         <>
-          {/* Outer horizontal scroll wrapper — column header + rows scroll as one unit.
+          {/* Outer horizontal scroll wrapper; column header + rows scroll as one unit.
               minWidth on children forces the outer div to create a scrollbar at narrow viewports,
               ensuring the 1fr matchup column always has real space. */}
           <div
             className="overflow-x-auto"
             role="grid"
-            aria-label={`Divergence terminal — ${sortedRows.length} rows`}
+            aria-label={`Divergence terminal. ${sortedRows.length} rows`}
             aria-rowcount={sortedRows.length}
           >
-            {/* ── Column header row — outside the vertical scroll container */}
+            {/* ── Column header row; outside the vertical scroll container */}
             <div
               role="row"
               aria-label="Column headers"
@@ -779,7 +779,7 @@ export function DivergenceTable({
               </div>
             </div>
 
-            {/* ── Vertical scroll container — div height is respected, unlike tbody */}
+            {/* ── Vertical scroll container; div height is respected, unlike tbody */}
             <div
               ref={containerRef}
               style={{

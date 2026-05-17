@@ -67,7 +67,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color }}>
           {p.name}:{" "}
-          {typeof p.value === "number" ? `${(p.value * 100).toFixed(1)}%` : "—"}
+          {typeof p.value === "number" ? `${(p.value * 100).toFixed(1)}%` : "-"}
         </div>
       ))}
     </div>

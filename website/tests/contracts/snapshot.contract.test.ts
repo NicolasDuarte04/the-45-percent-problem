@@ -1,7 +1,7 @@
 /**
  * Contract tests for the 2026-04-23T00:00Z fixture snapshot bundle.
  * Every artifact in /public/data/latest/ must round-trip through its Zod schema.
- * [BLOCK] — must be 100% green before any UI work (§12.2).
+ * [BLOCK]: must be 100% green before any UI work (§12.2).
  */
 import { describe, it, expect } from "vitest";
 import fs from "fs";
@@ -23,7 +23,7 @@ const LATEST = path.join(process.cwd(), "public", "data", "latest");
 const DATA_ROOT = path.join(process.cwd(), "public", "data");
 // Snapshot ID is sourced from the live data being tested, not hard-coded,
 // so the contract suite stays green across nightly snapshots. Cross-artifact
-// consistency is still enforced below — every file must agree on the same id.
+// consistency is still enforced below; every file must agree on the same id.
 const SNAPSHOT_ID: string = (() => {
   const meta = JSON.parse(
     fs.readFileSync(path.join(LATEST, "snapshot_meta.json"), "utf-8"),
@@ -387,7 +387,7 @@ describe("cross-artifact consistency", () => {
   // bracket bracket-slot pages) must have a corresponding matches/{id}.json
   // file, or the static page 404s at runtime. This test exists because a
   // [:10] slice in scripts/generate_snapshot.py once shipped to production
-  // and broke 62 of 72 group-stage match links — see commit 0b9db6a.
+  // and broke 62 of 72 group-stage match links; see commit 0b9db6a.
   it("every match_id referenced in divergence.json has a matches/{id}.json file", () => {
     const matchesDir = path.join(LATEST, "matches");
     const matchFiles = new Set(

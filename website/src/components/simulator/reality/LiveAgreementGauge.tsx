@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * LiveAgreementGauge — Phase D Workstream 3, Phase E §5.4 motion.
+ * LiveAgreementGauge. Phase D Workstream 3, Phase E §5.4 motion.
  *
  * Per UX_POLISH_PLAN_SIMULATOR_PHASE_D.md §4.2 + §4.4 with the Option C
  * resolution (§4.1). The live build gauge speaks a 3-state viral
- * vocabulary only — REALISTIC / BOLD CALL / LONG SHOT — never the
+ * vocabulary only. REALISTIC / BOLD CALL / LONG SHOT; never the
  * post-submit rarity vocabulary (Common, Plausible, Uncommon, Rare,
  * Vanishingly rare). The post-submit hero is RealityScorePanel, which
  * MUST NOT import this component.
@@ -32,14 +32,14 @@ interface LiveAgreementGaugeProps {
   total: number;
   /** True only when the scenario meets the per-mode show-threshold. */
   isComplete: boolean;
-  /** Reserved; do not use "full" — that surface is RealityScorePanel. */
+  /** Reserved; do not use "full": that surface is RealityScorePanel. */
   variant?: "compact" | "full";
 }
 
 const SEGMENT_COUNT = 5;
 
 /**
- * Pick the active segment by raw probability buckets — same threshold
+ * Pick the active segment by raw probability buckets; same threshold
  * geometry the post-submit panel uses, so the bar widths line up
  * across surfaces. Critically, only the *index* is shared; the textual
  * label here is the live-gauge viral hook, never the scientific term.
@@ -97,7 +97,7 @@ function LiveAgreementGaugeImpl({
           return (
             <li
               key={i}
-              // Phase E §8 (D.3) — gauge segment border in accent-warm
+              // Phase E §8 (D.3): gauge segment border in accent-warm
               // when active to tie the gauge into the "you are here"
               // beacon system used across the simulator.
               className={[
@@ -109,7 +109,7 @@ function LiveAgreementGaugeImpl({
             >
               <motion.span
                 aria-hidden="true"
-                // Phase E §8 (D.3) — active segment fills with the
+                // Phase E §8 (D.3): active segment fills with the
                 // accent-warm beacon, replacing the prior text-primary
                 // bone fill.
                 className="absolute inset-0 bg-[var(--accent-warm)]"
@@ -127,7 +127,7 @@ function LiveAgreementGaugeImpl({
         <span
           className={[
             "relative inline-block min-h-[1em] font-mono text-[14px] uppercase tracking-[0.10em] sm:text-[15px]",
-            // Phase E §8 (D.3) — viral hook tracks the gauge accent.
+            // Phase E §8 (D.3): viral hook tracks the gauge accent.
             isComplete
               ? "text-[var(--accent-warm)]"
               : "text-[var(--text-primary)]",

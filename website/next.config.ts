@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 
 /**
- * §12.8 — MDX pipeline.
+ * §12.8: MDX pipeline.
  *
  * ACTIVE: Full JS pipeline with remark-math / rehype-katex / rehype-pretty-code.
  * Activated once the parent directory was renamed from "The 45% Problem" to
@@ -10,12 +10,12 @@ import createMDX from "@next/mdx";
  * resolver to throw `URIError: URI malformed` during fileURLToPath conversion.
  *
  * Pipeline:
- *   remark-gfm              — GitHub Flavoured Markdown (tables, task lists, etc.)
- *   remark-math             — parse $...$ and $$...$$ math fences into mdast nodes
- *   rehype-katex            — render those nodes to KaTeX HTML (SSR, no client JS)
- *   rehype-slug             — inject id attributes on headings
- *   rehype-autolink-headings— wrap headings in self-link anchors ({ behavior: "wrap" })
- *   rehype-pretty-code      — syntax-highlighted code blocks via Shiki
+ *   remark-gfm. GitHub Flavoured Markdown (tables, task lists, etc.)
+ *   remark-math: parse $...$ and $$...$$ math fences into mdast nodes
+ *   rehype-katex: render those nodes to KaTeX HTML (SSR, no client JS)
+ *   rehype-slug: inject id attributes on headings
+ *   rehype-autolink-headings: wrap headings in self-link anchors ({ behavior: "wrap" })
+ *   rehype-pretty-code: syntax-highlighted code blocks via Shiki
  *
  * KaTeX CSS is still imported once in globals.css; equations render server-side
  * so the page is fully readable before any client hydration.

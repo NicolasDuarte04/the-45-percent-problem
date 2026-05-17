@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/simulate_stress_test.sh
 #
-# Pre-launch stress test automator — §12.10 / §11.2–11.4
+# Pre-launch stress test automator · §12.10 / §11.2-11.4
 #
 # Usage:
 #   ./scripts/simulate_stress_test.sh <snapshots_dir>
@@ -128,7 +128,7 @@ EOF
   git commit -m "stress-test(deploy): snapshot $SNAPSHOT_ID"
   git push origin "$BRANCH"
 
-  echo "  Pushed — waiting for CI run to register..."
+  echo "  Pushed: waiting for CI run to register..."
   sleep 15
 
   # Locate the run triggered by this push.
@@ -162,7 +162,7 @@ EOF
   if [[ -z "$RUN_ID" ]]; then
     echo "  ERROR: could not locate CI run for $SNAPSHOT_ID" >&2
     FAIL=$((FAIL + 1))
-    FAILED_SNAPSHOTS+=("$SNAPSHOT_ID — no run found")
+    FAILED_SNAPSHOTS+=("$SNAPSHOT_ID: no run found")
     continue
   fi
 
@@ -177,7 +177,7 @@ EOF
       --jq '.conclusion // "unknown"' 2>/dev/null || echo "unknown")"
     echo "  FAIL (conclusion: $CONCLUSION)"
     FAIL=$((FAIL + 1))
-    FAILED_SNAPSHOTS+=("$SNAPSHOT_ID — $CONCLUSION")
+    FAILED_SNAPSHOTS+=("$SNAPSHOT_ID. $CONCLUSION")
     # Continue rather than abort: §11.4 requires a complete report.
   fi
 
@@ -201,8 +201,8 @@ fi
 
 echo ""
 if [[ $FAIL -gt 0 ]]; then
-  echo "RESULT: FAILED — review CI logs above before requesting prod sign-off (§11.4)."
+  echo "RESULT: FAILED: review CI logs above before requesting prod sign-off (§11.4)."
   exit 1
 else
-  echo "RESULT: ALL PASS — cleared for §11.4 manual review and sign-off."
+  echo "RESULT: ALL PASS: cleared for §11.4 manual review and sign-off."
 fi

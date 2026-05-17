@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
  *      this mirrors the Origin/Referer pattern intended for the email
  *      subsystem. Per the same note, we do NOT touch /api/subscribe's
  *      CSRF behavior in this commit.
- *   2. Rate limit (10/min per IP) — same shape as /api/subscribe; this
+ *   2. Rate limit (10/min per IP); same shape as /api/subscribe; this
  *      route also creates DB rows and triggers email sends.
  *   3. Validate path id and JSON body.
  *   4. Look up the prediction row.
@@ -34,9 +34,9 @@ export const dynamic = "force-dynamic";
  *   - suppressed | complained: 409 with the explicit error code so the
  *     UI can surface "this email cannot be added to notifications"
  *     per §11.6. Distinct codes preserve ops visibility.
- *   - created | reactivated: 200 with status — fresh verification email
+ *   - created | reactivated: 200 with status: fresh verification email
  *     sent.
- *   - already_pending | already_active: 200 with status — no fresh email,
+ *   - already_pending | already_active: 200 with status: no fresh email,
  *     but the prediction is still attached to the existing subscriber.
  *     UI can render an "already on file" affordance. Cross-device
  *     cookie acquisition for already_active users is a Phase B concern

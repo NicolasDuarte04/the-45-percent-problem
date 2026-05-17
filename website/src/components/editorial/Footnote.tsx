@@ -5,7 +5,7 @@ interface NumProps {
 }
 
 /**
- * Inline footnote reference — superscript numeral linking to the matching
+ * Inline footnote reference: superscript numeral linking to the matching
  * <Footnote n={n}> entry at the foot of the article.
  *
  * Usage:

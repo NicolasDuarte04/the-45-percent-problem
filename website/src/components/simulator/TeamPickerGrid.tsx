@@ -11,7 +11,7 @@
  * attaches `useDraggable` so users can drag teams to droppable slots in
  * addition to the existing click-to-select interaction. Visual layout
  * (flag + code + name) is identical between click-only and draggable
- * variants — the picker reads the same in both modes.
+ * variants: the picker reads the same in both modes.
  */
 
 import { useDraggable } from "@dnd-kit/core";

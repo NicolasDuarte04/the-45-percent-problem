@@ -23,7 +23,7 @@ import {
 } from "@/components/figures";
 
 /**
- * §8.13 — globally-available MDX components for Vault articles.
+ * §8.13: globally-available MDX components for Vault articles.
  * Registered by Next.js via the `mdx-components.tsx` file convention; every
  * MDX page under `app/(editorial)/vault/…` can reference these identifiers
  * without importing.

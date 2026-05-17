@@ -1,17 +1,17 @@
 /**
- * SimulatorTrailer — landing-page trailer embed.
+ * SimulatorTrailer: landing-page trailer embed.
  *
  * Pure HTML5 `<video>`, autoplaying muted on loop with `playsInline` so
  * mobile Safari treats it as inline media rather than promoting it to
  * fullscreen on tap. Bordless and corner-sharp on the simulator canvas
- * (brutalist tone) — visually continuous with the dark canvas it sits
+ * (brutalist tone): visually continuous with the dark canvas it sits
  * on, exactly like the editorial-canvas trailer pattern but stripped
  * of the rounded card shell.
  *
  * The poster frame (`/trailer-poster.jpg`) renders before the video
  * decodes so the layout never shifts and there's no black flash on
  * first paint. `aria-hidden` + `tabIndex={-1}` keep the loop out of
- * the focus order — it's ambient, not informational.
+ * the focus order: it's ambient, not informational.
  *
  * Server component: no client state or effects, just an HTML element.
  * The browser handles autoplay + loop natively.
@@ -36,7 +36,7 @@ export function SimulatorTrailer({
       <div
         // 16:9 box keeps the layout stable during decode + ensures the
         // video never overflows on narrow viewports. No border, no
-        // shadow, no radius — the frame is the canvas itself.
+        // shadow, no radius: the frame is the canvas itself.
         style={{ aspectRatio: "16 / 9", width: "100%" }}
         className="overflow-hidden"
       >

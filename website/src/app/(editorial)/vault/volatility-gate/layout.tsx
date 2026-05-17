@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Volatility Gate — Research Vault",
+  title: "Volatility Gate · Research Vault",
   description:
     "The five pre-registered suppression rules that prevent the model from acting on noisy or unreliable market prices.",
 };
@@ -35,7 +35,7 @@ export default function VolatilityGateLayout({
         {
           href: "/vault/market-layer",
           title: "Market layer",
-          blurb: "De-vigging and edge — how divergence is measured.",
+          blurb: "De-vigging and edge: how divergence is measured.",
         },
         {
           href: "/vault/evaluation",

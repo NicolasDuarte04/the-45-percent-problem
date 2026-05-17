@@ -24,7 +24,7 @@ export async function generateMetadata({
 }) {
   const { forecast_id } = await params;
   return {
-    title: `Forecast ${forecast_id} — Transparency Ledger`,
+    title: `Forecast ${forecast_id} · Transparency Ledger`,
     description: `Full audit record for forecast ${forecast_id} including reproduction recipe.`,
   };
 }
@@ -270,7 +270,7 @@ export default async function ForecastDetailPage({
                     </span>
                   ) : (
                     <span className="mono" style={{ color: "var(--text-tertiary)" }}>
-                      — (shadow model, not M★)
+. (shadow model, not M★)
                     </span>
                   )}
                 </FieldRow>
@@ -343,17 +343,17 @@ export default async function ForecastDetailPage({
 #   - The 45% Problem research repo at the commit below
 #   - Phase 7 evaluation harness installed (pip install -e .)
 #
-# Step 1 — check out the exact code commit
+# Step 1: check out the exact code commit
 git clone https://github.com/the-45-percent-problem/research.git
 cd research
 git checkout ${record.code_sha}
 
-# Step 2 — verify the data snapshot
+# Step 2: verify the data snapshot
 # SHA-256 of the input data bundle must match:
 # ${record.data_sha}
 sha256sum data/snapshots/active.tar.gz
 
-# Step 3 — run the reproduction harness
+# Step 3: run the reproduction harness
 python -m p9.reproduce \\
   --forecast-id ${record.forecast_id} \\
   --code-sha    ${record.code_sha} \\
@@ -378,7 +378,7 @@ python -m p9.reproduce \\
                 Pre-registration invariant: once a forecast is published in{" "}
                 <span className="mono">ledger.jsonl</span>, it is never edited. If a
                 bug in the upstream emitter produced a wrong snapshot, the correction
-                appears as a new snapshot — not a rewrite of this record.
+                appears as a new snapshot; not a rewrite of this record.
               </p>
               <p>
                 The full artifact archive is indexed at{" "}

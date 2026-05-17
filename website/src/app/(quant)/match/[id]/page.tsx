@@ -74,19 +74,19 @@ export async function generateMetadata({
   try {
     const maps = await loadStructuralMaps();
     if (!maps.matchesById.has(id)) {
-      return { title: "Match detail — The 45% Problem" };
+      return { title: "Match detail · The 45% Problem" };
     }
 
     const detail = loadMatchIfPresent(id);
     if (detail) {
       const match = mergeMatch(detail, maps);
       return {
-        title: `${match.home.display_name} vs ${match.away.display_name} — Match detail`,
+        title: `${match.home.display_name} vs ${match.away.display_name}. Match detail`,
         description: `Per-match probability breakdown, goal matrix, and strength inputs for the ${match.round} fixture on ${match.kickoff_utc}.`,
       };
     }
 
-    // Knockout fixture — teams not yet determined
+    // Knockout fixture: teams not yet determined
     const structural = maps.matchesById.get(id)!;
     const homeLabel = structural.home_slot
       ? formatSlot(structural.home_slot)
@@ -96,11 +96,11 @@ export async function generateMetadata({
       : "TBD";
     const roundLabel = ROUND_LABELS[structural.round] ?? structural.round;
     return {
-      title: `${homeLabel} vs ${awayLabel} — ${roundLabel} — The 45% Problem`,
+      title: `${homeLabel} vs ${awayLabel}. ${roundLabel} · The 45% Problem`,
       description: `${roundLabel} fixture. Team assignments and probability breakdowns will appear here once the preceding rounds conclude.`,
     };
   } catch {
-    return { title: "Match detail — The 45% Problem" };
+    return { title: "Match detail · The 45% Problem" };
   }
 }
 
@@ -121,7 +121,7 @@ export default async function MatchDetailPage({
   if (!detail) {
     if (structural.round === "GRP") {
       console.warn(
-        `[match/${id}] Group-stage match missing JSON detail — expected file not found.`,
+        `[match/${id}] Group-stage match missing JSON detail; expected file not found.`,
       );
     }
 
@@ -259,7 +259,7 @@ export default async function MatchDetailPage({
     );
   }
 
-  // ── Group-stage / already-priced fixture — full probability view ──────────
+  // ── Group-stage / already-priced fixture; full probability view ──────────
   const match = mergeMatch(detail, maps);
   const records = loadLedger();
   const meta = loadSnapshotMeta();

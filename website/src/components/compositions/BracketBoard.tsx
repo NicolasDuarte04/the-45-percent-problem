@@ -65,7 +65,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   // Crosshair hover. Hovering a cell sets both row and col; hovering a team
   // label sets only the row; hovering a round header sets only the col.
   // Hover-clear is hoisted to the grid wrapper so the cursor moving across
-  // gridlines inside the matrix never flickers — the highlight stays lit
+  // gridlines inside the matrix never flickers; the highlight stays lit
   // until the cursor leaves the grid.
   const [hoverRow, setHoverRow] = useState<string | null>(null);
   const [hoverCol, setHoverCol] = useState<RoundKey | null>(null);
@@ -108,7 +108,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
       </div>
 
       {/* Pre-tournament empty-state note. A traditional knockout tree
-          requires resolved slots — in the pre-tournament phase we have no
+          requires resolved slots: in the pre-tournament phase we have no
           match-to-match edges to draw, so we explain the fallback instead
           of showing an empty lattice. Once the draw is played and the
           bracket.json slots populate, this note hides and the matrix is
@@ -137,7 +137,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               margin: 0,
             }}
           >
-            A traditional knockout tree cannot be drawn yet — the draw has not
+            A traditional knockout tree cannot be drawn yet; the draw has not
             been played, so the model has no match-to-match edges between
             slots. The matrix below is the faithful substitute: each row is a
             team, each column is a round, and each cell is the marginal
@@ -151,7 +151,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 
       <style>{crosshairStyles}</style>
 
-      {/* Native CSS Grid — no external bracket library (§12.7) */}
+      {/* Native CSS Grid: no external bracket library (§12.7) */}
       <div
         role="table"
         data-guide-id="bracket-matrix"
@@ -174,7 +174,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           overflowX: "auto",
         }}
       >
-          {/* Header row — sticky so it stays visible during vertical scroll.
+          {/* Header row: sticky so it stays visible during vertical scroll.
               Color lifted to --text-primary (slate-ink / paper-ink) so the
               round labels are unmistakably legible above the Prism heatmap.
               Weight semibold, tracking .14em, with a hairline bottom border
@@ -263,7 +263,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                   className="mono text-[10px] ml-auto tabular-nums"
                   style={{ color: "var(--text-quiet)" }}
                 >
-                  #{team.seed} · {team.group ?? "—"}
+                  #{team.seed} · {team.group ?? "-"}
                 </span>
               </Link>
 
@@ -300,7 +300,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           })}
       </div>
 
-      {/* Legend — Prism ramp strip */}
+      {/* Legend · Prism ramp strip */}
       <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
         <div
           className="mono text-[10px] uppercase tracking-[.08em]"
@@ -344,11 +344,11 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 // The team-label header (.brk-col-header--axis) never dims; it's the matrix
 // origin, not a column.
 //
-// IMPORTANT: opacity is intentionally avoided on the sticky column headers —
+// IMPORTANT: opacity is intentionally avoided on the sticky column headers. 
 // a semi-transparent sticky strip lets scrolling cells leak through and
 // reads as broken UI. We dim text colour instead and keep bg-panel-elev
 // solid. Cells are dimmed via filter: saturate/brightness rather than
-// opacity for the same reason — opacity bleeds the dark gridline colour
+// opacity for the same reason; opacity bleeds the dark gridline colour
 // through the heatmap fill and looks muddy. Filter mutes the colour while
 // preserving the cell's visual presence.
 const crosshairStyles = `

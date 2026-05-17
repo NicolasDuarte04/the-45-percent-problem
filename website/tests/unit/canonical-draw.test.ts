@@ -8,7 +8,7 @@
 import { describe, it, expect } from "vitest";
 import { GROUP_MATCHES } from "@/lib/data/wc2026-official-draw";
 
-describe("canonical draw — Group K", () => {
+describe("canonical draw: Group K", () => {
   it("MD1 matches FIFA: POR-COD + UZB-COL (diagonal pairing)", () => {
     const md1 = GROUP_MATCHES.filter(
       (m) => m.group === "K" && m.matchday === 1,
@@ -20,7 +20,7 @@ describe("canonical draw — Group K", () => {
   });
 });
 
-describe("canonical draw — host home/away", () => {
+describe("canonical draw: host home/away", () => {
   it("hosts (MEX, CAN, USA) are home in their MD3 fixture", () => {
     const hosts = ["MEX", "CAN", "USA"] as const;
     for (const h of hosts) {
@@ -33,7 +33,7 @@ describe("canonical draw — host home/away", () => {
   });
 });
 
-describe("canonical draw — round-robin completeness", () => {
+describe("canonical draw: round-robin completeness", () => {
   it("each group has 6 matches covering all C(4,2)=6 unique pairs", () => {
     for (const g of "ABCDEFGHIJKL".split("")) {
       const matches = GROUP_MATCHES.filter((m) => m.group === g);
@@ -61,7 +61,7 @@ describe("canonical draw — round-robin completeness", () => {
   });
 });
 
-describe("canonical draw — totals", () => {
+describe("canonical draw: totals", () => {
   it("produces exactly 72 group-stage matches", () => {
     expect(GROUP_MATCHES.length).toBe(72);
   });

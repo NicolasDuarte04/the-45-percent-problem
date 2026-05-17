@@ -76,7 +76,7 @@ export function CanvasTour({
   // setAnchorEl is invoked from a rAF callback (subscription-style) rather
   // than synchronously in the effect body. The dialog only renders when
   // `step` and `rect` are both truthy, so a stale anchorEl from a previous
-  // step is harmless — the cleanup restores its outline on unmount.
+  // step is harmless: the cleanup restores its outline on unmount.
   useEffect(() => {
     if (!step) return;
     let el: HTMLElement | null = null;

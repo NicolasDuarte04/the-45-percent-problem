@@ -44,7 +44,7 @@ function modeSkew(mode: Mode): number {
     case "champions_path":
       return 3.2; // bolder skew; constraint-heavy
     case "full_bracket":
-      return 5.0; // joint probability of many constraints — very rare
+      return 5.0; // joint probability of many constraints; very rare
   }
 }
 

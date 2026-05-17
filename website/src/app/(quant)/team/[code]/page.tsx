@@ -16,7 +16,7 @@ export const dynamic = "force-static";
 
 export async function generateStaticParams() {
   // Generate the 48 routes from Drizzle (the canonical qualifier list), not
-  // from disk snapshots — protects against snapshot drift adding/removing
+  // from disk snapshots: protects against snapshot drift adding/removing
   // teams that the draw doesn't sanction.
   const teams = await getStructuralTeams();
   return teams.map((t) => ({ code: t.fifa_code }));
@@ -31,15 +31,15 @@ export async function generateMetadata({
   try {
     const maps = await loadStructuralMaps();
     if (!maps.teamsByCode.has(code)) {
-      return { title: "Team — The 45% Problem" };
+      return { title: "Team · The 45% Problem" };
     }
     const team = mergeTeamProgression(loadTeam(code), maps);
     return {
-      title: `${team.display_name} — Team progression`,
+      title: `${team.display_name}. Team progression`,
       description: `Per-team progression cone from group stage to champion for ${team.display_name}.`,
     };
   } catch {
-    return { title: "Team — The 45% Problem" };
+    return { title: "Team · The 45% Problem" };
   }
 }
 

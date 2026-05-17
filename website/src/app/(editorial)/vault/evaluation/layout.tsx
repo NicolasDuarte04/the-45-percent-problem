@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Evaluation — Research Vault",
+  title: "Evaluation · Research Vault",
   description:
-    "Brier score, log-loss, RPS, and closing-line value in plain English — how to read the Transparency Ledger's scoring metrics.",
+    "Brier score, log-loss, RPS, and closing-line value in plain English; how to read the Transparency Ledger's scoring metrics.",
 };
 
 const bibtex = `@misc{forty_five_percent_evaluation_2026,
@@ -27,7 +27,7 @@ export default function EvaluationLayout({
     <VaultArticle
       eyebrow="§ VIII · Long-form"
       title="Evaluation"
-      deck="Brier score, log-loss, RPS, and closing-line value — what each metric measures, how to read the Ledger, and why calibration matters more than accuracy."
+      deck="Brier score, log-loss, RPS, and closing-line value; what each metric measures, how to read the Ledger, and why calibration matters more than accuracy."
       readingTimeMinutes={8}
       lastRevised="2026-04-22"
       citation={{ apa, bibtex }}

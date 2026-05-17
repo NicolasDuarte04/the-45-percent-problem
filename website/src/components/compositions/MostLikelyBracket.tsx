@@ -7,7 +7,7 @@ import type { TournamentSnapshot, TournamentTeam } from "@/lib/data/schemas";
 import { Flag } from "@/components/primitives/Flag";
 
 /**
- * Most Likely Bracket — modal path through the 48-team draw.
+ * Most Likely Bracket: modal path through the 48-team draw.
  *
  * Data wiring: round-by-round slots are derived from tournament.json by taking
  * the top-k teams sorted by the round-specific p_reach. Pairwise advancement
@@ -41,7 +41,7 @@ function winProb(a: number, b: number): number {
 
 function buildBracket(tournament: TournamentSnapshot) {
   // Top-k selections per round. These populate slots deterministically and
-  // mirror the modal path — not a replacement for a full simulated bracket.
+  // mirror the modal path: not a replacement for a full simulated bracket.
   const byR16 = [...tournament.teams].sort((a, b) => b.p_r16 - a.p_r16);
   const byQF = [...tournament.teams].sort(
     (a, b) => b.p_quarterfinal - a.p_quarterfinal
@@ -134,7 +134,7 @@ function TeamRow({
     <Link
       href={`/team/${slot.team.fifa_code}`}
       prefetch={false}
-      aria-label={`${slot.team.display_name} — team detail`}
+      aria-label={`${slot.team.display_name}; team detail`}
       className="bracket-team-row flex items-center gap-2 px-[9px] py-[5px] no-underline transition-colors"
       style={{ opacity: dim ? 0.45 : 1, color: "inherit" }}
       onMouseEnter={
@@ -472,8 +472,8 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
         }}
       >
         Each match shows the posterior probability that the favoured side
-        advances. Click a team to open its progression page. The chain — R16
-        through final — is the sequence of modal outcomes; its joint
+        advances. Click a team to open its progression page. The chain · R16
+        through final: is the sequence of modal outcomes; its joint
         likelihood is much lower than any leg alone.
       </p>
 
@@ -489,7 +489,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
           }}
         >
           <RoundColumn
-            kicker="Stage 1 · 14 – 18 Jun"
+            kicker="Stage 1 · 14 · 18 Jun"
             label="Round of 16"
             align="left"
           >
@@ -508,7 +508,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             hasActiveTeam={hasActive}
           />
           <RoundColumn
-            kicker="Stage 2 · 28 – 29 Jun"
+            kicker="Stage 2 · 28 · 29 Jun"
             label="Quarterfinals"
             align="left"
           >
@@ -665,7 +665,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             hasActiveTeam={hasActive}
           />
           <RoundColumn
-            kicker="Stage 2 · 28 – 29 Jun"
+            kicker="Stage 2 · 28 · 29 Jun"
             label="Quarterfinals"
             align="right"
           >
@@ -685,7 +685,7 @@ export function MostLikelyBracket({ tournament }: MostLikelyBracketProps) {
             hasActiveTeam={hasActive}
           />
           <RoundColumn
-            kicker="Stage 1 · 14 – 18 Jun"
+            kicker="Stage 1 · 14 · 18 Jun"
             label="Round of 16"
             align="right"
           >

@@ -1,4 +1,4 @@
-# UX/UI Polish Plan — Tournament Scenario Simulator (Phase D)
+# UX/UI Polish Plan. Tournament Scenario Simulator (Phase D)
 
 **Project:** 45analytics / The 45% Problem
 **Branch base:** `main` (Phase C merged)
@@ -6,7 +6,7 @@
 **Scope:** UX/UI polish only. No new model logic, no new API routes, no schema changes. Aesthetic and interaction layer.
 **Goal:** Close the gap between the simulator's quant-correct functionality and a mainstream user's first 30 seconds. Pass the Grandma Test without losing the brutalist aesthetic.
 
-**Revision (this version):** Workstream 3.1 vocabulary decision is now **resolved** — Option C (Ultra-Minimalist Hybrid) is the chosen path. See §4.1 and §9.
+**Revision (this version):** Workstream 3.1 vocabulary decision is now **resolved**. Option C (Ultra-Minimalist Hybrid) is the chosen path. See §4.1 and §9.
 
 ---
 
@@ -25,7 +25,7 @@ A codebase scan confirmed the following starting points. The polish plan builds 
 
 **The gaps the polish targets:**
 1. **Static `TeamGrid` on the landing** (`src/components/simulator/TeamGrid.tsx`) shows code + name only, no flag. Inconsistent with `TeamPickerGrid` inside the modes.
-2. **Empty droppable slots** render `{code ?? "—"}` (line 95 of `ModeFinalFour.tsx`). The en dash gives no affordance; nothing visually says "drop here."
+2. **Empty droppable slots** render `{code ?? "-"}` (line 95 of `ModeFinalFour.tsx`). The en dash gives no affordance; nothing visually says "drop here."
 3. **Live score is a percentage only.** Per Patch v2.1 §3, the rarity band and 1-in-N are correctly suppressed during build to avoid "Common · 1 in 1" nonsense on partial scenarios. But the percentage alone has zero emotional pull.
 4. **Mode selector cards** have no iconography. Three nearly identical bordered rectangles with text only.
 5. **`DragOverlay`** shows just the team code mid-drag. The flag is in the source cell but disappears the moment you grab it.
@@ -34,7 +34,7 @@ A codebase scan confirmed the following starting points. The polish plan builds 
 
 ## 1. Three Phases, Five Workstreams
 
-Workstreams 1, 2, and 4 are independent and can ship in parallel. Workstream 3 (Live Agreement Gauge) depends on a one-time decision (vocabulary) — now resolved as Option C below. Workstream 5 (QA pass) runs last.
+Workstreams 1, 2, and 4 are independent and can ship in parallel. Workstream 3 (Live Agreement Gauge) depends on a one-time decision (vocabulary); now resolved as Option C below. Workstream 5 (QA pass) runs last.
 
 | # | Workstream | Files touched | Estimated PRs |
 |---|------------|---------------|----------------|
@@ -46,7 +46,7 @@ Workstreams 1, 2, and 4 are independent and can ship in parallel. Workstream 3 (
 
 ---
 
-## 2. Workstream 1 — Universal Flag System
+## 2. Workstream 1 · Universal Flag System
 
 ### 2.1 Update static `TeamGrid` (landing page)
 
@@ -109,7 +109,7 @@ Flags are already used in `TradeTicket` (size 24/32 depending on mode) but `Scen
 
 ---
 
-## 3. Workstream 2 — Tactile Empty Slot Affordances
+## 3. Workstream 2 · Tactile Empty Slot Affordances
 
 ### 3.1 Create the `EmptySlot` component
 
@@ -141,9 +141,9 @@ interface EmptySlotProps {
 
 ### 3.2 Replace dash patterns across modes
 
-- `src/components/simulator/modes/ModeFinalFour.tsx` — replace `{code ?? "—"}` on line 95 with `<EmptySlot label="SF1" size="md" ariaLabel="Drop a team into Semifinal slot 1" />` (same for slots 2, 3, 4).
-- `src/components/simulator/modes/ModeChampionsPath.tsx` — replace empty stage cells with `<EmptySlot size="md" label="OPPONENT" ariaLabel={`Choose opponent for ${stage}`} />`.
-- `src/components/simulator/modes/ModeFullBracket.tsx` — replace empty match cells with `<EmptySlot size="sm" label="WINNER" ariaLabel={`Choose winner of ${matchId}`} />`.
+- `src/components/simulator/modes/ModeFinalFour.tsx`; replace `{code ?? "-"}` on line 95 with `<EmptySlot label="SF1" size="md" ariaLabel="Drop a team into Semifinal slot 1" />` (same for slots 2, 3, 4).
+- `src/components/simulator/modes/ModeChampionsPath.tsx`; replace empty stage cells with `<EmptySlot size="md" label="OPPONENT" ariaLabel={`Choose opponent for ${stage}`} />`.
+- `src/components/simulator/modes/ModeFullBracket.tsx`; replace empty match cells with `<EmptySlot size="sm" label="WINNER" ariaLabel={`Choose winner of ${matchId}`} />`.
 
 ### 3.3 Click-to-fill complement
 
@@ -155,7 +155,7 @@ For mobile and keyboard users, add a tap-to-fill flow:
 dnd-kit's KeyboardSensor and the existing click handler can both feed the same `handleDropToSlot` function.
 
 **Acceptance for Workstream 2:**
-- Zero `{code ?? "—"}` patterns remain in the simulator.
+- Zero `{code ?? "-"}` patterns remain in the simulator.
 - Empty slots in all three modes use `EmptySlot` with the appropriate `size` and `label`.
 - Dragging a team over a slot visibly lights up the target.
 - Tapping an empty slot then tapping a team places the team correctly on touch devices.
@@ -163,33 +163,33 @@ dnd-kit's KeyboardSensor and the existing click handler can both feed the same `
 
 ---
 
-## 4. Workstream 3 — Live Agreement Gauge
+## 4. Workstream 3 · Live Agreement Gauge
 
 The vocabulary decision is now settled; build accordingly.
 
-### 4.1 Vocabulary decision — RESOLVED: Option C (Ultra-Minimalist Hybrid)
+### 4.1 Vocabulary decision. RESOLVED: Option C (Ultra-Minimalist Hybrid)
 
 **Three options were considered.**
 
-**Option A:** Reuse the rarity band vocabulary in a "preview" treatment. Rejected — muddies the post-submit reveal.
+**Option A:** Reuse the rarity band vocabulary in a "preview" treatment. Rejected: muddies the post-submit reveal.
 
-**Option B:** Introduce a new 5-state vocabulary for the live gauge. Rejected — two full vocabularies to internalise.
+**Option B:** Introduce a new 5-state vocabulary for the live gauge. Rejected: two full vocabularies to internalise.
 
-**Option C — CHOSEN: Ultra-Minimalist Hybrid.**
-- **Live build (the live gauge): zero scientific rarity terminology.** Render only three things: a punchy viral hook label, the segmented bar, and the percentage. The viral hook is a 3-state vocabulary keyed off the percentage. No words like "Common," "Plausible," "Uncommon," "Rare," or "Vanishingly rare" appear anywhere in the live gauge — not as captions, not as tooltips, not as `aria-label` text.
+**Option C · CHOSEN: Ultra-Minimalist Hybrid.**
+- **Live build (the live gauge): zero scientific rarity terminology.** Render only three things: a punchy viral hook label, the segmented bar, and the percentage. The viral hook is a 3-state vocabulary keyed off the percentage. No words like "Common," "Plausible," "Uncommon," "Rare," or "Vanishingly rare" appear anywhere in the live gauge; not as captions, not as tooltips, not as `aria-label` text.
 - **Post-submit (Trade Ticket / `RealityScorePanel`): unchanged.** The strict 5-band scientific rarity vocabulary remains exactly as it is today.
-- **Why this wins.** During play, the user gets a clean emotional read with no reading homework. On submit, the scientific rarity band lands as a verdict with weight. The two surfaces speak two different registers — playful during interaction, rigorous on reveal.
+- **Why this wins.** During play, the user gets a clean emotional read with no reading homework. On submit, the scientific rarity band lands as a verdict with weight. The two surfaces speak two different registers; playful during interaction, rigorous on reveal.
 
-**Live-gauge viral hook — 3 states only:**
+**Live-gauge viral hook · 3 states only:**
 
 | Hook label | Threshold (model probability of the predicted scenario) |
 |------------|----------------------------------------------------------|
 | `REALISTIC`  | ≥ 5%   |
-| `BOLD CALL`  | 1% – 5% |
+| `BOLD CALL`  | 1%. 5% |
 | `LONG SHOT`  | < 1%   |
 
 Rules:
-- Labels are mono, uppercase, tracked. No serif here — serif is reserved for the post-submit rarity band on the reveal panel.
+- Labels are mono, uppercase, tracked. No serif here: serif is reserved for the post-submit rarity band on the reveal panel.
 - Below 0.1% the label stays `LONG SHOT`. There is no fourth tier.
 - The `LONG SHOT` token must be added to the simulator-allowed vocabulary list explicitly so the forbidden-vocabulary grep does not fail.
 - The mapping from percentage → hook label lives in a single helper, e.g. `src/lib/sim/getLiveHook.ts`. The post-submit panel does **not** import this helper. The two vocabularies do not cross-pollute.
@@ -211,7 +211,7 @@ Anatomy (live build state, post-resolution of Option C):
 
 **The segmented bar:**
 - Horizontal, 5 segments, separated by 1px gaps.
-- Each segment represents one rarity threshold zone from `getRarityBand.ts`. The geometry still tracks the 5 underlying thresholds — preserves visual real estate so layout matches the post-submit panel.
+- Each segment represents one rarity threshold zone from `getRarityBand.ts`. The geometry still tracks the 5 underlying thresholds; preserves visual real estate so layout matches the post-submit panel.
 - Active segment fills with `--text-primary`; inactive segments are 1px outline only.
 - Width: ~280px desktop, full-width mobile. Height: 8px.
 - No tick labels, no inline annotations.
@@ -231,7 +231,7 @@ interface LiveAgreementGaugeProps {
 **Rendering rules:**
 - When `isComplete=false`: ghost state (all segments outlined, no active segment), no hook label, no percentage.
 - When `isComplete=true` and `variant="compact"`: full bar, active segment, **viral hook label only** (`REALISTIC` / `BOLD CALL` / `LONG SHOT`), percentage in mono tabular. **No scientific rarity word anywhere.** No 1-in-N.
-- The `variant="full"` case is reserved and currently unused — the post-submit hero is `RealityScorePanel`, which this component must never replace.
+- The `variant="full"` case is reserved and currently unused; the post-submit hero is `RealityScorePanel`, which this component must never replace.
 
 **Per-mode "show-threshold" definition:**
 
@@ -277,7 +277,7 @@ The post-submit `RealityScorePanel` stays untouched. Do not import `LiveAgreemen
 
 ---
 
-## 5. Workstream 4 — Mode Card Iconography
+## 5. Workstream 4 · Mode Card Iconography
 
 ### 5.1 Design 3 geometric glyphs
 
@@ -308,7 +308,7 @@ Keep all existing copy. Keep the bracket notation in headings (`[ FINAL FOUR ]`)
 
 ---
 
-## 6. Workstream 5 — Polish & QA
+## 6. Workstream 5 · Polish & QA
 
 ### 6.1 Visual regression
 Run `pnpm test:visual` after each workstream lands. Update baselines for: Landing TeamGrid, ModeFinalFour mid-build, Champion's Path mid-build, Full Bracket mid-build, Mode selector cards, Trade Ticket.
@@ -358,14 +358,14 @@ Each PR should include before/after screenshots (desktop and mobile), confirmati
 1. **Day 1 morning:** Workstream 1 (Universal flag system).
 2. **Day 1 afternoon:** Workstream 4 (Mode card glyphs). Parallel to Workstream 1's review.
 3. **Day 2:** Workstream 2 (Tactile empty slots).
-4. **Day 2 end / Day 3:** Workstream 3 (Live Agreement Gauge). Vocabulary is Option C — proceed directly to component build.
+4. **Day 2 end / Day 3:** Workstream 3 (Live Agreement Gauge). Vocabulary is Option C: proceed directly to component build.
 5. **Day 3 end:** Workstream 5 (Polish & QA).
 
 Total wall-clock: ~3 days. No remaining blocking decisions.
 
 ---
 
-## 9. The One Decision Required Before Coding Starts — RESOLVED
+## 9. The One Decision Required Before Coding Starts. RESOLVED
 
 **Option C (Ultra-Minimalist Hybrid) is the chosen vocabulary path for Workstream 3.1.**
 

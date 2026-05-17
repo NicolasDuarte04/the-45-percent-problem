@@ -34,11 +34,11 @@ These are the manual steps that cannot be automated. Knock them out before point
 Sign up for, in this order:
 
 1. **Vercel** (you already have this; confirm the project is connected to the website Git repo)
-2. **Supabase** (https://supabase.com) — free tier is sufficient through the tournament. Create a project; the Database settings page exposes both the **pooler** connection string (port 6543, used at runtime) and the **direct** string (port 5432, used by migrations). You will paste both into Vercel env vars (`DATABASE_URL` and `DIRECT_URL` respectively).
-3. **Resend** (https://resend.com) — free tier covers 3,000 sends/month and 100/day; upgrade to the Pro plan ($20/month) when you cross 50 active subscribers, since you will hit the daily cap fast.
+2. **Supabase** (https://supabase.com); free tier is sufficient through the tournament. Create a project; the Database settings page exposes both the **pooler** connection string (port 6543, used at runtime) and the **direct** string (port 5432, used by migrations). You will paste both into Vercel env vars (`DATABASE_URL` and `DIRECT_URL` respectively).
+3. **Resend** (https://resend.com); free tier covers 3,000 sends/month and 100/day; upgrade to the Pro plan ($20/month) when you cross 50 active subscribers, since you will hit the daily cap fast.
 4. **Cloudflare** account: deferred for v1. Skip this step for now. The form is built to accept a Turnstile token but does not require one until you flip `NEXT_PUBLIC_TURNSTILE_ENABLED=true` in env vars. Re-enable in Phase 5 once everything else is working; rate limiting via Upstash covers most of the spam-control gap until then.
-5. **Upstash** (https://upstash.com) — free Redis tier is enough for the rate limiter.
-6. **Sentry** (https://sentry.io) — free developer tier; create one project for "45analytics-web" and one for "45analytics-pipeline".
+5. **Upstash** (https://upstash.com); free Redis tier is enough for the rate limiter.
+6. **Sentry** (https://sentry.io); free developer tier; create one project for "45analytics-web" and one for "45analytics-pipeline".
 
 Cost summary for v1: Vercel free, Supabase free, Resend $20/mo at scale, Upstash free, Sentry free. Turnstile is deferred (free when added). Expect roughly $20 to $40/month total at active-tournament scale, scaling with Resend send volume.
 

@@ -82,7 +82,7 @@ export default async function BriefsArchivePage() {
           }}
         >
           Past issues of the 45analytics daily brief. Quiet days are listed
-          with the same visual weight as active ones — the model does not
+          with the same visual weight as active ones; the model does not
           manufacture output.
         </p>
       </header>

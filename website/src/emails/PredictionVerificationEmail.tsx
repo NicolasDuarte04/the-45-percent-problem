@@ -13,7 +13,7 @@ import {
 export interface PredictionVerificationEmailProps {
   verifyUrl: string;
   predictionId: string; // e.g. "45A-2026-KZ8X"
-  rarityBand: string;   // "Common" | "Plausible" | ... — kept loose to avoid type drift
+  rarityBand: string;   // "Common" | "Plausible" | ...; kept loose to avoid type drift
   storyLine: string;    // server-rendered serif sentence
   expiresInHours?: number;
 }

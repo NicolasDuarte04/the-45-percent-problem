@@ -1,6 +1,6 @@
-// §2 Design System — Frontier Tech Editorial (v2.0)
+// §2 Design System · Frontier Tech Editorial (v2.0)
 
-// Editorial (cream) canvas — §2.2
+// Editorial (cream) canvas · §2.2
 export const editorialColors = {
   paper: '#F7F4EC',
   paperSunk: '#EEEAE0',
@@ -12,7 +12,7 @@ export const editorialColors = {
   rule: 'rgb(31 31 31 / 0.10)',
 } as const;
 
-// Quant (warm slate) canvas — §2.3, softened from v1.0
+// Quant (warm slate) canvas · §2.3, softened from v1.0
 export const quantColors = {
   slateCanvas: '#0F1216',
   slatePanel: '#151A21',
@@ -23,7 +23,7 @@ export const quantColors = {
   slateInkQuiet: '#6D7585',
 } as const;
 
-// Prism — data visualization palette — §2.4
+// Prism: data visualization palette · §2.4
 // Selected in OKLCH for perceptual uniformity; verified for deuteranopia / protanopia / tritanopia.
 export const prism = {
   peach: '#F9B88A',   // primary warm accent; M★ lineage
@@ -36,7 +36,7 @@ export const prism = {
   sun: '#F5D76E',     // Volatility Gate flag
 } as const;
 
-// Semantic bindings — §2.4
+// Semantic bindings · §2.4
 export const semantic = {
   edgePositive: prism.mint,
   edgeNegative: prism.rose,
@@ -47,11 +47,11 @@ export const semantic = {
   ledgerMiss: prism.rose,
 } as const;
 
-// Role-aliased UI tokens — Mission 3
+// Role-aliased UI tokens · Mission 3
 //
 // These mirror the `--ui-*` CSS aliases declared in `globals.css`. They name
 // what a surface MEANS rather than what it LOOKS LIKE, so a component asking
-// `uiRoles.guidance` reads as "give me the active-step color" — and a future
+// `uiRoles.guidance` reads as "give me the active-step color"; and a future
 // re-theme retargets four indirections instead of every component.
 //
 // The TS values here resolve to the editorial-canvas hexes (where the deeper
@@ -66,14 +66,14 @@ export const uiRoles = {
   warning:  '#B07A00',  // = --gate-fired (deep amber): caveats only
 } as const;
 
-// Typography — §2.5
+// Typography · §2.5
 export const typography = {
   fontSerif: '"Source Serif 4 Variable"',
   fontSans: '"Inter Variable"',
   fontMono: '"JetBrains Mono Variable"',
 } as const;
 
-// Spacing — §2.6 (editorial 4-point base, quant 8-point base preserved)
+// Spacing · §2.6 (editorial 4-point base, quant 8-point base preserved)
 export const spacing = {
   panelPaddingV: '12px',
   panelPaddingH: '16px',
@@ -82,7 +82,7 @@ export const spacing = {
   gridUnitQuant: '8px',
 } as const;
 
-// Motion — §2.7
+// Motion · §2.7
 export const motion = {
   pageFade: '160ms',
   disclosureDuration: '180ms',

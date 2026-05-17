@@ -27,8 +27,8 @@ export function TournamentCalibrationStrip({
           alignItems: "center",
         }}
       >
-        <Metric label="Brier (lower = better)" value="—" />
-        <Metric label="Log-loss" value="—" />
+        <Metric label="Brier (lower = better)" value="-" />
+        <Metric label="Log-loss" value="-" />
         <Metric label="Settled forecasts" value="0" />
         <div
           style={{
@@ -71,11 +71,11 @@ export function TournamentCalibrationStrip({
     >
       <Metric
         label="Brier (lower = better)"
-        value={brier !== null ? brier.toFixed(4) : "—"}
+        value={brier !== null ? brier.toFixed(4) : "-"}
       />
       <Metric
         label="Log-loss"
-        value={logloss !== null ? logloss.toFixed(4) : "—"}
+        value={logloss !== null ? logloss.toFixed(4) : "-"}
       />
       <Metric
         label="Settled forecasts"

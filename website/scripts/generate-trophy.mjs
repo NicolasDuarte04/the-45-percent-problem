@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Trophy point-cloud generator — single source of truth for both the
+ * Trophy point-cloud generator: single source of truth for both the
  * favicon (black canvas, oxblood outliers) and the editorial hero accent
  * (cream canvas, monochromatic deep technical ink).
  *
@@ -35,9 +35,9 @@ const VARIANTS = {
     vbW: 1000,
     vbH: 1000,
     pad: 30,
-    canvas: "#0F0F10", // oklch(10% 0 0)         — near-black
-    ink: "#F4EFE5", //   oklch(95% 0.01 80)      — warm bone white
-    outlier: "#6E3F35", // oklch(35% 0.08 20)    — deep brick / oxblood
+    canvas: "#0F0F10", // oklch(10% 0 0); near-black
+    ink: "#F4EFE5", //   oklch(95% 0.01 80); warm bone white
+    outlier: "#6E3F35", // oklch(35% 0.08 20); deep brick / oxblood
     pOutlier: 0.06,
     dotR: 1.4,
     dotROut: 1.7,
@@ -52,17 +52,17 @@ const VARIANTS = {
     vbH: 560,
     pad: 18,
     canvas: "#F7F4EC", // editorial cream
-    ink: "#161B20", //   oklch(22% 0.012 250)    — deep technical ink (cool slate)
-    outlier: null, //    monochromatic — no outliers
+    ink: "#161B20", //   oklch(22% 0.012 250); deep technical ink (cool slate)
+    outlier: null, //    monochromatic: no outliers
     pOutlier: 0,
     dotR: 0.78,
     dotROut: 0.78,
     fillOpacity: 0.78,
-    /* Pure depth sort — closer points sit on top, reinforcing the 3D core
+    /* Pure depth sort: closer points sit on top, reinforcing the 3D core
        density that the cream-canvas alpha-blend already encourages. */
     sort: "depth",
     label:
-      "Quantitative World Cup trophy — 10,000 Monte Carlo samples from the M★ posterior",
+      "Quantitative World Cup trophy. 10,000 Monte Carlo samples from the M★ posterior",
   },
 };
 

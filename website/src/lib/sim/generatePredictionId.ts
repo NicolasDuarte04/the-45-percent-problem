@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-// Crockford base32 alphabet — excludes I, L, O, U to avoid visual
+// Crockford base32 alphabet: excludes I, L, O, U to avoid visual
 // confusion (1/I, 1/L, 0/O) and accidental profanity (U).
 const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
@@ -10,7 +10,7 @@ const TAIL_LEN = 4;
 /**
  * Generate one prediction ID candidate. Format: `45A-2026-XXXX` where
  * XXXX is four Crockford-base32 chars from a cryptographically-strong
- * random source. The space is 32^4 = 1,048,576 — plenty of headroom
+ * random source. The space is 32^4 = 1,048,576; plenty of headroom
  * before a collision is statistically meaningful, but the caller must
  * still check for collisions on insert and retry.
  */
@@ -39,7 +39,7 @@ export function isValidPredictionId(id: string): boolean {
 /**
  * Generate a unique prediction ID by retrying until `existsCheck`
  * returns false. Caps at `maxAttempts` (default 5) and throws on
- * exhaustion — at 1M IDs and a low-volume Phase A, that ceiling is
+ * exhaustion: at 1M IDs and a low-volume Phase A, that ceiling is
  * effectively unreachable.
  */
 export async function generateUniquePredictionId(

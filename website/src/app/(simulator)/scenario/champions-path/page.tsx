@@ -3,7 +3,7 @@ import { ModeChampionsPath } from "@/components/simulator/modes/ModeChampionsPat
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
 
 export const metadata: Metadata = {
-  title: "Champion's Path — Scenario Simulator",
+  title: "Champion's Path · Scenario Simulator",
   description:
     "Trace your team's path from the Round of 16 to the final. See how often the model agrees.",
 };

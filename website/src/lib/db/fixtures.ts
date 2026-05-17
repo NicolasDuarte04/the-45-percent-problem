@@ -54,7 +54,7 @@ export async function getTeamsInGroup(group: GroupLetter): Promise<Team[]> {
     .orderBy(asc(schema.teams.drawPot));
 }
 
-/** Teams keyed by group letter — convenient for rendering all 12 groups. */
+/** Teams keyed by group letter; convenient for rendering all 12 groups. */
 export async function getAllTeamsGrouped(): Promise<
   Record<GroupLetter, Team[]>
 > {
@@ -147,7 +147,7 @@ export interface MatchWithTeams {
 /**
  * Returns matches enriched with their home/away team rows and venue. Rows
  * with `home_slot` / `away_slot` (knockout matches whose teams are TBD)
- * have `home: null` / `away: null` — render the slot descriptor instead.
+ * have `home: null` / `away: null`: render the slot descriptor instead.
  */
 export async function getMatchesWithTeams(opts: {
   round?: Round;

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Bibliography — Research Vault",
+  title: "Bibliography · Research Vault",
   description:
     "Formal bibliography of the academic works and mathematical methods cited across The 45% Problem: probabilistic football modeling, de-vigging and market microstructure, forecast scoring rules, pairwise comparison, bootstrap procedures, bet sizing, and macroeconomic determinants.",
 };
