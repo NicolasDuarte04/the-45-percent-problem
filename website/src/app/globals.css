@@ -52,6 +52,11 @@
 
   /* Prism palette — invariant across canvases */
   --prism-peach:  #F9B88A;
+  /* Warm-accent alias (used by SnapshotPicker selection state on
+     editorial / quant surfaces). Same hex as the simulator canvas
+     binding at L177; declared here so non-simulator surfaces can
+     resolve var(--accent-warm) without introducing a new colour. */
+  --accent-warm:  var(--prism-peach);
   --prism-coral:  #EC7C6A;
   --prism-rose:   #E76E8A;
   --prism-plum:   #8E5A8A;
