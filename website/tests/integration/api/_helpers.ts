@@ -4,7 +4,7 @@
  * Mocking strategy: each route's tests stub `@/lib/db` at the module
  * level via `vi.mock(...)` (hoisted), and tests configure per-call
  * return values through this file's helpers. The `chainMock` here
- * mimics drizzle's chainable query builder — every method returns the
+ * mimics drizzle's chainable query builder; every method returns the
  * chain itself, and the chain is thenable so `await db.select()...`
  * resolves to the configured result regardless of how many `.where`,
  * `.limit`, `.orderBy`, `.set`, `.values`, `.returning` calls it sees.
@@ -68,7 +68,7 @@ export function samplePredictionRow(
   };
 }
 
-// NextRequest provides .nextUrl and .cookies — both are used by the
+// NextRequest provides .nextUrl and .cookies; both are used by the
 // route handlers, so tests must construct NextRequest (not plain Request)
 // even for paths that only read body/headers, for consistency.
 

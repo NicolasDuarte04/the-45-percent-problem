@@ -1,5 +1,5 @@
 /**
- * Forbidden-vocab boundary check — Phase E §9 (E.3).
+ * Forbidden-vocab boundary check · Phase E §9 (E.3).
  *
  * Phase D §6.5 already asserts the post-submit rarity vocabulary
  * (Common, Plausible, Uncommon, Rare, Vanishingly rare) does NOT
@@ -34,7 +34,7 @@ const POST_SUBMIT_FILES = [
 
 const VIRAL_HOOKS = ["REALISTIC", "BOLD CALL", "LONG SHOT"] as const;
 
-describe("Phase E §9 (E.3) — viral hooks must not appear in post-submit surfaces", () => {
+describe("Phase E §9 (E.3): viral hooks must not appear in post-submit surfaces", () => {
   for (const rel of POST_SUBMIT_FILES) {
     it(`${rel} contains no live-gauge viral hooks`, () => {
       const text = readFileSync(join(REPO_ROOT, rel), "utf-8");
@@ -45,7 +45,7 @@ describe("Phase E §9 (E.3) — viral hooks must not appear in post-submit surfa
         // CALL", not "bold call"). The post-submit RealityScorePanel
         // surface legitimately uses some of these as lowercase
         // idiomatic prose (e.g. "A bold call." in getRarityBand's
-        // Uncommon caption) — that's the rarity-band voice, not the
+        // Uncommon caption): that's the rarity-band voice, not the
         // viral-hook leak this guard is for.
         const re = new RegExp(`\\b${hook.replace(" ", "\\s+")}\\b`);
         if (re.test(text)) offenders.push(hook);

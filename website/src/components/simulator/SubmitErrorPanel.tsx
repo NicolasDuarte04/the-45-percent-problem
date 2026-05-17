@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * SubmitErrorPanel — Phase E §9 (E.1).
+ * SubmitErrorPanel · Phase E §9 (E.1).
  *
  * The Phase D error state was a single inline string with no recovery
  * affordance. This panel replaces it with:
@@ -9,7 +9,7 @@
  *   - A short, human message: "We couldn't reach the model. This is
  *     on us, not you." (server / network / unknown errors).
  *   - `[ TRY AGAIN ]` button that re-fires `onRetry` with the same
- *     payload from the parent's state — no client state lost.
+ *     payload from the parent's state; no client state lost.
  *   - `[ COPY DIAGNOSTIC ]` link that copies a short diagnostic
  *     string (error code + ISO timestamp + scenario hash if provided)
  *     to the clipboard for the user to send if it persists.
@@ -22,7 +22,7 @@
  * so the user can't hammer the API.
  *
  * Validation errors (`invalid`) and rate-limit errors (`rateLimit`)
- * keep their existing copy — those aren't "on us" failures, so the
+ * keep their existing copy: those aren't "on us" failures, so the
  * "this is on us" line is hidden for those kinds.
  */
 
@@ -47,7 +47,7 @@ interface SubmitErrorPanelProps {
   kind: SubmitErrorKind;
   /** Re-fires the submit with the parent-held payload. Required. */
   onRetry: () => void | Promise<void>;
-  /** Optional scenario hash — included in the diagnostic copy. */
+  /** Optional scenario hash: included in the diagnostic copy. */
   scenarioHash?: string;
   /** Disable retry while a submit is already in flight. */
   retryInFlight?: boolean;
@@ -65,7 +65,7 @@ interface SubmitErrorPanelProps {
   rateLimitRetrySeconds?: number;
 }
 
-const BACKOFF_MS = [1000, 2000, 4000]; // §9 (E.1) — 1s, 2s, 4s.
+const BACKOFF_MS = [1000, 2000, 4000]; // §9 (E.1). 1s, 2s, 4s.
 
 function headlineFor(
   kind: SubmitErrorKind,
@@ -160,7 +160,7 @@ export function SubmitErrorPanel({
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      // No clipboard access — fall through; the user still sees the text below.
+      // No clipboard access: fall through; the user still sees the text below.
     }
     setCopied(true);
     if (copyResetRef.current) clearTimeout(copyResetRef.current);
@@ -182,7 +182,7 @@ export function SubmitErrorPanel({
           {invalidIssues.slice(0, 6).map((iss, idx) => (
             <li key={`${iss.path}-${idx}`}>
               <span className="text-[var(--text-primary)]">{iss.path || "(payload)"}</span>
-              {iss.message ? <> — {iss.message}</> : null}
+              {iss.message ? <>. {iss.message}</> : null}
             </li>
           ))}
         </ul>
@@ -197,7 +197,7 @@ export function SubmitErrorPanel({
             "border px-4 py-2 font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
             retryInFlight || inBackoff || kind === "invalid"
               ? "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed"
-              : // Mission 3 — `--ui-danger` (deep rose) is the accent on
+              : // Mission 3. `--ui-danger` (deep rose) is the accent on
                 // the recovery affordance: this panel only renders for
                 // failures, so the hover tone semantically matches the
                 // surface, not the brand-warm CTA.
@@ -223,7 +223,7 @@ export function SubmitErrorPanel({
       {heavyFailing ? (
         <p className="font-sans text-[12px] italic text-[var(--text-quiet)]">
           Still failing after several tries. Copy the diagnostic above and
-          email us — we&rsquo;ll dig into it.
+          email us: we&rsquo;ll dig into it.
         </p>
       ) : null}
     </div>

@@ -18,7 +18,7 @@ const CAPTIONS: Record<RarityBand, string> = {
  *   ≥  0.1%    → Rare
  *   <  0.1%    → Vanishingly rare
  *
- * The `belowResolutionFloor` flag fires when count < 30 — at that point
+ * The `belowResolutionFloor` flag fires when count < 30; at that point
  * the floor caveat ("Fewer than 30 of 10,000…") should render in 12pt
  * italic sans below the band per v2 §3.1.
  */

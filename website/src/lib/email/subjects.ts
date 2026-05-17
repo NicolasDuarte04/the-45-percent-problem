@@ -1,7 +1,7 @@
 /**
  * Subject-line builder for the daily brief.
  *
- * Six variants per Addendum v2 — three quant-register, three fan-register —
+ * Six variants per Addendum v2; three quant-register, three fan-register. 
  * all in the same `[45A | YYYY-MM-DD]` masthead format. Phase 5 wires the
  * register choice per subscriber based on open-rate signals; v1 picks based
  * on the `register` argument, defaulting to quant.

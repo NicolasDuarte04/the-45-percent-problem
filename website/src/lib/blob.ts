@@ -33,7 +33,7 @@ export interface BriefBlobMeta {
 
 function pathnameForDate(date: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error(`Invalid brief date "${date}" — expected YYYY-MM-DD.`);
+    throw new Error(`Invalid brief date "${date}"; expected YYYY-MM-DD.`);
   }
   return `${BRIEF_PREFIX}${date}.json`;
 }

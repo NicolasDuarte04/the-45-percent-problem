@@ -117,7 +117,7 @@ describe("GET /api/predictions?email=...", () => {
     const res = await GetList(req as never);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, predictions: [] });
-    // No DB call should have happened — early return.
+    // No DB call should have happened; early return.
     expect(mockDb.select).not.toHaveBeenCalled();
   });
 
@@ -214,7 +214,7 @@ describe("GET /api/predictions?email=...", () => {
     mockDb.select.mockReturnValue(chainMock(rows));
     const cookieValue = signOwnerCookie(OWNER_EMAIL);
     const req = getRequest({
-      // Mixed-case in the URL — should still match the lowercase cookie.
+      // Mixed-case in the URL: should still match the lowercase cookie.
       url: `http://localhost/api/predictions?email=Owner@Example.COM`,
       cookies: { [COOKIE_NAME]: cookieValue },
     });

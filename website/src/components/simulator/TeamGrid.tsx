@@ -9,12 +9,12 @@
  * which is the same module that seeds the Postgres `teams` table. No
  * parallel hardcoded roster.
  *
- * Polish — staggered entrance + gentle hover "breathing" scale on every
+ * Polish: staggered entrance + gentle hover "breathing" scale on every
  * cell. The motion is viewport-triggered (the wall reveals once it scrolls
  * into view, not on every navigation back to the simulator landing) and
  * routes through `useReducedMotionAware` so the entire effect collapses
  * to instant for users who set `prefers-reduced-motion: reduce`. Hover
- * is a 1.04 scale over the standard 180ms micro preset — small enough
+ * is a 1.04 scale over the standard 180ms micro preset; small enough
  * to feel alive, not jittery.
  *
  * Layout per design v1 §2.1 unchanged: 6-column grid at desktop,
@@ -35,7 +35,7 @@ export function TeamGrid() {
     a.display_name.localeCompare(b.display_name, "en"),
   );
 
-  // Single transition preset — `micro` is short enough (180ms) to feel
+  // Single transition preset. `micro` is short enough (180ms) to feel
   // good on both the entry stagger and the hover pulse, so we route
   // both through one curve. useReducedMotionAware collapses everything
   // to instant for users with `prefers-reduced-motion: reduce`.
@@ -50,7 +50,7 @@ export function TeamGrid() {
         id="team-grid-heading"
         className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]"
       >
-        WC 2026 qualifiers — 48 teams, alphabetical
+        WC 2026 qualifiers · 48 teams, alphabetical
       </h2>
 
       <ul
@@ -64,7 +64,7 @@ export function TeamGrid() {
             // Entry: faintly faded + slightly scaled down → identity
             // once the cell intersects the viewport. The 0.012s
             // per-cell stagger spreads the 48-cell reveal across
-            // ~580ms total — readable as a wave, not a single fade.
+            // ~580ms total: readable as a wave, not a single fade.
             // viewport.once = true so navigating away and back doesn't
             // re-fire the wave.
             initial={{ opacity: 0, scale: 0.96 }}

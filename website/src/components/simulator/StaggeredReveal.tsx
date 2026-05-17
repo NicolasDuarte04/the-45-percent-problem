@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * StaggeredReveal — MOTION_SPEC.md §2.
+ * StaggeredReveal · MOTION_SPEC.md §2.
  *
  * Page-level cascade for the result screen: hero → share strip →
  * alert configurator. Each item enters at `index * 180ms` after
@@ -42,7 +42,7 @@ interface StaggeredRevealItemProps {
   /**
    * Zero-based position in the cascade. Each item delays its
    * entrance by `index * 180ms` so the user's eye is led down the
-   * page in declared order. Required — there is no implicit ordering.
+   * page in declared order. Required: there is no implicit ordering.
    */
   index: number;
 }
@@ -55,7 +55,7 @@ const STAGGER_MS = 180;
  *
  * Why named exports rather than a `<StaggeredReveal.Item>` static
  * property: a server component cannot reach across the client
- * boundary to read a static property off a "use client" symbol —
+ * boundary to read a static property off a "use client" symbol. 
  * it only has a stub reference. Separate named imports keep this
  * file callable from server components without an intermediary
  * client wrapper.

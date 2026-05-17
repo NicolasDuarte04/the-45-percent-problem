@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * BracketTree — Phase E §7 (C.1, C.3, C.4).
+ * BracketTree · Phase E §7 (C.1, C.3, C.4).
  *
  * Absolute-positioned tournament tree with right-angle SVG connectors,
  * winner-row highlight + loser-row dim, layoutId-based winner chip
@@ -53,7 +53,7 @@ interface BracketTreeProps {
 export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreeProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dropTransition = useReducedMotionAware("drop");
-  // Lazy initial — read matchMedia once on mount. The resize listener
+  // Lazy initial: read matchMedia once on mount. The resize listener
   // updates state when the viewport crosses the breakpoint. SSR
   // returns false (no window); first client render gets the real
   // value via lazy init, no extra render or hydration mismatch beyond
@@ -76,7 +76,7 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
   const cellW = isMobile ? MOBILE_CELL_WIDTH : CELL_WIDTH;
   const totalW = isMobile ? MOBILE_TOTAL_WIDTH : TOTAL_WIDTH;
 
-  // Phase E §7 (C.2/C.3) — a connector is highlighted when its parent
+  // Phase E §7 (C.2/C.3); a connector is highlighted when its parent
   // has a winner picked AND that winner is the chip currently sitting
   // in the child match's slot.
   const highlightedParents = new Set<string>();
@@ -129,7 +129,7 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
           className="relative"
           style={{ width: totalW, height: TOTAL_HEIGHT + CELL_HEIGHT }}
         >
-          {/* Round labels — desktop only, anchored above each column. */}
+          {/* Round labels: desktop only, anchored above each column. */}
           {!isMobile
             ? ROUNDS.map((r) => (
                 <div
@@ -142,13 +142,13 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
               ))
             : null}
 
-          {/* Connector overlay — sits behind the cells. */}
+          {/* Connector overlay: sits behind the cells. */}
           <BracketConnectors
             highlightedParents={highlightedParents}
             mobile={isMobile}
           />
 
-          {/* Match cells — absolute, positioned by geometry helpers. */}
+          {/* Match cells: absolute, positioned by geometry helpers. */}
           {ROUNDS.map((round) =>
             Array.from({ length: round.count }, (_, m) => {
               const pair = getMatch(round.level, m);

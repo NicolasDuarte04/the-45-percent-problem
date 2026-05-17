@@ -1,5 +1,5 @@
 /**
- * §3 — /about
+ * §3: /about
  * Project statement, author, citation instructions.
  */
 import Link from "next/link";
@@ -8,9 +8,9 @@ import type { Metadata } from "next";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "About — The 45% Problem",
+  title: "About · The 45% Problem",
   description:
-    "Project statement, author, methodology, and citation instructions for The 45% Problem — a probabilistic pricing study for the 2026 FIFA World Cup.",
+    "Project statement, author, methodology, and citation instructions for The 45% Problem; a probabilistic pricing study for the 2026 FIFA World Cup.",
 };
 
 export default function AboutPage() {
@@ -104,7 +104,7 @@ export default function AboutPage() {
           </p>
           <p style={{ fontSize: 16, lineHeight: "26px", color: "var(--text-secondary)" }}>
             This is not a prediction product. It does not give gambling advice.
-            The word &ldquo;bet&rdquo; does not appear in the product UI — a pre-registration
+            The word &ldquo;bet&rdquo; does not appear in the product UI; a pre-registration
             commitment and a design invariant. See the{" "}
             <Link
               href="/vault/preregistration"
@@ -185,7 +185,7 @@ export default function AboutPage() {
               whiteSpace: "pre-wrap",
             }}
           >
-            {`Duarte Jaraba, N. (2026). The 45% Problem — Probabilistic Pricing for FIFA World Cup 2026. OSF. https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321`}
+            {`Duarte Jaraba, N. (2026). The 45% Problem. Probabilistic Pricing for FIFA World Cup 2026. OSF. https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321`}
           </pre>
           <p
             style={{

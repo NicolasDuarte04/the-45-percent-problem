@@ -1,5 +1,5 @@
 /**
- * Bracket geometry — Phase E §7 (C.1).
+ * Bracket geometry · Phase E §7 (C.1).
  *
  * Single source of truth for the absolute-positioned tournament tree.
  * Both BracketTree (match cells) and BracketConnectors (SVG lines)
@@ -33,7 +33,7 @@ export const ROUNDS: ReadonlyArray<RoundDef> = [
   { key: "f", label: "Final", count: 1, level: 4, advancersOffset: 30 },
 ] as const;
 
-// Desktop pitch — bracket is wide enough to read every team without
+// Desktop pitch: bracket is wide enough to read every team without
 // crushing the cells. On screens narrower than `MOBILE_BREAKPOINT_PX`
 // the BracketTree drops to MOBILE_COL_WIDTH and the container scrolls
 // horizontally (Phase E §7 (C.4)).

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Glossary — Research Vault",
+  title: "Glossary · Research Vault",
   description:
     "Definitions for every technical term used on this site, with formal statements and plain-English equivalents.",
 };

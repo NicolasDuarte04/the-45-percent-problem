@@ -6,7 +6,7 @@
  * the page <main>. Children render inside a max-width container so the
  * landing's editorial layout and the dashboard's data layouts share spacing.
  *
- * Pure server component — no client interactivity.
+ * Pure server component: no client interactivity.
  */
 
 interface SimulatorChromeProps {

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Why Probabilities — Research Vault",
+  title: "Why Probabilities · Research Vault",
   description:
     "The case for distributions over predictions: why a probability is more informative and more honest than a point forecast.",
 };
@@ -27,7 +27,7 @@ export default function WhyProbabilitiesLayout({
     <VaultArticle
       eyebrow="§ II · Long-form"
       title="Why Probabilities"
-      deck="The case for distributions over predictions. A probability is more informative and more honest than a point forecast — and harder to fake."
+      deck="The case for distributions over predictions. A probability is more informative and more honest than a point forecast; and harder to fake."
       readingTimeMinutes={5}
       lastRevised="2026-04-22"
       citation={{ apa, bibtex }}
@@ -39,7 +39,7 @@ export default function WhyProbabilitiesLayout({
         },
         {
           href: "/vault/models",
-          title: "Anatomy of M0–M★",
+          title: "Anatomy of M0. M★",
           blurb: "The five candidate models.",
         },
       ]}

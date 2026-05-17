@@ -1,7 +1,7 @@
 /**
  * generate-healthz.mjs
  *
- * Reads public/data/latest/snapshot_meta.json and writes public/healthz —
+ * Reads public/data/latest/snapshot_meta.json and writes public/healthz. 
  * a plain-text file consumed by external uptime monitors (Cronitor, Better
  * Stack, etc.) to verify that the deployed site reflects a fresh snapshot.
  *

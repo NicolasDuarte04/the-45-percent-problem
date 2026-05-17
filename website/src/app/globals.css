@@ -5,7 +5,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── Editorial canvas (cream) — default ─────────────────────────────────────── */
+/* ── Editorial canvas (cream): default ─────────────────────────────────────── */
 /* §2.2 tokens. These names are preserved from v1.0 for backwards compatibility  */
 /* with all existing components that use var(--bg-root) etc.                     */
 :root {
@@ -25,12 +25,12 @@
   --text-quiet:     #8A847C;
   --data-neutral:   #5A5550;
 
-  /* Semantic — deeper values on cream so text clears WCAG AA (≥ 4.5:1).
+  /* Semantic: deeper values on cream so text clears WCAG AA (≥ 4.5:1).
      The lit Prism versions are restored on the quant canvas below. */
-  --edge-positive: #2B8A5F;   /* deep mint — 4.7:1 on --paper */
-  --edge-negative: #C4435E;   /* deep rose — 5.2:1 on --paper */
-  --gate-fired:    #B07A00;   /* deep amber — 4.6:1 on --paper */
-  --accent-focus:  #0F6B7D;   /* deep teal — 6.8:1 on --paper */
+  --edge-positive: #2B8A5F;   /* deep mint · 4.7:1 on --paper */
+  --edge-negative: #C4435E;   /* deep rose · 5.2:1 on --paper */
+  --gate-fired:    #B07A00;   /* deep amber · 4.6:1 on --paper */
+  --accent-focus:  #0F6B7D;   /* deep teal · 6.8:1 on --paper */
   --ledger-hit:    #2B8A5F;
   --ledger-miss:   #C4435E;
 
@@ -41,16 +41,16 @@
      what they LOOK LIKE ("teal", "mint"), so future re-themes touch four
      indirections instead of every component.
 
-     Quant canvas does NOT redeclare these — `--accent-focus` etc. already
+     Quant canvas does NOT redeclare these. `--accent-focus` etc. already
      swap to the lit Prism variants under `[data-canvas="quant"]`, and the
      aliases below dereference at use-site, so the same `var(--ui-success)`
      resolves correctly inside or outside the quant canvas. */
   --ui-guidance: var(--accent-focus);   /* teal: focus, current step, active */
   --ui-success:  var(--edge-positive);  /* mint: completion, submitted, filled */
   --ui-danger:   var(--edge-negative);  /* rose: errors, destructive */
-  --ui-warning:  var(--gate-fired);     /* amber: caveats only — reserved */
+  --ui-warning:  var(--gate-fired);     /* amber: caveats only: reserved */
 
-  /* Prism palette — invariant across canvases */
+  /* Prism palette: invariant across canvases */
   --prism-peach:  #F9B88A;
   /* Warm-accent alias (used by SnapshotPicker selection state on
      editorial / quant surfaces). Same hex as the simulator canvas
@@ -68,10 +68,10 @@
   /* Editorial ornament rule */
   --rule: rgb(31 31 31 / 0.10);
 
-  /* Button radius — 6px on Editorial (§2.11) */
+  /* Button radius · 6px on Editorial (§2.11) */
   --radius: 0.375rem;
 
-  /* Shadcn semantic tokens — editorial light mode */
+  /* Shadcn semantic tokens: editorial light mode */
   --background:          #F7F4EC;
   --foreground:          #141414;
   --card:                #FCFAF4;
@@ -92,7 +92,7 @@
   --ring:                #7ED0E8;
 }
 
-/* ── Quant canvas (warm slate) — data-dense routes ──────────────────────────── */
+/* ── Quant canvas (warm slate); data-dense routes ──────────────────────────── */
 /* §2.3 tokens. Overrides applied when [data-canvas="quant"] is in the DOM tree.  */
 [data-canvas="quant"] {
   --bg-root:       #0F1216;
@@ -107,7 +107,7 @@
   --data-neutral:   #A8AFBC;
   --rule:           #262D37;
 
-  /* Semantic — restored to lit Prism on slate where the dark canvas gives
+  /* Semantic: restored to lit Prism on slate where the dark canvas gives
      the light tones enough contrast without needing to deepen them.
      --edge-negative is chroma-bumped on quant (#EF5A7D vs #E76E8A on editorial)
      so the warning signal reads clearly against the dark slate canvas. */
@@ -132,10 +132,10 @@
   --ui-danger:   var(--edge-negative);
   --ui-warning:  var(--gate-fired);
 
-  /* Button radius — 4px on Quant (§2.11) */
+  /* Button radius · 4px on Quant (§2.11) */
   --radius: 0.25rem;
 
-  /* Shadcn semantic tokens — quant dark mode */
+  /* Shadcn semantic tokens: quant dark mode */
   --background:          #0F1216;
   --foreground:          #EEE8DD;
   --card:                #151A21;
@@ -156,7 +156,7 @@
   --ring:                #F9B88A;
 }
 
-/* ── Simulator canvas — Tournament Scenario Simulator ──────────────────────── */
+/* ── Simulator canvas. Tournament Scenario Simulator ──────────────────────── */
 /* Inherits the same warm-slate base as quant. Brutalist tone: sharp corners
    everywhere (`--radius: 0`), no shadows. The peach accent is reserved for
    exactly three surfaces (CTA hover, PROMOTED state, Trade Ticket flag border)
@@ -177,13 +177,13 @@
   --rule:           #262D37;
   --accent-focus:   #7ED0E8;
 
-  /* Simulator-only tokens. Aliases of existing prism palette entries —
+  /* Simulator-only tokens. Aliases of existing prism palette entries. 
      no new color values are introduced here (IMPL_PROMPT §15.2). */
   --accent-warm:    #F9B88A;
   --state-dead:     color-mix(in oklab, #E76E8A 60%, transparent);
   --state-promoted: #F9B88A;
 
-  /* Semantic — restored to lit Prism on the simulator canvas, mirroring
+  /* Semantic: restored to lit Prism on the simulator canvas, mirroring
      the quant block. The mid-:root values of --edge-* are deepened for
      the cream canvas; on slate the lit Prism tones read with adequate
      contrast and signal correctly. Without these the caret-color and
@@ -206,7 +206,7 @@
   /* Brutalist: 0 radius across the board. */
   --radius: 0;
 
-  /* Shadcn semantic tokens — same shape as quant, with primary swapped to
+  /* Shadcn semantic tokens: same shape as quant, with primary swapped to
      bone-white so default buttons render as inverted-bone hits. */
   --background:          #0F1216;
   --foreground:          #EEE8DD;
@@ -304,15 +304,15 @@
 
 /* Alert-configurator decoration per VIRAL_LOOP_PIVOT.md §2.2 + §2.4.
 
-   .reveal-alert      — entrance fade for the configurator panel,
+   .reveal-alert; entrance fade for the configurator panel,
                          starts 200ms after the trade-ticket reveal so
                          the eye lands hero → share → alert in order.
-   .alert-status-pip  — the blinking cursor bar in the eyebrow's
+   .alert-status-pip; the blinking cursor bar in the eyebrow's
                          "STATUS: ▍" before submit. Anchors the panel
                          visually as a terminal config window.
-   .alert-armed-glyph — the success ✓ glyph in --ui-success after the
+   .alert-armed-glyph; the success ✓ glyph in --ui-success after the
                          alert is armed.
-   .alert-input       — brutalist hide-the-affordance: rest state has
+   .alert-input; brutalist hide-the-affordance: rest state has
                          no underline; focus draws a 1px --ui-guidance
                          rule. The valid / invalid modifier classes
                          override on blur to --ui-success / --ui-danger
@@ -337,7 +337,7 @@
 /* Visible-affordance input state machine.
    The previous brutalist hide-the-affordance pattern (transparent
    border at rest, underline only on focus) post-launch tested as
-   too stealth — users did not register that the NOTIFY value column
+   too stealth: users did not register that the NOTIFY value column
    was an input. The new resting state shows a solid --text-tertiary
    bottom rule and a subtle inset background so the field reads
    unmistakably as an input on first glance. The cyan / mint / rose
@@ -421,7 +421,7 @@
 
 /* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */
 @theme inline {
-  /* Canvas-aware colors — resolve through CSS vars so they flip with the canvas */
+  /* Canvas-aware colors: resolve through CSS vars so they flip with the canvas */
   --color-bg-root:       var(--bg-root);
   --color-bg-panel:      var(--bg-panel);
   --color-bg-panel-elev: var(--bg-panel-elev);
@@ -459,7 +459,7 @@
   --color-slate-ink-soft:  #A8AFBC;
   --color-slate-ink-quiet: #6D7585;
 
-  /* Prism palette — static, not canvas-aware */
+  /* Prism palette: static, not canvas-aware */
   --color-prism-peach:  #F9B88A;
   --color-prism-coral:  #EC7C6A;
   --color-prism-rose:   #E76E8A;
@@ -494,12 +494,12 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
 
-  /* Font families — §2.5 */
+  /* Font families · §2.5 */
   --font-serif: "Source Serif 4 Variable", Georgia, ui-serif, serif;
   --font-sans:  "Inter Variable", system-ui, sans-serif;
   --font-mono:  "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
 
-  /* Type scale — §2.5 */
+  /* Type scale · §2.5 */
   --text-display-xl: 64px;
   --text-display-lg: 48px;
   --text-display-md: 36px;
@@ -513,7 +513,7 @@
   --text-data-sm:    12px;
   --text-caption:    12px;
 
-  /* Spacing additions — §2.6 editorial 4-point rhythm */
+  /* Spacing additions · §2.6 editorial 4-point rhythm */
   --spacing-18: 4.5rem;
   --spacing-22: 5.5rem;
   --spacing-30: 7.5rem;
@@ -539,7 +539,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* FOUC fix — §2.1 dual-canvas: when a quant-canvas div is present anywhere
+  /* FOUC fix · §2.1 dual-canvas: when a quant-canvas div is present anywhere
      in the tree (terminal, ledger, bracket, match, team routes), promote the
      slate background to <body> so overscroll/pull-to-refresh never reveals
      the editorial cream. Uses :has() which is supported in all evergreen
@@ -560,7 +560,7 @@
     line-height: 1.625;
   }
 
-  /* Headings use serif on Editorial canvas, sans on Quant — §2.9 */
+  /* Headings use serif on Editorial canvas, sans on Quant. §2.9 */
   h1, h2, h3 {
     font-family: var(--font-serif);
   }
@@ -571,7 +571,7 @@
     font-family: var(--font-sans);
   }
 
-  /* Canvas wrapper — covers full viewport and inherits canvas variables */
+  /* Canvas wrapper: covers full viewport and inherits canvas variables */
   [data-canvas] {
     background-color: var(--bg-root);
     color: var(--text-primary);
@@ -580,7 +580,7 @@
     flex-direction: column;
   }
 
-  /* Monospaced numeric elements — tabular alignment is mandatory — §0.1.3 */
+  /* Monospaced numeric elements: tabular alignment is mandatory · §0.1.3 */
   .mono,
   .tabular {
     font-family: var(--font-mono);
@@ -590,7 +590,7 @@
     line-height: 20px;
   }
 
-  /* Editorial reading measure — §2.5 */
+  /* Editorial reading measure · §2.5 */
   .prose-editorial {
     max-width: 68ch;
   }
@@ -609,7 +609,7 @@
     font-family: var(--font-serif);
   }
 
-  /* Reduced motion — §2.7 */
+  /* Reduced motion · §2.7 */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -623,7 +623,7 @@
     outline-offset: 2px;
   }
 
-  /* Masthead wordmark accent — teal on editorial, canvas-native light on quant.
+  /* Masthead wordmark accent: teal on editorial, canvas-native light on quant.
      Using a rule instead of an inline style so it flips with the canvas. */
   .wordmark-accent {
     color: rgb(15, 107, 125);
@@ -746,7 +746,7 @@
     }
   }
 
-  /* Dropcap — first glyph of first paragraph, display-md, floated left.
+  /* Dropcap: first glyph of first paragraph, display-md, floated left.
      The wrapper is a <div> so MDX-nested <p> children stay valid markup;
      ::first-letter targets the first paragraph inside. */
   .vault-dropcap p:first-child::first-letter,
@@ -762,7 +762,7 @@
     margin-bottom: -6px;
   }
 
-  /* Section rule between H2s — centered · · · in --ink-quiet */
+  /* Section rule between H2s: centered · · · in --ink-quiet */
   .vault-section-rule {
     text-align: center;
     color: var(--text-quiet);
@@ -775,7 +775,7 @@
     content: "\00B7  \00B7  \00B7";
   }
 
-  /* Pull quote — left-hang indent on ≥ 1024px, 96px opening serif quote */
+  /* Pull quote: left-hang indent on ≥ 1024px, 96px opening serif quote */
   .vault-pullquote {
     font-family: var(--font-serif);
     font-weight: 400;
@@ -804,7 +804,7 @@
     color: var(--text-quiet);
   }
 
-  /* Figure — 56px above, 40px below, italic caption in --ink-quiet */
+  /* Figure. 56px above, 40px below, italic caption in --ink-quiet */
   .vault-figure {
     margin: 56px 0 40px;
   }
@@ -817,7 +817,7 @@
     color: var(--text-quiet);
   }
 
-  /* Eyebrow label — §2.5 meta token */
+  /* Eyebrow label · §2.5 meta token */
   .vault-eyebrow {
     font-family: var(--font-sans);
     font-size: 13px;
@@ -836,7 +836,7 @@
     color: var(--text-tertiary);
   }
 
-  /* Cite chip — click-to-copy BibTeX surface at foot of article */
+  /* Cite chip: click-to-copy BibTeX surface at foot of article */
   .vault-citechip {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -1103,11 +1103,11 @@
     color: var(--accent-focus);
   }
 
-  /* Vault pillar cards — the base background lives here (instead of an
+  /* Vault pillar cards: the base background lives here (instead of an
      inline `style={{ background }}`) so the hover state's background-color
      rule can actually win against the `background` shorthand specificity.
      Lift on hover so the card reads as affordance rather than ornament.
-     Default = --bg-panel (sunken), hover = --bg-panel-elev (elevated) — a
+     Default = --bg-panel (sunken), hover = --bg-panel-elev (elevated); a
      real tone shift on both canvases. */
   .vault-pillar {
     background-color: var(--bg-panel);
@@ -1129,7 +1129,7 @@
   .vault-pillar:focus-within {
     border-color: color-mix(in oklch, var(--accent-focus) 70%, var(--border-subtle));
   }
-  /* Inner entry rows — group-hover underline feels right for a text link. */
+  /* Inner entry rows: group-hover underline feels right for a text link. */
   .vault-pillar a.group:hover span:first-child {
     text-decoration: underline;
     text-decoration-color: color-mix(in oklch, var(--text-primary) 30%, transparent);
@@ -1157,7 +1157,7 @@
     height: 0;
   }
 
-  /* Most-likely bracket — interactive states.
+  /* Most-likely bracket: interactive states.
      Team rows link to /team/[code]. The row highlights on hover, and the
      enclosing card lifts slightly. */
   .bracket-team-row {

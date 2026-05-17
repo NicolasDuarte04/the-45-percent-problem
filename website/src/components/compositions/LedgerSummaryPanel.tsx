@@ -34,7 +34,7 @@ function MetricRow({
           >
             {v === null ? (
               <span className="mono text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-                —
+. 
               </span>
             ) : (
               <NumericCell value={v} formatter={(x) => formatMono(x, 4)} />

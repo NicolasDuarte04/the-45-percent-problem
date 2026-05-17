@@ -1,5 +1,5 @@
 /**
- * Visual regression test: §7.2 invariant — HIT and MISS rows must share
+ * Visual regression test: §7.2 invariant. HIT and MISS rows must share
  * identical grid, padding, font size, and row height. The ONLY permitted
  * visual difference is the label chip text and color in the last data column.
  *
@@ -15,7 +15,7 @@
 
 import { test, expect } from "@playwright/test";
 
-test.describe("Ledger §7.2 — HIT/MISS visual parity", () => {
+test.describe("Ledger §7.2: HIT/MISS visual parity", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/ledger");
     // Wait for the table to hydrate

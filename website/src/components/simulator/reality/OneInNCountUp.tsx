@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * OneInNCountUp — Phase E §9 (E.2) + Q3.
+ * OneInNCountUp · Phase E §9 (E.2) + Q3.
  *
  * Animates the 1-in-N integer from 1 → final over 700ms with cubic-out
  * easing. Q3 lock: integer-only count-up. The fractional percentage in
- * RealityScorePanel renders at its final value immediately — counting
+ * RealityScorePanel renders at its final value immediately; counting
  * up two decimal places looks fussy and undercuts the quant credibility
  * the reveal exists to deliver.
  *
@@ -29,7 +29,7 @@ interface OneInNCountUpProps {
 
 const DURATION_MS = 700;
 
-// cubic-out per §9 (E.2): t * (2 - t) ish — using the canonical
+// cubic-out per §9 (E.2): t * (2 - t) ish; using the canonical
 // `1 - (1 - t) ** 3` for smooth deceleration into the landing value.
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -41,7 +41,7 @@ export function OneInNCountUp({
   suffix = "",
 }: OneInNCountUpProps) {
   const prefersReduced = useReducedMotion();
-  // Lazy initial — when reduced-motion or trivially small target, mount
+  // Lazy initial: when reduced-motion or trivially small target, mount
   // at the final value so the effect doesn't need to write state
   // synchronously on first run.
   const skipAnimation = prefersReduced || target <= 2;

@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
  *   - the dashboard's "view ticket" inline render,
  *   - any future share-card image renderer.
  *
- * Returns a sanitized view via toPublicPredictionView — no email,
+ * Returns a sanitized view via toPublicPredictionView; no email,
  * no subscriberId. Per handoff §3 addition (c), the public permalink
  * must not leak either field.
  *

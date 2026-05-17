@@ -35,7 +35,7 @@ export interface LiveDataBlockProps {
   /**
    * When true, render a small `◆ FALLBACK` chip in the masthead row. Only
    * shows when this prop is true AND the brief's `lead_in.fallback_used`
-   * is also true — pages should derive this from a `?debug=fallback`
+   * is also true: pages should derive this from a `?debug=fallback`
    * query param so it stays hidden from general readers.
    */
   showFallbackMarker?: boolean;
@@ -86,7 +86,7 @@ export async function LiveDataBlock({
         </span>
         {renderFallbackMarker && (
           <span
-            title="lead_in.fallback_used = true (debug only — gated behind ?debug=fallback)"
+            title="lead_in.fallback_used = true (debug only; gated behind ?debug=fallback)"
             style={{
               marginLeft: "auto",
               padding: "2px 8px",

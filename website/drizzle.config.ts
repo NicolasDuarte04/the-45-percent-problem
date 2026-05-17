@@ -7,7 +7,7 @@ import type { Config } from "drizzle-kit";
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  /* no .env.local present — fall back to ambient process.env */
+  /* no .env.local present; fall back to ambient process.env */
 }
 
 const directUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;

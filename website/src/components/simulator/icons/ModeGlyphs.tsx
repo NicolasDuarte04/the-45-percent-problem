@@ -26,7 +26,7 @@ const baseProps = {
   focusable: false,
 };
 
-// Final Four — four small unfilled squares in a 2x2 grid with a faint
+// Final Four: four small unfilled squares in a 2x2 grid with a faint
 // 1px line connecting their inner corners to a single convergence point
 // at the centre. Reads as "four → one".
 export function FinalFourGlyph({ className }: GlyphProps) {
@@ -44,7 +44,7 @@ export function FinalFourGlyph({ className }: GlyphProps) {
   );
 }
 
-// Champion's Path — four dots connected left-to-right by a single 1px
+// Champion's Path: four dots connected left-to-right by a single 1px
 // line, with a small filled circle at the rightmost dot (the path's
 // destination).
 export function ChampionsPathGlyph({ className }: GlyphProps) {
@@ -59,7 +59,7 @@ export function ChampionsPathGlyph({ className }: GlyphProps) {
   );
 }
 
-// Full Bracket — minimalist tournament-tree fragment: 4 short
+// Full Bracket: minimalist tournament-tree fragment: 4 short
 // horizontal lines on the left, converging through 2, into 1, in
 // classic bracket-tree geometry.
 export function FullBracketGlyph({ className }: GlyphProps) {

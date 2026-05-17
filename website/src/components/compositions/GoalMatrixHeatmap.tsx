@@ -353,7 +353,7 @@ export function GoalMatrixHeatmap({
                           }
                           onClick={() => togglePinned(h, a)}
                           aria-pressed={isPinned}
-                          aria-label={`${homeCode} ${h} – ${a} ${awayCode}, ${(p * 100).toFixed(2)}%`}
+                          aria-label={`${homeCode} ${h}. ${a} ${awayCode}, ${(p * 100).toFixed(2)}%`}
                         >
                           {p < 0.001 ? "·" : (p * 100).toFixed(1)}
                         </button>
@@ -408,7 +408,7 @@ export function GoalMatrixHeatmap({
                 >
                   {focus !== null
                     ? `${homeCode} ${focus.h} − ${focus.a} ${awayCode}`
-                    : `${homeCode} — − — ${awayCode}`}
+                    : `${homeCode}. −. ${awayCode}`}
                 </span>
                 <span
                   className="mono text-[9px] uppercase tracking-[.08em]"
@@ -433,7 +433,7 @@ export function GoalMatrixHeatmap({
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {focusP !== null ? `${(focusP * 100).toFixed(3)}%` : "—.———%"}
+                {focusP !== null ? `${(focusP * 100).toFixed(3)}%` : "-.. . . %"}
               </div>
               <div
                 className="mono text-[10px] uppercase tracking-[.08em]"
@@ -494,7 +494,7 @@ export function GoalMatrixHeatmap({
                   }
                   onClick={() => togglePinned(s.home, s.away)}
                   aria-pressed={isPinned}
-                  aria-label={`Highlight scoreline ${s.home}–${s.away}, ${(s.p * 100).toFixed(2)} percent${isPinned ? ", pinned" : ""}`}
+                  aria-label={`Highlight scoreline ${s.home}-${s.away}, ${(s.p * 100).toFixed(2)} percent${isPinned ? ", pinned" : ""}`}
                 >
                   <span
                     className="gm-rank-badge mono"

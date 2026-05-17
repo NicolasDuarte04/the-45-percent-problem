@@ -8,7 +8,7 @@ interface PdfEmbedProps {
 }
 
 /**
- * §8.7 / §12.8 — PDF embed with native <object> rendering and an <iframe>
+ * §8.7 / §12.8: PDF embed with native <object> rendering and an <iframe>
  * fallback for engines that reject <object>. The <object> element renders
  * the <iframe> only when it cannot display the PDF itself; readers whose
  * browsers reject both are served the download link adjacent to the embed

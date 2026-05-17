@@ -36,7 +36,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const pt = payload[0]?.payload;
   if (!pt) return null;
   const edgeSign = pt.edgeE >= 0 ? "+" : "";
-  const clvText = pt.clvBps != null ? `${pt.clvBps > 0 ? "+" : ""}${pt.clvBps} bps` : "—";
+  const clvText = pt.clvBps != null ? `${pt.clvBps > 0 ? "+" : ""}${pt.clvBps} bps` : "-";
   return (
     <div
       style={{

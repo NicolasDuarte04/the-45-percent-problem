@@ -50,7 +50,7 @@ export function FeaturedDivergences({ divergence }: FeaturedDivergencesProps) {
 function DivergenceCard({ row }: { row: DivergenceRow }) {
   const marketLabel = MARKET_LABELS[row.market] ?? row.market;
 
-  // Short, generic blurb built from the row — we do not invent unsourced
+  // Short, generic blurb built from the row; we do not invent unsourced
   // narratives. The structure is: which side the edge favors + gate state.
   const direction =
     row.edge_E >= 0

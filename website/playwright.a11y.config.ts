@@ -25,7 +25,7 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:3000",
     // Audit both light (editorial) and dark (quant) canvases.
-    // colorScheme is not forced here — pages use data-canvas attribute,
+    // colorScheme is not forced here; pages use data-canvas attribute,
     // not prefers-color-scheme, for canvas selection.
   },
 

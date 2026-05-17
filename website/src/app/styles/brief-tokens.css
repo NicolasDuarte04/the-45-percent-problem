@@ -1,7 +1,7 @@
 /**
  * Brief / email-system design tokens.
  *
- * Scope: surfaces S1–S7 from the design canvas (capture form, verify, confirmed,
+ * Scope: surfaces S1. S7 from the design canvas (capture form, verify, confirmed,
  * unsubscribe, daily brief web view, archive, team page). These run with their
  * own palette distinct from the editorial / quant canvases in globals.css.
  *
@@ -12,7 +12,7 @@
  * quant canvas is always slate (dark). Mirroring the canvas keeps the brief
  * panel from clashing with the page it sits on. The original brief specifies
  * `prefers-color-scheme`, but in this app the canvases are themselves not
- * preference-aware — so following them is the only way to honor the spirit of
+ * preference-aware: so following them is the only way to honor the spirit of
  * "respect the page's theme context."
  *
  * Forced overrides: `[data-theme="light"]` and `[data-theme="dark"]` pin the
@@ -21,7 +21,7 @@
  */
 
 [data-surface="brief"] {
-  /* Light theme — paper canvas (default) */
+  /* Light theme: paper canvas (default) */
   --brief-bg:              #F4F1EA;
   --brief-bg-elev:         #FCFAF4;
   --brief-ink:             #0E0E0E;

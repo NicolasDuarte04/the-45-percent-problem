@@ -5,7 +5,7 @@
  *
  * An earlier iteration of this script proposed bare \bword\b regexes for
  * `predict`, `pick`, `lock`, `play`, `returns`, `tip`, `profit`. A dry-run
- * against the codebase produced 36 false positives — every one of them
+ * against the codebase produced 36 false positives; every one of them
  * legitimate non-product text:
  *   - TypeScript built-ins (the Pick<T> utility type)
  *   - JSDoc convention (a "Returns the directory" leader on a function)
@@ -26,7 +26,7 @@
  *
  * So this script uses substring phrases only. The simulator-aware
  * machinery (SIMULATOR_SURFACES + EMAIL_SYSTEM_FORBIDDEN_REGEX) is
- * retained as **dormant scaffolding** — see the comment block on those
+ * retained as **dormant scaffolding**: see the comment block on those
  * tables below. It does not currently fire any rules but is structurally
  * ready for the day a single-word ban makes sense (with a tighter regex
  * or a surface-aware extractor; both are tracked as known follow-ups).
@@ -59,7 +59,7 @@ import { fileURLToPath } from "url";
 // Case-insensitive substring match. Multi-word phrasings preferred for the
 // reasons documented at the top of this file.
 const GLOBAL_FORBIDDEN_PHRASES = [
-  // §6.6 original nine — preserved verbatim.
+  // §6.6 original nine; preserved verbatim.
   "bet on",
   "place a bet",
   "wager",
@@ -90,7 +90,7 @@ const GLOBAL_FORBIDDEN_PHRASES = [
   "tip of the day",
 
   // "predict the X" gambling idioms (the bare verb "predict" is
-  // unconstrained — vault essays use it correctly).
+  // unconstrained: vault essays use it correctly).
   "predict the winner",
   "predict the score",
 
@@ -106,7 +106,7 @@ const GLOBAL_FORBIDDEN_PHRASES = [
   // Action-tone phrases.
   "send it",
 
-  // "returns" / "profit" collocations — bare words are too noisy
+  // "returns" / "profit" collocations: bare words are too noisy
   // (JSDoc @returns, code comments, financial-research vault essays).
   "expected returns",
   "guaranteed returns",
@@ -136,7 +136,7 @@ const GLOBAL_FORBIDDEN_REGEX = [
 
 const EMAIL_SYSTEM_FORBIDDEN_REGEX = [
   // Empty by design. See block comment above. When populated, rules here
-  // skip files matched by SIMULATOR_SURFACES below — i.e., simulator UI
+  // skip files matched by SIMULATOR_SURFACES below; i.e., simulator UI
   // and templates may use the rule's vocabulary as part of its product.
   // Schema: { pattern: RegExp, label: string }
 ];
@@ -146,7 +146,7 @@ const SIMULATOR_SURFACES = [
   // unused (that table is empty), but kept ready and forward-compatible.
   // Phase B email templates are listed pre-emptively; matching is by
   // path-contains, so a prefix that doesn't yet exist on disk simply
-  // never hits — no warning, no error.
+  // never hits: no warning, no error.
   path.join("src", "app", "(simulator)") + path.sep,
   path.join("src", "components", "simulator") + path.sep,
   path.join("src", "lib", "sim") + path.sep,
@@ -380,9 +380,9 @@ if (isCli) {
   }
 
   if (violations > 0) {
-    console.error(`\n§6.6 check FAILED — ${violations} violation(s). Fix before shipping.`);
+    console.error(`\n§6.6 check FAILED. ${violations} violation(s). Fix before shipping.`);
     process.exit(1);
   } else {
-    console.log(`§6.6 check passed — no forbidden phrases or copy exclamation marks found.`);
+    console.log(`§6.6 check passed; no forbidden phrases or copy exclamation marks found.`);
   }
 }

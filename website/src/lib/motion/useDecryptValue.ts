@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * useDecryptValue — MOTION_SPEC.md §1.
+ * useDecryptValue · MOTION_SPEC.md §1.
  *
  * Cycle the digit positions of `target` through random glyphs for
  * `durationMs`, then snap to `target`. Non-digit characters (the
@@ -10,7 +10,7 @@
  *
  * The effect is the cognitive counterpart to "compiling…": the user
  * sees the terminal resolve a calculation, then lock. Brutalist
- * tone — no fade, no decel; the lock IS the punctuation.
+ * tone: no fade, no decel; the lock IS the punctuation.
  *
  * SSR-safe: returns `target` until the first client tick. The
  * server-rendered HTML therefore shows the final value, hydration
@@ -34,7 +34,7 @@ interface UseDecryptValueOptions {
    * Total scramble duration in ms. Default 400.
    *
    * Phase E §3 caps standard motion at 600ms. The default 400 sits
-   * inside the layout-transition band (300–500ms) and interlocks
+   * inside the layout-transition band (300-500ms) and interlocks
    * with StaggeredReveal's 240ms hero entrance: the eye lands on
    * the hero ~240ms after mount, mid-scramble, then the digits
    * lock ~160ms later. Don't extend this without re-running that

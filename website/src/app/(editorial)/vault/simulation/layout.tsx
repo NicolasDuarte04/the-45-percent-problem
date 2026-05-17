@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Simulation — Research Vault",
+  title: "Simulation · Research Vault",
   description:
     "Bivariate Poisson, Dixon-Coles correction, and the 10,000-run Monte Carlo engine that powers every probability on this site.",
 };
@@ -27,14 +27,14 @@ export default function SimulationLayout({
     <VaultArticle
       eyebrow="§ V · Long-form"
       title="Simulation"
-      deck="Bivariate Poisson, Dixon-Coles low-score correction, and the 10,000-run Monte Carlo engine — how a match model becomes a tournament distribution."
+      deck="Bivariate Poisson, Dixon-Coles low-score correction, and the 10,000-run Monte Carlo engine; how a match model becomes a tournament distribution."
       readingTimeMinutes={10}
       lastRevised="2026-04-22"
       citation={{ apa, bibtex }}
       readNext={[
         {
           href: "/vault/models",
-          title: "Anatomy of M0–M★",
+          title: "Anatomy of M0. M★",
           blurb: "The five candidate models and their strength functions.",
         },
         {

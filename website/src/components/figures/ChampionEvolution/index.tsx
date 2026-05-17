@@ -10,7 +10,7 @@ interface Props {
 }
 
 /**
- * §8.4 — ChampionEvolution.
+ * §8.4: ChampionEvolution.
  * p_champion line for the top N teams across the life of the tournament.
  * Falls back to a bar chart with 95% CI error bars when history is sparse
  * (pre-tournament or first snapshot).
@@ -79,7 +79,7 @@ export function ChampionEvolution({
             whiteSpace: "pre-wrap",
           }}
         >
-          {`p_champion — snapshot ${tournament.snapshot_id}\n${noscriptRows}`}
+          {`p_champion: snapshot ${tournament.snapshot_id}\n${noscriptRows}`}
         </pre>
       </noscript>
     </Figure>

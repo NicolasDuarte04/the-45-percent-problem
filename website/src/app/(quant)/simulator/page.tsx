@@ -1,9 +1,9 @@
 /**
- * /simulator — Scenario Simulator (initial scaffold).
+ * /simulator · Scenario Simulator (initial scaffold).
  *
  * Greenfield route. Reads tournament STRUCTURE through the canonical
  * Drizzle path (with TS fallback for environments without DATABASE_URL).
- * No hardcoded matchups anywhere — every team and every fixture rendered
+ * No hardcoded matchups anywhere: every team and every fixture rendered
  * here is sourced from the seeded Postgres tables (or, in fallback mode,
  * from the TS module that mirrors them).
  *
@@ -68,7 +68,7 @@ export default async function ScenarioSimulatorPage() {
       {/* Group grid */}
       <section className="mb-12">
         <h2 className="mb-4 font-serif text-xl text-stone-900 dark:text-stone-100">
-          Groups A–L
+          Groups A-L
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(Object.entries(groups) as [string, typeof groups[keyof typeof groups]][]).map(

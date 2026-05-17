@@ -182,7 +182,7 @@ export function ProgressionConeChart({
               cursor={{ stroke: "var(--border-default)", strokeDasharray: "3 3" }}
             />
             {/* Cone: area from 0 up to P(reach stage). Naturally funnels as
-                probabilities decay across the progression — the cone shape
+                probabilities decay across the progression; the cone shape
                 emerges from the published probabilities, not interpolation. */}
             <Area
               type="monotone"
@@ -199,7 +199,7 @@ export function ProgressionConeChart({
               }}
               activeDot={{ r: 5 }}
             />
-            {/* 95% CI segment — rendered only at the champion stage, which is
+            {/* 95% CI segment: rendered only at the champion stage, which is
                 the only stage with a published CI in the data contract (§4.6).
                 Drawn as a vertical segment from ciLo to ciHi at x=CHA, with
                 small cap dots at both bounds. */}
@@ -265,7 +265,7 @@ export function ProgressionConeChart({
             >
               {d.is_champion && d.ci_lo !== null && d.ci_hi !== null
                 ? `[${(d.ci_lo * 100).toFixed(1)}, ${(d.ci_hi * 100).toFixed(1)}]`
-                : "— no CI —"}
+                : ": no CI. "}
             </div>
           </div>
         ))}

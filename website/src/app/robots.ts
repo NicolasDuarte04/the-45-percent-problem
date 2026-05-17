@@ -1,5 +1,5 @@
 /**
- * Next.js metadata route — §10.3 SEO.
+ * Next.js metadata route. §10.3 SEO.
  * Generates /robots.txt at build time.
  */
 import type { MetadataRoute } from "next";

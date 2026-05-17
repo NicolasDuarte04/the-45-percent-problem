@@ -9,7 +9,7 @@ interface TournamentLeaderboardProps {
 }
 
 // Prism rainbow (§2.4) rotated across the leaderboard. Color encodes ordinal
-// position — no lineage meaning.
+// position: no lineage meaning.
 const PRISM_CYCLE = [
   "var(--prism-peach)",
   "var(--prism-coral)",

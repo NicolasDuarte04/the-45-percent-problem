@@ -1,12 +1,12 @@
 /**
  * Mode-selector cards per design v2 §5.2 + Patch v2.1 §2:
  * three equal-weight options with mono uppercase headings (NEUTRAL color
- * by default — warm accent only on hover, never on resting state), serif
+ * by default: warm accent only on hover, never on resting state), serif
  * sub-explanation, time estimate in 12pt sans at 60% opacity.
  *
  * Pure server component. Each card is an <a> link to its mode-specific
  * route. Those routes are scaffolded in subsequent steps; in Phase A they
- * may 404 — that's intentional, this step ships only the visual entry
+ * may 404: that's intentional, this step ships only the visual entry
  * point.
  *
  * Patch v2.1 §2 verification: open with no hover state. All three headings

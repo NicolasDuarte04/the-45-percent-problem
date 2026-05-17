@@ -26,7 +26,7 @@ describe("check-forbidden-words: documented false-positive immunity", () => {
   // The cautionary tale: these were the offenders that motivated the
   // multi-word-phrase design. They MUST continue to pass.
 
-  it("allows '5% longshot' anywhere — it is a Blueprint Kelly term", () => {
+  it("allows '5% longshot' anywhere: it is a Blueprint Kelly term", () => {
     const v: Violation[] = scanContent(
       "src/app/(quant)/terminal/page.tsx",
       'ε is the pre-registered edge threshold (3% mainline / 5% longshot).',
@@ -126,12 +126,12 @@ describe("check-forbidden-words: Path A multi-word phrase additions", () => {
     "guaranteed returns",
     "pure profit",
     "quick profit",
-  ])("rejects %s globally — even in editorial copy", (phrase) => {
+  ])("rejects %s globally: even in editorial copy", (phrase) => {
     const v: Violation[] = scanContent(NON_SIM_FILE, `text ${phrase} more text`);
     expect(rules(v)).toContain(`FORBIDDEN-PHRASE:${phrase}`);
   });
 
-  it("rejects 'your picks' even inside a simulator surface — global means global", () => {
+  it("rejects 'your picks' even inside a simulator surface; global means global", () => {
     const v: Violation[] = scanContent(
       SIM_COMPONENT_FILE,
       "Tap to confirm your picks.",
@@ -139,7 +139,7 @@ describe("check-forbidden-words: Path A multi-word phrase additions", () => {
     expect(rules(v)).toContain("FORBIDDEN-PHRASE:your picks");
   });
 
-  it("rejects 'moneyline' inside a simulator surface — global means global", () => {
+  it("rejects 'moneyline' inside a simulator surface; global means global", () => {
     const v: Violation[] = scanContent(
       SIM_COMPONENT_FILE,
       "do not show the moneyline",

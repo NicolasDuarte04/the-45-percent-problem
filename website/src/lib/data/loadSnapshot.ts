@@ -87,7 +87,7 @@ export function loadMatch(matchId: string, snapshotId?: string): MatchDetail {
 /**
  * Like loadMatch but returns null instead of throwing when the per-match JSON
  * file does not exist. Use this for knockout fixtures that haven't been priced
- * yet — the structural scaffold exists in Drizzle but the snapshot pipeline
+ * yet: the structural scaffold exists in Drizzle but the snapshot pipeline
  * hasn't emitted a detail file for them.
  */
 export function loadMatchIfPresent(

@@ -11,13 +11,13 @@ import { LEDGER_STEPS, LEDGER_DURATION_SEC } from "./_steps";
 export const dynamic = "force-static";
 
 export const metadata = {
-  title: "Transparency Ledger — The 45% Problem",
+  title: "Transparency Ledger · The 45% Problem",
   description:
     "Append-only record of every forecast M★ has issued, with realized outcomes. Hits and misses treated with equal prominence.",
 };
 
 // ── §7.6 Misses narrative ─────────────────────────────────────────────────────
-// The three highest-confidence M★ misses — the inverse of a highlight reel.
+// The three highest-confidence M★ misses; the inverse of a highlight reel.
 
 function TopMissesNarrative({ records }: { records: LedgerRecord[] }) {
   const mstarMisses = records
@@ -46,8 +46,8 @@ function TopMissesNarrative({ records }: { records: LedgerRecord[] }) {
         // Modal prediction (highest probability outcome)
         const dist = r.outcome_predicted_distribution;
         const modalOutcome = Object.entries(dist).sort(([, a], [, b]) => b - a)[0];
-        const modalLabel = modalOutcome ? modalOutcome[0] : "—";
-        const modalP = modalOutcome ? (modalOutcome[1] * 100).toFixed(1) : "—";
+        const modalLabel = modalOutcome ? modalOutcome[0] : "-";
+        const modalP = modalOutcome ? (modalOutcome[1] * 100).toFixed(1) : "-";
 
         const realizedP = (r.p_model_on_realized * 100).toFixed(1);
 
@@ -266,12 +266,12 @@ export default function LedgerPage() {
               className="text-[13px] font-medium"
               style={{ color: "var(--text-primary)" }}
             >
-              Highest-Confidence Misses — M★
+              Highest-Confidence Misses · M★
             </h2>
             <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
               Pre-registered §7.6: the three forecasts where M★ assigned the highest
               probability to a modal outcome that did not occur. This is the inverse of
-              a highlight reel — the strongest statement of calibration discipline the
+              a highlight reel: the strongest statement of calibration discipline the
               ledger makes.
             </p>
           </div>

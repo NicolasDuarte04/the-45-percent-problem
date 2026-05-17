@@ -154,7 +154,7 @@ export async function loadLatestBrief(): Promise<BriefSample> {
 
 /**
  * Single brief by date. Returns null when neither Blob nor the sample
- * matches — the caller (Next.js dynamic route) should call notFound().
+ * matches: the caller (Next.js dynamic route) should call notFound().
  */
 export async function loadBriefByDate(
   date: string,
@@ -178,7 +178,7 @@ export async function loadBriefByDate(
     const sample = await readSampleBrief();
     if (sample.brief_date === date) return sample;
   } catch {
-    /* swallow — return null below */
+    /* swallow: return null below */
   }
   return null;
 }

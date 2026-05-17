@@ -1,4 +1,4 @@
-# MOTION_SPEC.md — `/scenario/p/[id]` kinetic layer
+# MOTION_SPEC.md: `/scenario/p/[id]` kinetic layer
 
 > Three brutalist effects to give the result screen kinetic energy without
 > crossing into casino territory. Scope: post-prediction permalink only.
@@ -7,10 +7,10 @@
 
 ---
 
-## 0. Brutalist constraints — read before writing animation code
+## 0. Brutalist constraints: read before writing animation code
 
 The motion vocabulary in `src/lib/motion/vocabulary.ts` already locks the
-project's tone (Phase E §3): durations bounded 150–600 ms, one and only
+project's tone (Phase E §3): durations bounded 150-600 ms, one and only
 one ease curve per preset, no overshoots, no rotation, no glow, no
 particle effects. These three new effects extend that vocabulary; they
 do not break it.
@@ -36,14 +36,14 @@ do not break it.
 
 ---
 
-## 1. The Decrypt Effect — 88 px Reality Score
+## 1. The Decrypt Effect · 88 px Reality Score
 
 ### 1.1 Intent
 
 When the result screen lands, the hero number reads as if a terminal is
 *resolving the calculation*. The user sees digits cycle for ~400 ms and
 then snap to the final percentage. The effect is the cognitive
-counterpart to "compiling…" — it earns the result.
+counterpart to "compiling…": it earns the result.
 
 ### 1.2 Specifics
 
@@ -52,7 +52,7 @@ counterpart to "compiling…" — it earns the result.
 | Total duration | **400 ms** | Phase E §3 ceiling for layout transitions; feels computed, not theatrical. |
 | Tick interval | **48 ms** (≈ 21 Hz) | Faster than 60 Hz reads as "noise"; slower than 30 Hz reads as "loading dots". 21 Hz is the terminal-cursor sweet spot. |
 | Tick driver | `requestAnimationFrame` with manual throttle | Pauses with the tab; never wakes a sleeping device for animation. |
-| Final lock | snap to target on the trailing edge | No fade, no decel — the lock IS the punctuation. |
+| Final lock | snap to target on the trailing edge | No fade, no decel; the lock IS the punctuation. |
 | Glyph set | `0123456789` only | The non-digit chars (`.`, `%`, `-`) are preserved through every frame so the column never jitters. |
 | Sign / "▲ " prefix | preserved verbatim | Promoted-state glyph is part of the hero, not part of the cipher. |
 | Reduced motion | render the final string immediately | No partial scramble, no fade. |
@@ -166,7 +166,7 @@ reason about, and inherits framer-motion's reduced-motion contract via
 
 ---
 
-## 2. Staggered Reveal — Hero → Share → Alert
+## 2. Staggered Reveal. Hero → Share → Alert
 
 ### 2.1 Intent
 
@@ -178,18 +178,18 @@ user's eye is led down the page in the order they should act:
 3. Alert configurator (`ALERT · ARM POSITION`)
 
 The Trade Ticket below the fold keeps its existing `.reveal-ticket` CSS
-fade — that surface is post-action, so it stays passive.
+fade: that surface is post-action, so it stays passive.
 
 ### 2.2 Specifics
 
 | param | value | rationale |
 |---|---|---|
-| Per-child duration | **240 ms** | Sits inside Phase E §3's 150–300 ms micro-interaction band. |
+| Per-child duration | **240 ms** | Sits inside Phase E §3's 150-300 ms micro-interaction band. |
 | Stagger delay | **180 ms** | Just long enough for the eye to land on the previous element before the next moves; shorter felt simultaneous in tests. |
 | Initial state | `opacity: 0, y: 8` | 8 px is the strict ceiling for translate; below that we lose the "settle"; above it reads marketing. |
 | Easing | `motion.entry` preset | Already in vocabulary; reuse, do not invent. |
 | Reduced motion | skip animation, render at final state | Existing `useReducedMotionAware("entry")` returns `{ duration: 0 }`; the variants resolve instantly. |
-| Fire when | on mount (above the fold) | No `whileInView` — the result screen is at the top of the page on this route, so we want to start immediately. |
+| Fire when | on mount (above the fold) | No `whileInView`; the result screen is at the top of the page on this route, so we want to start immediately. |
 
 ### 2.3 Replacement for the existing CSS reveal classes
 
@@ -285,7 +285,7 @@ import { StaggeredReveal } from "@/components/simulator/StaggeredReveal";
   </StaggeredReveal.Item>
 </StaggeredReveal>
 
-{/* Trade Ticket stays outside the cascade — its existing
+{/* Trade Ticket stays outside the cascade; its existing
     .reveal-ticket CSS handles the late fade. */}
 <div className="mt-12 mb-12">
   <TradeTicket view={view} compact />
@@ -296,32 +296,32 @@ import { StaggeredReveal } from "@/components/simulator/StaggeredReveal";
 
 The Decrypt hook fires on mount. When the hero's Reveal child finishes
 its 240 ms entrance, the scramble has already been running for ~240 ms
-of its 400 ms lifecycle — i.e., the digits are still cycling when the
+of its 400 ms lifecycle; i.e., the digits are still cycling when the
 eye arrives, then lock ~160 ms later. The two effects are tuned so the
 eye lands on the hero *during* the scramble, not after it. Do not
 extend either duration without re-running this calculation.
 
 ---
 
-## 3. Terminal Typewriter — `WATCH` row in the alert configurator
+## 3. Terminal Typewriter. `WATCH` row in the alert configurator
 
 ### 3.1 Intent
 
 The `WATCH` row in `PredictionAlertConfigurator` echoes the user's
 scenario (e.g. `ARG > AUT > AUS > BEL`). Today it renders all at once.
 With this effect, when the configurator panel enters the viewport, the
-chain types out left-to-right at terminal speed — like the alert is
+chain types out left-to-right at terminal speed; like the alert is
 parsing the user's prediction in real time.
 
 ### 3.2 Specifics
 
 | param | value | rationale |
 |---|---|---|
-| Per-character interval | **22 ms** | Faster than mainstream typewriter effects (40–60 ms) — reads as "command-line echo", not "human typing". |
+| Per-character interval | **22 ms** | Faster than mainstream typewriter effects (40-60 ms): reads as "command-line echo", not "human typing". |
 | Total duration | bounded by string length × tickMs (~440 ms for a 4-team chain) | Stays under the 600 ms ceiling. |
 | Trigger | `IntersectionObserver`, fires once on first 50 % visibility | Mounts above the fold? Fires immediately. Below the fold? Waits for the user to scroll. |
 | Caret | none | A blinking caret would compete with `STATUS: ▍` in the eyebrow. The mono font's column rhythm is the structural cue. |
-| Mobile truncation | unchanged — types out the truncated string `ARG > AUT > … > +2` on `<sm` and the full chain on `sm+` | The truncation logic in `PredictionAlertConfigurator` already runs at the responsive layer; the typewriter sits over the result. |
+| Mobile truncation | unchanged; types out the truncated string `ARG > AUT > … > +2` on `<sm` and the full chain on `sm+` | The truncation logic in `PredictionAlertConfigurator` already runs at the responsive layer; the typewriter sits over the result. |
 | Reduced motion | render the full string immediately | No animation, no flicker. |
 | Re-renders | hook is keyed on `text`; if the prediction id changes (route nav), the typewriter restarts. Otherwise stable. | |
 
@@ -386,7 +386,7 @@ const inView = useInView(ref, { once: true, amount: 0.5 });
 ```
 
 `useInView` from framer-motion is a thin wrapper over IntersectionObserver
-and returns a boolean — feed it directly to `useTypewriter({ active })`.
+and returns a boolean: feed it directly to `useTypewriter({ active })`.
 We are already a framer-motion consumer; no new dep.
 
 ### 3.5 Wiring into `PredictionAlertConfigurator.tsx`
@@ -420,7 +420,7 @@ resize. Two hooks, one render, no resize jank.
 
 - It does not type the `WATCH` *label*. The label is a structural cue,
   not a value.
-- It does not type `TRIGGER` (always "state change only" — same string
+- It does not type `TRIGGER` (always "state change only"; same string
   on every render, would feel like padding).
 - It does not type the user's email in the success state. The email is
   the user's input; replaying it visually would read as confirmation
@@ -452,9 +452,9 @@ any CSS animation, so no new `@media` block is required.
 | `src/lib/motion/useDecryptValue.ts` | new |
 | `src/lib/motion/useTypewriter.ts` | new |
 | `src/components/simulator/StaggeredReveal.tsx` | new |
-| `src/components/simulator/RealityScorePanel.tsx` | edit — replace static hero string with `useDecryptValue` output |
-| `src/components/simulator/PredictionAlertConfigurator.tsx` | edit — `useInView` + `useTypewriter` on the WATCH row |
-| `src/app/(simulator)/scenario/p/[id]/page.tsx` | edit — wrap hero / share / alert in `<StaggeredReveal>` |
+| `src/components/simulator/RealityScorePanel.tsx` | edit; replace static hero string with `useDecryptValue` output |
+| `src/components/simulator/PredictionAlertConfigurator.tsx` | edit. `useInView` + `useTypewriter` on the WATCH row |
+| `src/app/(simulator)/scenario/p/[id]/page.tsx` | edit; wrap hero / share / alert in `<StaggeredReveal>` |
 | `src/app/globals.css` | no change. Existing reveal classes stay as no-JS fallback. |
 
 Total new code: ~150 LOC across three new files. No new dependencies.
@@ -479,7 +479,7 @@ A change is done when all of the following are true:
    frame on first client tick.
 5. The 88 px hero, the 5-pip rarity bar, the share strip, the alert
    eyebrow's `STATUS: ▍` cursor, and the OG export are visually
-   unchanged. This spec adds motion only — no surface redesign.
+   unchanged. This spec adds motion only; no surface redesign.
 
 ---
 

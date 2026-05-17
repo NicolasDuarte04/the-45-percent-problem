@@ -23,7 +23,7 @@ export function EdgeSparkline({
   if (allPoints.length < 2) {
     return (
       <span className="mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-        —
+. 
       </span>
     );
   }

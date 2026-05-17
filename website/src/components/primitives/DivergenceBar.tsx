@@ -29,7 +29,7 @@ export function DivergenceBar({ p_model, q_market, className }: DivergenceBarPro
         aria-hidden
         style={{ overflow: "visible" }}
       >
-        {/* 2px baseline — §2.11 */}
+        {/* 2px baseline · §2.11 */}
         <line
           x1={0}
           y1={8}

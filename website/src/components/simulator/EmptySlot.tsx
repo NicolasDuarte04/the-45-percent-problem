@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * EmptySlot — tactile empty-target affordance per
+ * EmptySlot: tactile empty-target affordance per
  * UX_POLISH_PLAN_SIMULATOR_PHASE_D.md §3.1, with Phase E §5.4 motion.
  *
  * Replaces the en-dash placeholders that previously sat in droppable
@@ -17,10 +17,10 @@
  * wrapper so the team chip and EmptySlot trade places coherently.
  *
  * Reduced motion: useReducedMotionAware collapses the micro preset to
- * { duration: 0 }, so the lit-state crossfade snaps instantly — the
+ * { duration: 0 }, so the lit-state crossfade snaps instantly; the
  * Phase D static behavior.
  *
- * Sharp corners (border-radius: 0). Inline SVG glyph — no icon library.
+ * Sharp corners (border-radius: 0). Inline SVG glyph: no icon library.
  */
 
 import { motion } from "framer-motion";
@@ -29,11 +29,11 @@ import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 interface EmptySlotProps {
   /** Optional caption above the glyph; defaults to "DROP A TEAM". */
   label?: string;
-  /** dnd-kit `isOver` — the drag is hovering this slot. */
+  /** dnd-kit `isOver`: the drag is hovering this slot. */
   isOver?: boolean;
   /** Tap-to-fill is armed for this slot. */
   isActive?: boolean;
-  /** Visual density — sm fits bracket cells, md fits FF/CP, lg fits champion-cell. */
+  /** Visual density: sm fits bracket cells, md fits FF/CP, lg fits champion-cell. */
   size?: "sm" | "md" | "lg";
   /** Required for screen-reader context when this is the only child of a button. */
   ariaLabel: string;

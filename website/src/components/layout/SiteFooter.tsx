@@ -15,7 +15,7 @@ export function SiteFooter() {
       }}
     >
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 text-[11px]">
-        {/* Col 1 — Research description */}
+        {/* Col 1 · Research description */}
         <div className="space-y-2">
           <div
             className="mono text-[10px] uppercase tracking-[.08em]"
@@ -27,7 +27,7 @@ export function SiteFooter() {
             <strong style={{ color: "var(--text-primary)" }}>
               The 45% Problem
             </strong>{" "}
-            — Probabilistic Pricing for FIFA World Cup 2026.
+. Probabilistic Pricing for FIFA World Cup 2026.
           </p>
           <p>
             Research publication. No content on this site constitutes investment
@@ -35,7 +35,7 @@ export function SiteFooter() {
           </p>
         </div>
 
-        {/* Col 2 — Technical metadata (SHA / data / snapshot) */}
+        {/* Col 2. Technical metadata (SHA / data / snapshot) */}
         <div className="space-y-2">
           <div
             className="mono text-[10px] uppercase tracking-[.08em]"
@@ -53,7 +53,7 @@ export function SiteFooter() {
           </dl>
         </div>
 
-        {/* Col 3 — Citation */}
+        {/* Col 3 · Citation */}
         <div className="space-y-2">
           <div
             className="mono text-[10px] uppercase tracking-[.08em]"

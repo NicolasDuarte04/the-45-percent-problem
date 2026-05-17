@@ -1,9 +1,9 @@
 /**
- * Lighthouse CI configuration — §9.3 / §12.9
+ * Lighthouse CI configuration · §9.3 / §12.9
  *
  * Thresholds (pre-registered in Phase 9 blueprint):
  *   Performance   ≥ 92
- *   Accessibility ≥ 98  (redundant with axe audit — belt-and-braces)
+ *   Accessibility ≥ 98  (redundant with axe audit; belt-and-braces)
  *   Best-Practices ≥ 95
  *   SEO           ≥ 95
  *
@@ -48,7 +48,7 @@ module.exports = {
         "categories:best-practices": ["error", { minScore: 0.95 }],
         "categories:seo": ["error", { minScore: 0.95 }],
 
-        // Bundle-size advisory (§9.4). Warn only — the next build --profile
+        // Bundle-size advisory (§9.4). Warn only: the next build --profile
         // output is the canonical gate. lhci cannot enforce per-route budgets
         // precisely enough to be the hard gate.
         "resource-summary:script:size": [

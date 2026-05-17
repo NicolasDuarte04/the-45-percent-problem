@@ -10,7 +10,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * gone 13 months re-verifies via the email link in any state-change
  * notification (Phase B+) or the magic-link flow (Phase B+).
  *
- * Security: signed with PREDICTION_OWNER_HMAC_SECRET — a SEPARATE secret
+ * Security: signed with PREDICTION_OWNER_HMAC_SECRET: a SEPARATE secret
  * from UNSUBSCRIBE_HMAC_SECRET, because the threat models differ
  * (unsubscribe is one-shot; this is session-equivalent).
  */
@@ -99,7 +99,7 @@ export function cookieSetHeader(value: string): string {
     .join("; ");
 }
 
-/** Cookie clear header — used on dashboard sign-out, if/when added. */
+/** Cookie clear header: used on dashboard sign-out, if/when added. */
 export function cookieClearHeader(): string {
   return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }

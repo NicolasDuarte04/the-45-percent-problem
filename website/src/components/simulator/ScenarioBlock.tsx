@@ -9,7 +9,7 @@
  * The 3-column Full Bracket layout from v1 is heavy for inline rendering;
  * for Phase A this component renders a more readable line-stack form
  * (SEMIFINALISTS, R16/QF/SF/F leaders, etc.). The canonical scenario
- * data lives on the prediction row in raw form — when the eventual
+ * data lives on the prediction row in raw form; when the eventual
  * server-side share-card render arrives in Phase B, that surface can
  * use the v1 anatomy directly without refactoring this component.
  *
@@ -82,7 +82,7 @@ function ChampionsPathBlock({ scenario }: { scenario: ChampionsPathScenario }) {
         {stages.map(({ key, label }) => {
           const stage = scenario[key];
           if (!stage) return null;
-          // ">" for a win, "<" for a loss — matches the design v1 §4.1
+          // ">" for a win, "<" for a loss; matches the design v1 §4.1
           // ticker glyph; sticking to ASCII keeps the strip stable across
           // mail clients and any future server-side image render.
           const sep = stage.result === "W" ? ">" : "<";

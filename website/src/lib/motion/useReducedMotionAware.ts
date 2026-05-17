@@ -1,5 +1,5 @@
 /**
- * useReducedMotionAware — Phase E §5.3.
+ * useReducedMotionAware · Phase E §5.3.
  *
  * Wraps every motion preset access with a reduced-motion check. When
  * the user has `prefers-reduced-motion: reduce` enabled, the returned

@@ -1,5 +1,5 @@
 /**
- * Cached prediction fetcher — shared by the permalink page and generateMetadata.
+ * Cached prediction fetcher: shared by the permalink page and generateMetadata.
  *
  * React's `cache()` memoises the result per request so the DB is only hit once
  * even when both `generateMetadata` and `Page` call this function in the same

@@ -47,7 +47,7 @@ describe("teamsByGroupSortedByElo", () => {
     const out = teamsByGroupSortedByElo();
     // Spot-check four groups across confederation mixes to anchor the
     // expected behavior. Note Group A's chalk pick is KOR, not the
-    // host MEX — Korea Republic outranks Mexico in the static
+    // host MEX. Korea Republic outranks Mexico in the static
     // pre-tournament snapshot. If the snapshot file changes, update
     // this assertion deliberately rather than papering over it.
     expect(out.A[0]).toBe("KOR"); // Korea Republic leads A

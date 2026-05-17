@@ -3,7 +3,7 @@ import { ModeFullBracket } from "@/components/simulator/modes/ModeFullBracket";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
 
 export const metadata: Metadata = {
-  title: "Full Bracket — Scenario Simulator",
+  title: "Full Bracket · Scenario Simulator",
   description:
     "Call the whole tournament. Twelve group winners, twelve runners-up, then the knockouts.",
 };

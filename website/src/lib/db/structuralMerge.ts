@@ -10,7 +10,7 @@
  *   - We treat Drizzle as the single source of truth for *identity* (display
  *     name, fifa_code, confederation, group, home/away pairing on a match).
  *   - Snapshot rows whose match_id / fifa_code is unknown to Drizzle are
- *     dropped silently — better to render fewer rows than to render fictional
+ *     dropped silently: better to render fewer rows than to render fictional
  *     teams while a snapshot regeneration catches up.
  *   - Snapshot rows that match Drizzle keep all their probability fields
  *     untouched; only the identity sub-object is rewritten.
@@ -121,7 +121,7 @@ export function mergeTournament(
 /**
  * Replace a single match's identity (home/away) with Drizzle-sourced TeamRefs.
  * If the match isn't in Drizzle (e.g. a stale snapshot), the original is
- * returned unchanged — callers that need a 404 should check `matchesById`
+ * returned unchanged: callers that need a 404 should check `matchesById`
  * directly before loading the snapshot.
  */
 export function mergeMatch(match: MatchDetail, maps: StructuralMaps): MatchDetail {

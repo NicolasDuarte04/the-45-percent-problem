@@ -12,11 +12,11 @@
  * 2026 venue rotation.
  *
  * Schema:
- *   Team        — one of the 48 qualified nations.
- *   GroupLetter — 'A'..'L'.
- *   Round       — 'GRP'|'R32'|'R16'|'QF'|'SF'|'3P'|'FIN'.
- *   GroupMatch  — fully resolved (both teams known).
- *   KnockoutMatch — uses slot descriptors (e.g. '1A', 'BEST3-ABCDF') until
+ *   Team: one of the 48 qualified nations.
+ *   GroupLetter. 'A'..'L'.
+ *   Round. 'GRP'|'R32'|'R16'|'QF'|'SF'|'3P'|'FIN'.
+ *   GroupMatch: fully resolved (both teams known).
+ *   KnockoutMatch: uses slot descriptors (e.g. '1A', 'BEST3-ABCDF') until
  *                   teams are determined by group results.
  */
 
@@ -69,11 +69,11 @@ export interface GroupMatch {
 /**
  * Slot descriptor used for knockout matches whose teams are TBD.
  *
- *   `${rank}${group}`           — e.g. "1A" = winner of Group A.
- *   `BEST3-${groupLetters}`     — e.g. "BEST3-ABCDF" = the 3rd-place
+ *   `${rank}${group}`: e.g. "1A" = winner of Group A.
+ *   `BEST3-${groupLetters}`: e.g. "BEST3-ABCDF" = the 3rd-place
  *                                 finisher from groups A/B/C/D/F who
  *                                 ranks among the 8 best 3rd-placed teams.
- *   `W${matchId}`               — winner of an earlier KO match.
+ *   `W${matchId}`: winner of an earlier KO match.
  */
 export type SlotDescriptor = string;
 
@@ -90,7 +90,7 @@ export interface KnockoutMatch {
 // ─── Venues (16) ──────────────────────────────────────────────────────────────
 
 export const VENUES: Venue[] = [
-  // USA — 11
+  // USA · 11
   { key: "MetLife",   stadium: "MetLife Stadium",          city: "East Rutherford, NJ", country: "USA" },
   { key: "SoFi",      stadium: "SoFi Stadium",             city: "Inglewood, CA",       country: "USA" },
   { key: "ATT",       stadium: "AT&T Stadium",             city: "Arlington, TX",       country: "USA" },
@@ -102,16 +102,16 @@ export const VENUES: Venue[] = [
   { key: "Gillette",  stadium: "Gillette Stadium",         city: "Foxborough, MA",      country: "USA" },
   { key: "Lumen",     stadium: "Lumen Field",              city: "Seattle, WA",         country: "USA" },
   { key: "NRG",       stadium: "NRG Stadium",              city: "Houston, TX",         country: "USA" },
-  // Canada — 2
+  // Canada · 2
   { key: "BMO",       stadium: "BMO Field",                city: "Toronto",             country: "CAN" },
   { key: "BC_Place",  stadium: "BC Place",                 city: "Vancouver",           country: "CAN" },
-  // Mexico — 3
+  // Mexico · 3
   { key: "Azteca",    stadium: "Estadio Banorte",          city: "Mexico City",         country: "MEX" },
   { key: "Akron",     stadium: "Estadio Akron",            city: "Guadalajara",         country: "MEX" },
   { key: "BBVA",      stadium: "Estadio BBVA",             city: "Monterrey",           country: "MEX" },
 ];
 
-// ─── Teams (48) — official Final Draw, 5 Dec 2025 ─────────────────────────────
+// ─── Teams (48): official Final Draw, 5 Dec 2025 ─────────────────────────────
 //
 // Pot order in each group (index 0..3) is the published draw order. This order
 // drives the canonical group-stage matchday pattern below: [0v1, 2v3] / [0v2,
@@ -119,7 +119,7 @@ export const VENUES: Venue[] = [
 // (e.g. Mexico v South Africa + South Korea v Czechia for Group A on 11 June).
 
 export const TEAMS: Team[] = [
-  // Group A — Mexico opens the tournament 11 June
+  // Group A. Mexico opens the tournament 11 June
   { fifa_code: "MEX", display_name: "Mexico",          confederation: "CONCACAF", group: "A", draw_pot: 1 },
   { fifa_code: "RSA", display_name: "South Africa",    confederation: "CAF",      group: "A", draw_pot: 2 },
   { fifa_code: "KOR", display_name: "Korea Republic",  confederation: "AFC",      group: "A", draw_pot: 3 },
@@ -244,7 +244,7 @@ const GROUP_MATCHDAY_OVERRIDES: Partial<
     ]
   >
 > = {
-  // Group K — diagonal MD1 verified against FIFA's published fixture list.
+  // Group K: diagonal MD1 verified against FIFA's published fixture list.
   // All three MDs overridden to guarantee a complete round-robin:
   //   MD1: POR-COD, UZB-COL
   //   MD2: POR-UZB, COD-COL
@@ -262,7 +262,7 @@ const GROUP_MATCHDAY_OVERRIDES: Partial<
 };
 
 /**
- * Per-group MD1 anchor — exact FIFA-published kickoff (UTC) and venue for
+ * Per-group MD1 anchor: exact FIFA-published kickoff (UTC) and venue for
  * each of the two MD1 fixtures. Verified against fifa.com fixtures page.
  *
  * Format: { group: { md1: [ [kickoff_utc, venue, kickoff_utc, venue], ... ] } }
@@ -382,16 +382,16 @@ export const GROUP_MATCHES: GroupMatch[] = buildGroupMatches();
 // ─── Knockout fixtures (32) ───────────────────────────────────────────────────
 //
 // Slot descriptors (resolved at runtime once group results land):
-//   "1A" / "2A" — winner / runner-up of Group A
-//   "BEST3-XYZWV" — the 3rd-placed team from one of those 5 groups that
+//   "1A" / "2A": winner / runner-up of Group A
+//   "BEST3-XYZWV": the 3rd-placed team from one of those 5 groups that
 //                    finished among the 8 best 3rd-placed sides
-//   "WMnn" — winner of an earlier KO match
+//   "WMnn": winner of an earlier KO match
 //
 // Bracket pathway follows the published 2026 FIFA bracket diagram. Groups
 // are paired so two teams from the same group cannot meet before the QFs.
 
 export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
-  // ── Round of 32 — 16 matches, 28 Jun – 3 Jul ────────────────────────────────
+  // ── Round of 32 · 16 matches, 28 Jun · 3 Jul ────────────────────────────────
   { match_id: "M73", round: "R32", kickoff_utc: "2026-06-28T19:00:00Z", venue_key: "ATT",        home_slot: "1A", away_slot: "BEST3-CDEFI" },
   { match_id: "M74", round: "R32", kickoff_utc: "2026-06-28T22:00:00Z", venue_key: "MercedesBenz", home_slot: "1L", away_slot: "BEST3-EHIJK" },
   { match_id: "M75", round: "R32", kickoff_utc: "2026-06-29T00:00:00Z", venue_key: "MetLife",    home_slot: "1G", away_slot: "BEST3-ABCDF" },
@@ -409,7 +409,7 @@ export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
   { match_id: "M87", round: "R32", kickoff_utc: "2026-07-03T00:00:00Z", venue_key: "HardRock",   home_slot: "1I", away_slot: "BEST3-BCDFG" },
   { match_id: "M88", round: "R32", kickoff_utc: "2026-07-03T22:00:00Z", venue_key: "SoFi",       home_slot: "1D", away_slot: "2E" },
 
-  // ── Round of 16 — 8 matches, 4–7 Jul ────────────────────────────────────────
+  // ── Round of 16 · 8 matches, 4-7 Jul ────────────────────────────────────────
   { match_id: "M89", round: "R16", kickoff_utc: "2026-07-04T20:00:00Z", venue_key: "ATT",        home_slot: "WM73", away_slot: "WM74" },
   { match_id: "M90", round: "R16", kickoff_utc: "2026-07-04T23:00:00Z", venue_key: "Lincoln",    home_slot: "WM75", away_slot: "WM76" },
   { match_id: "M91", round: "R16", kickoff_utc: "2026-07-05T19:00:00Z", venue_key: "Lumen",      home_slot: "WM77", away_slot: "WM78" },
@@ -419,20 +419,20 @@ export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
   { match_id: "M95", round: "R16", kickoff_utc: "2026-07-07T19:00:00Z", venue_key: "MetLife",    home_slot: "WM85", away_slot: "WM86" },
   { match_id: "M96", round: "R16", kickoff_utc: "2026-07-07T22:00:00Z", venue_key: "SoFi",       home_slot: "WM87", away_slot: "WM88" },
 
-  // ── Quarter-finals — 4 matches, 9–11 Jul ────────────────────────────────────
+  // ── Quarter-finals · 4 matches, 9-11 Jul ────────────────────────────────────
   { match_id: "M97",  round: "QF", kickoff_utc: "2026-07-09T20:00:00Z", venue_key: "MetLife",    home_slot: "WM89", away_slot: "WM90" },
   { match_id: "M98",  round: "QF", kickoff_utc: "2026-07-10T20:00:00Z", venue_key: "ATT",        home_slot: "WM91", away_slot: "WM92" },
   { match_id: "M99",  round: "QF", kickoff_utc: "2026-07-10T23:00:00Z", venue_key: "MercedesBenz", home_slot: "WM93", away_slot: "WM94" },
   { match_id: "M100", round: "QF", kickoff_utc: "2026-07-11T22:00:00Z", venue_key: "HardRock",   home_slot: "WM95", away_slot: "WM96" },
 
-  // ── Semi-finals — 2 matches, 14–15 Jul ──────────────────────────────────────
+  // ── Semi-finals · 2 matches, 14-15 Jul ──────────────────────────────────────
   { match_id: "M101", round: "SF", kickoff_utc: "2026-07-14T20:00:00Z", venue_key: "ATT",        home_slot: "WM97", away_slot: "WM98" },
   { match_id: "M102", round: "SF", kickoff_utc: "2026-07-15T20:00:00Z", venue_key: "MetLife",    home_slot: "WM99", away_slot: "WM100" },
 
-  // ── Third-place — 18 Jul ────────────────────────────────────────────────────
+  // ── Third-place · 18 Jul ────────────────────────────────────────────────────
   { match_id: "M103", round: "3P", kickoff_utc: "2026-07-18T18:00:00Z", venue_key: "HardRock",   home_slot: "LM101", away_slot: "LM102" },
 
-  // ── Final — 19 Jul ──────────────────────────────────────────────────────────
+  // ── Final · 19 Jul ──────────────────────────────────────────────────────────
   { match_id: "M104", round: "FIN", kickoff_utc: "2026-07-19T19:00:00Z", venue_key: "MetLife",   home_slot: "WM101", away_slot: "WM102" },
 ];
 
@@ -456,7 +456,7 @@ export function teamsInGroup(g: GroupLetter): Team[] {
 /**
  * Display name for a FIFA 3-letter code. Falls back to the code itself
  * when unknown so callers never render an empty string. Case-insensitive
- * on input — internally upper-cased before the lookup.
+ * on input: internally upper-cased before the lookup.
  */
 export function teamName(code: string): string {
   return TEAM_BY_CODE[code.toUpperCase()]?.display_name ?? code;
@@ -466,7 +466,7 @@ export function groupMatchesIn(g: GroupLetter): GroupMatch[] {
   return GROUP_MATCHES.filter((m) => m.group === g);
 }
 
-/** Total count sanity checks — consumed by tests. */
+/** Total count sanity checks: consumed by tests. */
 export const COUNTS = {
   teams: TEAMS.length,            // expect 48
   groups: 12,

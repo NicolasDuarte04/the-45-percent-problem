@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 interface FigureProps {
   children: ReactNode;
   caption?: ReactNode;
-  /** Source citation — rendered as a trailing link in the caption when provided. */
+  /** Source citation: rendered as a trailing link in the caption when provided. */
   cite?: { href: string; label: string };
   /** Allow the figure to break the grid to ±10% on wide viewports. §8.3 */
   bleed?: boolean;
@@ -12,7 +12,7 @@ interface FigureProps {
 }
 
 /**
- * §8.3 / §8.4 — figure wrapper for living figures, static images, and tables.
+ * §8.3 / §8.4: figure wrapper for living figures, static images, and tables.
  * Caption sits in `caption` size, --ink-quiet, italic.
  */
 export function Figure({

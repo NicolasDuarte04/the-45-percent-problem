@@ -1,10 +1,10 @@
 /**
- * Daily Brief — react-email template (Surface 5 in the design briefs).
+ * Daily Brief: react-email template (Surface 5 in the design briefs).
  *
  * Renders a full daily-brief artifact (BriefSample) into both an HTML
  * payload and a plain-text payload for Resend dispatch. Same component is
  * also re-rendered as a Next.js page at `/briefs/[date]` (the web view of
- * a past issue) — that is why the masthead, divergence table, etc. live
+ * a past issue): that is why the masthead, divergence table, etc. live
  * here rather than in the page route.
  *
  * Layout (top to bottom, mirrors the original brief):
@@ -22,7 +22,7 @@
  * - three font families only (JetBrains Mono, Source Serif 4, Inter)
  * - hairline borders, no shadows, radius cap of 2px
  * - tabular numerals on every probability and bps cell
- * - ASCII / Unicode glyphs only (▲ ▼ ✓ ⚠ ◆ →) — no SVG icons
+ * - ASCII / Unicode glyphs only (▲ ▼ ✓ ⚠ ◆ →); no SVG icons
  * - pipes (`|`) as separators, never em or en dashes
  * - verbatim disclaimer
  */
@@ -75,7 +75,7 @@ function formatDelta(bps: number): string {
   return `${glyph} ${sign}${Math.abs(bps)} bps`;
 }
 
-// ─── Tokens (light theme — the design-canvas v2 brief palette) ──────────────
+// ─── Tokens (light theme: the design-canvas v2 brief palette) ──────────────
 
 const PALETTE = {
   bg: "#F4F1EA",
@@ -315,7 +315,7 @@ const styles = {
   } as const,
 } as const;
 
-// ─── Mobile @media overrides — collapse table to stacked cards under 500px ──
+// ─── Mobile @media overrides: collapse table to stacked cards under 500px ──
 
 const MOBILE_CSS = `
 @media only screen and (max-width: 500px) {
@@ -373,7 +373,7 @@ export interface DailyBriefEmailProps {
   /**
    * Absolute origin used to build links in the email (logo, methodology,
    * archive). When omitted the links go to relative paths, which Apple Mail
-   * and Gmail will silently break — supply this for production sends.
+   * and Gmail will silently break; supply this for production sends.
    */
   siteUrl?: string;
 }

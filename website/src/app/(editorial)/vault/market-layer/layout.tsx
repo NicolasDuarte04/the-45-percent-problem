@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Market Layer — Research Vault",
+  title: "Market Layer · Research Vault",
   description:
     "De-vigging, edge calculation, and the power method: how bookmaker odds become model-comparable implied probabilities.",
 };
@@ -27,7 +27,7 @@ export default function MarketLayerLayout({
     <VaultArticle
       eyebrow="§ VI · Long-form"
       title="Market Layer"
-      deck="De-vigging, edge, and the power method. How raw bookmaker decimal odds become de-vigged implied probabilities — and why the proportional method is wrong."
+      deck="De-vigging, edge, and the power method. How raw bookmaker decimal odds become de-vigged implied probabilities; and why the proportional method is wrong."
       readingTimeMinutes={8}
       lastRevised="2026-04-22"
       citation={{ apa, bibtex }}

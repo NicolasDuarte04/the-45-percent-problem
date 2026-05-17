@@ -26,7 +26,7 @@ const panels: NavPanel[] = [
     href: "/vault",
     title: "Research Vault",
     description:
-      "Phase 1 framework PDF, OSF pre-registration, model cards for M0–M★, glossary, and kill-criteria statement.",
+      "Phase 1 framework PDF, OSF pre-registration, model cards for M0. M★, glossary, and kill-criteria statement.",
     glyph: "●",
   },
   {

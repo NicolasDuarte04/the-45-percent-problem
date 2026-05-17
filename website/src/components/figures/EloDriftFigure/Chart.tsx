@@ -58,7 +58,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <div style={{ marginBottom: 4, color: "var(--text-quiet)" }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color }}>
-          {p.name}: {typeof p.value === "number" ? p.value.toFixed(0) : "—"}
+          {p.name}: {typeof p.value === "number" ? p.value.toFixed(0) : "-"}
         </div>
       ))}
     </div>

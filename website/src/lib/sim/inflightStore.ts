@@ -46,7 +46,7 @@ export function readInflight(): InflightScenario | null {
       typeof parsed?.updatedAt !== "number" ||
       parsed.scenario === undefined
     ) {
-      // Malformed payload — drop it.
+      // Malformed payload: drop it.
       window.localStorage.removeItem(INFLIGHT_KEY);
       return null;
     }
@@ -66,7 +66,7 @@ export function writeInflight(mode: Mode, scenario: unknown): void {
     const payload: InflightScenario = { mode, scenario, updatedAt: Date.now() };
     window.localStorage.setItem(INFLIGHT_KEY, JSON.stringify(payload));
   } catch {
-    /* localStorage may be full or disabled — fail silently. */
+    /* localStorage may be full or disabled; fail silently. */
   }
 }
 

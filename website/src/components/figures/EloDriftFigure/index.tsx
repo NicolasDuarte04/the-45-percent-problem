@@ -12,7 +12,7 @@ interface Props {
 }
 
 /**
- * §8.4 — EloDriftFigure.
+ * §8.4: EloDriftFigure.
  * M★ Elo for four featured teams. Shows a line chart when per-team history is
  * available; falls back to a bar chart of current values when history is empty
  * (expected during pre-tournament period).

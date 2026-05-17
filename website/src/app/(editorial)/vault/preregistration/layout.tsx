@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { VaultArticle } from "../_layouts/Article";
 
 export const metadata = {
-  title: "Pre-registration — Research Vault",
+  title: "Pre-registration · Research Vault",
   description:
     "The OSF lockdown, the signed git tag, and a plain-English account of what pre-registration commits this project to.",
 };
@@ -28,7 +28,7 @@ export default function PreregistrationLayout({
     <VaultArticle
       eyebrow="§ III · Artifact of record"
       title="Pre-registration"
-      deck="The OSF lockdown, the signed git tag, and a plain-English account of what pre-registration commits this project to — and what it does not."
+      deck="The OSF lockdown, the signed git tag, and a plain-English account of what pre-registration commits this project to; and what it does not."
       readingTimeMinutes={9}
       lastRevised="2026-04-22"
       doi="10.17605/OSF.IO/8B5HD"
@@ -43,7 +43,7 @@ export default function PreregistrationLayout({
         {
           href: "/vault/models",
           title: "Model anatomy",
-          blurb: "M0 through M★ — what each model is and why it was included.",
+          blurb: "M0 through M★: what each model is and why it was included.",
         },
       ]}
     >

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Hero number + denominator + rarity band + 1-in-N — the "Reality Score"
+ * Hero number + denominator + rarity band + 1-in-N; the "Reality Score"
  * presentation per design v2 §3 + Patch v2.1 §3.
  *
  * The hero number is monospace with tabular figures so columns of digits
@@ -17,7 +17,7 @@
  *
  * Per Patch v2.1 §3, the rarity band and 1-in-N are NOT rendered by
  * caller code while the user is mid-build (only after submit). This
- * component itself does not enforce that — the parent decides whether
+ * component itself does not enforce that; the parent decides whether
  * to mount it.
  *
  * MOTION_SPEC.md §1: the hero string is driven through useDecryptValue
@@ -71,7 +71,7 @@ export function RealityScorePanel({
   const isDead = state === "dead";
   const isPromoted = state === "promoted";
 
-  // MOTION_SPEC.md §1 — decrypt the hero string. The promoted-state "▲ "
+  // MOTION_SPEC.md §1: decrypt the hero string. The promoted-state "▲ "
   // prefix and the "%" suffix are non-digit characters and will be held
   // steady through every frame; only the digits cycle.
   const heroFinal = `${isPromoted ? "▲ " : ""}${formatPercent(count, total)}`;
@@ -94,7 +94,7 @@ export function RealityScorePanel({
         Reality Score
       </div>
 
-      {/* Peach scanline — the 45analytics signature accent (VIRAL_LOOP §3.1.B).
+      {/* Peach scanline: the 45analytics signature accent (VIRAL_LOOP §3.1.B).
           64px wide, 1px tall, --state-promoted. Repeats the OG image's
           vertical rule so the on-page surface and the export read as one
           artifact. Suppressed on dead state, no animation, no glow. */}
@@ -110,7 +110,7 @@ export function RealityScorePanel({
           unit on the OG export, but the on-page hero still leads with it
           since the live result screen has more room to land hard.
           Strikethrough is a 1px diagonal rule rendered via inline gradient
-          for the DEAD state — sharp, no fuzzy outline. */}
+          for the DEAD state: sharp, no fuzzy outline. */}
       <div className="mt-4 relative inline-block">
         <span
           className={`font-mono tabular-nums text-[48px] leading-[1] sm:text-[88px] ${
@@ -127,14 +127,14 @@ export function RealityScorePanel({
         ) : null}
       </div>
 
-      {/* Denominator. Always renders — the anti-casino discipline.
+      {/* Denominator. Always renders: the anti-casino discipline.
           §3.1.A keeps the denominator at --text-tertiary; only the
           provenance lines below drop further to --text-quiet. */}
       <div className="mt-2 font-mono text-[14px] tabular-nums text-[var(--text-tertiary)]">
         {count.toLocaleString("en-US")} / {total.toLocaleString("en-US")} simulations
       </div>
 
-      {/* Rarity band — serif label + sans tone caption + optional
+      {/* Rarity band: serif label + sans tone caption + optional
           resolution-floor caveat. Reveal class fades the whole group
           starting at t=100ms per IMPL_PROMPT §9. CSS-only animation,
           see globals.css; reduced-motion is handled there. */}
@@ -153,8 +153,8 @@ export function RealityScorePanel({
         ) : null}
       </div>
 
-      {/* 1-in-N translator — the bridge from percentage to a frame any
-          human can hold. Reveals at t=200ms. Phase E §9 (E.2) + Q3 —
+      {/* 1-in-N translator: the bridge from percentage to a frame any
+          human can hold. Reveals at t=200ms. Phase E §9 (E.2) + Q3: 
           when oneInNTarget is provided, the integer counts up from
           1 → final over 700ms cubic-out; otherwise the static
           sentence renders unchanged. */}

@@ -63,7 +63,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <div style={{ color: "var(--text-quiet)", marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color }}>
-          {p.name}: {typeof p.value === "number" ? `${(p.value * 100).toFixed(2)}%` : "—"}
+          {p.name}: {typeof p.value === "number" ? `${(p.value * 100).toFixed(2)}%` : "-"}
         </div>
       ))}
       {pt?.gateTripped ? (

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * AccentPulse — Phase E §8 (D.3).
+ * AccentPulse · Phase E §8 (D.3).
  *
  * One-shot 250ms warm-tint pulse: an absolutely positioned overlay
  * that fades from ~8% `--accent-warm` fill to 0 over the duration.
@@ -14,7 +14,7 @@
  * advance), bump the trigger via `setPulseKey(k => k + 1)`.
  *
  * Reduced motion: useReducedMotionAware collapses the transition to
- * 0ms so the overlay flashes for one frame and clears — visually
+ * 0ms so the overlay flashes for one frame and clears; visually
  * indistinguishable from no pulse but preserves the same render
  * surface.
  */
@@ -29,7 +29,7 @@ interface AccentPulseProps {
    */
   triggerKey: number;
   /**
-   * Mission 3 — semantic tone. `warm` (default) keeps the original
+   * Mission 3: semantic tone. `warm` (default) keeps the original
    * accent-warm tint used for slot drops and pick landings. `success`
    * routes through `--ui-success` for "this group is now complete"
    * moments per the rebind table. Tone is per-call so existing

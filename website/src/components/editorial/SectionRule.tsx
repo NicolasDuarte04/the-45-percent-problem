@@ -1,5 +1,5 @@
 /**
- * §2.8 — centered · · · ornament rendered between H2 breaks on editorial
+ * §2.8: centered · · · ornament rendered between H2 breaks on editorial
  * surfaces. Decorative only.
  */
 export function SectionRule() {

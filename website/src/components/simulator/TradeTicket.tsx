@@ -4,7 +4,7 @@
  * Brutalist receipt aesthetic: single 1px border, sharp corners
  * (--radius: 0 from the simulator canvas), dense vertical stack.
  * No drop shadow, no rounded corners, no gradient. The ticket IS
- * the page's main visual surface on the permalink — story line at
+ * the page's main visual surface on the permalink; story line at
  * the top, score block, scenario block, ID strip, watermark at
  * the bottom-right. Hairline rules separate the four internal
  * sections so the visual hierarchy reads even at a glance.
@@ -45,7 +45,7 @@ import type {
 interface TradeTicketProps {
   view: PublicPredictionView;
   /**
-   * VIRAL_LOOP §3.1.D — when true, the ticket renders only the scenario
+   * VIRAL_LOOP §3.1.D: when true, the ticket renders only the scenario
    * detail block, the prediction-ID strip, and the provenance footer;
    * the flag tile, story line, and Reality Score block are omitted
    * because the parent has lifted them above the share / alert strip
@@ -119,7 +119,7 @@ export function TradeTicket({ view, compact = false }: TradeTicketProps) {
         </>
       ) : null}
 
-      {/* Scenario block — mode-specific compact mono listing. Reveals
+      {/* Scenario block: mode-specific compact mono listing. Reveals
           at t=400ms with .reveal-ticket per IMPL_PROMPT §9. The leading
           rule + spacing only apply when the panel sits beneath the
           Reality Score block; in compact mode the scenario IS the
@@ -138,7 +138,7 @@ export function TradeTicket({ view, compact = false }: TradeTicketProps) {
         <ScenarioBlock mode={view.mode} scenario={view.scenario} />
       </section>
 
-      {/* Prediction ID strip — design v1 §4.1. §3.1.A reclassifies the
+      {/* Prediction ID strip: design v1 §4.1. §3.1.A reclassifies the
           ID hex from --text-tertiary to --text-quiet so the page hero
           gains visual weight without growing. */}
       <section

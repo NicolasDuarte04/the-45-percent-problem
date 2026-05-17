@@ -1,11 +1,11 @@
 import katex from "katex";
 
 /**
- * §12.8 — Server-side KaTeX rendering components.
+ * §12.8: Server-side KaTeX rendering components.
  *
  * These exist because the Rust mdxRs compiler (required while the project
  * directory contains a `%` in its name) cannot process the standard
- * remark-math `$...$` / `$$...$$` syntax — LaTeX curly braces conflict with
+ * remark-math `$...$` / `$$...$$` syntax. LaTeX curly braces conflict with
  * MDX JSX expression delimiters. Instead, math in vault MDX files is written
  * as <InlineMath math="..." /> and <BlockMath math="..." />.
  *

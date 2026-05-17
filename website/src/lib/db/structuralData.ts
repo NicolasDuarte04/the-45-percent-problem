@@ -4,7 +4,7 @@
  * Production read path for tournament STRUCTURE: which 48 teams are in
  * the tournament, which 12 groups they sit in, and which 104 matchups
  * they will play. Per the May 2026 mandate this is the only path frontend
- * code is allowed to take for that data — no hardcoded pairings.
+ * code is allowed to take for that data; no hardcoded pairings.
  *
  * Strategy:
  *   1. If DATABASE_URL is set, read from Postgres via Drizzle (the SoT).
@@ -186,7 +186,7 @@ export async function lookupMatch(
 
 /** Helper: get the venue map (used to render kickoff cards). */
 export function getStructuralVenues() {
-  // Venues are immutable static data — always source from TS module.
+  // Venues are immutable static data; always source from TS module.
   return TS_VENUES;
 }
 

@@ -1,5 +1,5 @@
 /**
- * Next.js metadata route — §10.3 SEO.
+ * Next.js metadata route. §10.3 SEO.
  * Generates /sitemap.xml at build time.
  */
 import type { MetadataRoute } from "next";
@@ -12,7 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const now = new Date();
 
-  // Static routes — full priority ordering per §3 sitemap
+  // Static routes: full priority ordering per §3 sitemap
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: base,
@@ -130,7 +130,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Snapshot manifest — used for audit trail, lower priority
+  // Snapshot manifest: used for audit trail, lower priority
   let manifestEntries: MetadataRoute.Sitemap = [];
   try {
     const manifest = loadManifest();
@@ -141,7 +141,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     }));
   } catch {
-    // Manifest unavailable at build — skip dynamic snapshot entries
+    // Manifest unavailable at build: skip dynamic snapshot entries
   }
 
   return [...staticRoutes, ...manifestEntries];
