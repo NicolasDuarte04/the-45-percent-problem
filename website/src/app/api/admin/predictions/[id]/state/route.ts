@@ -3,9 +3,10 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
-import { predictions } from "@/lib/db/schema";
+import { predictions, predictionStateLog } from "@/lib/db/schema";
 import { isValidPredictionId } from "@/lib/sim/generatePredictionId";
 import { toPublicPredictionView } from "@/lib/sim/predictionViews";
+import { EVALUATOR_VERSION } from "@/lib/sim/predictionEvaluator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,6 +80,20 @@ export async function POST(
   }
   const { state, killedBy } = parsed.data;
 
+  // Read the current row first so we can record the previous state in the
+  // audit log. The audit log is populated by both this manual route and
+  // the automated evaluator path; manual transitions land with a null
+  // triggeredByMatchId since they are not tied to a specific match.
+  const existing = await db
+    .select()
+    .from(predictions)
+    .where(eq(predictions.id, id))
+    .limit(1);
+  const current = existing[0];
+  if (!current) {
+    return jsonError("notFound", 404);
+  }
+
   const now = new Date();
   const result = await db
     .update(predictions)
@@ -96,6 +111,25 @@ export async function POST(
   const row = result[0];
   if (!row) {
     return jsonError("notFound", 404);
+  }
+
+  // Audit-log the manual transition when the state actually changed.
+  // No-op transitions (admin re-applying the same state) do not produce
+  // a log row, mirroring the evaluator's idempotency contract.
+  if (current.state !== state) {
+    await db.insert(predictionStateLog).values({
+      predictionId: id,
+      previousState: current.state,
+      newState: state,
+      previousCountCurrent: current.countCurrent,
+      newCountCurrent: current.countCurrent,
+      triggeredByMatchId: null,
+      reason:
+        state === "dead"
+          ? `Manual admin transition. ${killedBy ?? "no reason recorded"}`
+          : "Manual admin transition.",
+      evaluatorVersion: EVALUATOR_VERSION,
+    });
   }
 
   return NextResponse.json({ ok: true, prediction: toPublicPredictionView(row) });

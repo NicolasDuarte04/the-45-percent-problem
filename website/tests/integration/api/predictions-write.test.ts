@@ -231,7 +231,9 @@ describe("POST /api/admin/predictions/[id]/state", () => {
   }
 
   it("updates a prediction's state with a valid Bearer token (200)", async () => {
+    const existing = samplePredictionRow({ id: VALID_ID, state: "alive" });
     const updated = samplePredictionRow({ id: VALID_ID, state: "promoted" });
+    mockDb.select.mockReturnValue(chainMock([existing]));
     mockDb.update.mockReturnValue(chainMock([updated]));
 
     const req = jsonPostRequest({
@@ -246,6 +248,25 @@ describe("POST /api/admin/predictions/[id]/state", () => {
     expect(json.prediction.state).toBe("promoted");
     expect(json.prediction).not.toHaveProperty("email");
     expect(json.prediction).not.toHaveProperty("subscriberId");
+    // Audit-log row written for the alive -> promoted transition.
+    expect(mockDb.insert).toHaveBeenCalled();
+  });
+
+  it("does not write an audit-log row when state is unchanged (no-op)", async () => {
+    const existing = samplePredictionRow({ id: VALID_ID, state: "alive" });
+    const updated = samplePredictionRow({ id: VALID_ID, state: "alive" });
+    mockDb.select.mockReturnValue(chainMock([existing]));
+    mockDb.update.mockReturnValue(chainMock([updated]));
+
+    const req = jsonPostRequest({
+      url: `http://localhost/api/admin/predictions/${VALID_ID}/state`,
+      body: { state: "alive" },
+      headers: { authorization: `Bearer ${VALID_TOKEN}` },
+    });
+    const res = await PostAdminState(req as never, adminCtx(VALID_ID));
+
+    expect(res.status).toBe(200);
+    expect(mockDb.insert).not.toHaveBeenCalled();
   });
 
   it("rejects a missing Authorization header (401)", async () => {

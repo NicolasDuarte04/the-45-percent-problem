@@ -236,3 +236,89 @@ export const predictions = pgTable(
 
 export type Prediction = typeof predictions.$inferSelect;
 export type NewPrediction = typeof predictions.$inferInsert;
+
+// ─── Phase B Foundation (Checkpoint 13) ─────────────────────────────────────
+//
+// match_outcomes is the website's source-of-truth for settled WC 2026
+// matches. Admin entry only in Phase B; live ingestion ships in Checkpoint
+// 15. The prediction evaluator reads from this table to decide state
+// transitions.
+//
+// prediction_state_log is an append-only audit trail of every transition.
+// Calibration emails (Checkpoint 14) will query this table grouped by
+// subscriber. Manual admin state changes and automated cron evaluations
+// both write here, so the audit log is the union of all transitions
+// regardless of trigger.
+
+export const matchOutcomes = pgTable(
+  "match_outcomes",
+  {
+    /** Match identifier (e.g. "M01", "R32_M1"). Matches the schema used
+     * by the matches table and downstream evaluation logic. */
+    matchId: text("match_id").primaryKey(),
+    competition: text("competition").notNull(),
+    stage: text("stage", {
+      enum: ["group", "r32", "r16", "qf", "sf", "final"],
+    }).notNull(),
+    homeTeam: varchar("home_team", { length: 3 }).notNull(),
+    awayTeam: varchar("away_team", { length: 3 }).notNull(),
+    homeGoals: integer("home_goals").notNull(),
+    awayGoals: integer("away_goals").notNull(),
+    /** FIFA code of the shootout winner if penalties decided the match. */
+    shootoutWinner: varchar("shootout_winner", { length: 3 }),
+    settledAt: timestamp("settled_at", { withTimezone: true }).notNull(),
+    enteredAt: timestamp("entered_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    enteredBy: text("entered_by").notNull(),
+    meta: jsonb("meta").default(sql`'{}'::jsonb`),
+  },
+  (t) => [
+    index("idx_match_outcomes_stage").on(t.stage),
+    index("idx_match_outcomes_settled_at").on(t.settledAt),
+    check(
+      "match_outcomes_goals_non_negative",
+      sql`${t.homeGoals} >= 0 AND ${t.awayGoals} >= 0`,
+    ),
+  ],
+);
+
+export const predictionStateLog = pgTable(
+  "prediction_state_log",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    predictionId: text("prediction_id")
+      .notNull()
+      .references(() => predictions.id, { onDelete: "cascade" }),
+    previousState: text("previous_state", {
+      enum: ["alive", "dead", "promoted"],
+    }).notNull(),
+    newState: text("new_state", {
+      enum: ["alive", "dead", "promoted"],
+    }).notNull(),
+    previousCountCurrent: integer("previous_count_current").notNull(),
+    newCountCurrent: integer("new_count_current").notNull(),
+    /** Nullable for daily reconciliation runs and for manual admin
+     * transitions that are not triggered by a specific settled match. */
+    triggeredByMatchId: text("triggered_by_match_id").references(
+      () => matchOutcomes.matchId,
+    ),
+    reason: text("reason").notNull(),
+    evaluatedAt: timestamp("evaluated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    evaluatorVersion: text("evaluator_version").notNull(),
+  },
+  (t) => [
+    index("idx_prediction_state_log_prediction").on(t.predictionId),
+    index("idx_prediction_state_log_evaluated_at").on(
+      sql`${t.evaluatedAt} DESC`,
+    ),
+  ],
+);
+
+export type MatchOutcome = typeof matchOutcomes.$inferSelect;
+export type NewMatchOutcome = typeof matchOutcomes.$inferInsert;
+export type PredictionStateLogEntry = typeof predictionStateLog.$inferSelect;
+export type NewPredictionStateLogEntry =
+  typeof predictionStateLog.$inferInsert;
