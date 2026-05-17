@@ -57,7 +57,17 @@ export const sendLog = pgTable(
     subscriberId: uuid("subscriber_id")
       .notNull()
       .references(() => subscribers.id),
-    briefDate: date("brief_date").notNull(),
+    // 'brief' for the daily brief, 'calibration_digest' for the
+    // per-match-day prediction-state digest. Default 'brief' keeps the
+    // migration forward-compatible: pre-existing rows are brief sends.
+    eventType: text("event_type").notNull().default("brief"),
+    // Only set when eventType === 'brief'. Nullable as of the calibration
+    // digest migration so non-brief sends can use digestDate instead.
+    briefDate: date("brief_date"),
+    // Only set when eventType === 'calibration_digest'. Used by the
+    // dispatcher's idempotency check to skip subscribers who already
+    // received today's digest.
+    digestDate: date("digest_date"),
     messageId: text("message_id"),
     status: text("status").notNull(),
     sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
@@ -71,6 +81,11 @@ export const sendLog = pgTable(
   (t) => [
     index("idx_send_log_subscriber").on(t.subscriberId),
     index("idx_send_log_brief_date").on(t.briefDate),
+    index("idx_send_log_event_subscriber_digest").on(
+      t.eventType,
+      t.subscriberId,
+      t.digestDate,
+    ),
   ],
 );
 

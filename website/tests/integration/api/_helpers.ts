@@ -32,6 +32,8 @@ export function chainMock(result: unknown): any {
   const chain: Record<string, unknown> = {};
   chain.from = () => chain;
   chain.where = () => chain;
+  chain.innerJoin = () => chain;
+  chain.leftJoin = () => chain;
   chain.set = () => chain;
   chain.values = () => chain;
   chain.limit = () => chain;
