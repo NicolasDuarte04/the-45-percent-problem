@@ -37,6 +37,8 @@ export function chainMock(result: unknown): any {
   chain.limit = () => chain;
   chain.orderBy = () => chain;
   chain.returning = () => chain;
+  chain.onConflictDoUpdate = () => chain;
+  chain.onConflictDoNothing = () => chain;
   chain.then = (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
     Promise.resolve(result).then(resolve, reject);
   chain.catch = (reject: (e: unknown) => unknown) => Promise.resolve(result).catch(reject);
