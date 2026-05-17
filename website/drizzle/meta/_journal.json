@@ -29,6 +29,13 @@
       "when": 1779056909691,
       "tag": "0003_long_fabian_cortez",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779058993179,
+      "tag": "0004_calibration_digest_send_log",
+      "breakpoints": true
     }
   ]
 }

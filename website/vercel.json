@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/eval-predictions",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/calibration-digest",
+      "schedule": "5 6 * * *"
     }
   ]
 }
