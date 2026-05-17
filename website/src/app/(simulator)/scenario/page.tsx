@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BrowseRaritiesStrip } from "@/components/simulator/explore/BrowseRaritiesStrip";
 import { LandingHero } from "@/components/simulator/LandingHero";
 import { ModeSelectorCards } from "@/components/simulator/ModeSelectorCards";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
@@ -94,6 +95,7 @@ export default async function ScenarioLandingPage({ searchParams }: PageProps) {
     <SimulatorChrome width="narrow">
       <LandingHero />
       <ModeSelectorCards />
+      <BrowseRaritiesStrip />
       <SimulatorTrailer />
       <TeamGrid />
     </SimulatorChrome>

@@ -7,9 +7,33 @@ import { getPromoCard } from "@/lib/sim/promoCards";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { getOneInN } from "@/lib/sim/getOneInN";
+import { COUNTRY_NAMES } from "@/lib/flags/countries";
+import type { TeamCode } from "@/lib/sim/types";
 
 interface PageProps {
-  searchParams: Promise<{ card?: string }>;
+  searchParams: Promise<{ card?: string; teams?: string }>;
+}
+
+/**
+ * Parse a `?teams=ESP,FRA,ARG,BRA` query into a validated TeamCode[4].
+ * Returns null if the parameter is absent, malformed, includes an unknown
+ * code, or does not name exactly four distinct teams. Codes are
+ * upper-cased defensively before validation.
+ */
+function parseTeamsParam(raw: string | undefined): TeamCode[] | null {
+  if (!raw) return null;
+  const codes = raw
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  if (codes.length !== 4) return null;
+  if (new Set(codes).size !== 4) return null;
+  const known = COUNTRY_NAMES as Record<string, string>;
+  for (const c of codes) {
+    if (!/^[A-Z]{3}$/.test(c)) return null;
+    if (!known[c]) return null;
+  }
+  return codes as TeamCode[];
 }
 
 /**
@@ -74,7 +98,7 @@ export async function generateMetadata({
 }
 
 export default async function FinalFourPage({ searchParams }: PageProps) {
-  const { card: slug } = await searchParams;
+  const { card: slug, teams: teamsParam } = await searchParams;
   const modelSha = process.env.MODEL_SHA ?? "phaseA-mock";
   const snapshotSha = process.env.SNAPSHOT_SHA ?? "phaseA-mock";
 
@@ -85,7 +109,15 @@ export default async function FinalFourPage({ searchParams }: PageProps) {
     modalSemifinalists = [];
   }
 
+  // `?card=` takes priority over `?teams=` when both are present, so the
+  // curated promo OG / unfurl is preserved. `?teams=` is the explore-page
+  // hand-off (Checkpoint 11, P2.2); it pre-fills the same slot row but
+  // does not set a promoSlug, so the generic Final Four OG renders.
   const promo = slug ? getPromoCard(slug) : null;
+  const teamsPreset = promo ? null : parseTeamsParam(teamsParam);
+  const initialScenario = promo
+    ? promo.semifinalists
+    : (teamsPreset ?? undefined);
 
   return (
     <SimulatorChrome width="narrow">
@@ -93,7 +125,7 @@ export default async function FinalFourPage({ searchParams }: PageProps) {
         modelSha={modelSha}
         snapshotSha={snapshotSha}
         modalSemifinalists={modalSemifinalists}
-        initialScenario={promo ? promo.semifinalists : undefined}
+        initialScenario={initialScenario}
         promoSlug={promo ? promo.slug : undefined}
       />
     </SimulatorChrome>

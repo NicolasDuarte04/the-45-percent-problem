@@ -44,6 +44,15 @@ interface EventMap {
   // Forecast Desk. Deduped via `claimDeskViewed`. The unauthenticated
   // empty state must not emit this event.
   desk_viewed: undefined;
+  // Fires every time the user clicks a band button on /scenario/explore
+  // (Checkpoint 11, P2.2). No dedup: each click is the exploration-depth
+  // signal we want to measure.
+  explore_band_selected: { band: RarityBand };
+  // Fires when the user clicks a scenario card's "Try this scenario"
+  // link on /scenario/explore. `teams` is the comma-separated team
+  // code list (e.g. "ARG,BRA,ESP,FRA") so downstream analytics can
+  // join clicks to the canonical scenario.
+  explore_card_clicked: { band: RarityBand; teams: string };
 }
 
 declare global {
