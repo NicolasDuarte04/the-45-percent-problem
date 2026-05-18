@@ -162,36 +162,57 @@ export async function dispatchCalibrationDigests(
   let skippedCount = 0;
   let failureCount = 0;
 
-  for (const bundle of bySubscriber.values()) {
-    const alreadySent = await hasAlreadyReceivedDigest({
-      subscriberId: bundle.subscriberId,
-      digestDate: args.digestDate,
-    });
-    if (alreadySent) {
-      skippedCount += 1;
-      continue;
-    }
+  // Bounded-concurrency send loop (Checkpoint 16). The prior shape
+  // awaited each bundle in series; for ~100 subscribers that produced
+  // ~100 serial idempotency checks plus ~100 serial Resend round-trips,
+  // easily measured in tens of seconds. With a small concurrency cap
+  // we get most of the parallelism win without flooding Resend or
+  // hammering the per-subscriber rate limit. The cap stays small
+  // because the per-send work talks to two external services
+  // (Postgres + Resend) on Vercel free-tier headroom.
+  const SEND_CONCURRENCY = 5;
+  const bundles = Array.from(bySubscriber.values());
+  let cursor = 0;
 
-    try {
-      const result = await sendCalibrationDigest({
-        to: bundle.email,
+  async function worker(): Promise<void> {
+    while (true) {
+      const myIndex = cursor++;
+      if (myIndex >= bundles.length) return;
+      const bundle = bundles[myIndex];
+      const alreadySent = await hasAlreadyReceivedDigest({
         subscriberId: bundle.subscriberId,
         digestDate: args.digestDate,
-        transitions: bundle.transitions,
       });
-      if (result.kind === "sent") {
-        dispatchedCount += 1;
-      } else {
+      if (alreadySent) {
         skippedCount += 1;
+        continue;
       }
-    } catch (err) {
-      console.error(
-        `[calibrationDispatcher] send failed for subscriber ${bundle.subscriberId}`,
-        err,
-      );
-      failureCount += 1;
+      try {
+        const result = await sendCalibrationDigest({
+          to: bundle.email,
+          subscriberId: bundle.subscriberId,
+          digestDate: args.digestDate,
+          transitions: bundle.transitions,
+        });
+        if (result.kind === "sent") {
+          dispatchedCount += 1;
+        } else {
+          skippedCount += 1;
+        }
+      } catch (err) {
+        console.error(
+          `[calibrationDispatcher] send failed for subscriber ${bundle.subscriberId}`,
+          err,
+        );
+        failureCount += 1;
+      }
     }
   }
+
+  const workerCount = Math.min(SEND_CONCURRENCY, bundles.length);
+  await Promise.all(
+    Array.from({ length: workerCount }, () => worker()),
+  );
 
   return { dispatchedCount, skippedCount, failureCount };
 }

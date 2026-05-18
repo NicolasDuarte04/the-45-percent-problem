@@ -25,6 +25,40 @@ import createMDX from "@next/mdx";
  */
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  // Checkpoint 16: edge-cache the home and bracket responses for short
+  // windows. Both pages are dynamic (they await searchParams to read the
+  // snapshot picker query), so the platform cannot statically prerender
+  // them, but the request itself is overwhelmingly the default
+  // no-query-string variant. Setting s-maxage lets the Vercel CDN serve
+  // a cached HTML for the default view for up to 5 minutes and serve
+  // stale content for another 10 minutes while a background revalidation
+  // refreshes the cache. Snapshot deep-links cache under their own URL
+  // and are similarly cheap. The Plausible script tag is unaffected and
+  // hot-loads regardless, so per-user analytics still fire on every view.
+  async headers() {
+    return [
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value:
+              "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/bracket",
+        headers: [
+          {
+            key: "Cache-Control",
+            value:
+              "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 const withMDX = createMDX({

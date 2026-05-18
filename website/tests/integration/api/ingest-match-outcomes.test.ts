@@ -80,9 +80,11 @@ describe("POST /api/ingest/match-outcomes", () => {
     expect(json.ok).toBe(true);
     expect(json.accepted).toBe(2);
     expect(json.transitionsCount).toBe(0);
-    // Two upserts (one per outcome). No prediction-state-log insert
-    // since there are no candidate predictions.
-    expect(mockDb.insert).toHaveBeenCalledTimes(2);
+    // One batched upsert covering both outcomes (Checkpoint 16: the
+    // per-outcome loop became a single multi-row INSERT). No
+    // prediction-state-log insert since there are no candidate
+    // predictions.
+    expect(mockDb.insert).toHaveBeenCalledTimes(1);
   });
 
   it("rejects an empty outcomes array (400)", async () => {

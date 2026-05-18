@@ -22,7 +22,11 @@ const sourceSerif4 = Source_Serif_4({
   variable: "--font-source-serif-4",
   subsets: ["latin"],
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  // Checkpoint 16: weights 300 and 700 were preloaded but no rule in
+  // globals.css and no inline style ever requests them. Source Serif 4
+  // weights actually in use are 400 (body/headings), 500 (subheads,
+  // emphasised links), and 600 (a single .vault-prose heading rule).
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
