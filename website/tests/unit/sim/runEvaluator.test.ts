@@ -40,14 +40,18 @@ vi.mock("@/lib/sim/predictionEvaluator", () => ({
 import { db } from "@/lib/db";
 import { runEvaluatorAcrossPredictions } from "@/lib/sim/runEvaluator";
 
+// Duck-typed mimic of the drizzle query chain. Same escape hatch as
+// the integration-test _helpers (the typed builders are too narrow to
+// satisfy structurally; the runtime contract is what we test).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function chain(result: any) {
+function chain(result: unknown): any {
   const c: Record<string, unknown> = {};
   c.from = () => c;
   c.where = () => c;
   c.set = () => c;
   c.values = () => c;
-  c.then = (resolve: (v: unknown) => unknown) => Promise.resolve(resolve(result));
+  c.then = (resolve: (v: unknown) => unknown) =>
+    Promise.resolve(resolve(result));
   return c;
 }
 
