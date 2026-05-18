@@ -1,6 +1,5 @@
 import { EditorialMasthead } from "@/components/layout/EditorialMasthead";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { getOperatorSession } from "@/lib/sim/getOperatorSession";
 
 /**
  * Route-group layout for the Tournament Scenario Simulator.
@@ -13,17 +12,19 @@ import { getOperatorSession } from "@/lib/sim/getOperatorSession";
  * The masthead and footer are reused from the existing site chrome.
  * The simulator is a sibling route group to (editorial) and (quant),
  * not a parallel app.
+ *
+ * Checkpoint 17 follow-up: operator detection moved to the masthead
+ * client island via /api/me/session-status. See
+ * src/app/(editorial)/layout.tsx for rationale.
  */
-export default async function SimulatorLayout({
+export default function SimulatorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const operator = await getOperatorSession();
-
   return (
     <div data-canvas="simulator">
-      <EditorialMasthead isOperator={operator !== null} />
+      <EditorialMasthead />
       <main className="flex-1 w-full">{children}</main>
       <SiteFooter />
     </div>
