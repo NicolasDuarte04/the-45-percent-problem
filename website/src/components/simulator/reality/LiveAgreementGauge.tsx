@@ -12,11 +12,13 @@
  *
  * Phase E motion (§5.4):
  *   - When `isComplete` flips false → true, the active segment fills
- *     using the `gaugeFill` preset (450ms). Other segments stay outline.
+ *     using a 450ms CSS transition (.ck17-gauge-fill). Other segments
+ *     stay outline. Checkpoint 17 (B1) moved this off Framer Motion.
  *   - The viral hook label crossfades on change using the `micro`
- *     preset via <AnimatePresence mode="wait">.
- *   - Reduced motion: useReducedMotionAware collapses both transitions
- *     to instant snap.
+ *     preset via <AnimatePresence mode="wait">. Kept on Framer Motion
+ *     because the mode="wait" coordinator has no clean CSS equivalent.
+ *   - Reduced motion: CSS @media collapses the fill transition to
+ *     instant; useReducedMotionAware still flattens the crossfade.
  *
  * Performance: primitive props only so React.memo stays effective.
  * Score recompute happens in the caller on drop, not on drag-over.
@@ -72,7 +74,6 @@ function LiveAgreementGaugeImpl({
   const hook = isComplete ? getLiveHook(count, total) : null;
   const percent = isComplete ? formatLivePercent(count, total) : null;
 
-  const gaugeFillTransition = useReducedMotionAware("gaugeFill");
   const microTransition = useReducedMotionAware("micro");
 
   return (
@@ -107,16 +108,14 @@ function LiveAgreementGaugeImpl({
                   : "border-[var(--text-primary)]",
               ].join(" ")}
             >
-              <motion.span
+              <span
                 aria-hidden="true"
                 // Phase E §8 (D.3): active segment fills with the
                 // accent-warm beacon, replacing the prior text-primary
-                // bone fill.
-                className="absolute inset-0 bg-[var(--accent-warm)]"
-                initial={false}
-                animate={{ opacity: active ? 1 : 0, scaleX: active ? 1 : 0 }}
-                style={{ transformOrigin: "left center" }}
-                transition={gaugeFillTransition}
+                // bone fill. Checkpoint 17 (B1): CSS-only fill via
+                // ck17-gauge-fill toggled by data-active.
+                data-active={active ? "true" : "false"}
+                className="ck17-gauge-fill absolute inset-0 bg-[var(--accent-warm)]"
               />
             </li>
           );

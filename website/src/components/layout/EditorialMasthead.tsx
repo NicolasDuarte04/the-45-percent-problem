@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface Tab {
   id: string;
@@ -77,20 +78,51 @@ function isTerminalRoute(pathname: string): boolean {
 
 interface EditorialMastheadProps {
   /**
-   * When true, render an additional `Desk` nav tab pointing at /me.
-   * The flag is resolved server-side from the signed `45a:sim:owner`
-   * cookie inside each route-group layout (Pattern A in the spec).
-   * Defaults to false so server callers that have not been migrated
-   * yet still render correctly.
+   * Initial value for the `Desk` tab visibility on first paint. Server
+   * callers can pass `false` (the new default after Checkpoint 17) and
+   * let the client island below promote the flag on hydration once the
+   * /api/me/session-status check resolves.
+   *
+   * Kept on the public interface so a caller that already knows the
+   * operator state server-side (e.g. /me itself, which is force-dynamic
+   * and reads cookies directly) can avoid the round trip.
    */
   isOperator?: boolean;
 }
 
 export function EditorialMasthead({
-  isOperator = false,
+  isOperator: initialIsOperator = false,
 }: EditorialMastheadProps = {}) {
   const pathname = usePathname() ?? "/";
   const onTerminal = isTerminalRoute(pathname);
+
+  // Checkpoint 17 follow-up: read operator state on the client so the
+  // Desk tab survives static prerendering. Pages under (editorial),
+  // (quant), and (simulator) layouts no longer read the cookie at the
+  // layout level, so the prerendered HTML always omits the Desk tab.
+  // On hydration we hit /api/me/session-status (no-store, ~10 ms in
+  // production) and promote the flag in place. For non-operators the
+  // fetch is a no-op; for operators the Desk tab appears as soon as
+  // the response lands.
+  const [isOperator, setIsOperator] = useState(initialIsOperator);
+  useEffect(() => {
+    if (initialIsOperator) return;
+    let cancelled = false;
+    fetch("/api/me/session-status", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (cancelled || !body) return;
+        if (body.isOperator === true) setIsOperator(true);
+      })
+      .catch(() => {
+        // Silent: the worst case is the Desk tab is hidden on this
+        // visit; the user can still type /me directly if they know it.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialIsOperator]);
+
   const tabs = isOperator ? [...TABS, DESK_TAB] : TABS;
 
   return (

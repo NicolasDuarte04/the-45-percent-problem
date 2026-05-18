@@ -1,19 +1,20 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
-import { claimDeskViewed, track } from "@/lib/analytics/track";
 import { getOneInN } from "@/lib/sim/getOneInN";
 import type { OwnerPredictionView } from "@/lib/sim/predictionViews";
 import type { Mode, PredictionState } from "@/lib/sim/types";
 
-/** Mask an email for the operator eyebrow. Returns `n***@gmail.com`
- *  shape: first character of the local part, three asterisks, then the
- *  full domain. Empty input falls back to `your inbox` so the eyebrow
- *  never reads `***@`. This is intentionally distinct from the
- *  `emailHint` helper inside PredictionAlertConfigurator, which only
- *  truncates length; the operator eyebrow needs an actual mask. */
+import { ClearOperatorSessionLink } from "./ClearOperatorSessionLink";
+import { DeskViewedBeacon } from "./DeskViewedBeacon";
+
+// Checkpoint 17 (A2): ForecastDesk is server-rendered. The chrome,
+// table head, table body rows, and empty-state copy ship as HTML.
+// Two tiny client islands carry the only interactive responsibilities:
+// DeskViewedBeacon fires the once-per-session `desk_viewed` analytics
+// event, and ClearOperatorSessionLink hosts the
+// [ Clear operator session ] button. The row hover affordance is
+// pure CSS (group-hover) so the table body needs no client JS.
+
 function maskEmail(value: string | null | undefined): string {
   if (!value) return "your inbox";
   const v = value.trim().toLowerCase();
@@ -48,23 +49,12 @@ interface ForecastDeskProps {
 }
 
 export function ForecastDesk({ email, predictions }: ForecastDeskProps) {
-  // Fire desk_viewed once per session for cookie-valid loads. The /me
-  // page never renders this component for unauthenticated visitors, so
-  // any mount of ForecastDesk is by definition cookie-valid.
-  const fired = useRef(false);
-  useEffect(() => {
-    if (fired.current) return;
-    fired.current = true;
-    if (claimDeskViewed()) {
-      track("desk_viewed");
-    }
-  }, []);
-
   const masked = maskEmail(email);
   const count = predictions.length;
 
   return (
     <section aria-labelledby="desk-heading" className="mt-8 mb-12">
+      <DeskViewedBeacon />
       <p
         className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]"
       >
@@ -83,7 +73,7 @@ export function ForecastDesk({ email, predictions }: ForecastDeskProps) {
         <ForecastTable predictions={predictions} />
       )}
 
-      <ClearSessionLink />
+      <ClearOperatorSessionLink />
     </section>
   );
 }
@@ -145,7 +135,6 @@ function Th({
 }
 
 function ForecastRow({ prediction }: { prediction: OwnerPredictionView }) {
-  const [hovered, setHovered] = useState(false);
   const state = prediction.state;
   const isDead = state === "dead";
   const isPromoted = state === "promoted";
@@ -164,23 +153,13 @@ function ForecastRow({ prediction }: { prediction: OwnerPredictionView }) {
       }
     : { color: stateColor };
 
-  // The whole row is wrapped in a <Link> via a single cell-spanning
-  // anchor. To preserve table semantics the click target is layered
-  // with an absolutely-positioned overlay link; the table cells render
-  // text only. This avoids invalid <tr><a></a></tr> markup while
-  // keeping the row a single navigable target.
+  // Row hover affordance via pure CSS arbitrary values: the inset
+  // left-edge accent-warm shadow appears on :hover. No client state,
+  // no useState, no event handlers. Pure CSS replaces the previous
+  // useState pair while preserving the original 120ms transition.
   return (
     <tr
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        position: "relative",
-        cursor: "pointer",
-        boxShadow: hovered
-          ? "inset 2px 0 0 0 var(--accent-warm)"
-          : "inset 2px 0 0 0 transparent",
-        transition: "box-shadow 120ms ease-out",
-      }}
+      className="relative cursor-pointer transition-shadow duration-100 [box-shadow:inset_2px_0_0_0_transparent] hover:[box-shadow:inset_2px_0_0_0_var(--accent-warm)]"
     >
       <Td>
         <Link
@@ -281,36 +260,6 @@ function ForecastDeskEmptyAuthenticated() {
         </Link>
       </p>
     </div>
-  );
-}
-
-function ClearSessionLink() {
-  const [pending, setPending] = useState(false);
-  return (
-    <p className="mt-16">
-      <button
-        type="button"
-        disabled={pending}
-        onClick={async () => {
-          if (pending) return;
-          setPending(true);
-          try {
-            await fetch("/api/me/logout", {
-              method: "POST",
-              credentials: "same-origin",
-            });
-          } catch {
-            // Swallow: the user can refresh manually if the network
-            // call failed. Reloading still re-evaluates the cookie on
-            // the server, so a partial failure is recoverable.
-          }
-          window.location.reload();
-        }}
-        className="font-mono text-[11px] uppercase tracking-[0.10em] text-[var(--text-quiet)] hover:text-[var(--text-tertiary)] focus:outline-none focus-visible:underline underline-offset-4 disabled:opacity-60"
-      >
-        [ Clear operator session ]
-      </button>
-    </p>
   );
 }
 

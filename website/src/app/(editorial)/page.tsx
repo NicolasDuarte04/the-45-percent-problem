@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { loadSnapshot } from "@/lib/data/loadSnapshot";
 import {
@@ -23,20 +24,20 @@ import {
   SnapshotPicker,
   SnapshotBanner,
 } from "@/components/compositions/SnapshotPicker";
+import { SnapshotAwareHome } from "@/components/compositions/SnapshotAwareHome";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const params = await searchParams;
-  const rawSnapshot = params.snapshot;
-  const requestedSnapshot = Array.isArray(rawSnapshot) ? rawSnapshot[0] : rawSnapshot;
-  const picker = resolveSnapshotPickerState(requestedSnapshot);
-  const snapshotId = picker.selected.id === "latest" ? undefined : picker.selected.id;
+// Checkpoint 17 (A1): the home page reads zero per-request input, so
+// Next 16 can prerender it statically. Snapshot toggling is now a
+// client island (SnapshotAwareHome). The deep-link `?snapshot=` form
+// still resolves to the historical view, fetched client-side from
+// /api/snapshots/[id]/page-data.
+export const dynamic = "force-static";
+
+export default async function Home() {
+  const picker = resolveSnapshotPickerState(undefined);
 
   const maps = await loadStructuralMaps();
-  const snap = loadSnapshot(snapshotId);
+  const snap = loadSnapshot(undefined);
   const tournament = mergeTournament(snap.tournament, maps);
   const divergence = mergeDivergence(snap.divergence, maps);
   const { evaluation, meta } = snap;
@@ -153,124 +154,146 @@ export default async function Home({
         />
       </header>
 
-      {/* ── § 0 · Scenario ────────────────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 0 · Scenario"
-          title="Call the final four."
-          rightSlot={
-            <GhostLink href="/scenario/final-four">
-              Enter the simulator →
-            </GhostLink>
-          }
-        />
-        <p
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: 14,
-            lineHeight: 1.65,
-            color: "var(--text-tertiary)",
-            margin: 0,
-            maxWidth: 540,
-          }}
-        >
-          Pick four semifinalists. The model has run 10,000 simulated
-          tournaments. See where your scenario lands.
-        </p>
-      </section>
+      {/* Snapshot-aware block. Default view: server-rendered HTML for
+          current snapshot, statically prerenderable. Historical view
+          (?snapshot=<id>): client-fetched and rendered in place via
+          SnapshotAwareHome. */}
+      <Suspense fallback={null}>
+        <SnapshotAwareHome current={picker.current} weekAgo={picker.weekAgo}>
+          {/* ── § 0 · Scenario ────────────────────────────────────────── */}
+          <section style={{ marginBottom: 56 }}>
+            <SectionHead
+              eyebrow="§ 0 · Scenario"
+              title="Call the final four."
+              rightSlot={
+                <GhostLink href="/scenario/final-four">
+                  Enter the simulator →
+                </GhostLink>
+              }
+            />
+            <p
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: 14,
+                lineHeight: 1.65,
+                color: "var(--text-tertiary)",
+                margin: 0,
+                maxWidth: 540,
+              }}
+            >
+              Pick four semifinalists. The model has run 10,000 simulated
+              tournaments. See where your scenario lands.
+            </p>
+          </section>
 
-      {/* ── § 1 · Championship pricing ─────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 1 · Championship pricing"
-          title="Tournament leaderboard"
-          rightSlot={
-            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-              <SnapshotPicker
+          {/* ── § 1 · Championship pricing ────────────────────────────── */}
+          <section style={{ marginBottom: 56 }}>
+            <SectionHead
+              eyebrow="§ 1 · Championship pricing"
+              title="Tournament leaderboard"
+              rightSlot={
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                  <SnapshotPicker
+                    current={picker.current}
+                    weekAgo={picker.weekAgo}
+                    selectedId={picker.selected.id}
+                    basePath="/"
+                  />
+                  <GhostLink href="/bracket">All 48 teams →</GhostLink>
+                </div>
+              }
+            />
+            <div style={{ marginBottom: 12 }}>
+              <SnapshotBanner
+                selected={picker.selected}
                 current={picker.current}
-                weekAgo={picker.weekAgo}
-                selectedId={picker.selected.id}
                 basePath="/"
               />
-              <GhostLink href="/bracket">All 48 teams →</GhostLink>
             </div>
-          }
-        />
-        <div style={{ marginBottom: 12 }}>
-          <SnapshotBanner
-            selected={picker.selected}
-            current={picker.current}
-            basePath="/"
-          />
-        </div>
-        {/* TournamentLeaderboard declares min-width: 640px on its
-            internal table; the wrapper isolates that overflow so the
-            page never horizontally scrolls on a 375px mobile viewport.
-            Per Mobile Optimization Plan §4 Phase 1 task 4. */}
-        <div className="overflow-x-auto">
-          <TournamentLeaderboard tournament={tournament} />
-        </div>
-      </section>
+            {/* TournamentLeaderboard declares min-width: 640px on its
+                internal table; the wrapper isolates that overflow so the
+                page never horizontally scrolls on a 375px mobile viewport.
+                Per Mobile Optimization Plan §4 Phase 1 task 4. */}
+            <div className="overflow-x-auto">
+              <TournamentLeaderboard tournament={tournament} />
+            </div>
+          </section>
 
-      {/* ── Most likely bracket ───────────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 1.5 · Modal path"
-          title="Most likely bracket"
-          rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
-        />
-        {/* MostLikelyBracket declares min-width: 1100px (the largest
-            offender). Wrapper traps the overflow inside the section
-            instead of forcing the document horizontal scrollbar.
-            Per Mobile Optimization Plan §4 Phase 1 task 4. */}
-        <div className="overflow-x-auto">
-          <MostLikelyBracket tournament={tournament} />
-        </div>
-      </section>
+          {/* ── Most likely bracket ───────────────────────────────────── */}
+          <section style={{ marginBottom: 56 }}>
+            <SectionHead
+              eyebrow="§ 1.5 · Modal path"
+              title="Most likely bracket"
+              rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
+            />
+            {/* MostLikelyBracket declares min-width: 1100px (the largest
+                offender). Wrapper traps the overflow inside the section
+                instead of forcing the document horizontal scrollbar.
+                Per Mobile Optimization Plan §4 Phase 1 task 4. */}
+            <div className="overflow-x-auto">
+              <MostLikelyBracket tournament={tournament} />
+            </div>
+          </section>
 
-      {/* ── § 1.7 · Trailer ────────────────────────────────────────────────── */}
-      <TrailerSection src="/assets/trailer.mp4" />
+          {/* ── § 1.7 · Trailer ──────────────────────────────────────── */}
+          <TrailerSection src="/assets/trailer.mp4" />
 
-      {/* ── § 1.6 · Terminal dashboard ─────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 1.6 · Terminal"
-          title="Dashboard"
-        />
-        <TerminalDashboard
-          divergence={divergence}
-          tournament={tournament}
-        />
-      </section>
+          {/* Checkpoint 17 (C1): below-the-fold sections live inside
+              Suspense boundaries so selective hydration can defer them.
+              The page is statically prerendered (A1) so the boundaries
+              do not produce visible loading states under normal
+              navigation; they exist to bound future async work and
+              keep the hydration tree split. */}
+          {/* ── § 1.6 · Terminal dashboard ─────────────────────────── */}
+          <Suspense fallback={null}>
+            <section style={{ marginBottom: 56 }}>
+              <SectionHead
+                eyebrow="§ 1.6 · Terminal"
+                title="Dashboard"
+              />
+              <TerminalDashboard
+                divergence={divergence}
+                tournament={tournament}
+              />
+            </section>
+          </Suspense>
 
-      {/* ── § 2 · This window ──────────────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 2 · This window"
-          title="Featured divergences"
-          rightSlot={<GhostLink href="/terminal">Full terminal →</GhostLink>}
-        />
-        <FeaturedDivergences divergence={divergence} />
-      </section>
+          {/* ── § 2 · This window ────────────────────────────────────── */}
+          <Suspense fallback={null}>
+            <section style={{ marginBottom: 56 }}>
+              <SectionHead
+                eyebrow="§ 2 · This window"
+                title="Featured divergences"
+                rightSlot={<GhostLink href="/terminal">Full terminal →</GhostLink>}
+              />
+              <FeaturedDivergences divergence={divergence} />
+            </section>
+          </Suspense>
 
-      {/* ── § 3 · Calibration ──────────────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 3 · Calibration"
-          title="How the model is doing"
-        />
-        <TournamentCalibrationStrip evaluation={evaluation} meta={meta} />
-      </section>
+          {/* ── § 3 · Calibration ────────────────────────────────────── */}
+          <Suspense fallback={null}>
+            <section style={{ marginBottom: 56 }}>
+              <SectionHead
+                eyebrow="§ 3 · Calibration"
+                title="How the model is doing"
+              />
+              <TournamentCalibrationStrip evaluation={evaluation} meta={meta} />
+            </section>
+          </Suspense>
+        </SnapshotAwareHome>
+      </Suspense>
 
       {/* ── § 4 · Research vault ───────────────────────────────────────────── */}
-      <section style={{ marginBottom: 56 }}>
-        <SectionHead
-          eyebrow="§ 4 · Research vault"
-          title="Recent writing"
-          rightSlot={<GhostLink href="/vault">All essays →</GhostLink>}
-        />
-        <RecentWritingList />
-      </section>
+      <Suspense fallback={null}>
+        <section style={{ marginBottom: 56 }}>
+          <SectionHead
+            eyebrow="§ 4 · Research vault"
+            title="Recent writing"
+            rightSlot={<GhostLink href="/vault">All essays →</GhostLink>}
+          />
+          <RecentWritingList />
+        </section>
+      </Suspense>
 
       {/* ── Terminal CTA block ─────────────────────────────────────────────── */}
       <TerminalCTA />

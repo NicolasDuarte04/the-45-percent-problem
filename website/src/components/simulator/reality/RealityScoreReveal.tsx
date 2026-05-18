@@ -32,10 +32,8 @@
  * sm+ sizes, so the page does not shift when the phase advances.
  */
 
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { RealityScorePanel } from "@/components/simulator/RealityScorePanel";
-import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import { useTypewriter } from "@/lib/motion/useTypewriter";
 import type { PublicPredictionView } from "@/lib/sim/types";
 
@@ -93,8 +91,6 @@ export function RealityScoreReveal({
   state = "alive",
   variant = "submitted",
 }: RealityScoreRevealProps) {
-  const entryTransition = useReducedMotionAware("entry");
-  const gaugeFillTransition = useReducedMotionAware("gaugeFill");
   const activeIdx = activeSegmentIndex(count, total);
   const oneInNTarget =
     count <= 0 ? total : Math.max(1, Math.round(total / count));
@@ -149,11 +145,12 @@ export function RealityScoreReveal({
           {typedLine}
         </div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={entryTransition}
-        >
+        // Checkpoint 17 (B1): entry + segment-fill animations migrated
+        // from Framer Motion to CSS keyframes (ck17-reveal-entry) and
+        // CSS transitions (ck17-gauge-fill plus the 100ms-delayed
+        // variant). Reduced-motion users get the same instant snap
+        // they got from useReducedMotionAware.
+        <div className="ck17-reveal-entry">
           {/* 5-band rarity bar. Post-submit, vocabulary intentionally
               scientific (Common, Plausible, Uncommon, Rare, Vanishingly
               rare). Never the live-gauge viral hook. */}
@@ -173,16 +170,10 @@ export function RealityScoreReveal({
                       : "border-[var(--text-tertiary)]",
                   ].join(" ")}
                 >
-                  <motion.span
+                  <span
                     aria-hidden="true"
-                    className="absolute inset-0 bg-[var(--accent-warm)]"
-                    initial={{ opacity: 0, scaleX: 0 }}
-                    animate={{
-                      opacity: active ? 1 : 0,
-                      scaleX: active ? 1 : 0,
-                    }}
-                    style={{ transformOrigin: "left center" }}
-                    transition={{ ...gaugeFillTransition, delay: 0.1 }}
+                    data-active={active ? "true" : "false"}
+                    className="ck17-gauge-fill ck17-gauge-fill-delayed absolute inset-0 bg-[var(--accent-warm)]"
                   />
                 </li>
               );
@@ -196,7 +187,7 @@ export function RealityScoreReveal({
             variant={variant}
             oneInNTarget={oneInNTarget}
           />
-        </motion.div>
+        </div>
       )}
     </div>
   );
