@@ -18,7 +18,9 @@ import {
   predictionStateLog,
   matchOutcomes,
 } from "@/lib/db/schema";
-import type { Prediction, MatchOutcome } from "@/lib/db/schema";
+import type {
+  NewPredictionStateLogEntry,
+} from "@/lib/db/schema";
 import { evaluatePrediction } from "./predictionEvaluator";
 
 export interface RunEvaluatorOptions {
@@ -32,6 +34,13 @@ export interface RunEvaluatorResult {
   transitionsCount: number;
 }
 
+interface PendingUpdate {
+  id: string;
+  state: "alive" | "dead" | "promoted";
+  countCurrent: number;
+  killedBy: string | null;
+}
+
 export async function runEvaluatorAcrossPredictions(
   opts: RunEvaluatorOptions,
 ): Promise<RunEvaluatorResult> {
@@ -41,53 +50,65 @@ export async function runEvaluatorAcrossPredictions(
     .from(predictions)
     .where(inArray(predictions.state, ["alive", "promoted"]));
 
-  let transitionsCount = 0;
-  for (const prediction of candidates) {
-    const transitioned = await evaluateAndPersist(prediction, settled, opts);
-    if (transitioned) transitionsCount += 1;
-  }
-  return { evaluatedCount: candidates.length, transitionsCount };
-}
-
-/** Evaluate a single prediction and persist any transition. Returns true
- *  when a prediction_state_log row was written. */
-async function evaluateAndPersist(
-  prediction: Prediction,
-  settled: readonly MatchOutcome[],
-  opts: RunEvaluatorOptions,
-): Promise<boolean> {
-  const result = evaluatePrediction({ prediction, settledMatches: settled });
-  const stateChanged = result.newState !== prediction.state;
-  const countChanged = result.newCountCurrent !== prediction.countCurrent;
-  if (!stateChanged && !countChanged) return false;
-
+  // Phase B's prior implementation issued one UPDATE + one INSERT per
+  // transitioned prediction inside the loop, in series. On a busy
+  // matchday with a few thousand alive predictions that produced
+  // thousands of sequential DB roundtrips inside a single request,
+  // making the admin/ingest synchronous evaluator path a credible
+  // 60s-timeout candidate. We now evaluate purely in memory, then
+  // issue parallel UPDATEs (bounded by the pool size) plus a single
+  // batched INSERT for the audit-log rows.
+  const pendingUpdates: PendingUpdate[] = [];
+  const pendingLogRows: NewPredictionStateLogEntry[] = [];
   const now = new Date();
-  await db
-    .update(predictions)
-    .set({
+
+  for (const prediction of candidates) {
+    const result = evaluatePrediction({ prediction, settledMatches: settled });
+    const stateChanged = result.newState !== prediction.state;
+    const countChanged = result.newCountCurrent !== prediction.countCurrent;
+    if (!stateChanged && !countChanged) continue;
+
+    pendingUpdates.push({
+      id: prediction.id,
       state: result.newState,
       countCurrent: result.newCountCurrent,
       // Mirror the descriptive evaluator reason into killedBy on dead
       // transitions, and clear it when leaving dead, matching the
       // manual admin route's contract.
       killedBy:
-        result.newState === "dead"
-          ? result.reason.slice(0, 256)
-          : null,
-      updatedAt: now,
-    })
-    .where(eq(predictions.id, prediction.id));
+        result.newState === "dead" ? result.reason.slice(0, 256) : null,
+    });
+    pendingLogRows.push({
+      predictionId: prediction.id,
+      previousState: prediction.state,
+      newState: result.newState,
+      previousCountCurrent: prediction.countCurrent,
+      newCountCurrent: result.newCountCurrent,
+      triggeredByMatchId: opts.triggeredByMatchId,
+      reason: result.reason,
+      evaluatorVersion: result.evaluatorVersion,
+    });
+  }
 
-  await db.insert(predictionStateLog).values({
-    predictionId: prediction.id,
-    previousState: prediction.state,
-    newState: result.newState,
-    previousCountCurrent: prediction.countCurrent,
-    newCountCurrent: result.newCountCurrent,
-    triggeredByMatchId: opts.triggeredByMatchId,
-    reason: result.reason,
-    evaluatorVersion: result.evaluatorVersion,
-  });
+  if (pendingLogRows.length > 0) {
+    await Promise.all(
+      pendingUpdates.map((u) =>
+        db
+          .update(predictions)
+          .set({
+            state: u.state,
+            countCurrent: u.countCurrent,
+            killedBy: u.killedBy,
+            updatedAt: now,
+          })
+          .where(eq(predictions.id, u.id)),
+      ),
+    );
+    await db.insert(predictionStateLog).values(pendingLogRows);
+  }
 
-  return true;
+  return {
+    evaluatedCount: candidates.length,
+    transitionsCount: pendingLogRows.length,
+  };
 }
