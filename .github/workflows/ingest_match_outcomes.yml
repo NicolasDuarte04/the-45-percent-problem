@@ -1,0 +1,54 @@
+# Hourly live match-outcome ingestion (Checkpoint 15).
+#
+# Fires every hour all year; the Python script short-circuits outside
+# the WC 2026 tournament window (June 11 to July 19, 2026, plus a 3-day
+# buffer on each side). Inside the window it pulls newly-FINISHED
+# matches from Football-Data.org and POSTs them to the website's
+# /api/ingest/match-outcomes endpoint.
+#
+# Required repository secrets:
+#   INGEST_TOKEN              Bearer token. Must match the value of
+#                             INGEST_TOKEN configured on the website
+#                             (Vercel env). Length >= 16. Rotate
+#                             independently from BRIEF_DISPATCH_TOKEN.
+#   FOOTBALL_DATA_API_KEY     Free-tier API key from football-data.org.
+#                             Register at https://www.football-data.org
+#                             and copy the X-Auth-Token value.
+#
+# Repository variables (or env defaults):
+#   SITE_URL                  Defaults to https://45analytics.com if
+#                             unset; override for staging.
+#
+# Manual operator entry via /api/admin/match-outcomes remains available
+# and is the fallback if this workflow fails. The script and the admin
+# route are complementary, not exclusive.
+
+name: Ingest live match outcomes
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # Guard against forks running the cron with their own secrets.
+    if: github.repository == 'NicolasDuarte04/the-45-percent-problem'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Fetch and ingest match outcomes
+        env:
+          CI: "true"
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://45analytics.com' }}
+        run: python ingestion/fetch_match_outcomes.py
