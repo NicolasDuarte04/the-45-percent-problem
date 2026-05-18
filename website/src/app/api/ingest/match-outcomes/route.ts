@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { matchOutcomes } from "@/lib/db/schema";
@@ -128,37 +129,40 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { outcomes } = parsed.data;
 
   try {
-    for (const data of outcomes) {
-      await db
-        .insert(matchOutcomes)
-        .values({
-          matchId: data.matchId,
-          competition: data.competition,
-          stage: data.stage,
-          homeTeam: data.homeTeam,
-          awayTeam: data.awayTeam,
-          homeGoals: data.homeGoals,
-          awayGoals: data.awayGoals,
-          shootoutWinner: data.shootoutWinner ?? null,
-          settledAt: new Date(data.settledAt),
-          enteredBy: "ingest",
-          meta: data.meta ?? {},
-        })
-        .onConflictDoUpdate({
-          target: matchOutcomes.matchId,
-          set: {
-            competition: data.competition,
-            stage: data.stage,
-            homeTeam: data.homeTeam,
-            awayTeam: data.awayTeam,
-            homeGoals: data.homeGoals,
-            awayGoals: data.awayGoals,
-            shootoutWinner: data.shootoutWinner ?? null,
-            settledAt: new Date(data.settledAt),
-            meta: data.meta ?? {},
-          },
-        });
-    }
+    // Batched upsert: one INSERT statement covers all outcomes in the
+    // request. Previously this was a per-outcome loop that issued N
+    // sequential roundtrips; with the global pool capped at one
+    // connection a 50-outcome batch was 50 serial waits.
+    const rows = outcomes.map((data) => ({
+      matchId: data.matchId,
+      competition: data.competition,
+      stage: data.stage,
+      homeTeam: data.homeTeam,
+      awayTeam: data.awayTeam,
+      homeGoals: data.homeGoals,
+      awayGoals: data.awayGoals,
+      shootoutWinner: data.shootoutWinner ?? null,
+      settledAt: new Date(data.settledAt),
+      enteredBy: "ingest" as const,
+      meta: data.meta ?? {},
+    }));
+    await db
+      .insert(matchOutcomes)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: matchOutcomes.matchId,
+        set: {
+          competition: sql`excluded.competition`,
+          stage: sql`excluded.stage`,
+          homeTeam: sql`excluded.home_team`,
+          awayTeam: sql`excluded.away_team`,
+          homeGoals: sql`excluded.home_goals`,
+          awayGoals: sql`excluded.away_goals`,
+          shootoutWinner: sql`excluded.shootout_winner`,
+          settledAt: sql`excluded.settled_at`,
+          meta: sql`excluded.meta`,
+        },
+      });
   } catch (err) {
     console.error("[ingest/match-outcomes] upsert failed", err);
     return jsonError("server", 500);
