@@ -18,14 +18,19 @@
 module.exports = {
   ci: {
     collect: {
-      // Audit the five routes that matter for performance and SEO.
-      // /terminal is the most JS-heavy page (bundle budget §9.4).
+      // Routes that matter for performance and SEO. /terminal is the
+      // most JS-heavy page (bundle budget §9.4); /scenario/final-four is
+      // the primary social-traffic conversion surface (Checkpoint 16
+      // audit). /me is the returning-user dashboard.
       url: [
         "http://localhost:3000/",
         "http://localhost:3000/terminal",
         "http://localhost:3000/ledger",
         "http://localhost:3000/vault",
         "http://localhost:3000/vault/kill-criteria",
+        "http://localhost:3000/scenario",
+        "http://localhost:3000/scenario/final-four",
+        "http://localhost:3000/me",
       ],
       startServerCommand: "pnpm start",
       startServerReadyPattern: "Ready on",
