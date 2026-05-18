@@ -40,10 +40,20 @@ import type {
   FullBracketScenario,
   Mode,
   PredictionState,
+  TeamCode,
 } from "./types";
+import {
+  computeGroupStandings,
+  isGroupFullySettled,
+  WC2026_GROUP_ASSIGNMENTS,
+  type GroupStandings,
+} from "./groupStandings";
 import type { Prediction, MatchOutcome } from "@/lib/db/schema";
 
-export const EVALUATOR_VERSION = "v1";
+// Bump on any change to the evaluator's decision logic so re-runs against
+// the audit log can identify which rule set produced a transition. v2 adds
+// groups-stage Full Bracket evaluation (Checkpoint 15).
+export const EVALUATOR_VERSION = "v2";
 
 /** Stage names used across match_outcomes and the evaluator. */
 export type MatchStage = "group" | "r32" | "r16" | "qf" | "sf" | "final";
@@ -506,12 +516,12 @@ function evaluateFullBracket(
   //    minus stages whose every pick has already been confirmed by a settled
   //    match. This is the simpler approximation specced for v1.
   if (deepestStage === "groups") {
-    return {
-      state: "alive",
-      count: countCurrent,
-      reason:
-        "Groups-stage submission. Awaiting group-standings logic in a later checkpoint.",
-    };
+    return evaluateFullBracketGroupsStage(
+      scenario,
+      settled,
+      total,
+      countCurrent,
+    );
   }
 
   const jointResult = jointForUnsettledStages(scenario, settled, deepestStage);
@@ -595,3 +605,202 @@ function jointForUnsettledStages(
   }
   return joint;
 }
+
+// ─── Full Bracket: groups stage (Checkpoint 15) ─────────────────────────────
+//
+// The user submitted a Full Bracket scenario with koAdvancers.length === 0,
+// meaning they committed to:
+//   - 12 group winners (groupWinners)
+//   - 12 group runners-up (groupRunnersUp)
+//   - 8 best 3rd-placed teams (bestThirds; may be empty for a "groups
+//     only, no thirds" submission, although the FullBracketScenario zod
+//     superRefine forces bestThirds.length === 0 for that case)
+//
+// Evaluation walks the canonical 12 groups. For each group:
+//   1. Compute actual standings from settled match_outcomes.
+//   2. Compare against the user's predicted W and RU for that group.
+//      - If a group is fully settled (all 6 matches played) and the
+//        actual W or RU differs from the prediction: dead.
+//      - If a group is fully settled and the actual 3rd-placed team
+//        differs from the prediction's third pick (the team in that
+//        group that the user expected to finish third, derived from
+//        bestThirds): only contradicts when the user committed to 8
+//        thirds AND the user's third for this group is wrong.
+// After all groups are walked, if every group is fully settled and every
+// W/RU/3rd matches and the user's 8 best thirds match the actual top-8
+// best thirds: promoted. Otherwise alive.
+
+function evaluateFullBracketGroupsStage(
+  scenario: FullBracketScenario,
+  settled: readonly MatchOutcome[],
+  total: number,
+  countCurrent: number,
+): InnerResult {
+  const standings = computeGroupStandings(settled, WC2026_GROUP_ASSIGNMENTS);
+  const standingsByLetter = new Map<string, GroupStandings>();
+  for (const g of standings.groups) standingsByLetter.set(g.group, g);
+
+  // Map each predicted group winner / runner-up to its group letter
+  // using the canonical WC 2026 assignments. The scenario's
+  // groupWinners[i] is the user's prediction for group i (A..L).
+  const groupLetters = WC2026_GROUP_ASSIGNMENTS.map((a) => a.group);
+
+  // Build a per-group "predicted 3rd-placed team" map. The Full Bracket
+  // scenario gives 8 best thirds at most; the other 4 groups' 3rd
+  // finishers are unconstrained (they finish third but are not among the
+  // top 8 best thirds). We surface contradictions only for groups whose
+  // 3rd-placed team the user explicitly named.
+  const teamToGroup = new Map<TeamCode, string>();
+  for (const a of WC2026_GROUP_ASSIGNMENTS) {
+    for (const t of a.teams) teamToGroup.set(t as TeamCode, a.group);
+  }
+  const predictedThirdByGroup = new Map<string, TeamCode>();
+  for (const t of scenario.bestThirds) {
+    const g = teamToGroup.get(t as TeamCode);
+    if (g) predictedThirdByGroup.set(g, t as TeamCode);
+  }
+
+  let allGroupsSettled = true;
+
+  for (let i = 0; i < groupLetters.length; i += 1) {
+    const letter = groupLetters[i];
+    const assignment = WC2026_GROUP_ASSIGNMENTS[i];
+    const standing = standingsByLetter.get(letter);
+    if (!standing) continue;
+
+    const settledForGroup = isGroupFullySettled(
+      letter,
+      assignment.teams,
+      settled,
+    );
+    if (!settledForGroup) {
+      allGroupsSettled = false;
+      continue;
+    }
+
+    const actualW = standing.teams.find((t) => t.position === 1)?.code;
+    const actualRU = standing.teams.find((t) => t.position === 2)?.code;
+    const actualThird = standing.teams.find((t) => t.position === 3)?.code;
+    if (!actualW || !actualRU || !actualThird) {
+      allGroupsSettled = false;
+      continue;
+    }
+
+    const predictedW = scenario.groupWinners[i] as TeamCode | undefined;
+    const predictedRU = scenario.groupRunnersUp[i] as TeamCode | undefined;
+
+    if (predictedW && actualW !== predictedW) {
+      return {
+        state: "dead",
+        count: 0,
+        reason: `Group ${letter}: actual W is ${actualW}, predicted ${predictedW}. Scenario contradicted.`,
+      };
+    }
+    if (predictedRU && actualRU !== predictedRU) {
+      return {
+        state: "dead",
+        count: 0,
+        reason: `Group ${letter}: actual RU is ${actualRU}, predicted ${predictedRU}. Scenario contradicted.`,
+      };
+    }
+    const predictedThird = predictedThirdByGroup.get(letter);
+    if (predictedThird && actualThird !== predictedThird) {
+      return {
+        state: "dead",
+        count: 0,
+        reason: `Group ${letter}: actual 3rd is ${actualThird}, predicted ${predictedThird}. Scenario contradicted.`,
+      };
+    }
+  }
+
+  // Promotion: every group settled, every W/RU/3rd pick consistent, and
+  // (if the user gave 8 best thirds) the actual top-8 best thirds match
+  // the predicted set as an unordered set of FIFA codes.
+  if (allGroupsSettled) {
+    if (scenario.bestThirds.length === 8) {
+      const actualBestThirds = new Set(
+        standings.bestThirds.map((b) => b.code),
+      );
+      const predictedBestThirds = new Set(scenario.bestThirds);
+      const allMatch =
+        actualBestThirds.size === predictedBestThirds.size &&
+        [...actualBestThirds].every((c) => predictedBestThirds.has(c));
+      if (!allMatch) {
+        const missing = [...predictedBestThirds].filter(
+          (c) => !actualBestThirds.has(c),
+        );
+        return {
+          state: "dead",
+          count: 0,
+          reason: `Best thirds differ. Predicted ${[...predictedBestThirds].join(", ")} but actual best thirds include ${[...actualBestThirds].join(", ")}. Missing: ${missing.join(", ")}. Scenario contradicted.`,
+        };
+      }
+    }
+    return {
+      state: "promoted",
+      count: total,
+      reason: "All 12 groups confirmed. Scenario promoted.",
+    };
+  }
+
+  // Alive. Refresh countCurrent against the joint of pG marginals over
+  // group winners and runners-up that have not yet been confirmed by a
+  // fully-settled group. We use pG (probability of qualifying from the
+  // group; i.e., finishing top-2) as the per-team marginal; teams whose
+  // group has already settled and matched the prediction collapse to
+  // factor 1.
+  const confirmedTeams = new Set<TeamCode>();
+  for (const standing of standings.groups) {
+    const groupAssignment = WC2026_GROUP_ASSIGNMENTS.find(
+      (a) => a.group === standing.group,
+    );
+    if (!groupAssignment) continue;
+    if (!isGroupFullySettled(standing.group, groupAssignment.teams, settled)) {
+      continue;
+    }
+    const w = standing.teams.find((t) => t.position === 1)?.code;
+    const ru = standing.teams.find((t) => t.position === 2)?.code;
+    if (w) confirmedTeams.add(w);
+    if (ru) confirmedTeams.add(ru);
+  }
+
+  const allGroupPicks = [
+    ...scenario.groupWinners,
+    ...scenario.groupRunnersUp,
+  ] as TeamCode[];
+
+  let joint = 1;
+  let unknown = false;
+  for (const team of allGroupPicks) {
+    if (confirmedTeams.has(team)) continue;
+    const prob = TEAM_PROBS[team];
+    if (!prob) {
+      unknown = true;
+      break;
+    }
+    joint *= prob.pG;
+  }
+  if (unknown) {
+    return {
+      state: "alive",
+      count: countCurrent,
+      reason: "Snapshot missing for one or more group picks. Count unchanged.",
+    };
+  }
+  // STAGE_SCALES for the "groups" stage aligns with the rarity-band
+  // calibration: a strong groups-only pick (every team in their top-2
+  // marginal) should land in the same band as it did pre-tournament. We
+  // pick the constant that yields integer counts in the same ballpark as
+  // the r32 case (200x) but rescale for the higher marginals at pG. A
+  // future polish can derive this from a real Monte Carlo joint; for
+  // Phase B v1 we use a single calibrated scale.
+  const GROUPS_STAGE_SCALE = 5;
+  const count = Math.max(1, Math.round(total * joint * GROUPS_STAGE_SCALE));
+  return {
+    state: "alive",
+    count,
+    reason: "Groups submission consistent so far. Count recomputed against snapshot marginals.",
+  };
+}
+
+
