@@ -336,6 +336,39 @@
   }
 }
 
+/* V2-02 (A3): Champion's Path stages reveal sequentially. Each stage `<li>`
+   gets the class on mount; existing stages do not re-fire. Matches the
+   ck17 vocabulary (ease-out cubic-bezier) with the shorter 280ms timing
+   the V2 spec asks for ("terminal output stream in, deliberate"). */
+@keyframes ck17-stage-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ck17-stage-reveal {
+  animation: ck17-stage-reveal 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck17-stage-reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* V2-02 (A3): grid template for the Champion's Path stage list. Mobile
+   stacks vertically; at sm+ we lay out the visible stages side-by-side.
+   The column count is fed via the `--cp-stages-count` custom property
+   from the component so the stages grow into the available width as
+   they reveal (1, then 2, then 3, then 4 columns). */
+.cp-stages-grid {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .cp-stages-grid {
+    grid-template-columns: repeat(var(--cp-stages-count, 4), minmax(0, 1fr));
+  }
+}
+
 /* Gauge-fill segment overlay. Defaults to zero (off); the component
    adds `data-active="true"` to the active segment and the CSS tweens
    opacity and scaleX from there. Used both by LiveAgreementGauge (no

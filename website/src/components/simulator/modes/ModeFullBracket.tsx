@@ -452,6 +452,34 @@ function buildScenarioForStage(
  * which we don't compute during build. The trade-off matches the
  * spec's "single horizontal row of 12 group-3rd chips" framing.
  */
+/**
+ * V2-02 (A5): the user-facing rank for a team within its group. The
+ * group UI is click-to-pick (winner + runner-up); 3rd / 4th are derived
+ * deterministically from the same alphabetical-first tie-break that
+ * `thirdsCandidatesByGroup` uses, so the label the user sees here is
+ * exactly the team that will surface in the 3rd-place picker further
+ * down. That visible link is the whole point of the label addition.
+ *
+ * Returns "" when the rank isn't yet determined (runner-up unpicked,
+ * for instance) so the row reads as quiet until the user resolves it.
+ */
+function rankLabelFor(
+  code: TeamCode,
+  sel: GroupSelection,
+  teams: ReadonlyArray<TeamCode>,
+): string {
+  if (sel.winner === code) return "1st (winner)";
+  if (sel.runnerUp === code) return "2nd (runner-up)";
+  if (!sel.winner || !sel.runnerUp) return "";
+  const remaining = teams
+    .filter((c) => c !== sel.winner && c !== sel.runnerUp)
+    .slice()
+    .sort();
+  if (remaining[0] === code) return "3rd";
+  if (remaining[1] === code) return "4th (out)";
+  return "";
+}
+
 function thirdsCandidatesByGroup(s: BuildState): Record<GroupLetter, TeamCode | null> {
   const out = {} as Record<GroupLetter, TeamCode | null>;
   const byGroup = teamsByGroup();
@@ -1107,6 +1135,15 @@ export function ModeFullBracket({
             without advancing here. */}
         {groupsDone ? (
           <div className="mt-10">
+            {/* V2-02 (A6): contextualization. The 12 candidates below
+                are derived from the group rankings the user just made,
+                and only 8 of them advance. Without this line the
+                section appears out of nowhere with auto-filled flags
+                and the user has no mental model of where they came
+                from. Copy locked at the spec level. */}
+            <p className="mt-4 mb-3 font-sans text-[13px] leading-[1.6] text-[var(--text-tertiary)] sm:text-[14px]">
+              The 12 teams below are the 3rd-place finishers from your group rankings. 8 of them advance to the Round of 32. Pick which 8.
+            </p>
             <h2 className="font-serif text-[20px] leading-[1.3] text-[var(--text-primary)] sm:text-[22px]">
               Pick the eight 3rd-place teams that move on.
             </h2>
@@ -1359,22 +1396,41 @@ function GroupCard({
       ) : null}
       <ul className={emphasized ? "mt-2 space-y-2" : "mt-1 space-y-1"}>
         {teams.map((code) => {
-          const rank =
-            sel.winner === code ? "1" : sel.runnerUp === code ? "2" : "";
-          const inverted = rank !== "";
+          const inverted = sel.winner === code || sel.runnerUp === code;
+          // V2-02 (A5): explicit rank label, replacing the previous
+          // right-aligned "1" / "2" sigil. Carousel/emphasized cards
+          // show the full label ("1st (winner)"); the compact wall
+          // view shows the short form ("1st") to keep the 3-up grid
+          // legible at md breakpoint.
+          const fullRank = rankLabelFor(code, sel, teams);
+          const shortRank = fullRank.split(" ")[0];
+          const displayRank = emphasized ? fullRank : shortRank;
           return (
             <li key={code} className="contents">
               <button
                 type="button"
                 onClick={() => onPick(code)}
+                aria-label={fullRank ? `${code}, ${fullRank}` : code}
                 className={[
-                  "flex w-full items-center justify-between border font-mono tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                  "flex w-full items-center gap-3 border font-mono tabular-nums transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
                   emphasized ? "px-3 py-2.5 text-[15px]" : "px-2 py-1.5 text-[13px]",
                   inverted
                     ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-root)]"
                     : "border-[var(--border-default)] bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]",
                 ].join(" ")}
               >
+                <span
+                  aria-hidden="true"
+                  className={[
+                    "shrink-0 text-left uppercase tracking-[0.10em]",
+                    emphasized
+                      ? "w-[80px] text-[11px]"
+                      : "w-[28px] text-[10px]",
+                    inverted ? "opacity-90" : "text-[var(--text-tertiary)]",
+                  ].join(" ")}
+                >
+                  {displayRank}
+                </span>
                 <span className="inline-flex items-center gap-2">
                   {/* Polish: restore the visual language: every team
                       pick shows its national flag next to the FIFA code,
@@ -1384,7 +1440,6 @@ function GroupCard({
                   <Flag code={code} size={emphasized ? 22 : 16} />
                   <span>{code}</span>
                 </span>
-                <span className="text-[10px] opacity-70">{rank}</span>
               </button>
             </li>
           );
