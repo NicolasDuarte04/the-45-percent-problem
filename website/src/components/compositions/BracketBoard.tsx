@@ -332,27 +332,22 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   );
 }
 
-// V2-04 follow-up: cell-only hover, matched to the GoalMatrixHeatmap
-// `.gm-cell[data-hover]` interaction language. The crosshair (row +
-// column dim, axis tick highlights) is gone; only the hovered cell
-// reacts, with a scale + glow lift whose shadow color inherits from
-// the cell's own fill (--cell-fill set inline per cell).
+// V2-04 follow-up: quiet cell-only hover. The earlier scale + drop
+// shadow lift was loud against the dense 48-row grid and could push
+// hovered cells out of the layout: at the top of the grid the lifted
+// cell visually collided with the sticky column header strip. The
+// final treatment keeps the cell anchored in its grid slot and signals
+// "you are here" with two minimal cues: a small brightness lift and
+// an inset 1px ring whose hue inherits from the cell's own fill
+// (mixed with white so the ring reads as a brightened edge rather
+// than a duplicate fill). Less is more.
 const cellHoverStyles = `
 .brk-cell {
-  position: relative;
-  transition:
-    transform 150ms ease,
-    box-shadow 180ms ease,
-    filter 150ms ease;
-  will-change: transform;
+  transition: filter 140ms ease, box-shadow 140ms ease;
 }
 .brk-cell:hover {
-  transform: scale(1.04);
-  box-shadow:
-    0 0 0 1px var(--cell-fill),
-    0 6px 18px -2px color-mix(in oklch, var(--cell-fill) 70%, transparent);
-  filter: brightness(1.18);
-  z-index: 2;
+  filter: brightness(1.08);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cell-fill) 35%, white 65%);
 }
 .brk-col-header {
   color: var(--text-primary);
