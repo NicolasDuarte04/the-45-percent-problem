@@ -49,6 +49,7 @@ import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
 import { track, claimFirstPick } from "@/lib/analytics/track";
 import type { ChampionsPathScenario, TeamCode } from "@/lib/sim/types";
+import { COUNTRY_NAMES, type FifaCode } from "@/lib/flags/countries";
 
 interface ModeChampionsPathProps {
   modelSha: string;
@@ -653,11 +654,26 @@ export function ModeChampionsPath({
                   />
                 </div>
 
-                {/* W / L toggle. */}
-                <div className="mt-2 grid grid-cols-2 gap-px border border-[var(--border-default)] bg-[var(--rule)]">
+                {/* V2-04 (#1): WHO ADVANCES? instruction + full team-name
+                    buttons. Internal data model stays W/L; the visible
+                    label is the resolved team name (3-letter FIFA code
+                    fallback under 480px so long names don't wrap on
+                    narrow phones). Selected state fills with
+                    --accent-warm; rest border is --border-default,
+                    hover border is --accent-warm. */}
+                <div className="mt-2 text-center font-mono text-[9px] uppercase tracking-[0.10em] text-[var(--text-tertiary)]">
+                  WHO ADVANCES?
+                </div>
+                <div className="mt-1 grid grid-cols-2 gap-2">
                   {(["W", "L"] as const).map((r) => {
                     const isOn = stage.result === r;
                     const enabled = active && opponentReady && !dead;
+                    const code = (r === "W" ? state.team : stage.opponent) as
+                      | TeamCode
+                      | null;
+                    const fullName = code
+                      ? (COUNTRY_NAMES[code as FifaCode] ?? code)
+                      : "";
                     return (
                       <button
                         key={r}
@@ -668,16 +684,32 @@ export function ModeChampionsPath({
                           handleResult(s, r);
                         }}
                         aria-pressed={isOn}
+                        aria-label={
+                          code
+                            ? `Mark ${fullName} as advancing to the next round`
+                            : "Choose an opponent first"
+                        }
                         className={[
-                          "py-1.5 text-center font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                          "border px-1 py-1.5 text-center font-mono text-[11px] uppercase tracking-[0.10em] transition-colors duration-[120ms] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
                           isOn
-                            ? "bg-[var(--text-primary)] text-[var(--bg-root)]"
+                            ? "border-[var(--accent-warm)] bg-[var(--accent-warm)] text-[var(--bg-root)] cursor-pointer"
                             : enabled
-                              ? "bg-[var(--bg-root)] text-[var(--text-primary)] hover:bg-[var(--bg-panel-elev)]"
-                              : "bg-[var(--bg-root)] text-[var(--text-quiet)] cursor-not-allowed",
+                              ? "border-[var(--border-default)] bg-[var(--bg-root)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] cursor-pointer"
+                              : "border-[var(--border-default)] bg-[var(--bg-root)] text-[var(--text-quiet)] cursor-not-allowed",
                         ].join(" ")}
                       >
-                        {r}
+                        {code ? (
+                          <>
+                            <span className="min-[480px]:hidden">
+                              [ {code} advances ]
+                            </span>
+                            <span className="hidden min-[480px]:inline">
+                              [ {fullName} advances ]
+                            </span>
+                          </>
+                        ) : (
+                          <span>{r}</span>
+                        )}
                       </button>
                     );
                   })}

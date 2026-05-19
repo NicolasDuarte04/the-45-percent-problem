@@ -91,6 +91,12 @@ const R32_PAIRINGS: ReadonlyArray<readonly [string, string]> = [
 interface GroupSelection {
   winner: TeamCode | null;
   runnerUp: TeamCode | null;
+  // V2-04 (#2): explicit 3rd-place pick. The user now chooses 1st, 2nd,
+  // AND 3rd within each group; the 4th-place team is the remaining one.
+  // FullBracketScenario schema is unchanged. `thirdPlace` only drives
+  // the in-progress build (and which candidate surfaces in the
+  // 8-of-12 best-3rd-place picker downstream).
+  thirdPlace: TeamCode | null;
 }
 
 interface BuildState {
@@ -101,7 +107,9 @@ interface BuildState {
 
 function emptyState(): BuildState {
   const groupSelections = {} as Record<GroupLetter, GroupSelection>;
-  for (const g of GROUPS) groupSelections[g] = { winner: null, runnerUp: null };
+  for (const g of GROUPS) {
+    groupSelections[g] = { winner: null, runnerUp: null, thirdPlace: null };
+  }
   return {
     groupSelections,
     bestThirds: Array(8).fill(null),
@@ -121,6 +129,11 @@ function hydrate(): BuildState {
           base.groupSelections[g].winner = sel.winner as TeamCode;
         if (typeof sel.runnerUp === "string" && /^[A-Z]{3}$/.test(sel.runnerUp))
           base.groupSelections[g].runnerUp = sel.runnerUp as TeamCode;
+        if (
+          typeof sel.thirdPlace === "string" &&
+          /^[A-Z]{3}$/.test(sel.thirdPlace)
+        )
+          base.groupSelections[g].thirdPlace = sel.thirdPlace as TeamCode;
       }
     }
   }
@@ -183,7 +196,10 @@ function resolveSource(source: string, s: BuildState): TeamCode | null {
 }
 
 function allGroupsComplete(s: BuildState): boolean {
-  return GROUPS.every((g) => s.groupSelections[g].winner && s.groupSelections[g].runnerUp);
+  return GROUPS.every((g) => {
+    const sel = s.groupSelections[g];
+    return Boolean(sel.winner && sel.runnerUp && sel.thirdPlace);
+  });
 }
 
 function allBestThirdsComplete(s: BuildState): boolean {
@@ -205,6 +221,7 @@ type SubmitReadiness =
 type BlockedReason =
   | { kind: "needGroupWinner"; missing: number }
   | { kind: "needGroupRunnerUp"; missing: number }
+  | { kind: "needGroupThirdPlace"; missing: number }
   | { kind: "needThirds"; missing: number; stepBackToGroups: boolean }
   | { kind: "needR32"; missing: number }
   | { kind: "needR16"; missing: number; stepBackToR32: boolean }
@@ -238,6 +255,10 @@ function countFilled<T>(arr: ReadonlyArray<T | null>, max?: number): number {
 function detectReadiness(s: BuildState): SubmitReadiness {
   const winnersDone = GROUPS.every((g) => s.groupSelections[g].winner);
   const runnersUpDone = GROUPS.every((g) => s.groupSelections[g].runnerUp);
+  // V2-04 (#2): per-group 3rd-place is now an explicit pick. The groups
+  // boundary is only ready once 1st + 2nd + 3rd are all set across all 12
+  // groups; 4th-place is the lone remaining team and is auto-filled.
+  const thirdPlaceDone = GROUPS.every((g) => s.groupSelections[g].thirdPlace);
   if (!winnersDone) {
     const missing = GROUPS.filter((g) => !s.groupSelections[g].winner).length;
     return {
@@ -251,6 +272,16 @@ function detectReadiness(s: BuildState): SubmitReadiness {
     return {
       kind: "blocked",
       reason: { kind: "needGroupRunnerUp", missing },
+      nextLabel: STAGE_LABELS.groups,
+    };
+  }
+  if (!thirdPlaceDone) {
+    const missing = GROUPS.filter(
+      (g) => !s.groupSelections[g].thirdPlace,
+    ).length;
+    return {
+      kind: "blocked",
+      reason: { kind: "needGroupThirdPlace", missing },
       nextLabel: STAGE_LABELS.groups,
     };
   }
@@ -368,6 +399,8 @@ function describeBlocked(reason: BlockedReason): string {
       return `Pick ${reason.missing} more group ${word(reason.missing, "winner", "winners")}.`;
     case "needGroupRunnerUp":
       return `Pick ${reason.missing} more group ${word(reason.missing, "runner-up", "runners-up")}.`;
+    case "needGroupThirdPlace":
+      return `Pick ${reason.missing} more group 3rd-place ${word(reason.missing, "team", "teams")}.`;
     case "needThirds": {
       const base = `Pick ${reason.missing} more 3rd-place ${word(reason.missing, "team", "teams")}.`;
       return reason.stepBackToGroups
@@ -393,7 +426,8 @@ function describeBlocked(reason: BlockedReason): string {
 function lastReadyStage(s: BuildState): FullBracketStage | null {
   const winnersDone = GROUPS.every((g) => s.groupSelections[g].winner);
   const runnersUpDone = GROUPS.every((g) => s.groupSelections[g].runnerUp);
-  if (!winnersDone || !runnersUpDone) return null;
+  const thirdPlaceDone = GROUPS.every((g) => s.groupSelections[g].thirdPlace);
+  if (!winnersDone || !runnersUpDone || !thirdPlaceDone) return null;
   const r32Count = countFilled(s.koAdvancers, 16);
   const r16Count = countFilled(s.koAdvancers.slice(16, 24));
   const qfCount = countFilled(s.koAdvancers.slice(24, 28));
@@ -470,29 +504,27 @@ function rankLabelFor(
 ): string {
   if (sel.winner === code) return "1st (winner)";
   if (sel.runnerUp === code) return "2nd (runner-up)";
-  if (!sel.winner || !sel.runnerUp) return "";
-  const remaining = teams
-    .filter((c) => c !== sel.winner && c !== sel.runnerUp)
-    .slice()
-    .sort();
-  if (remaining[0] === code) return "3rd";
-  if (remaining[1] === code) return "4th (out)";
+  if (sel.thirdPlace === code) return "3rd";
+  // V2-04 (#2): 4th-place is the lone remaining team once 1st, 2nd, and 3rd
+  // are all explicitly chosen. Until then the row reads as quiet.
+  if (sel.winner && sel.runnerUp && sel.thirdPlace) {
+    const remaining = teams.find(
+      (c) =>
+        c !== sel.winner && c !== sel.runnerUp && c !== sel.thirdPlace,
+    );
+    if (remaining === code) return "4th (out)";
+  }
   return "";
 }
 
 function thirdsCandidatesByGroup(s: BuildState): Record<GroupLetter, TeamCode | null> {
+  // V2-04 (#2): the per-group 3rd-place candidate is now whichever team the
+  // user explicitly picked (sel.thirdPlace) rather than the alphabetical-
+  // first of the remaining two. The 8-of-12 best-3rd-place picker
+  // downstream consumes these candidates unchanged.
   const out = {} as Record<GroupLetter, TeamCode | null>;
-  const byGroup = teamsByGroup();
   for (const g of GROUPS) {
-    const sel = s.groupSelections[g];
-    if (!sel.winner || !sel.runnerUp) {
-      out[g] = null;
-      continue;
-    }
-    const remaining = byGroup[g]
-      .filter((c) => c !== sel.winner && c !== sel.runnerUp)
-      .sort();
-    out[g] = remaining[0] ?? null;
+    out[g] = s.groupSelections[g].thirdPlace;
   }
   return out;
 }
@@ -590,7 +622,9 @@ export function ModeFullBracket({
     const initialComplete = new Set<GroupLetter>();
     for (const g of GROUPS) {
       const sel = hydrated.groupSelections[g];
-      if (sel.winner && sel.runnerUp) initialComplete.add(g);
+      // V2-04 (#2): "complete" now requires all three explicit ranks
+      // (1st, 2nd, 3rd). 4th is the lone remaining team.
+      if (sel.winner && sel.runnerUp && sel.thirdPlace) initialComplete.add(g);
     }
     setDimmedGroups(initialComplete);
     prevCompleteRef.current = initialComplete;
@@ -618,7 +652,7 @@ export function ModeFullBracket({
     const nowComplete = new Set<GroupLetter>();
     for (const g of GROUPS) {
       const sel = state.groupSelections[g];
-      if (sel.winner && sel.runnerUp) nowComplete.add(g);
+      if (sel.winner && sel.runnerUp && sel.thirdPlace) nowComplete.add(g);
     }
     for (const g of GROUPS) {
       const wasComplete = prevCompleteRef.current.has(g);
@@ -702,24 +736,33 @@ export function ModeFullBracket({
     });
     setState((prev) => {
       const sel = prev.groupSelections[g];
+      // V2-04 (#2): click cycle covers three explicit ranks. Tapping a
+      // team that already holds a rank clears that rank (without
+      // cascading); tapping a fresh team fills the next empty rank in
+      // order (winner → runner-up → 3rd-place). With all three filled,
+      // a fresh tap replaces the 3rd-place pick (the most recent slot,
+      // and the one a user is most likely to be correcting).
       let nextSel: GroupSelection;
       if (sel.winner === code) {
-        nextSel = { winner: null, runnerUp: code };
-        if (sel.runnerUp === code) nextSel = { winner: null, runnerUp: null };
+        nextSel = { ...sel, winner: null };
       } else if (sel.runnerUp === code) {
         nextSel = { ...sel, runnerUp: null };
+      } else if (sel.thirdPlace === code) {
+        nextSel = { ...sel, thirdPlace: null };
       } else if (!sel.winner) {
         nextSel = { ...sel, winner: code };
       } else if (!sel.runnerUp) {
         nextSel = { ...sel, runnerUp: code };
+      } else if (!sel.thirdPlace) {
+        nextSel = { ...sel, thirdPlace: code };
       } else {
-        nextSel = { ...sel, runnerUp: code };
+        nextSel = { ...sel, thirdPlace: code };
       }
-      // Mission 2: if this click landed the second pick (winner +
-      // runner-up), auto-advance the carousel to the next incomplete
-      // group. The render-time effect below would do this too, but
-      // doing it here keeps the slide direction = forward.
-      if (nextSel.winner && nextSel.runnerUp) {
+      // Auto-advance the carousel once all three ranks are landed for
+      // this group. Mission 2 originally fired this on winner+runnerUp;
+      // V2-04 (#2) extends it to require the 3rd-place pick too so the
+      // user is moved on only when the group is fully ranked.
+      if (nextSel.winner && nextSel.runnerUp && nextSel.thirdPlace) {
         const startIdx = GROUPS.indexOf(g);
         for (let i = 1; i <= GROUPS.length; i++) {
           const candidate = GROUPS[(startIdx + i) % GROUPS.length];
@@ -727,7 +770,7 @@ export function ModeFullBracket({
             candidate === g
               ? nextSel
               : prev.groupSelections[candidate];
-          if (!(cs.winner && cs.runnerUp)) {
+          if (!(cs.winner && cs.runnerUp && cs.thirdPlace)) {
             setSlideDirection(1);
             setCarouselGroup(candidate);
             break;
@@ -761,10 +804,10 @@ export function ModeFullBracket({
   }
 
   function handleAutoFillAll() {
-    // Auto-fill resets the entire group stage: every group's winner =
-    // top-Elo, runner-up = second-Elo. KO + thirds reset because their
-    // upstream changed. Manually-touched is cleared because the user
-    // has explicitly asked the model-independent baseline to take over.
+    // Auto-fill resets the entire group stage. V2-04 (#2): the heuristic
+    // now covers all three explicit ranks: winner = top-Elo,
+    // runner-up = second-Elo, 3rd-place = third-Elo. The 4th-place team
+    // is the remaining one and is auto-filled at render time.
     setErrorKind(null);
     const sorted = teamsByGroupSortedByElo();
     setState((prev) => {
@@ -773,6 +816,7 @@ export function ModeFullBracket({
         groupSelections[g] = {
           winner: sorted[g][0],
           runnerUp: sorted[g][1],
+          thirdPlace: sorted[g][2],
         };
       }
       return {
@@ -788,7 +832,7 @@ export function ModeFullBracket({
 
   function handleAutoFillRemaining() {
     // Same logic as Auto-fill all, but only touches groups that aren't
-    // yet complete. Preserves user picks (per executive decision Q1).
+    // yet fully ranked. Preserves user picks (per executive decision Q1).
     setErrorKind(null);
     const sorted = teamsByGroupSortedByElo();
     setState((prev) => {
@@ -796,10 +840,11 @@ export function ModeFullBracket({
       let touchedAny = false;
       for (const g of GROUPS) {
         const sel = groupSelections[g];
-        if (sel.winner && sel.runnerUp) continue;
+        if (sel.winner && sel.runnerUp && sel.thirdPlace) continue;
         groupSelections[g] = {
           winner: sorted[g][0],
           runnerUp: sorted[g][1],
+          thirdPlace: sorted[g][2],
         };
         touchedAny = true;
       }
@@ -928,11 +973,12 @@ export function ModeFullBracket({
       : readiness.nextHint;
 
   // Phase E §6 (B.3): focused group: manual override else next
-  // alphabetical incomplete group.
+  // alphabetical incomplete group. V2-04 (#2): "incomplete" now
+  // means any of 1st / 2nd / 3rd is still unset.
   const nextIncompleteGroup =
     GROUPS.find((g) => {
       const sel = state.groupSelections[g];
-      return !(sel.winner && sel.runnerUp);
+      return !(sel.winner && sel.runnerUp && sel.thirdPlace);
     }) ?? null;
   const focusedGroup: GroupLetter | null = manualFocusGroup ?? nextIncompleteGroup;
 
@@ -1019,7 +1065,9 @@ export function ModeFullBracket({
             >
               {GROUPS.map((g) => {
                 const sel = state.groupSelections[g];
-                const isComplete = Boolean(sel.winner && sel.runnerUp);
+                const isComplete = Boolean(
+                  sel.winner && sel.runnerUp && sel.thirdPlace,
+                );
                 const isCurrent = carouselGroup === g;
                 return (
                   <li key={g} className="contents">
@@ -1055,7 +1103,9 @@ export function ModeFullBracket({
             <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               {GROUPS.map((g) => {
                 const sel = state.groupSelections[g];
-                const isComplete = Boolean(sel.winner && sel.runnerUp);
+                const isComplete = Boolean(
+                  sel.winner && sel.runnerUp && sel.thirdPlace,
+                );
                 const isFocused = focusedGroup === g;
                 const isDimmed = dimmedGroups.has(g) && !isFocused;
                 return (
@@ -1107,7 +1157,8 @@ export function ModeFullBracket({
                       pulseKey={groupPulseKeys[carouselGroup]}
                       isComplete={Boolean(
                         state.groupSelections[carouselGroup].winner &&
-                          state.groupSelections[carouselGroup].runnerUp,
+                          state.groupSelections[carouselGroup].runnerUp &&
+                          state.groupSelections[carouselGroup].thirdPlace,
                       )}
                       isFocused={true}
                       isDimmed={false}
@@ -1396,7 +1447,14 @@ function GroupCard({
       ) : null}
       <ul className={emphasized ? "mt-2 space-y-2" : "mt-1 space-y-1"}>
         {teams.map((code) => {
-          const inverted = sel.winner === code || sel.runnerUp === code;
+          // V2-04 (#2): 1st, 2nd, AND 3rd are all explicit picks now,
+          // so each of those buttons gets the inverted "chosen" styling.
+          // The 4th-place team (lone remaining) stays in the default
+          // treatment so it reads as the one that does not advance.
+          const inverted =
+            sel.winner === code ||
+            sel.runnerUp === code ||
+            sel.thirdPlace === code;
           // V2-02 (A5): explicit rank label, replacing the previous
           // right-aligned "1" / "2" sigil. Carousel/emphasized cards
           // show the full label ("1st (winner)"); the compact wall
