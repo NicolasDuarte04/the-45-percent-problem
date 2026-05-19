@@ -1,5 +1,5 @@
 "use client";
-// rev: bracket-matrix-heatmap-hover-v1
+// rev: bracket-matrix-heatmap-hover-v2
 
 import Link from "next/link";
 import type {
@@ -9,6 +9,10 @@ import type {
 } from "@/lib/data/schemas";
 import { Flag } from "@/components/primitives/Flag";
 import { formatProbability } from "@/lib/formatters";
+import {
+  probabilityToColor,
+  probabilityTextColorHex,
+} from "@/lib/viz/probabilityRamp";
 
 interface BracketBoardProps {
   bracket: BracketSnapshot;
@@ -31,42 +35,6 @@ const ROUNDS: Array<{ key: RoundKey; short: string; label: string }> = [
   { key: "p_final", short: "FIN", label: "final" },
   { key: "p_champion", short: "CHA", label: "champion" },
 ];
-
-function cellBackground(p: number): string {
-  // Prism-only density ramp (cyan → peach → plum). Canvas-invariant hues
-  // mixed into the elevated-panel background via oklch interpolation, so
-  // the ramp reads consistently on the Quant (warm slate) canvas.
-  if (p < 0.01) return "var(--bg-panel-elev)";
-  const scale = Math.min(1, p * 3);
-  if (p < 0.15) {
-    return `color-mix(in oklch, var(--prism-cyan) ${10 + scale * 35}%, var(--bg-panel-elev))`;
-  }
-  if (p < 0.35) {
-    return `color-mix(in oklch, var(--prism-peach) ${25 + scale * 55}%, var(--bg-panel-elev))`;
-  }
-  return `color-mix(in oklch, var(--prism-plum) ${35 + scale * 55}%, var(--bg-panel-elev))`;
-}
-
-// V2-04 (#3): probability-band lookup matched to the GoalMatrixHeatmap
-// palette so the two surfaces read consistently. Dark slate (#0F1216)
-// for the warm peach band where light text drops below contrast.
-// Light cream (#EEE8DD) for the cyan and plum bands. Quiet grey
-// (#A8AFBC) for empty / near-empty cells.
-//
-// Literal hex values (matching textColorForP in GoalMatrixHeatmap) are
-// used here, not the canvas-aware tokens, so the bracket renders the
-// same in both canvases. V2-03 wrote `var(--bg-root)` and the cells
-// inherited that color, but the inner <NumericCell> hard-codes
-// `style={ color: "var(--data-neutral)" }` on its span and was masking
-// the cell-level color the entire time. The numeric value is now
-// rendered as a plain <span> so this color reaches the glyph.
-function cellTextColor(p: number): string {
-  if (p < 0.01) return "#A8AFBC"; // empty cell, quiet grey
-  if (p < 0.10) return "#A8AFBC"; // very faint cyan, quiet grey
-  if (p < 0.15) return "#EEE8DD"; // cyan band, light cream on dark slate
-  if (p < 0.35) return "#0F1216"; // peach band, dark slate for max contrast
-  return "#EEE8DD";                // plum band, light cream on saturated plum
-}
 
 export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   const slotsPopulated = bracket.rounds.some((r) => r.slots.length > 0);
@@ -264,7 +232,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 
               {ROUNDS.map((r) => {
                 const p = team[r.key] as number;
-                const bg = cellBackground(p);
+                const bg = probabilityToColor(p);
                 return (
                   <div
                     key={r.key}
@@ -274,10 +242,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
                     style={
                       {
                         background: bg,
-                        color: cellTextColor(p),
-                        // V2-04 follow-up: --cell-fill exposes the cell's
-                        // background to the :hover rule so the lift shadow
-                        // inherits the cell's hue, mirroring the heatmap.
+                        color: probabilityTextColorHex(p),
                         "--cell-fill": bg,
                       } as React.CSSProperties
                     }
@@ -296,13 +261,13 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
           })}
       </div>
 
-      {/* Legend · Prism ramp strip */}
+      {/* Legend · sequential ramp strip (sourced from probabilityRamp.ts) */}
       <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
         <div
           className="mono text-[10px] uppercase tracking-[.08em]"
           style={{ color: "var(--text-quiet)" }}
         >
-          P(reach round) density · Prism ramp
+          P(reach round) density
         </div>
         <div className="flex items-center gap-2" style={{ minWidth: 240 }}>
           <span
@@ -317,7 +282,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               height: 8,
               borderRadius: 2,
               background:
-                "linear-gradient(90deg, var(--bg-panel-elev) 0%, color-mix(in oklch, var(--prism-cyan) 40%, var(--bg-panel-elev)) 30%, color-mix(in oklch, var(--prism-peach) 75%, var(--bg-panel-elev)) 65%, var(--prism-plum) 100%)",
+                "linear-gradient(90deg, #1C222B 0%, #263542 5%, #3A6B82 15%, #4F8FA8 30%, #8B8898 45%, #C99878 60%, #A87AA4 80%, #8E5A8A 100%)",
             }}
           />
           <span

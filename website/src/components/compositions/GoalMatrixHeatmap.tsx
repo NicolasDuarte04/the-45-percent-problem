@@ -1,6 +1,12 @@
 "use client";
-// rev: interactive-grid-v4
+// rev: interactive-grid-v5
 import { Fragment, useMemo, useState } from "react";
+import {
+  goalMatrixRampColor,
+  goalMatrixTextColor,
+  RAMP_COLORS as GM_RAMP_COLORS,
+  RAMP_STOPS_PCT as GM_RAMP_STOPS_PCT,
+} from "@/lib/viz/probabilityRamp";
 
 type TriRegion = "home" | "draw" | "away";
 
@@ -21,70 +27,14 @@ interface Cell {
 type Pos = { h: number; a: number };
 type Hover = (Pos & { source: "cell" | "scoreline" }) | null;
 
-const RAMP_STOPS_PCT = [0, 25, 60, 100] as const;
-const RAMP_COLORS = ["#1C222B", "#4F8FA8", "#C99878", "#8E5A8A"] as const;
-
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace("#", "");
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ];
-}
-
-const RAMP_RGB = RAMP_COLORS.map(hexToRgb);
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
-// D3's color interpolator can't read CSS custom properties, so the same 4-stop
-// ramp used by the legend is materialised here as sRGB. Keep these in lockstep
-// with the legend gradient below if either changes.
-function rampRgb(p: number, modalMax: number): [number, number, number] {
-  if (modalMax <= 0) return RAMP_RGB[0];
-  const norm = Math.max(0, Math.min(1, p / modalMax));
-  const stops = RAMP_STOPS_PCT.map((s) => s / 100);
-  for (let i = 0; i < stops.length - 1; i++) {
-    if (norm <= stops[i + 1]) {
-      const span = stops[i + 1] - stops[i] || 1;
-      const t = (norm - stops[i]) / span;
-      return [
-        lerp(RAMP_RGB[i][0], RAMP_RGB[i + 1][0], t) | 0,
-        lerp(RAMP_RGB[i][1], RAMP_RGB[i + 1][1], t) | 0,
-        lerp(RAMP_RGB[i][2], RAMP_RGB[i + 1][2], t) | 0,
-      ];
-    }
-  }
-  return RAMP_RGB[RAMP_RGB.length - 1];
-}
-
 function fillForP(p: number, modalMax: number): string {
-  const [r, g, b] = rampRgb(p, modalMax);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-// V2-03 (B5): contrast-aware text. The ramp peaks in luminance around
-// norm 0.6 (warm coral #C99878), so a single-threshold check on norm
-// misclassifies the brightest cells. Compute W3C relative luminance from
-// the actual cell RGB and switch to dark text whenever the cell crosses
-// the readable-on-light threshold. Very-empty cells (modalMax 0 or norm
-// near 0) stay dim so they read as background.
-function relativeLuminance(r: number, g: number, b: number): number {
-  const toLin = (c: number) => {
-    const cs = c / 255;
-    return cs <= 0.03928 ? cs / 12.92 : Math.pow((cs + 0.055) / 1.055, 2.4);
-  };
-  return 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b);
+  if (modalMax <= 0) return goalMatrixRampColor(0);
+  return goalMatrixRampColor(p / modalMax);
 }
 
 function textColorForP(p: number, modalMax: number): string {
   if (modalMax <= 0) return "#A8AFBC";
-  const norm = p / modalMax;
-  if (norm <= 0.05) return "#A8AFBC";
-  const [r, g, b] = rampRgb(p, modalMax);
-  return relativeLuminance(r, g, b) > 0.22 ? "#0F1216" : "#EEE8DD";
+  return goalMatrixTextColor(p / modalMax);
 }
 
 function niceStep(raw: number): number {
@@ -257,7 +207,7 @@ export function GoalMatrixHeatmap({
                 width: 240,
                 height: 10,
                 borderRadius: 2,
-                background: `linear-gradient(to right, ${RAMP_COLORS[0]} ${RAMP_STOPS_PCT[0]}%, ${RAMP_COLORS[1]} ${RAMP_STOPS_PCT[1]}%, ${RAMP_COLORS[2]} ${RAMP_STOPS_PCT[2]}%, ${RAMP_COLORS[3]} ${RAMP_STOPS_PCT[3]}%)`,
+                background: `linear-gradient(to right, ${GM_RAMP_COLORS[0]} ${GM_RAMP_STOPS_PCT[0]}%, ${GM_RAMP_COLORS[1]} ${GM_RAMP_STOPS_PCT[1]}%, ${GM_RAMP_COLORS[2]} ${GM_RAMP_STOPS_PCT[2]}%, ${GM_RAMP_COLORS[3]} ${GM_RAMP_STOPS_PCT[3]}%)`,
               }}
             />
             <div
