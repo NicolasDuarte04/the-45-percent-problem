@@ -1,14 +1,12 @@
 "use client";
-// rev: bracket-matrix-crosshair-v1
+// rev: bracket-matrix-heatmap-hover-v1
 
-import { useState } from "react";
 import Link from "next/link";
 import type {
   BracketSnapshot,
   TournamentSnapshot,
   TournamentTeam,
 } from "@/lib/data/schemas";
-import { NumericCell } from "@/components/primitives/NumericCell";
 import { Flag } from "@/components/primitives/Flag";
 import { formatProbability } from "@/lib/formatters";
 
@@ -49,25 +47,25 @@ function cellBackground(p: number): string {
   return `color-mix(in oklch, var(--prism-plum) ${35 + scale * 55}%, var(--bg-panel-elev))`;
 }
 
-// V2-04 (#3): probability-band ramp-stop lookup. The cellBackground ramp
-// transitions at p=0.15 (cyan to peach) and p=0.35 (peach to plum); the
-// text color tracks those boundaries so dark text only fires on the warm
-// peach band, where the background is light enough to need it. The dark
-// side uses pure #000. V2-03's --bg-root (#0F1216) was the darkest
-// neutral in the design tokens but tested visually muddy against the
-// lightest peach cells in the 14 to 35 percent range. The 0.10 threshold
-// from the V2-04 brief is the boundary below which cells render in the
-// quietest text register; the dark/light flip itself stays anchored to
-// the cellBackground band switch at 0.15 because cyan-band cells in
-// [0.10, 0.15) are slate-dominant and need light text. Documented as a
-// deliberate deviation from the brief's literal "trigger at 0.10"
-// wording, picked for the better-contrast reading per UX guidance.
+// V2-04 (#3): probability-band lookup matched to the GoalMatrixHeatmap
+// palette so the two surfaces read consistently. Dark slate (#0F1216)
+// for the warm peach band where light text drops below contrast.
+// Light cream (#EEE8DD) for the cyan and plum bands. Quiet grey
+// (#A8AFBC) for empty / near-empty cells.
+//
+// Literal hex values (matching textColorForP in GoalMatrixHeatmap) are
+// used here, not the canvas-aware tokens, so the bracket renders the
+// same in both canvases. V2-03 wrote `var(--bg-root)` and the cells
+// inherited that color, but the inner <NumericCell> hard-codes
+// `style={ color: "var(--data-neutral)" }` on its span and was masking
+// the cell-level color the entire time. The numeric value is now
+// rendered as a plain <span> so this color reaches the glyph.
 function cellTextColor(p: number): string {
-  if (p < 0.01) return "var(--text-tertiary)"; // empty cell
-  if (p < 0.10) return "var(--text-tertiary)"; // very faint cyan, quiet
-  if (p < 0.15) return "var(--text-primary)";  // cyan band, light on dark slate
-  if (p < 0.35) return "#000";                  // peach band, pure black for max contrast
-  return "var(--text-primary)";                  // plum band, light on saturated plum
+  if (p < 0.01) return "#A8AFBC"; // empty cell, quiet grey
+  if (p < 0.10) return "#A8AFBC"; // very faint cyan, quiet grey
+  if (p < 0.15) return "#EEE8DD"; // cyan band, light cream on dark slate
+  if (p < 0.35) return "#0F1216"; // peach band, dark slate for max contrast
+  return "#EEE8DD";                // plum band, light cream on saturated plum
 }
 
 export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
@@ -77,13 +75,12 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
     .slice()
     .sort((a, b) => b.p_champion - a.p_champion);
 
-  // Crosshair hover. Hovering a cell sets both row and col; hovering a team
-  // label sets only the row; hovering a round header sets only the col.
-  // Hover-clear is hoisted to the grid wrapper so the cursor moving across
-  // gridlines inside the matrix never flickers; the highlight stays lit
-  // until the cursor leaves the grid.
-  const [hoverRow, setHoverRow] = useState<string | null>(null);
-  const [hoverCol, setHoverCol] = useState<RoundKey | null>(null);
+  // V2-04 follow-up: row/column crosshair removed. Users found the
+  // dim-everything-off-axis effect visually noisy and asked for the
+  // GoalMatrixHeatmap interaction language instead (cell-only hover
+  // with a scale + glow lift). The hover is now driven entirely by
+  // the CSS `:hover` pseudo-class against `.brk-cell`, so no React
+  // hover state is needed.
 
   return (
     <div
@@ -164,7 +161,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         </div>
       )}
 
-      <style>{crosshairStyles}</style>
+      <style>{cellHoverStyles}</style>
 
       {/* Native CSS Grid: no external bracket library (§12.7) */}
       <div
@@ -172,12 +169,6 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         data-guide-id="bracket-matrix"
         aria-label="Bracket board: per-round marginal probabilities"
         className="brk-grid grid no-scrollbar"
-        data-hover-row={hoverRow !== null ? "" : undefined}
-        data-hover-col={hoverCol !== null ? "" : undefined}
-        onMouseLeave={() => {
-          setHoverRow(null);
-          setHoverCol(null);
-        }}
         style={{
           gridTemplateColumns: `minmax(180px, 1.4fr) repeat(${ROUNDS.length}, minmax(92px, 1fr))`,
           gap: 1,
@@ -211,11 +202,6 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             <div
               key={r.key}
               className="brk-col-header mono text-[11px] uppercase font-semibold tracking-[.14em] px-3 py-3 text-center"
-              data-col-active={hoverCol === r.key ? "" : undefined}
-              onMouseEnter={() => {
-                setHoverRow(null);
-                setHoverCol(r.key);
-              }}
               style={{
                 background: "var(--bg-panel-elev)",
                 position: "sticky",
@@ -232,17 +218,11 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 
           {/* Team rows */}
           {sortedTeams.map((team) => {
-            const rowActive = hoverRow === team.fifa_code;
             return (
             <div key={team.fifa_code} className="contents" role="row">
               <Link
                 href={`/team/${team.fifa_code}`}
-                className="brk-team px-3 py-2 flex items-center gap-2 transition-colors duration-[120ms]"
-                data-row-active={rowActive ? "" : undefined}
-                onMouseEnter={() => {
-                  setHoverRow(team.fifa_code);
-                  setHoverCol(null);
-                }}
+                className="brk-team px-3 py-2 flex items-center gap-2"
                 style={{
                   background: "var(--bg-panel)",
                   color: "var(--text-primary)",
@@ -284,29 +264,30 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
 
               {ROUNDS.map((r) => {
                 const p = team[r.key] as number;
-                const colActive = hoverCol === r.key;
+                const bg = cellBackground(p);
                 return (
                   <div
                     key={r.key}
                     role="cell"
                     aria-label={`${team.display_name} probability of reaching ${r.label}: ${(p * 100).toFixed(1)} percent`}
                     className="brk-cell flex items-center justify-center py-2"
-                    data-row-active={rowActive ? "" : undefined}
-                    data-col-active={colActive ? "" : undefined}
-                    onMouseEnter={() => {
-                      setHoverRow(team.fifa_code);
-                      setHoverCol(r.key);
-                    }}
-                    style={{
-                      background: cellBackground(p),
-                      color: cellTextColor(p),
-                    }}
+                    style={
+                      {
+                        background: bg,
+                        color: cellTextColor(p),
+                        // V2-04 follow-up: --cell-fill exposes the cell's
+                        // background to the :hover rule so the lift shadow
+                        // inherits the cell's hue, mirroring the heatmap.
+                        "--cell-fill": bg,
+                      } as React.CSSProperties
+                    }
                   >
-                    <NumericCell
-                      value={p}
-                      formatter={(x) => formatProbability(x, 1)}
-                      ariaLabel={`${(p * 100).toFixed(1)} percent`}
-                    />
+                    <span
+                      className="mono inline-block text-right tabular-nums"
+                      aria-label={`${(p * 100).toFixed(1)} percent`}
+                    >
+                      {formatProbability(p, 1)}
+                    </span>
                   </div>
                 );
               })}
@@ -351,48 +332,30 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   );
 }
 
-// Crosshair: hovering any team-row label, round header, or probability cell
-// dims everything off the active axis. Three rules drive the effect:
-//   - data-hover-row on the grid + :not([data-row-active]) on team labels
-//   - data-hover-col on the grid + :not([data-col-active]) on round headers
-//   - either axis active + cells that match neither row nor col
-// The team-label header (.brk-col-header--axis) never dims; it's the matrix
-// origin, not a column.
-//
-// IMPORTANT: opacity is intentionally avoided on the sticky column headers. 
-// a semi-transparent sticky strip lets scrolling cells leak through and
-// reads as broken UI. We dim text colour instead and keep bg-panel-elev
-// solid. Cells are dimmed via filter: saturate/brightness rather than
-// opacity for the same reason; opacity bleeds the dark gridline colour
-// through the heatmap fill and looks muddy. Filter mutes the colour while
-// preserving the cell's visual presence.
-const crosshairStyles = `
-.brk-team,
-.brk-col-header,
+// V2-04 follow-up: cell-only hover, matched to the GoalMatrixHeatmap
+// `.gm-cell[data-hover]` interaction language. The crosshair (row +
+// column dim, axis tick highlights) is gone; only the hovered cell
+// reacts, with a scale + glow lift whose shadow color inherits from
+// the cell's own fill (--cell-fill set inline per cell).
+const cellHoverStyles = `
 .brk-cell {
-  transition: filter 150ms ease, color 150ms ease;
+  position: relative;
+  transition:
+    transform 150ms ease,
+    box-shadow 180ms ease,
+    filter 150ms ease;
+  will-change: transform;
+}
+.brk-cell:hover {
+  transform: scale(1.04);
+  box-shadow:
+    0 0 0 1px var(--cell-fill),
+    0 6px 18px -2px color-mix(in oklch, var(--cell-fill) 70%, transparent);
+  filter: brightness(1.18);
+  z-index: 2;
 }
 .brk-col-header {
   color: var(--text-primary);
-}
-.brk-grid[data-hover-row] .brk-team:not([data-row-active]) {
-  filter: brightness(0.62);
-}
-.brk-grid[data-hover-col] .brk-col-header:not(.brk-col-header--axis):not([data-col-active]) {
-  color: var(--text-tertiary);
-}
-.brk-grid[data-hover-row] .brk-cell:not([data-row-active]):not([data-col-active]),
-.brk-grid[data-hover-col] .brk-cell:not([data-row-active]):not([data-col-active]) {
-  filter: saturate(0.35) brightness(0.82);
-}
-.brk-grid[data-hover-row] .brk-cell[data-row-active],
-.brk-grid[data-hover-col] .brk-cell[data-col-active] {
-  filter: brightness(1.06);
-}
-.brk-grid[data-hover-row][data-hover-col] .brk-cell[data-row-active][data-col-active] {
-  filter: brightness(1.14);
-}
-.brk-col-header:not(.brk-col-header--axis) {
   cursor: default;
 }
 `;
