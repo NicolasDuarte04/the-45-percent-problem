@@ -24,6 +24,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics/track";
 import { getOneInN } from "@/lib/sim/getOneInN";
+import { writeClipboardText } from "@/lib/clipboard";
 
 interface TicketShareButtonProps {
   predictionId: string;
@@ -48,40 +49,6 @@ const COPY_POST_LABEL: Record<CopyPostState, string> = {
 };
 
 const COMPOSER_MAX_CHARS = 280;
-
-/**
- * Robust clipboard write with a synchronous fallback. The modern
- * `navigator.clipboard.writeText` is denied (NotAllowedError) when the
- * document does not have focus at the moment of the click; the legacy
- * textarea + `document.execCommand("copy")` path tolerates that, so we
- * try it second. Returns true on success, false otherwise.
- */
-async function writeClipboardText(text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch (err) {
-    console.warn("[ticket-share] clipboard.writeText denied, falling back", err);
-  }
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    ta.style.pointerEvents = "none";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch (err) {
-    console.warn("[ticket-share] execCommand copy fallback failed", err);
-    return false;
-  }
-}
 
 /**
  * Assemble the one-tap composer string: `1 in N. {storyLine}. {permalink}`.
@@ -239,16 +206,15 @@ export function TicketShareButton({
       }
     }
 
-    // Clipboard fallback.
-    try {
-      await navigator.clipboard.writeText(permalinkUrl);
+    // Clipboard fallback (writeClipboardText handles execCommand fallback
+    // and never throws — see lib/clipboard.ts).
+    const wrote = await writeClipboardText(permalinkUrl);
+    if (wrote) {
       track("share_action", { type: "copy" });
       setCopyLabel("Copied!");
       setTimeout(() => setCopyLabel("Share"), 2000);
-    } catch {
-      // Clipboard unavailable (rare: non-secure context or denied permission).
-      // Silent fail; the user can still copy the URL from the address bar.
     }
+    // Silent fail otherwise: the user can still copy the URL from the address bar.
   }, [predictionId]);
 
   return (

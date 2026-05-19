@@ -39,9 +39,24 @@ const ROUNDS: Array<{ key: RoundKey; short: string; label: string }> = [
 export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
   const slotsPopulated = bracket.rounds.some((r) => r.slots.length > 0);
 
-  const sortedTeams: TournamentTeam[] = tournament.teams
-    .slice()
-    .sort((a, b) => b.p_champion - a.p_champion);
+  // Defensive dedupe by fifa_code. Upstream tournament.json is expected
+  // to contain one row per qualifier, but a stale `public/data/latest/`
+  // snapshot has shipped with duplicated fifa_codes before (May 2026:
+  // COD appeared at seeds 37 and 39 while TUN was dropped). Rendering
+  // duplicates would (a) emit a React duplicate-key warning, (b) show
+  // the same country twice in the matrix. Keep the first occurrence
+  // after sorting by champion probability — within a dupe pair they
+  // agree on fifa_code, so first-wins is deterministic.
+  const dedupedTeams: TournamentTeam[] = [];
+  const seenFifaCodes = new Set<string>();
+  for (const t of tournament.teams) {
+    if (seenFifaCodes.has(t.fifa_code)) continue;
+    seenFifaCodes.add(t.fifa_code);
+    dedupedTeams.push(t);
+  }
+  const sortedTeams: TournamentTeam[] = dedupedTeams.sort(
+    (a, b) => b.p_champion - a.p_champion,
+  );
 
   // V2-04 follow-up: row/column crosshair removed. Users found the
   // dim-everything-off-axis effect visually noisy and asked for the

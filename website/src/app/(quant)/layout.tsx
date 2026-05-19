@@ -1,29 +1,18 @@
 import { EditorialMasthead } from "@/components/layout/EditorialMasthead";
 import { DesktopRecommendedBanner } from "@/components/layout/DesktopRecommendedBanner";
-import {
-  DESKTOP_BANNER_DOM_ID,
-  DESKTOP_BANNER_STORAGE_KEY,
-} from "@/components/layout/desktopRecommendedBannerConstants";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 
 // Checkpoint 17 follow-up: operator detection moved to the masthead
 // client island so /bracket can statically prerender alongside the
 // rest of the (quant) routes. See src/app/(editorial)/layout.tsx for
 // the rationale.
-
-// Pre-hydrate dismiss check. Rendered by the server layout (not by the
-// Client Component itself) so it lives in the SSR document and runs
-// during initial HTML parse, before React hydrates. This preserves the
-// no-flash-of-banner-then-dismiss behavior without triggering React's
-// "script tag inside a Client Component" warning.
-const DESKTOP_BANNER_PRE_HYDRATE = `(function(){
-  try {
-    if (sessionStorage.getItem(${JSON.stringify(DESKTOP_BANNER_STORAGE_KEY)}) === "1") {
-      var el = document.getElementById(${JSON.stringify(DESKTOP_BANNER_DOM_ID)});
-      if (el) el.setAttribute("data-dismissed", "1");
-    }
-  } catch (e) { /* sessionStorage may be blocked; render the banner */ }
-})();`;
+//
+// The DesktopRecommendedBanner pre-hydrate dismiss check lives in the
+// root layout (app/layout.tsx) as a `next/script` with
+// `strategy="beforeInteractive"`. Rendering a raw <script> here
+// triggered React 19's "script tag inside a React component" warning
+// on client-side navigation; `next/script` with `beforeInteractive`
+// is the supported path.
 
 export default function QuantLayout({
   children,
@@ -34,7 +23,6 @@ export default function QuantLayout({
     <div data-canvas="quant">
       <EditorialMasthead />
       <DesktopRecommendedBanner />
-      <script dangerouslySetInnerHTML={{ __html: DESKTOP_BANNER_PRE_HYDRATE }} />
       <main className="flex-1 w-full">{children}</main>
       <SiteFooter />
     </div>
