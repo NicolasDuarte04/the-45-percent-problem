@@ -49,15 +49,25 @@ function cellBackground(p: number): string {
   return `color-mix(in oklch, var(--prism-plum) ${35 + scale * 55}%, var(--bg-panel-elev))`;
 }
 
+// V2-04 (#3): probability-band ramp-stop lookup. The cellBackground ramp
+// transitions at p=0.15 (cyan to peach) and p=0.35 (peach to plum); the
+// text color tracks those boundaries so dark text only fires on the warm
+// peach band, where the background is light enough to need it. The dark
+// side uses pure #000. V2-03's --bg-root (#0F1216) was the darkest
+// neutral in the design tokens but tested visually muddy against the
+// lightest peach cells in the 14 to 35 percent range. The 0.10 threshold
+// from the V2-04 brief is the boundary below which cells render in the
+// quietest text register; the dark/light flip itself stays anchored to
+// the cellBackground band switch at 0.15 because cyan-band cells in
+// [0.10, 0.15) are slate-dominant and need light text. Documented as a
+// deliberate deviation from the brief's literal "trigger at 0.10"
+// wording, picked for the better-contrast reading per UX guidance.
 function cellTextColor(p: number): string {
-  // V2-03 (B4): contrast-aware text. At p >= 0.15 the cell background is
-  // dominated by --prism-peach (warm, mid-luminance on the quant slate
-  // canvas); light text on peach drops below WCAG AA. Switch to dark text
-  // across the peach + plum range. Below 0.15 the cell is dark slate with
-  // a faint cyan tint and light text reads with adequate contrast.
-  if (p >= 0.15) return "var(--bg-root)";
-  if (p >= 0.08) return "var(--text-primary)";
-  return "var(--text-tertiary)";
+  if (p < 0.01) return "var(--text-tertiary)"; // empty cell
+  if (p < 0.10) return "var(--text-tertiary)"; // very faint cyan, quiet
+  if (p < 0.15) return "var(--text-primary)";  // cyan band, light on dark slate
+  if (p < 0.35) return "#000";                  // peach band, pure black for max contrast
+  return "var(--text-primary)";                  // plum band, light on saturated plum
 }
 
 export function BracketBoard({ bracket, tournament }: BracketBoardProps) {

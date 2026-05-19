@@ -303,11 +303,7 @@ export function GoalMatrixHeatmap({
             >
               <div />
               {Array.from({ length: maxCols }, (_, j) => (
-                <div
-                  key={`x-${j}`}
-                  className="gm-tick gm-tick-x"
-                  data-axis-active={active?.a === j ? "" : undefined}
-                >
+                <div key={`x-${j}`} className="gm-tick gm-tick-x">
                   <span>{j}</span>
                 </div>
               ))}
@@ -315,10 +311,7 @@ export function GoalMatrixHeatmap({
                 const h = maxRows - 1 - idx;
                 return (
                   <Fragment key={`row-${h}`}>
-                    <div
-                      className="gm-tick gm-tick-y"
-                      data-axis-active={active?.h === h ? "" : undefined}
-                    >
+                    <div className="gm-tick gm-tick-y">
                       <span>{h}</span>
                     </div>
                     {Array.from({ length: maxCols }, (_, a) => {
@@ -328,8 +321,10 @@ export function GoalMatrixHeatmap({
                       const rank = top3Rank.get(`${h}-${a}`);
                       const isHover = hover?.h === h && hover?.a === a;
                       const isPinned = pinned?.h === h && pinned?.a === a;
-                      const inRow = active?.h === h && !isHover && !isPinned;
-                      const inCol = active?.a === a && !isHover && !isPinned;
+                      // V2-04 (#4): row/column crosshair hover removed.
+                      // Only the cell-level hover (data-hover) and the
+                      // pinned-cell outline (data-pinned) drive visual
+                      // feedback. Triangle dim/highlight stays.
                       // Triangle region this cell sums into.
                       const triRegion: TriRegion =
                         h > a ? "home" : h === a ? "draw" : "away";
@@ -350,8 +345,6 @@ export function GoalMatrixHeatmap({
                           className="gm-cell mono"
                           data-hover={isHover ? "" : undefined}
                           data-pinned={isPinned ? "" : undefined}
-                          data-row-active={inRow ? "" : undefined}
-                          data-col-active={inCol ? "" : undefined}
                           data-tri-in={triIn ? "" : undefined}
                           data-tri-out={triOut ? "" : undefined}
                           data-rank={rank !== undefined ? rank : undefined}
@@ -714,11 +707,6 @@ const styles = `
   height: 18px;
   border-radius: 3px;
   padding: 0 4px;
-  transition: background 150ms ease, color 150ms ease;
-}
-.gm-tick[data-axis-active] > span {
-  background: var(--bg-panel-elev);
-  color: var(--text-primary);
 }
 .gm-cell {
   position: relative;
@@ -748,10 +736,6 @@ const styles = `
   outline: 2px solid var(--text-secondary);
   outline-offset: 2px;
   z-index: 4;
-}
-.gm-cell[data-row-active],
-.gm-cell[data-col-active] {
-  filter: brightness(1.12);
 }
 .gm-cell[data-hover] {
   transform: scale(1.05);
