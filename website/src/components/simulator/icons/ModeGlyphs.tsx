@@ -13,9 +13,12 @@ interface GlyphProps {
   className?: string;
 }
 
+// V2-03 (B1): default size bumped from 24 to 32 so the glyph reads as the
+// card's anchor, not a decorative corner stamp. Hand-drawn-feel geometry and
+// 1px stroke weight unchanged.
 const baseProps = {
-  width: 24,
-  height: 24,
+  width: 32,
+  height: 32,
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",

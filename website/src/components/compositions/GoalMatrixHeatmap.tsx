@@ -42,29 +42,49 @@ function lerp(a: number, b: number, t: number) {
 // D3's color interpolator can't read CSS custom properties, so the same 4-stop
 // ramp used by the legend is materialised here as sRGB. Keep these in lockstep
 // with the legend gradient below if either changes.
-function fillForP(p: number, modalMax: number): string {
-  if (modalMax <= 0) return RAMP_COLORS[0];
+function rampRgb(p: number, modalMax: number): [number, number, number] {
+  if (modalMax <= 0) return RAMP_RGB[0];
   const norm = Math.max(0, Math.min(1, p / modalMax));
   const stops = RAMP_STOPS_PCT.map((s) => s / 100);
   for (let i = 0; i < stops.length - 1; i++) {
     if (norm <= stops[i + 1]) {
       const span = stops[i + 1] - stops[i] || 1;
       const t = (norm - stops[i]) / span;
-      const r = lerp(RAMP_RGB[i][0], RAMP_RGB[i + 1][0], t);
-      const g = lerp(RAMP_RGB[i][1], RAMP_RGB[i + 1][1], t);
-      const b = lerp(RAMP_RGB[i][2], RAMP_RGB[i + 1][2], t);
-      return `rgb(${r | 0}, ${g | 0}, ${b | 0})`;
+      return [
+        lerp(RAMP_RGB[i][0], RAMP_RGB[i + 1][0], t) | 0,
+        lerp(RAMP_RGB[i][1], RAMP_RGB[i + 1][1], t) | 0,
+        lerp(RAMP_RGB[i][2], RAMP_RGB[i + 1][2], t) | 0,
+      ];
     }
   }
-  return RAMP_COLORS[RAMP_COLORS.length - 1];
+  return RAMP_RGB[RAMP_RGB.length - 1];
+}
+
+function fillForP(p: number, modalMax: number): string {
+  const [r, g, b] = rampRgb(p, modalMax);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// V2-03 (B5): contrast-aware text. The ramp peaks in luminance around
+// norm 0.6 (warm coral #C99878), so a single-threshold check on norm
+// misclassifies the brightest cells. Compute W3C relative luminance from
+// the actual cell RGB and switch to dark text whenever the cell crosses
+// the readable-on-light threshold. Very-empty cells (modalMax 0 or norm
+// near 0) stay dim so they read as background.
+function relativeLuminance(r: number, g: number, b: number): number {
+  const toLin = (c: number) => {
+    const cs = c / 255;
+    return cs <= 0.03928 ? cs / 12.92 : Math.pow((cs + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b);
 }
 
 function textColorForP(p: number, modalMax: number): string {
   if (modalMax <= 0) return "#A8AFBC";
   const norm = p / modalMax;
-  if (norm > 0.5) return "#0F1216";
-  if (norm > 0.15) return "#EEE8DD";
-  return "#A8AFBC";
+  if (norm <= 0.05) return "#A8AFBC";
+  const [r, g, b] = rampRgb(p, modalMax);
+  return relativeLuminance(r, g, b) > 0.22 ? "#0F1216" : "#EEE8DD";
 }
 
 function niceStep(raw: number): number {
@@ -353,8 +373,16 @@ export function GoalMatrixHeatmap({
                           }
                           onClick={() => togglePinned(h, a)}
                           aria-pressed={isPinned}
-                          aria-label={`${homeCode} ${h}. ${a} ${awayCode}, ${(p * 100).toFixed(2)}%`}
+                          aria-label={`${homeCode} ${h}. ${a} ${awayCode}, ${(p * 100).toFixed(2)}%${rank !== undefined ? `, modal rank ${rank + 1}` : ""}`}
                         >
+                          {rank !== undefined ? (
+                            <span
+                              className="gm-cell-rank mono"
+                              aria-hidden="true"
+                            >
+                              #{rank + 1}
+                            </span>
+                          ) : null}
                           {p < 0.001 ? "·" : (p * 100).toFixed(1)}
                         </button>
                       );
@@ -733,9 +761,13 @@ const styles = `
   filter: brightness(1.18);
   z-index: 2;
 }
+/* V2-03 (B5): selected-cell outline uses --accent-warm so it pops uniformly
+   against the heatmap palette rather than tinting with the cell's own fill.
+   The amber border reads in a dense 7x7 grid where a fill-derived outline
+   could blend with neighbouring cells. */
 .gm-cell[data-pinned] {
-  outline: 2px solid color-mix(in oklch, var(--cell-fill) 55%, white 45%);
-  outline-offset: 3px;
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
   box-shadow:
     0 0 0 1px var(--cell-fill),
     0 0 24px -2px color-mix(in oklch, var(--cell-fill) 75%, transparent);
@@ -789,6 +821,31 @@ const styles = `
   background: color-mix(in oklch, var(--cell-fill) 35%, var(--bg-panel-elev));
   border: 1.5px solid color-mix(in oklch, var(--cell-fill) 70%, white 30%);
   color: color-mix(in oklch, var(--cell-fill) 35%, white 65%);
+}
+
+/* V2-03 (B5): in-matrix rank badges for the top-3 modal scorelines. Lets
+   the user scan the heatmap and locate the most-likely cells at a glance,
+   rather than reading the side panel and visually searching. Fixed
+   --accent-warm so the badge pops against any cell fill. */
+.gm-cell-rank {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 12px;
+  padding: 0 3px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--accent-warm);
+  background: color-mix(in oklch, var(--bg-root) 70%, transparent);
+  border: 1px solid var(--accent-warm);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 .gm-readout {
