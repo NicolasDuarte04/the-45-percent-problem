@@ -117,6 +117,59 @@ function nextEmptyOpponentSlot(state: BuildState): StageKey | null {
   return null;
 }
 
+/**
+ * V2-02 (A3): progressive disclosure of stage rows. Returns the stages
+ * that should be visible given the current state:
+ *   - no team picked → []
+ *   - team picked, R16 not yet complete → [R16]
+ *   - R16 complete with W → [R16, QF]
+ *   - ... and so on, capped at F.
+ *
+ * A stage that lands as an "L" stops further reveal: the path has died,
+ * the user can submit, and downstream stages should not pretend to be
+ * reachable. The earlier semantics (`isPathDeadAt`) already encoded this
+ * by returning null from nextEmptyOpponentSlot; here we just refuse to
+ * render those would-be-dead rows at all.
+ */
+function visibleStages(state: BuildState): StageKey[] {
+  if (!state.team) return [];
+  const out: StageKey[] = [];
+  for (const s of STAGE_KEYS) {
+    out.push(s);
+    const v = state[s];
+    if (!v.opponent || !v.result || v.result === "L") break;
+  }
+  return out;
+}
+
+/**
+ * V2-02 (A3): the headline copy is fixed; the subhead changes with the
+ * user's position in the path so the page narrates what to do next. The
+ * strings are locked at the spec level (do not rephrase).
+ */
+function subheadCopyFor(state: BuildState): string {
+  if (!state.team) {
+    return "First, pick the team you are tracing. Click or drag from the grid.";
+  }
+  for (const s of STAGE_KEYS) {
+    const v = state[s];
+    if (!v.opponent || !v.result) {
+      switch (s) {
+        case "r16":
+          return "Now tell us what happens in the Round of 16.";
+        case "qf":
+          return "Now the Quarterfinal.";
+        case "sf":
+          return "Now the Semifinal.";
+        case "f":
+          return "Now the Final.";
+      }
+    }
+    if (v.result === "L") break;
+  }
+  return "Your team's full story. Submit when ready.";
+}
+
 function toSubmissionScenario(state: BuildState): ChampionsPathScenario | null {
   if (!state.team) return null;
   const out: ChampionsPathScenario = { team: state.team, r16: { opponent: "", result: "W" } };
@@ -444,10 +497,20 @@ export function ModeChampionsPath({
     : "";
   const resolved = isResolved(state);
 
+  // V2-02 (A3): which stage rows to render. Driven entirely by `state`,
+  // so the inflight buffer rehydrates the right disclosure without any
+  // extra plumbing: a returning user who saved at QF-in-progress sees
+  // R16 (done) + QF (empty), nothing further.
+  const visibleStageList = useMemo(() => visibleStages(state), [state]);
   // Phase E §6 (B.2): derive the effective focus stage. Falls back to the
   // next-empty slot for natural progression when the user hasn't tapped
-  // a stage card explicitly.
-  const focusStage: StageKey | null = activeStage ?? nextEmptyOpponentSlot(state);
+  // a stage card explicitly. If activeStage points at a stage that is no
+  // longer visible (e.g., cleared by a cascading L result), drop it.
+  const focusStageRaw: StageKey | null =
+    activeStage && visibleStageList.includes(activeStage)
+      ? activeStage
+      : nextEmptyOpponentSlot(state);
+  const focusStage = focusStageRaw;
   // Q1: picker is expanded whenever the path is unresolved, OR when the
   // user explicitly tapped "Edit story" while resolved. Reset of
   // the manual flag is handled inline in handlers that mutate state.
@@ -501,9 +564,7 @@ export function ModeChampionsPath({
         </div>
 
         <p className="mt-3 font-sans text-[14px] text-[var(--text-tertiary)]">
-          {state.team
-            ? "Pick an opponent for each stage, then call the result."
-            : "First, pick the team you are tracing. Click or drag from the grid."}
+          {subheadCopyFor(state)}
         </p>
 
         {/* Team slot */}
@@ -526,12 +587,18 @@ export function ModeChampionsPath({
         {/* Stage row (vertical on mobile, horizontal at sm+). Phase E
             §6 (B.2): tappable to set focus; active stage gets the
             accent-warm border; completed stages dim to ~60%; dead
-            stages stay at the existing 40%. */}
+            stages stay at the existing 40%. V2-02 (A3): stages reveal
+            progressively: only the team picker is visible before a
+            team is chosen, then R16 appears, then QF after R16=W, etc.
+            The grid template column count is fed from the visible
+            list so each stage grows into the available width. */}
+        {visibleStageList.length > 0 ? (
         <ol
           aria-label="Stages from R16 to Final"
-          className="mt-6 grid grid-cols-1 gap-px border border-[var(--border-default)] bg-[var(--rule)] sm:grid-cols-4"
+          className="cp-stages-grid mt-6 grid gap-px border border-[var(--border-default)] bg-[var(--rule)]"
+          style={{ ["--cp-stages-count" as never]: visibleStageList.length }}
         >
-          {STAGE_KEYS.map((s) => {
+          {visibleStageList.map((s) => {
             const stage = state[s];
             const dead = isPathDeadAt(state, s);
             const active = !dead && (stage.opponent !== null || nextEmptyOpponentSlot(state) === s);
@@ -553,7 +620,7 @@ export function ModeChampionsPath({
                   }
                 }}
                 className={[
-                  "relative flex h-32 w-full cursor-pointer flex-col bg-[var(--bg-root)] p-3 transition-colors duration-100 sm:h-36",
+                  "ck17-stage-reveal relative flex h-32 w-full cursor-pointer flex-col bg-[var(--bg-root)] p-3 transition-colors duration-100 sm:h-36",
                   "border focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
                   isFocused
                     ? "border-[var(--accent-warm)]"
@@ -619,6 +686,7 @@ export function ModeChampionsPath({
             );
           })}
         </ol>
+        ) : null}
 
         {/* Narrative line: assembles in serif as scenario fills. */}
         {narrative ? (
