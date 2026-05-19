@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BrowseRaritiesStrip } from "@/components/simulator/explore/BrowseRaritiesStrip";
+import { HowItWorksDiagram } from "@/components/simulator/HowItWorksDiagram";
 import { LandingHero } from "@/components/simulator/LandingHero";
 import { ModeSelectorCards } from "@/components/simulator/ModeSelectorCards";
 import { SimulatorChrome } from "@/components/simulator/SimulatorChrome";
-import { SimulatorTrailer } from "@/components/simulator/SimulatorTrailer";
-import { TeamGrid } from "@/components/simulator/TeamGrid";
 import { getPromoCard } from "@/lib/sim/promoCards";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
@@ -29,8 +28,11 @@ const BASE_METADATA: Metadata = {
  *   - SimulatorChrome top mast strip
  *   - LandingHero
  *   - ModeSelectorCards
- *   - SimulatorTrailer
- *   - TeamGrid
+ *   - BrowseRaritiesStrip
+ *   - HowItWorksDiagram (V2-01: replaced the looping trailer mp4 with
+ *     a static three-step diagram. The 48-team flag grid that used to
+ *     follow this slot was unmounted in V2-01 because it was decorative
+ *     and read as interactive.)
  *   - SiteFooter (from layout)
  *
  * `?card=<slug>` (P0.7) is a marketing convenience. When the slug
@@ -96,8 +98,7 @@ export default async function ScenarioLandingPage({ searchParams }: PageProps) {
       <LandingHero />
       <ModeSelectorCards />
       <BrowseRaritiesStrip />
-      <SimulatorTrailer />
-      <TeamGrid />
+      <HowItWorksDiagram />
     </SimulatorChrome>
   );
 }
