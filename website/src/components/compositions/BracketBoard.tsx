@@ -50,8 +50,13 @@ function cellBackground(p: number): string {
 }
 
 function cellTextColor(p: number): string {
-  if (p > 0.35) return "var(--bg-root)";
-  if (p > 0.08) return "var(--text-primary)";
+  // V2-03 (B4): contrast-aware text. At p >= 0.15 the cell background is
+  // dominated by --prism-peach (warm, mid-luminance on the quant slate
+  // canvas); light text on peach drops below WCAG AA. Switch to dark text
+  // across the peach + plum range. Below 0.15 the cell is dark slate with
+  // a faint cyan tint and light text reads with adequate contrast.
+  if (p >= 0.15) return "var(--bg-root)";
+  if (p >= 0.08) return "var(--text-primary)";
   return "var(--text-tertiary)";
 }
 

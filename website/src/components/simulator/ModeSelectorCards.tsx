@@ -77,7 +77,7 @@ export function ModeSelectorCards() {
                 className="group relative block border border-[var(--border-default)] p-5 transition-colors duration-100 hover:border-[var(--accent-warm)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]"
               >
                 <Glyph className="pointer-events-none absolute right-4 top-4 text-[var(--text-tertiary)] transition-colors duration-100 group-hover:text-[var(--accent-warm)]" />
-                <div className="pr-8 font-mono text-[13px] uppercase tracking-[0.10em] text-[var(--text-primary)] transition-colors duration-100 group-hover:text-[var(--accent-warm)]">
+                <div className="pr-12 font-mono text-[13px] uppercase tracking-[0.10em] text-[var(--text-primary)] transition-colors duration-100 group-hover:text-[var(--accent-warm)]">
                   {mode.heading}
                 </div>
                 <p className="mt-3 font-serif text-[16px] leading-[1.45] text-[var(--text-primary)]">

@@ -28,8 +28,11 @@ import type {
  * carry a quiet warm accent (var(--accent-warm)); non-matches carry
  * none. There are no sentiment colours, no scores, no badges, no
  * celebratory or judgmental copy. The header is locked to the form
- * "[N] OF [M] [things] MATCH THE MODEL'S MODAL CALL" so the panel
- * reads as a set-theoretic disclosure surface.
+ * "OVERLAP · [N] OF [M] [things]" so the panel reads as a
+ * set-theoretic disclosure surface. The eyebrow above the header
+ * (MODEL CALL · COMPARISON) already establishes the comparison
+ * context, so the header omits the "with the model's modal call"
+ * tail.
  */
 
 type StageKey = "r16" | "qf" | "sf" | "f";
@@ -181,7 +184,7 @@ function FinalFourBody({
   return (
     <>
       <PanelHeader
-        text={`${matchCount} of 4 semifinalists match the model's modal call`}
+        text={`Overlap · ${matchCount} of 4 semifinalists`}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-5">
@@ -276,7 +279,7 @@ function ChampionsPathBody({
   return (
     <>
       <PanelHeader
-        text={`${matchCount} of ${total} ${total === 1 ? "stage" : "stages"} match the model's modal call`}
+        text={`Overlap · ${matchCount} of ${total} ${total === 1 ? "stage" : "stages"}`}
       />
 
       <div className="mt-5 overflow-x-auto">
@@ -447,7 +450,7 @@ function FullBracketBody({
   return (
     <>
       <PanelHeader
-        text={`${totalMatches} of ${totalPossible} advancements match the model's modal call`}
+        text={`Overlap · ${totalMatches} of ${totalPossible} advancements`}
       />
 
       {userChamp ? (
