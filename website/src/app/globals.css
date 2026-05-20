@@ -253,6 +253,24 @@
   --border:              #262D37;
   --input:               #262D37;
   --ring:                #F9B88A;
+
+  /* Rarity band fills · CP-00 (V3). Cascade note: CSS custom-property
+     `var()` substitution resolves at the declaring element, not at the
+     consuming element (UI_IMPROVEMENT_ARCHITECTURE_V3.md §1, locked
+     guardrails). The `:root` definitions of these tokens bake in the
+     editorial `--text-tertiary`, `--accent-warm`, and `--bg-panel-elev`
+     values; a `[data-canvas="simulator"]` descendant inherits those
+     already-substituted strings and ignores its own palette overrides.
+     Each canvas that needs the band fills against its own surface must
+     redefine them inside its own block. The same six lines below also
+     appear (with their own values) in the `:root` editorial block and
+     in the `[data-canvas="quant"]` block. */
+  --band-common:         color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  --band-plausible:      color-mix(in srgb, var(--text-primary) 60%, transparent);
+  --band-uncommon:       color-mix(in srgb, var(--accent-warm) 30%, var(--bg-panel-elev));
+  --band-rare:           color-mix(in srgb, var(--accent-warm) 60%, var(--bg-panel-elev));
+  --band-vanishing:      var(--accent-warm);
+  --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
 }
 
 /* ── Simulator reveal sequence (IMPL_PROMPT §9) ─────────────────────────────
