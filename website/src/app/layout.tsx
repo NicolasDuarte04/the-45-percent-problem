@@ -3,7 +3,28 @@ import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  DESKTOP_BANNER_DOM_ID,
+  DESKTOP_BANNER_STORAGE_KEY,
+} from "@/components/layout/desktopRecommendedBannerConstants";
 import "./globals.css";
+
+// Pre-hydrate dismiss check for the DesktopRecommendedBanner (rendered
+// only inside (quant)/layout.tsx). Lives in the root layout because
+// `beforeInteractive` scripts must be placed in the root layout per
+// the next/script docs; the getElementById guard makes it a no-op on
+// routes without the banner. Preserves the no-flash-of-banner-then-
+// dismiss behavior without rendering a raw <script> inside a nested
+// layout (which triggers React's "script tag inside a React component"
+// warning under React 19).
+const DESKTOP_BANNER_PRE_HYDRATE = `(function(){
+  try {
+    if (sessionStorage.getItem(${JSON.stringify(DESKTOP_BANNER_STORAGE_KEY)}) === "1") {
+      var el = document.getElementById(${JSON.stringify(DESKTOP_BANNER_DOM_ID)});
+      if (el) el.setAttribute("data-dismissed", "1");
+    }
+  } catch (e) { /* sessionStorage may be blocked; render the banner */ }
+})();`;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -64,6 +85,11 @@ export default function RootLayout({
       }
     >
       <body className="min-h-screen antialiased" style={{ overflowX: "clip" }}>
+        <Script
+          id="quant-banner-pre-hydrate"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: DESKTOP_BANNER_PRE_HYDRATE }}
+        />
         <Script src="https://plausible.io/js/script.tagged-events.js" data-domain="45analytics.com" strategy="afterInteractive" />
         <TooltipProvider>
           {children}

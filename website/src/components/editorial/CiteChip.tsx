@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { writeClipboardText } from "@/lib/clipboard";
 
 interface CiteChipProps {
   /** The BibTeX body to copy. Rendered inline (monospace) and copyable. */
@@ -20,7 +21,8 @@ export function CiteChip({ bibtex, apa, className }: CiteChipProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(bibtex);
+    const ok = await writeClipboardText(bibtex);
+    if (!ok) return;
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   }

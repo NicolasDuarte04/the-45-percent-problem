@@ -27,6 +27,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { writeClipboardText } from "@/lib/clipboard";
 
 export type SubmitErrorKind =
   | "rateLimit"
@@ -157,11 +158,8 @@ export function SubmitErrorPanel({
     // Snapshot retryCount at click time; safe to read state inside an
     // event handler (just not during render).
     const text = formatDiagnostic(kind, scenarioHash, retryCount);
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // No clipboard access: fall through; the user still sees the text below.
-    }
+    // writeClipboardText handles execCommand fallback and never throws.
+    await writeClipboardText(text);
     setCopied(true);
     if (copyResetRef.current) clearTimeout(copyResetRef.current);
     copyResetRef.current = setTimeout(() => setCopied(false), 2000);

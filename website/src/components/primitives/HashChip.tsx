@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { writeClipboardText } from "@/lib/clipboard";
 
 interface HashChipProps {
   sha: string;
@@ -15,7 +16,8 @@ export function HashChip({ sha, kind, className }: HashChipProps) {
   const label = kind === "code_sha" ? "code" : "data";
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(sha);
+    const ok = await writeClipboardText(sha);
+    if (!ok) return;
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
