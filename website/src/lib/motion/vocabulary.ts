@@ -62,6 +62,30 @@ export const motion = {
     duration: 0.6,
     ease: [0.22, 1, 0.36, 1],
   } satisfies Transition,
+
+  // Band reveal: the gauge fill on the permalink's first beat. One-shot
+  // per prediction view, gated by sessionStorage. Lands inside the
+  // 450ms gaugeFill envelope; named separately so CP-08 can stage it
+  // independently of the build-mode gauge.
+  bandReveal: {
+    duration: 0.6,
+    ease: [0.22, 1, 0.36, 1],
+  } satisfies Transition,
+
+  // Tick roll: the 1-in-N count-up on the permalink and any future
+  // tabular-nums roll surface. Short, decisive, ease-out.
+  tickRoll: {
+    duration: 0.22,
+    ease: [0.22, 1, 0.36, 1],
+  } satisfies Transition,
+
+  // Toast in: the inline status surface used by CP-04, CP-07, CP-10,
+  // CP-11. Slide-up + opacity, 240ms ease-out. Exit is symmetric via
+  // the `exit` preset already defined above.
+  toastIn: {
+    duration: 0.24,
+    ease: [0.22, 1, 0.36, 1],
+  } satisfies Transition,
 } as const;
 
 export type MotionPreset = keyof typeof motion;

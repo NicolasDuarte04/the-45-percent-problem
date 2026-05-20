@@ -7,6 +7,7 @@ import {
   DESKTOP_BANNER_DOM_ID,
   DESKTOP_BANNER_STORAGE_KEY,
 } from "@/components/layout/desktopRecommendedBannerConstants";
+import { ToastHost } from "@/components/ui/Toast";
 import "./globals.css";
 
 // Pre-hydrate dismiss check for the DesktopRecommendedBanner (rendered
@@ -94,6 +95,7 @@ export default function RootLayout({
         <TooltipProvider>
           {children}
         </TooltipProvider>
+        <ToastHost />
         <Analytics />
       </body>
     </html>
