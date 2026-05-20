@@ -70,6 +70,18 @@
   /* Editorial ornament rule */
   --rule: rgb(31 31 31 / 0.10);
 
+  /* Rarity band fills · CP-00 (V3). Consumed by the live gauge (CP-02)
+     and the post-submit reveal (CP-08). Common and Plausible mute toward
+     bone; Uncommon, Rare, and Vanishingly rare reach toward --accent-warm.
+     The companion --band-vanishing-glow drives the post-submit border
+     treatment in CP-08. */
+  --band-common:         color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  --band-plausible:      color-mix(in srgb, var(--text-primary) 60%, transparent);
+  --band-uncommon:       color-mix(in srgb, var(--accent-warm) 30%, var(--bg-panel-elev));
+  --band-rare:           color-mix(in srgb, var(--accent-warm) 60%, var(--bg-panel-elev));
+  --band-vanishing:      var(--accent-warm);
+  --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
+
   /* Button radius · 6px on Editorial (§2.11) */
   --radius: 0.375rem;
 
@@ -133,6 +145,19 @@
   --ui-success:  var(--edge-positive);
   --ui-danger:   var(--edge-negative);
   --ui-warning:  var(--gate-fired);
+
+  /* Rarity band fills · CP-00 (V3). Same six lines as the editorial
+     block; var() references resolve against the quant palette here
+     (lit Prism --accent-warm, dark --bg-panel-elev), so the same
+     declarations yield surface-appropriate hexes without further
+     branching. Tune the percentages per surface if legibility fails
+     on the dev review page. */
+  --band-common:         color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  --band-plausible:      color-mix(in srgb, var(--text-primary) 60%, transparent);
+  --band-uncommon:       color-mix(in srgb, var(--accent-warm) 30%, var(--bg-panel-elev));
+  --band-rare:           color-mix(in srgb, var(--accent-warm) 60%, var(--bg-panel-elev));
+  --band-vanishing:      var(--accent-warm);
+  --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
 
   /* Button radius · 4px on Quant (§2.11) */
   --radius: 0.25rem;

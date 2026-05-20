@@ -9,6 +9,19 @@ const CAPTIONS: Record<RarityBand, string> = {
 };
 
 /**
+ * Ordered band labels (rarest last). Exported so downstream CP modules
+ * can read the canonical string list without duplicating it. Consumed
+ * via `src/lib/sim/bandCopy.ts` (CP-00 (V3)).
+ */
+export const BAND_LABELS: readonly RarityBand[] = [
+  "Common",
+  "Plausible",
+  "Uncommon",
+  "Rare",
+  "Vanishingly rare",
+] as const;
+
+/**
  * Map a Reality Score (count / total) to a rarity band per design v2 §3.1.
  *
  * Thresholds (inclusive lower bound):
