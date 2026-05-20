@@ -160,6 +160,7 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
                   matchIdx={m}
                   pair={pair}
                   advancer={advancer}
+                  isPathMember={advancer !== null}
                   cellWidth={cellW}
                   isMobile={isMobile}
                   onPick={(code) => onAdvance(round.level, m, code)}
@@ -179,6 +180,13 @@ interface MatchCellProps {
   matchIdx: number;
   pair: MatchPair;
   advancer: TeamCode | null;
+  /**
+   * V3 CP-01: this cell sits on the path of a team the user advanced,
+   * driving a persistent 12% --accent-warm background. Composes against
+   * --bg-root, not transparent, so the cell does not bleed through to
+   * the connector layer.
+   */
+  isPathMember: boolean;
   cellWidth: number;
   isMobile: boolean;
   onPick: (code: TeamCode | null) => void;
@@ -190,6 +198,7 @@ function MatchCell({
   matchIdx,
   pair,
   advancer,
+  isPathMember,
   cellWidth,
   isMobile,
   onPick,
@@ -200,7 +209,13 @@ function MatchCell({
 
   return (
     <div
-      className="absolute border border-[var(--border-default)] bg-[var(--bg-root)]"
+      className={[
+        "absolute border border-[var(--border-default)]",
+        isPathMember
+          ? "bg-[color-mix(in_srgb,var(--accent-warm)_12%,var(--bg-root))]"
+          : "bg-[var(--bg-root)]",
+      ].join(" ")}
+      data-path-member={isPathMember ? "true" : undefined}
       style={{ top, left, width: cellWidth, height: CELL_HEIGHT }}
       aria-label={`Round ${level + 1} match ${matchIdx + 1}`}
     >
