@@ -46,11 +46,23 @@ interface BracketTreeProps {
   getMatch: (level: number, matchIdx: number) => MatchPair;
   /** Returns the chosen winner for a match, or null. */
   getAdvancer: (level: number, matchIdx: number) => TeamCode | null;
+  /**
+   * The team the user has crowned overall champion (koAdvancers[30]).
+   * Null until the Final is decided. Every match this team won then
+   * lights up in `--ui-success` green; other path-member cells stay
+   * in the default warm treatment.
+   */
+  champion: TeamCode | null;
   /** User clicked a side. `code` may be null when the side hasn't resolved yet. */
   onAdvance: (level: number, matchIdx: number, code: TeamCode | null) => void;
 }
 
-export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreeProps) {
+export function BracketTree({
+  getMatch,
+  getAdvancer,
+  champion,
+  onAdvance,
+}: BracketTreeProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dropTransition = useReducedMotionAware("drop");
   // Lazy initial: read matchMedia once on mount. The resize listener
@@ -78,13 +90,23 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
 
   // Phase E §7 (C.2/C.3); a connector is highlighted when its parent
   // has a winner picked AND that winner is the chip currently sitting
-  // in the child match's slot.
+  // in the child match's slot. `championPathParents` is the narrower
+  // subset: parents whose winner is the team the user has crowned
+  // overall champion. Connectors in that subset stroke in
+  // `--ui-success` green so the champion's path through the bracket
+  // is the only line that lights up green; everything else stays
+  // warm.
   const highlightedParents = new Set<string>();
+  const championPathParents = new Set<string>();
   for (let pIdx = 0; pIdx < ROUNDS.length - 1; pIdx++) {
     const parent = ROUNDS[pIdx];
     for (let m = 0; m < parent.count; m++) {
       const winner = getAdvancer(parent.level, m);
-      if (winner) highlightedParents.add(`${parent.level}-${m}`);
+      if (winner) {
+        const key = `${parent.level}-${m}`;
+        highlightedParents.add(key);
+        if (champion && winner === champion) championPathParents.add(key);
+      }
     }
   }
 
@@ -145,6 +167,7 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
           {/* Connector overlay: sits behind the cells. */}
           <BracketConnectors
             highlightedParents={highlightedParents}
+            championPathParents={championPathParents}
             mobile={isMobile}
           />
 

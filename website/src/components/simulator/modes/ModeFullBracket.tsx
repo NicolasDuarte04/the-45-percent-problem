@@ -889,9 +889,34 @@ export function ModeFullBracket({
     setState((prev) => {
       const next = [...prev.koAdvancers];
       next[idx] = code;
-      const stageStart =
-        idx < 16 ? 16 : idx < 24 ? 24 : idx < 28 ? 28 : idx < 30 ? 30 : 31;
-      for (let i = stageStart; i < 31; i++) next[i] = null;
+      // Clear only the specific downstream cells that depend on this match.
+      // R32 m feeds R16 ⌊m/2⌋ → QF ⌊m/4⌋ → SF ⌊m/8⌋ → Final. The prior
+      // implementation wiped the entire next stage onward, which collapsed
+      // picks in unrelated bracket halves whenever the user changed any
+      // single match.
+      const downstream: number[] = [];
+      if (idx < 16) {
+        const m = idx;
+        downstream.push(
+          16 + Math.floor(m / 2),
+          24 + Math.floor(m / 4),
+          28 + Math.floor(m / 8),
+          30,
+        );
+      } else if (idx < 24) {
+        const m = idx - 16;
+        downstream.push(
+          24 + Math.floor(m / 2),
+          28 + Math.floor(m / 4),
+          30,
+        );
+      } else if (idx < 28) {
+        const m = idx - 24;
+        downstream.push(28 + Math.floor(m / 2), 30);
+      } else if (idx < 30) {
+        downstream.push(30);
+      }
+      for (const slot of downstream) next[slot] = null;
       return { ...prev, koAdvancers: next };
     });
   }
@@ -1279,6 +1304,7 @@ export function ModeFullBracket({
                 if (level === 3) return state.koAdvancers[28 + m];
                 return state.koAdvancers[30];
               }}
+              champion={state.koAdvancers[30]}
               onAdvance={(level, m, code) => {
                 const idx =
                   level === 0
