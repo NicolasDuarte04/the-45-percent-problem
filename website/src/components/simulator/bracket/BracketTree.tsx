@@ -46,11 +46,23 @@ interface BracketTreeProps {
   getMatch: (level: number, matchIdx: number) => MatchPair;
   /** Returns the chosen winner for a match, or null. */
   getAdvancer: (level: number, matchIdx: number) => TeamCode | null;
+  /**
+   * The team the user has crowned overall champion (koAdvancers[30]).
+   * Null until the Final is decided. Every match this team won then
+   * lights up in `--ui-success` green; other path-member cells stay
+   * in the default warm treatment.
+   */
+  champion: TeamCode | null;
   /** User clicked a side. `code` may be null when the side hasn't resolved yet. */
   onAdvance: (level: number, matchIdx: number, code: TeamCode | null) => void;
 }
 
-export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreeProps) {
+export function BracketTree({
+  getMatch,
+  getAdvancer,
+  champion,
+  onAdvance,
+}: BracketTreeProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dropTransition = useReducedMotionAware("drop");
   // Lazy initial: read matchMedia once on mount. The resize listener
@@ -161,6 +173,7 @@ export function BracketTree({ getMatch, getAdvancer, onAdvance }: BracketTreePro
                   pair={pair}
                   advancer={advancer}
                   isPathMember={advancer !== null}
+                  isChampionPath={champion !== null && advancer === champion}
                   cellWidth={cellW}
                   isMobile={isMobile}
                   onPick={(code) => onAdvance(round.level, m, code)}
@@ -187,6 +200,15 @@ interface MatchCellProps {
    * the connector layer.
    */
   isPathMember: boolean;
+  /**
+   * The advancer at this cell is the same team the user has crowned
+   * champion (koAdvancers[30]). Once that pick is made, every match
+   * the champion won lights up in `--ui-success` green to spotlight
+   * the full champion path through the bracket. While the champion
+   * is still unpicked this is always false and the path keeps its
+   * default warm treatment.
+   */
+  isChampionPath: boolean;
   cellWidth: number;
   isMobile: boolean;
   onPick: (code: TeamCode | null) => void;
@@ -199,6 +221,7 @@ function MatchCell({
   pair,
   advancer,
   isPathMember,
+  isChampionPath,
   cellWidth,
   isMobile,
   onPick,
@@ -210,12 +233,15 @@ function MatchCell({
   return (
     <div
       className={[
-        "absolute border border-[var(--border-default)]",
-        isPathMember
-          ? "bg-[color-mix(in_srgb,var(--accent-warm)_12%,var(--bg-root))]"
-          : "bg-[var(--bg-root)]",
+        "absolute border",
+        isChampionPath
+          ? "border-[var(--ui-success)] bg-[color-mix(in_srgb,var(--ui-success)_18%,var(--bg-root))]"
+          : isPathMember
+            ? "border-[var(--border-default)] bg-[color-mix(in_srgb,var(--accent-warm)_12%,var(--bg-root))]"
+            : "border-[var(--border-default)] bg-[var(--bg-root)]",
       ].join(" ")}
       data-path-member={isPathMember ? "true" : undefined}
+      data-champion-path={isChampionPath ? "true" : undefined}
       style={{ top, left, width: cellWidth, height: CELL_HEIGHT }}
       aria-label={`Round ${level + 1} match ${matchIdx + 1}`}
     >
