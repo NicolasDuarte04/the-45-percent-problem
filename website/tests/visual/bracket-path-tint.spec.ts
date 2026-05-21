@@ -7,11 +7,12 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
  * cell whose getAdvancer() returns a non-null team, plus the
  * cascade-clear behaviour when an upstream advance is changed.
  *
- * Once the user crowns an overall champion (koAdvancers[30]), every
- * match that champion won lights up in --ui-success green: the cell
- * background switches to a stronger green mix and gains a green
- * border (data-champion-path="true"). Non-champion advancers stay in
- * the warm treatment.
+ * Once the user crowns an overall champion (koAdvancers[30]), the
+ * SVG connectors carrying that team forward stroke in --ui-success
+ * (data-champion-path="true" on the <path>); the cells themselves
+ * keep the warm tint regardless. The intent is a single green line
+ * tracing the champion's path through the bracket without recolouring
+ * any of the boxes.
  *
  * The cascade-clear was tightened in this PR: changing a single match
  * now only clears the specific downstream cells that depend on it

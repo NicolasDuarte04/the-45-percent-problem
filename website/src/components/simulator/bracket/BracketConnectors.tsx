@@ -18,6 +18,15 @@
  * is the team propagated into the child, the connector strokes in
  * `--accent-warm`. Otherwise it strokes in `--text-tertiary`.
  *
+ * Champion path (V3 follow-up): once the user crowns an overall
+ * champion (koAdvancers[30]), the subset of highlighted connectors
+ * whose parent winner equals that champion strokes in `--ui-success`
+ * green instead. This is the only line the simulator paints green —
+ * the cells themselves keep the warm path tint regardless of
+ * champion state. The intent is to draw a single green trail through
+ * the bracket showing the path the champion took, without recoloring
+ * any of the boxes.
+ *
  * Draw-in animation (Q2: first session load only):
  *   - Each path is rendered with `stroke-dasharray = pathLength` and
  *     `stroke-dashoffset = pathLength` initially, then animated to 0.
@@ -57,6 +66,8 @@ interface ConnectorSeg {
   length: number;
   /** True when the parent winner has propagated into this connector's child. */
   highlighted: boolean;
+  /** True when the parent winner equals the user-crowned champion. */
+  isChampionPath: boolean;
 }
 
 interface BracketConnectorsProps {
@@ -67,12 +78,20 @@ interface BracketConnectorsProps {
    * matches the cell highlight.
    */
   highlightedParents: ReadonlySet<string>;
+  /**
+   * Subset of `highlightedParents` whose parent winner is also the
+   * user-crowned champion. These connectors stroke in `--ui-success`
+   * instead of `--accent-warm`, lighting up a single green trail
+   * from the champion's first KO match through the Final.
+   */
+  championPathParents: ReadonlySet<string>;
   /** Mobile pitch overrides desktop COL_WIDTH / CELL_WIDTH. */
   mobile?: boolean;
 }
 
 export function BracketConnectors({
   highlightedParents,
+  championPathParents,
   mobile = false,
 }: BracketConnectorsProps) {
   const prefersReduced = useReducedMotion();
@@ -123,21 +142,22 @@ export function BracketConnectors({
           // horizontal_1 = halfGutter; horizontal_2 = childLeftX - midX = halfGutter.
           const length =
             halfGutter + Math.abs(childCenter - parentCenter) + halfGutter;
-          const highlighted = highlightedParents.has(
-            `${parent.level}-${parentMatchIdx}`,
-          );
+          const key = `${parent.level}-${parentMatchIdx}`;
+          const highlighted = highlightedParents.has(key);
+          const isChampionPath = championPathParents.has(key);
           out.push({
             id: `${parent.level}-${parentMatchIdx}->${child.level}-${m}`,
             parentLevel: parent.level,
             d,
             length,
             highlighted,
+            isChampionPath,
           });
         }
       }
     }
     return out;
-  }, [colW, cellW, halfGutter, highlightedParents]);
+  }, [colW, cellW, halfGutter, highlightedParents, championPathParents]);
 
   return (
     <svg
@@ -189,15 +209,23 @@ function ConnectorPath({ seg, shouldAnimate, prefersReduced }: ConnectorPathProp
     el.style.strokeDashoffset = "0";
   }, [shouldAnimate, prefersReduced, seg.length, delayMs]);
 
+  // Champion path beats highlighted beats default. Stroke-width bumps
+  // by 0.5 on the champion line so the green trail reads as a single
+  // continuous path even when the gutter colour around it is busy.
+  const stroke = seg.isChampionPath
+    ? "var(--ui-success)"
+    : seg.highlighted
+      ? "var(--accent-warm)"
+      : "var(--text-tertiary)";
+
   return (
     <path
       ref={ref}
       d={seg.d}
       fill="none"
-      stroke={
-        seg.highlighted ? "var(--accent-warm)" : "var(--text-tertiary)"
-      }
-      strokeWidth={1}
+      stroke={stroke}
+      strokeWidth={seg.isChampionPath ? 1.5 : 1}
+      data-champion-path={seg.isChampionPath ? "true" : undefined}
       style={{ transition: "stroke 200ms ease-out" }}
     />
   );

@@ -90,13 +90,23 @@ export function BracketTree({
 
   // Phase E §7 (C.2/C.3); a connector is highlighted when its parent
   // has a winner picked AND that winner is the chip currently sitting
-  // in the child match's slot.
+  // in the child match's slot. `championPathParents` is the narrower
+  // subset: parents whose winner is the team the user has crowned
+  // overall champion. Connectors in that subset stroke in
+  // `--ui-success` green so the champion's path through the bracket
+  // is the only line that lights up green; everything else stays
+  // warm.
   const highlightedParents = new Set<string>();
+  const championPathParents = new Set<string>();
   for (let pIdx = 0; pIdx < ROUNDS.length - 1; pIdx++) {
     const parent = ROUNDS[pIdx];
     for (let m = 0; m < parent.count; m++) {
       const winner = getAdvancer(parent.level, m);
-      if (winner) highlightedParents.add(`${parent.level}-${m}`);
+      if (winner) {
+        const key = `${parent.level}-${m}`;
+        highlightedParents.add(key);
+        if (champion && winner === champion) championPathParents.add(key);
+      }
     }
   }
 
@@ -157,6 +167,7 @@ export function BracketTree({
           {/* Connector overlay: sits behind the cells. */}
           <BracketConnectors
             highlightedParents={highlightedParents}
+            championPathParents={championPathParents}
             mobile={isMobile}
           />
 
@@ -173,7 +184,6 @@ export function BracketTree({
                   pair={pair}
                   advancer={advancer}
                   isPathMember={advancer !== null}
-                  isChampionPath={champion !== null && advancer === champion}
                   cellWidth={cellW}
                   isMobile={isMobile}
                   onPick={(code) => onAdvance(round.level, m, code)}
@@ -200,15 +210,6 @@ interface MatchCellProps {
    * the connector layer.
    */
   isPathMember: boolean;
-  /**
-   * The advancer at this cell is the same team the user has crowned
-   * champion (koAdvancers[30]). Once that pick is made, every match
-   * the champion won lights up in `--ui-success` green to spotlight
-   * the full champion path through the bracket. While the champion
-   * is still unpicked this is always false and the path keeps its
-   * default warm treatment.
-   */
-  isChampionPath: boolean;
   cellWidth: number;
   isMobile: boolean;
   onPick: (code: TeamCode | null) => void;
@@ -221,7 +222,6 @@ function MatchCell({
   pair,
   advancer,
   isPathMember,
-  isChampionPath,
   cellWidth,
   isMobile,
   onPick,
@@ -233,15 +233,12 @@ function MatchCell({
   return (
     <div
       className={[
-        "absolute border",
-        isChampionPath
-          ? "border-[var(--ui-success)] bg-[color-mix(in_srgb,var(--ui-success)_18%,var(--bg-root))]"
-          : isPathMember
-            ? "border-[var(--border-default)] bg-[color-mix(in_srgb,var(--accent-warm)_12%,var(--bg-root))]"
-            : "border-[var(--border-default)] bg-[var(--bg-root)]",
+        "absolute border border-[var(--border-default)]",
+        isPathMember
+          ? "bg-[color-mix(in_srgb,var(--accent-warm)_12%,var(--bg-root))]"
+          : "bg-[var(--bg-root)]",
       ].join(" ")}
       data-path-member={isPathMember ? "true" : undefined}
-      data-champion-path={isChampionPath ? "true" : undefined}
       style={{ top, left, width: cellWidth, height: CELL_HEIGHT }}
       aria-label={`Round ${level + 1} match ${matchIdx + 1}`}
     >
