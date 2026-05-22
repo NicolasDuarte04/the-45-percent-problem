@@ -38,6 +38,7 @@ import {
   type SubmitErrorKind,
   type SubmitInvalidIssueView,
 } from "@/components/simulator/SubmitErrorPanel";
+import { StickyProgressMeter } from "@/components/simulator/ui/StickyProgressMeter";
 import {
   clearInflight,
   readInflightForMode,
@@ -561,6 +562,7 @@ export function ModeFullBracket({
   const router = useRouter();
   const [state, setState] = useState<BuildState>(emptyState);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [invalidIssues, setInvalidIssues] = useState<
     SubmitInvalidIssueView[] | undefined
@@ -971,6 +973,7 @@ export function ModeFullBracket({
         rarity_band: band,
         stage,
       });
+      setSubmitted(true);
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }
@@ -987,10 +990,6 @@ export function ModeFullBracket({
   const koUnlocked = r32Available(state);
   const candidatesByGroup = useMemo(() => thirdsCandidatesByGroup(state), [state]);
   const selectedThirds = new Set(state.bestThirds.filter(Boolean) as TeamCode[]);
-  const submitLabel: SubmitLabel =
-    readiness.kind === "ready"
-      ? STAGE_LABELS[readiness.stage]
-      : readiness.nextLabel;
   const submitDisabled = readiness.kind !== "ready" || submitting;
   const helperText: string | null =
     readiness.kind === "blocked"
@@ -1012,7 +1011,8 @@ export function ModeFullBracket({
       <section
         aria-labelledby="fb-heading"
         data-canvas="simulator"
-        className="pt-10 pb-12"
+        className="pt-10"
+        style={{ paddingBottom: "var(--sticky-meter-h, 96px)" }}
       >
         <div className="flex items-baseline justify-between gap-4">
           <h1
@@ -1337,28 +1337,11 @@ export function ModeFullBracket({
           />
         </div>
 
-        {/* Submit + error.
-            Checkpoint 9 (P1.1): the button label adapts to the current
-            commitment depth ("[ Submit groups ]" through
-            "[ Submit full bracket ]") and only enables at the six clean
-            stage boundaries. Mid-stage states keep submit disabled and
-            surface a helper line beneath the button telling the user what
-            they still need to pick (or how to step back to the prior
-            boundary). */}
+        {/* CP-03: the in-flow stage-labelled submit button is removed; the
+            sticky meter below now carries the ARM ALERT CTA. The helper
+            line stays because it still tells the user what to pick next.
+            The error panel keeps its own retry affordance. */}
         <div className="mt-10 flex flex-col items-start gap-3">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitDisabled}
-            className={[
-              "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-              !submitDisabled
-                ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
-                : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
-            ].join(" ")}
-          >
-            {submitting ? "[ Submitting... ]" : submitLabel}
-          </button>
           {helperText ? (
             <p className="font-sans text-[12px] text-[var(--text-quiet)]">
               {helperText}
@@ -1375,6 +1358,27 @@ export function ModeFullBracket({
           ) : null}
         </div>
       </section>
+
+      <StickyProgressMeter
+        current={
+          GROUPS.reduce((acc, g) => {
+            const sel = state.groupSelections[g];
+            return (
+              acc +
+              (sel.winner ? 1 : 0) +
+              (sel.runnerUp ? 1 : 0) +
+              (sel.thirdPlace ? 1 : 0)
+            );
+          }, 0) +
+          state.bestThirds.filter((t) => t !== null).length +
+          state.koAdvancers.filter((t) => t !== null).length
+        }
+        total={36 + 8 + 31}
+        modeLabel="FULL BRACKET"
+        isReady={!submitDisabled}
+        isSubmitted={submitted}
+        onSubmit={handleSubmit}
+      />
     </>
   );
 }
