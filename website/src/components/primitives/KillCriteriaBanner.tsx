@@ -28,7 +28,7 @@ export function KillCriteriaBanner({ active, condition, className }: KillCriteri
         KILL CRITERIA TRIPPED
         {condition ? `: ${condition}` : ""}
         {". "}
-        Model framing has changed to null-result. See{" "}
+        Kill criterion tripped. See dual-SE reading for context at{" "}
         <a
           href="/vault/kill-criteria"
           className="underline underline-offset-2"

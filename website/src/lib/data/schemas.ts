@@ -237,6 +237,23 @@ export const EvaluationMetricsSchema = z.object({
     tripped: z.boolean(),
     gap_se: z.number(),
     threshold_se: z.number(),
+    // Marginal-SE reading from data/calibration/champion_model.json
+    // (delta_vs_M0 / sigma_CV). Optional for backward compat with
+    // snapshots written before the dual-SE field landed; absence is
+    // treated as "render the neutral pre-tournament pill."
+    marginal_gap_se: z.number().optional(),
+    // Pill state. `pre_tournament_locked` is the only sane state when
+    // matches_settled === 0; the three `in_tournament_*` states are
+    // only valid once outcomes are scoring. Only `in_tournament_tripped`
+    // produces a red badge in the UI. Optional for backward compat.
+    status: z
+      .enum([
+        "pre_tournament_locked",
+        "in_tournament_clear",
+        "in_tournament_warning",
+        "in_tournament_tripped",
+      ])
+      .optional(),
     condition: z.string(),
     timestamp: z.string(),
     action_taken: z.string(),

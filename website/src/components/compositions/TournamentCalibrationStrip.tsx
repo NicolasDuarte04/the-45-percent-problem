@@ -1,5 +1,9 @@
 import Link from "next/link";
 import type { EvaluationMetrics, SnapshotMeta } from "@/lib/data/schemas";
+import {
+  deriveKillCriteriaPillState,
+  type KillCriteriaStatus,
+} from "@/components/primitives/KillCriteriaPill";
 
 interface TournamentCalibrationStripProps {
   evaluation: EvaluationMetrics;
@@ -105,16 +109,9 @@ export function TournamentCalibrationStrip({
         </span>{" "}
         bps across {evaluation.matches_settled.toLocaleString()} settled
         forecasts. Kill criteria{" "}
-        <span
-          className="mono"
-          style={{
-            color: evaluation.kill_criteria_check.tripped
-              ? "var(--edge-negative)"
-              : "var(--text-primary)",
-          }}
-        >
-          {evaluation.kill_criteria_check.tripped ? "TRIGGERED" : "not tripped"}
-        </span>
+        <KillCriteriaInlineStatus
+          status={evaluation.kill_criteria_check.status}
+        />
         .{" "}
         <Link
           href="/ledger"
@@ -124,6 +121,45 @@ export function TournamentCalibrationStrip({
         </Link>
       </div>
     </div>
+  );
+}
+
+function KillCriteriaInlineStatus({
+  status,
+}: {
+  status?: KillCriteriaStatus;
+}) {
+  // This component only renders inside the matches_settled > 0 branch of
+  // the strip; the helper still needs a positive count to skip the
+  // pre-tournament neutral state.
+  const state = deriveKillCriteriaPillState({ status, matchesSettled: 1 });
+
+  let inlineLabel: string;
+  let color: string;
+  switch (state.variant) {
+    case "rose":
+      inlineLabel = "TRIGGERED";
+      color = "var(--edge-negative)";
+      break;
+    case "amber":
+      inlineLabel = "WARNING";
+      color = "var(--prism-sun)";
+      break;
+    case "mint":
+      inlineLabel = "cleared";
+      color = "var(--edge-positive)";
+      break;
+    case "neutral":
+    default:
+      inlineLabel = "not tripped";
+      color = "var(--text-primary)";
+      break;
+  }
+
+  return (
+    <span className="mono" style={{ color }} aria-label={state.ariaLabel}>
+      {inlineLabel}
+    </span>
   );
 }
 

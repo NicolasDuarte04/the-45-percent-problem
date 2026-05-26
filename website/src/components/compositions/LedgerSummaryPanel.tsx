@@ -1,5 +1,7 @@
+import Link from "next/link";
 import type { EvaluationMetrics } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
+import { KillCriteriaPill } from "@/components/primitives/KillCriteriaPill";
 import { ReliabilityDiagram } from "@/components/compositions/ReliabilityDiagram";
 import { formatMono } from "@/lib/formatters";
 
@@ -49,7 +51,7 @@ function MetricRow({
 export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
   const clvSign = metrics.clv_cumulative_bps >= 0 ? "+" : "−";
   const clvAbs = Math.abs(metrics.clv_cumulative_bps);
-  const killTripped = metrics.kill_criteria_check.tripped;
+  const inTournament = metrics.matches_settled > 0;
 
   return (
     <section
@@ -78,21 +80,14 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
           </p>
         </div>
 
-        {/* Kill criteria pill */}
-        <div
-          className="flex items-center gap-2 px-3 py-1 rounded border text-[11px] mono"
-          style={{
-            borderColor: killTripped ? "var(--edge-negative)" : "var(--border-default)",
-            color: killTripped ? "var(--edge-negative)" : "var(--text-tertiary)",
-            backgroundColor: killTripped
-              ? "rgba(252,165,165,0.06)"
-              : "transparent",
-          }}
-          aria-label={`Kill criteria: ${killTripped ? "tripped" : "not tripped"}`}
-        >
-          <span aria-hidden>{killTripped ? "◆" : "●"}</span>
-          <span>{killTripped ? "KILL CRITERIA TRIPPED" : "KILL CRITERIA: NOT TRIPPED"}</span>
-        </div>
+        {/* Kill criteria pill: state-aware, gated on matches_settled. */}
+        <KillCriteriaPill
+          status={metrics.kill_criteria_check.status}
+          matchesSettled={metrics.matches_settled}
+          marginalGapSe={metrics.kill_criteria_check.marginal_gap_se}
+          pairedGapSe={metrics.kill_criteria_check.gap_se}
+          thresholdSe={metrics.kill_criteria_check.threshold_se}
+        />
       </div>
 
       <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -206,7 +201,10 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
               </div>
             )}
 
-            {/* Kill criteria condition detail */}
+            {/* Kill criteria condition detail.
+                Pre-tournament: only the dual-SE block at /vault/kill-criteria
+                is canonical; the in-panel gap_se / threshold_se line is
+                meaningless until matches start settling. */}
             <div
               className="mt-3 pt-3 border-t text-[11px]"
               style={{
@@ -214,17 +212,33 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
                 color: "var(--text-tertiary)",
               }}
             >
-              <span>Pre-registered kill condition: </span>
-              <span className="mono">{metrics.kill_criteria_check.condition}</span>
-              <span>
-                {" "}· gap{" "}
-                <span
-                  className="mono"
-                  aria-label={`gap ${metrics.kill_criteria_check.gap_se.toFixed(2)} SE of ${metrics.kill_criteria_check.threshold_se.toFixed(1)} SE`}
-                >
-                  {metrics.kill_criteria_check.gap_se.toFixed(2)} SE / {metrics.kill_criteria_check.threshold_se.toFixed(1)} SE
+              {inTournament ? (
+                <>
+                  <span>Pre-registered kill condition: </span>
+                  <span className="mono">{metrics.kill_criteria_check.condition}</span>
+                  <span>
+                    {" "}· gap{" "}
+                    <span
+                      className="mono"
+                      aria-label={`gap ${metrics.kill_criteria_check.gap_se.toFixed(2)} SE of ${metrics.kill_criteria_check.threshold_se.toFixed(1)} SE`}
+                    >
+                      {metrics.kill_criteria_check.gap_se.toFixed(2)} SE / {metrics.kill_criteria_check.threshold_se.toFixed(1)} SE
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <span>
+                  See{" "}
+                  <Link
+                    href="/vault/kill-criteria"
+                    className="underline underline-offset-2"
+                    style={{ color: "var(--accent-focus)" }}
+                  >
+                    /vault/kill-criteria
+                  </Link>{" "}
+                  for the dual-SE reading and the locked-champion artifact.
                 </span>
-              </span>
+              )}
             </div>
           </div>
         </div>

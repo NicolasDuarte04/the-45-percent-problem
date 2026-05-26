@@ -10,7 +10,7 @@
   "tournament_phase": "pre_tournament",
   "matches_settled": 0,
   "matches_remaining": 104,
-  "kill_criteria_active": true,
+  "kill_criteria_active": false,
   "notes": "Phase 7 M_STAR (= M2_fifa) snapshot under amendment v1.1; per-team probabilities aggregated from batch batch_20260512_013228Z; see osf/amendments/amendment_v1.1_data_completeness.md.",
   "active_batch_id": "batch_20260512_013228Z",
   "amendment_pointer": "osf/amendments/amendment_v1.1_data_completeness.md"
