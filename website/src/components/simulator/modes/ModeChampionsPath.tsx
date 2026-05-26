@@ -36,6 +36,7 @@ import {
   SubmitErrorPanel,
   type SubmitErrorKind,
 } from "@/components/simulator/SubmitErrorPanel";
+import { StickyProgressMeter } from "@/components/simulator/ui/StickyProgressMeter";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import {
   clearInflight,
@@ -300,6 +301,7 @@ export function ModeChampionsPath({
   const router = useRouter();
   const [state, setState] = useState<BuildState>(emptyState);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
   // Phase E §6 (B.2): stage focus. When set, picks route to this stage
@@ -485,6 +487,7 @@ export function ModeChampionsPath({
         result.prediction.total,
       );
       track("submit_success", { mode: "champions_path", rarity_band: band });
+      setSubmitted(true);
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }
@@ -546,7 +549,8 @@ export function ModeChampionsPath({
       <section
         aria-labelledby="cp-heading"
         data-canvas="simulator"
-        className="pt-10 pb-12"
+        className="pt-10"
+        style={{ paddingBottom: "var(--sticky-meter-h, 96px)" }}
       >
         <div className="flex items-baseline justify-between gap-4">
           <h1
@@ -763,21 +767,10 @@ export function ModeChampionsPath({
           />
         </div>
 
-        {/* Submit + error. */}
+        {/* CP-03: submit affordance lives in the sticky meter below; the
+            in-flow button is removed to avoid two competing submit CTAs.
+            The error panel keeps its own retry. */}
         <div className="mt-10 flex flex-col items-start gap-3">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!resolved || submitting}
-            className={[
-              "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-              resolved && !submitting
-                ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
-                : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
-            ].join(" ")}
-          >
-            {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
-          </button>
           {errorKind ? (
             <SubmitErrorPanel
               kind={errorKind}
@@ -787,6 +780,19 @@ export function ModeChampionsPath({
           ) : null}
         </div>
       </section>
+
+      <StickyProgressMeter
+        current={
+          STAGE_KEYS.filter(
+            (s) => state[s].opponent !== null && state[s].result !== null,
+          ).length
+        }
+        total={4}
+        modeLabel="CHAMPION'S PATH"
+        isReady={resolved && !submitting}
+        isSubmitted={submitted}
+        onSubmit={handleSubmit}
+      />
 
       <DragOverlay dropAnimation={null}>
         {activeCode ? (

@@ -36,6 +36,7 @@ import {
   SubmitErrorPanel,
   type SubmitErrorKind,
 } from "@/components/simulator/SubmitErrorPanel";
+import { StickyProgressMeter } from "@/components/simulator/ui/StickyProgressMeter";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import { COUNTRY_NAMES, type FifaCode } from "@/lib/flags/countries";
 import {
@@ -211,6 +212,7 @@ export function ModeFinalFour({
     Array(SLOT_COUNT).fill(null),
   );
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind | null>(null);
   const [activeCode, setActiveCode] = useState<TeamCode | null>(null);
   const [activeSlotIdx, setActiveSlotIdx] = useState<number | null>(null);
@@ -421,6 +423,7 @@ export function ModeFinalFour({
         result.prediction.total,
       );
       track("submit_success", { mode: "final_four", rarity_band: band });
+      setSubmitted(true);
       router.push(`/scenario/p/${result.prediction.id}`);
       return;
     }
@@ -439,7 +442,8 @@ export function ModeFinalFour({
         aria-labelledby={isInline ? undefined : "ff-heading"}
         aria-label={isInline ? "Final Four scenario" : undefined}
         data-canvas="simulator"
-        className={isInline ? "pb-2" : "pt-10 pb-12"}
+        className={isInline ? "pb-2" : "pt-10"}
+        style={!isInline ? { paddingBottom: "var(--sticky-meter-h, 96px)" } : undefined}
       >
         {isInline ? null : (
           <div className="flex items-baseline justify-between gap-4">
@@ -548,21 +552,26 @@ export function ModeFinalFour({
           />
         </div>
 
-        {/* Submit + error */}
+        {/* Helper line + error panel. The page-variant submit affordance
+            lives in the sticky StickyProgressMeter (CP-03); for the
+            inline (home page) variant we keep the legacy in-flow submit
+            button. */}
         <div className="mt-10 flex flex-col items-start gap-3">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!allFilled || submitting}
-            className={[
-              "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
-              allFilled && !submitting
-                ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
-                : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
-            ].join(" ")}
-          >
-            {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
-          </button>
+          {isInline ? (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!allFilled || submitting}
+              className={[
+                "border px-5 py-3 font-mono text-[13px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)]",
+                allFilled && !submitting
+                  ? "border-[var(--text-primary)] text-[var(--text-primary)] hover:border-[var(--accent-warm)] hover:text-[var(--accent-warm)] cursor-pointer"
+                  : "border-[var(--border-default)] text-[var(--text-quiet)] cursor-not-allowed",
+              ].join(" ")}
+            >
+              {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
+            </button>
+          ) : null}
           {errorKind ? (
             <SubmitErrorPanel
               kind={errorKind}
@@ -587,6 +596,17 @@ export function ModeFinalFour({
           ) : null}
         </div>
       </section>
+
+      {!isInline ? (
+        <StickyProgressMeter
+          current={filled.length}
+          total={SLOT_COUNT}
+          modeLabel="FINAL FOUR"
+          isReady={allFilled && !submitting}
+          isSubmitted={submitted}
+          onSubmit={handleSubmit}
+        />
+      ) : null}
 
       <DragOverlay dropAnimation={null}>
         {activeCode ? (
