@@ -1,14 +1,16 @@
+# Rewired 2026-05-27 (cp-05). Previously called scripts/generate_snapshot.py
+# which produced M0 numbers that overwrote the M2 deploy under amendment v1.1.
+# Now calls scripts/regenerate_snapshot_from_batch.py which re-aggregates
+# the website JSON bundle from the locked M2 batch (data/calibration/active_batch.json).
+# The Elo fetch and the canonical-draw export were removed from this path;
+# the new script consumes neither. See GO_TO_LAUNCH.md Checkpoint 2.
+# TODO: if a future batch needs fresh Elo ratings pre-run, add a dedicated
+# fetch_elo.yml workflow rather than restoring it here.
 name: Nightly Simulation Pipeline
 
 on:
-  # Cron disabled 2026-05-12 by lockdown closure: script writes
-  # M0 snapshots that overwrite the M2 deploy under amendment
-  # v1.1. Re-enable after rewiring to
-  # scripts/regenerate_snapshot_from_batch.py per
-  # tomorrow morning's queue. See lockdown closure report,
-  # URGENT FOLLOW-UP section.
-  # schedule:
-  #   - cron: '0 0 * * *'
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:
@@ -44,37 +46,8 @@ jobs:
       - name: Install project dependencies
         run: pip install -e ".[dev]"
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: website/pnpm-lock.yaml
-
-      - name: Install website dependencies
-        working-directory: website
-        run: pnpm install --frozen-lockfile
-
-      - name: Export canonical WC 2026 draw JSON for Python pipeline
-        working-directory: website
-        run: pnpm tsx scripts/export-canonical-draw-json.ts
-
-      - name: Build WC 2026 fixture table (hardcoded, no network required)
-        run: python ingestion/fetch_wc2026_fixtures.py --force
-
-      - name: Fetch fresh Elo ratings from eloratings.net
-        run: python ingestion/fetch_elo_ratings.py --force
-
-      - name: Run snapshot generator
-        run: python scripts/generate_snapshot.py
-
-      - name: Normalize snapshot for website schema
-        run: python scripts/normalize_snapshot.py
+      - name: Regenerate snapshot bundle from locked M2 batch
+        run: python scripts/regenerate_snapshot_from_batch.py
 
       - name: Stage updated website data files
         id: stage

@@ -304,7 +304,8 @@ def main() -> None:
         "tournament_phase":     "pre_tournament",
         "matches_settled":      0,
         "matches_remaining":    104,
-        "kill_criteria_active": True,
+        # cp-05: hardcoded False, aligned with cp-04's evaluation_metrics.kill_criteria_check.status="pre_tournament_locked".
+        "kill_criteria_active": False,
         "notes": (
             f"Phase 7 M_STAR (= {champion_internal}) snapshot under "
             f"amendment {amendment_v}; per-team probabilities aggregated "
