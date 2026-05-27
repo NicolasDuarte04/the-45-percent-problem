@@ -31,10 +31,17 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          # SNAPSHOT_PUSH_TOKEN is a fine-grained PAT with contents:write on
-          # this repo, owned by an account on the branch-protection bypass
-          # list. The default GITHUB_TOKEN cannot push to a protected main.
-          token: ${{ secrets.SNAPSHOT_PUSH_TOKEN }}
+          # Pushes to main use the default GITHUB_TOKEN. The workflow-level
+          # permissions: contents: write block above is sufficient; no PAT
+          # is required. Confirmed empirically on 2026-05-27 by probe run
+          # 26534292687 on branch probe/github-token, which executed the
+          # full pipeline including the push step with no token override.
+          # The previous SNAPSHOT_PUSH_TOKEN dependency was a fine-grained
+          # PAT that expired on its 30-day cycle and caused the 2026-05-27
+          # nightly to fail at checkout; the original "PAT required to
+          # bypass branch protection" rationale was wrong from day one
+          # because this is a free-plan private repo with no branch
+          # protection available.
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
