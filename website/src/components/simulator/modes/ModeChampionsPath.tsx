@@ -791,6 +791,7 @@ export function ModeChampionsPath({
         modeLabel="CHAMPION'S PATH"
         isReady={resolved && !submitting}
         isSubmitted={submitted}
+        submitting={submitting}
         onSubmit={handleSubmit}
       />
 

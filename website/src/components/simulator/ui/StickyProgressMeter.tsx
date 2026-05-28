@@ -13,6 +13,7 @@
  * on the permalink takes over.
  */
 
+import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import { useRollingNumber } from "@/lib/motion/useRollingNumber";
@@ -23,6 +24,13 @@ export interface StickyProgressMeterProps {
   modeLabel: string;
   isReady: boolean;
   isSubmitted: boolean;
+  /**
+   * True while handleSubmit is in flight. The CTA shows
+   * `[ Submitting... ]` during that window, matching the inline
+   * (home-page embed) variant of ModeFinalFour. Optional so existing
+   * callers keep working; defaults to false.
+   */
+  submitting?: boolean;
   onSubmit: () => void;
 }
 
@@ -32,8 +40,19 @@ export function StickyProgressMeter({
   modeLabel,
   isReady,
   isSubmitted,
+  submitting = false,
   onSubmit,
 }: StickyProgressMeterProps) {
+  // Tag the body while the meter is mounted so a globals.css rule can
+  // give the SiteFooter matching bottom padding. Keeps the coupling
+  // inside the meter - no prop drilling, no layout context.
+  useEffect(() => {
+    if (isSubmitted) return;
+    document.body.dataset.hasStickyMeter = "true";
+    return () => {
+      delete document.body.dataset.hasStickyMeter;
+    };
+  }, [isSubmitted]);
   const bandTransition = useReducedMotionAware("bandReveal");
   const prefersReduced = useReducedMotion();
   const rolled = useRollingNumber(current);
@@ -82,7 +101,9 @@ export function StickyProgressMeter({
           disabled={!isReady}
           aria-disabled={!isReady}
           aria-label={
-            isReady ? "Arm alert for this scenario" : "Arm alert (not ready)"
+            isReady
+              ? "See how the model reacts to this scenario"
+              : "See how the model reacts (not ready)"
           }
           data-state={isReady ? "active" : "disabled"}
           className="inline-flex h-11 min-h-[44px] items-center px-3 font-mono text-[12px] uppercase tracking-[0.10em] transition-colors duration-100 focus:outline-none focus:ring-1 focus:ring-[var(--accent-focus)] sm:text-[13px]"
@@ -92,7 +113,7 @@ export function StickyProgressMeter({
             cursor: isReady ? "pointer" : "not-allowed",
           }}
         >
-          [ ARM ALERT ]
+          {submitting ? "[ Submitting... ]" : "[ See how the model reacts ]"}
         </motion.button>
       </div>
     </div>

@@ -254,6 +254,44 @@ Awaiting Nicolás's decision before implementing.
 
 ---
 
+## Phase 2 fix (chosen: Option A + rename)
+
+Implemented per Nicolás's pick:
+
+- **Overlap fix.** `StickyProgressMeter` sets `document.body.dataset.hasStickyMeter = "true"` in a `useEffect` on mount and clears it on unmount. A single rule in `website/src/app/globals.css` adds `padding-bottom: var(--sticky-meter-h, 96px)` to `body[data-has-sticky-meter]`. Extending the body's scrollable area pushes the SiteFooter up out from under the fixed meter at scroll-bottom; coupling stays inside the meter (no prop drilling, no layout context). Same `96px` fallback the mode sections already use for picker bottom-padding.
+- **Label rename.** `[ ARM ALERT ]` → `[ See how the model reacts ]` in the sticky meter, matching the inline home-embed pattern at `ModeFinalFour.tsx:572`. The submit-in-flight string mirrors the home embed: `[ Submitting... ]`. To support that, a new optional `submitting?: boolean` prop is threaded from each mode (all three mounts already had a `submitting` state); defaults to `false` so existing callers keep working.
+- **aria-label** also updated: "See how the model reacts to this scenario" / "See how the model reacts (not ready)" (was "Arm alert for this scenario" / "Arm alert (not ready)").
+- **Spec update.** `tests/visual/sticky-progress-meter.spec.ts` updated for the rename (button-role accessible-name regex and CTA-text assertion). 6/6 specs still green.
+- **Untouched.** `PredictionAlertConfigurator` (post-submit reveal panel) and its own `[ ARM ALERT ]` button: not modified. That label is accurate there.
+
+### Phase 2 verification (dev, localhost:3000)
+
+| Surface | Effect / data attr | Padding | Meter text | Btn hydrated | Footer visible at scroll-bottom |
+|---|---|---|---|---|---|
+| `/scenario/final-four` | `body[data-has-sticky-meter]` set | `96px` | `[ READY ] / [ SEE HOW THE MODEL REACTS ]` (4 teams in localStorage) | yes | yes |
+| `/scenario/champions-path` | set | `96px` | `[ STEP 0 OF 4 : CHAMPION'S PATH ] / [ SEE HOW THE MODEL REACTS ]` | yes | yes |
+| `/scenario/full-bracket` | set | `96px` | `[ STEP 0 OF 75 : FULL BRACKET ] / [ SEE HOW THE MODEL REACTS ]` | yes | yes |
+| `/ledger` (no meter) | not set | `0px` | n/a | n/a | n/a (correctly scoped) |
+| `/` (no meter) | not set | `0px` | n/a | n/a | n/a |
+
+cp-04 preserved: `/ledger` still reads "AWAITING TOURNAMENT KICKOFF" and "KILL CRITERIA TRIPPED" is absent.
+cp-06 preserved: all three `(editorial|quant|simulator)/loading.tsx` files still present and untouched.
+
+### Phase 2 quality gates
+
+| Gate | Command | Result |
+|---|---|---|
+| TypeScript | `pnpm tsc --noEmit` | exit 0 |
+| Lint | `pnpm lint` | 8 errors / 8 warnings, all in pre-existing files (`useDecryptValue.ts`, `useTypewriter.ts`, `db/index.ts`, `email/resend.ts`, `runEvaluator.test.ts`); net delta 0 against main; 0 hits on any touched file |
+| Unit | `pnpm test` | 324/324 passed |
+| Visual (sticky meter) | `pnpm test:visual tests/visual/sticky-progress-meter.spec.ts` | 6/6 passed |
+
+### Dev-server note (not a code issue)
+
+While verifying, the running dev server entered a streaming-SSR hang state: one Suspense boundary (`B:2`/`S:2`) never resolved, which blocked client hydration of everything below `<body>`. That made the meter render via SSR but never run any client effect. The same SSR output on production hydrates cleanly, confirming this was a stuck dev session rather than a regression. Restarting the dev server cleared it. Worth knowing for the next session.
+
+---
+
 ## Phase 1 merge-readiness checklist
 
 ```
@@ -265,4 +303,14 @@ Y - Item 3 investigation complete: cp-03 diff read, sticky footer component iden
 Y - Item 3 proposes 5 options with effort estimates. Stopped before implementing.
 Y - Audit doc is the only material file added; no production code changes; no production data file changes.
 Y - Branch is cp-07-prelaunch-audit-and-fix, off latest main (2054377), ready to PR (draft).
+```
+
+## Phase 2 merge-readiness checklist
+
+```
+Y - Phase 2: Item 3 fix implemented per Nicolás's chosen option (A + rename).
+Y - Phase 2: dev verification of the fix (no overlap, submit flow active, no console errors). Required restarting the dev server once to clear a streaming-SSR hang in the prior session.
+Y - Phase 2: pnpm tsc --noEmit clean; pnpm lint net delta 0 vs main; pnpm test 324/324; pnpm test:visual sticky-progress-meter 6/6.
+Y - Phase 2: cp-04 preserved (Ledger pill reads "AWAITING TOURNAMENT KICKOFF") and cp-06 preserved ((editorial|quant|simulator)/loading.tsx all present).
+Y - Phase 2: screenshot of the fixed simulator at scroll-bottom (footer visible above meter) attached via the session preview.
 ```
