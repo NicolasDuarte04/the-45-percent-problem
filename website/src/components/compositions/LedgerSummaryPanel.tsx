@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { EvaluationMetrics } from "@/lib/data/schemas";
 import { NumericCell } from "@/components/primitives/NumericCell";
 import { KillCriteriaPill } from "@/components/primitives/KillCriteriaPill";
-import { ReliabilityDiagram } from "@/components/compositions/ReliabilityDiagram";
+import { ReliabilityDiagramLazy } from "@/components/compositions/ReliabilityDiagramLazy";
 import { formatMono } from "@/lib/formatters";
 
 interface LedgerSummaryPanelProps {
@@ -251,7 +251,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
           >
             Calibration: Reliability Diagram
           </p>
-          <ReliabilityDiagram bins={metrics.reliability_diagram} />
+          <ReliabilityDiagramLazy bins={metrics.reliability_diagram} />
           <p
             className="text-[11px] mt-2"
             style={{ color: "var(--text-tertiary)" }}
