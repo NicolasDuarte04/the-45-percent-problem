@@ -273,6 +273,17 @@
   --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
 }
 
+/* ── Sticky meter footer compensation (cp-07) ──────────────────────────────
+   StickyProgressMeter sets `body[data-has-sticky-meter]` while mounted.
+   The meter is `fixed` at bottom of viewport (z-40, opaque) and would
+   otherwise occlude the SiteFooter at scroll-bottom. Extending the body's
+   scrollable area by the meter's height pushes the footer up out from
+   under the meter when the user scrolls to page-bottom. Same fallback
+   (96px) the mode sections already use for picker-control padding. */
+body[data-has-sticky-meter] {
+  padding-bottom: var(--sticky-meter-h, 96px);
+}
+
 /* ── Simulator reveal sequence (IMPL_PROMPT §9) ─────────────────────────────
    CSS-only fade-in chain triggered on first paint. `backwards` fill mode
    means the element holds the `from` state (opacity 0) during the

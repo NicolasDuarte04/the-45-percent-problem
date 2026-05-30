@@ -11,8 +11,11 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
  *
  * The meter mounts as a fixed bar at the bottom of the viewport, with
  * a `data-testid="sticky-progress-meter"` host element. The left
- * column carries `role="status"`; the CTA renders `[ ARM ALERT ]`
- * with explicit `aria-disabled`.
+ * column carries `role="status"`; the CTA renders
+ * `[ See how the model reacts ]` with explicit `aria-disabled`.
+ * (Pre-cp-07 the CTA was `[ ARM ALERT ]`; renamed because the
+ * sticky meter was borrowing terminology from a separate real
+ * alert-arming feature in the reveal panel.)
  */
 
 const FINAL_FOUR_PICKS = ["ESP", "FRA", "BRA", "ARG"] as const;
@@ -26,7 +29,7 @@ function statusLine(page: Page): Locator {
 }
 
 function ctaButton(page: Page): Locator {
-  return meter(page).getByRole("button", { name: /Arm alert/i });
+  return meter(page).getByRole("button", { name: /See how the model reacts/i });
 }
 
 function pickerCell(page: Page, code: string): Locator {
@@ -53,7 +56,7 @@ test.describe("Sticky progress meter (CP-03)", () => {
 
     const cta = ctaButton(page);
     await expect(cta).toBeVisible();
-    await expect(cta).toHaveText(/\[\s*ARM ALERT\s*\]/);
+    await expect(cta).toHaveText(/\[\s*See how the model reacts\s*\]/);
     await expect(cta).toHaveAttribute("aria-disabled", "true");
   });
 

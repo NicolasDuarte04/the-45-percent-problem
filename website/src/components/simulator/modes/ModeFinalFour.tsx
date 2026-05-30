@@ -604,6 +604,7 @@ export function ModeFinalFour({
           modeLabel="FINAL FOUR"
           isReady={allFilled && !submitting}
           isSubmitted={submitted}
+          submitting={submitting}
           onSubmit={handleSubmit}
         />
       ) : null}

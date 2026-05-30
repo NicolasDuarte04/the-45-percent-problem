@@ -1377,6 +1377,7 @@ export function ModeFullBracket({
         modeLabel="FULL BRACKET"
         isReady={!submitDisabled}
         isSubmitted={submitted}
+        submitting={submitting}
         onSubmit={handleSubmit}
       />
     </>
