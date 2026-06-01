@@ -27,6 +27,23 @@ const DESKTOP_BANNER_PRE_HYDRATE = `(function(){
   } catch (e) { /* sessionStorage may be blocked; render the banner */ }
 })();`;
 
+// Pre-hydrate onboarding-seen check for cp-08's additive Surface A
+// (chip + modal + masthead pill on the editorial canvas). Stamps the
+// `data-onboarding-seen` attribute on <html> before React hydrates so
+// the CSS selector that scopes the trophy-settle animation
+// (html:not([data-onboarding-seen="true"]) .trophy-settle) resolves
+// correctly on first paint, with no flash for returning visitors.
+// Mirrors the DESKTOP_BANNER_PRE_HYDRATE pattern above.
+const ONBOARDING_SEEN_PRE_HYDRATE = `(function(){
+  try {
+    var seen = localStorage.getItem("45a.onboarding.seen") === "true";
+    document.documentElement.setAttribute("data-onboarding-seen", seen ? "true" : "false");
+  } catch (e) {
+    /* localStorage may be blocked; treat as not-seen so the chip can render. */
+    document.documentElement.setAttribute("data-onboarding-seen", "false");
+  }
+})();`;
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -90,6 +107,11 @@ export default function RootLayout({
           id="quant-banner-pre-hydrate"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: DESKTOP_BANNER_PRE_HYDRATE }}
+        />
+        <Script
+          id="onboarding-seen-pre-hydrate"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: ONBOARDING_SEEN_PRE_HYDRATE }}
         />
         <Script src="https://plausible.io/js/script.tagged-events.js" data-domain="45analytics.com" strategy="afterInteractive" />
         <TooltipProvider>

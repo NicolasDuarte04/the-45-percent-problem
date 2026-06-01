@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useOnboardingSeen } from "@/components/onboarding/hooks";
 
 interface Tab {
   id: string;
@@ -88,6 +89,75 @@ interface EditorialMastheadProps {
    * and reads cookies directly) can avoid the round trip.
    */
   isOperator?: boolean;
+}
+
+// cp-08 additive onboarding · Surface A · the persistent "First time?"
+// masthead pill. Always available so a visitor who dismissed the chip,
+// arrived deep-linked, or just wants the explainer later can re-open
+// the modal. Reads `45a.onboarding.seen` from localStorage on mount;
+// when absent, applies the .help-pulse class (a gentle opacity breath
+// declared in globals.css). The OnboardingController owns the actual
+// modal; this pill dispatches a custom event so cross-component
+// coupling stays light. On dismissal anywhere (chip ✕, modal close,
+// CTA click), the controller broadcasts `45a:onboarding:seen` so this
+// pill clears its pulse without polling.
+function MastheadOnboardingPill() {
+  // `pulse = !seen` is a direct derivation from the shared
+  // useOnboardingSeen hook (useSyncExternalStore under the hood), so
+  // the pill stops pulsing the moment any dismissal path elsewhere
+  // writes `45a.onboarding.seen = "true"` and broadcasts the
+  // `45a:onboarding:seen` custom event. No setState-in-effect.
+  const seen = useOnboardingSeen();
+  const pulse = !seen;
+  const [hover, setHover] = useState(false);
+
+  function onClick() {
+    // The OnboardingController listens for this event and opens the
+    // modal regardless of where the masthead is rendered. The
+    // controller's `closeModal` then writes `seen` and broadcasts the
+    // `45a:onboarding:seen` event, which clears `pulse` here without
+    // any direct setState here.
+    try {
+      window.dispatchEvent(new Event("45a:onboarding:open"));
+    } catch {
+      /* Event constructor unavailable on truly ancient runtimes. */
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      // Hidden on mobile to keep the masthead's wordmark + brief row
+      // uncluttered at 375px (matches the "Open terminal" CTA's
+      // mobile-hiding convention). First-visit visitors on mobile
+      // discover onboarding via the chip; re-opening on mobile is
+      // currently a localStorage-clear recovery path.
+      className={`no-underline shrink-0 hidden md:inline-flex items-center md:order-5 ${pulse ? "help-pulse" : ""}`}
+      aria-label="First time here? Read a 90-second orientation."
+      title="First time here?"
+      style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: 11,
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        color: hover ? "var(--text-primary)" : "var(--text-tertiary)",
+        background: "transparent",
+        border: "1px solid var(--rule)",
+        padding: "0 10px",
+        height: 26,
+        borderRadius: 4,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        transition: "color 120ms, border-color 120ms",
+        borderColor: hover ? "var(--text-tertiary)" : "var(--rule)",
+      }}
+    >
+      First time?
+    </button>
+  );
 }
 
 export function EditorialMasthead({
@@ -210,6 +280,14 @@ export function EditorialMasthead({
               Open terminal <span style={{ opacity: 0.6 }}>→</span>
             </Link>
           )}
+
+          {/* cp-08 additive onboarding pill. Source order places it
+              after "Open terminal" on md+; on mobile the parent
+              wrapper switches off display: contents so this falls into
+              the same row as the wordmark and brief link, but the
+              button itself is hidden on mobile via .hidden md:inline-flex
+              to keep the narrow-viewport row uncluttered. */}
+          <MastheadOnboardingPill />
         </div>
 
         <nav
