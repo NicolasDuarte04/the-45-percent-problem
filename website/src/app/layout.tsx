@@ -86,6 +86,15 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${sourceSerif4.variable}`}
+      // cp-08: SSR default for the onboarding-seen attribute. Set to
+      // "false" so first-visit visitors get an exact-match hydration.
+      // The inline `ONBOARDING_SEEN_PRE_HYDRATE` script in <body>
+      // flips this to "true" for returning visitors before React
+      // hydrates; that legitimate one-attribute mismatch is silenced
+      // by `suppressHydrationWarning`. Same pattern next-themes uses
+      // for its theme attribute.
+      data-onboarding-seen="false"
+      suppressHydrationWarning
       // overflowX: "clip" prevents horizontal page-level scroll on
       // narrow viewports (Mobile Optimization Plan §6.1 acceptance
       // criterion #1) without establishing a new scroll container.
