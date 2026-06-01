@@ -85,6 +85,15 @@
   /* Button radius · 6px on Editorial (§2.11) */
   --radius: 0.375rem;
 
+  /* cp-08 additive onboarding tokens. Consumed by OnboardingChip,
+     OnboardingModal, and the modal's eyebrow ornament. Values copied
+     verbatim from website/design-output/onboarding-v2/colors_and_type.css
+     (the design package's editorial declarations). Quant canvas does
+     not redeclare these because the onboarding only renders on the
+     editorial canvas (homepage and other editorial routes). */
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.04), 0 6px 24px rgb(0 0 0 / 0.05);
+  --brand-accent: oklch(35% 0.08 20);
+
   /* Shadcn semantic tokens: editorial light mode */
   --background:          #F7F4EC;
   --foreground:          #141414;
@@ -1346,4 +1355,73 @@ body[data-has-sticky-meter] {
     }
   }
 
+}
+
+/* ── cp-08 additive onboarding (Surface A) ────────────────────────────────── */
+/* Animations and class hooks consumed by OnboardingChip, OnboardingModal,
+   MastheadOnboardingPill, and HeroGraphic's opt-in withSettle prop. All
+   four entrance animations stay in the cubic-bezier(0.4, 0, 0.2, 1) family
+   and clamp under prefers-reduced-motion. Specs are copied verbatim from
+   website/design-output/onboarding-v2/Design Package.md section 10. */
+
+/* P1 · Chip slide-in. Rises from outside the bottom-right corner. */
+@keyframes chipIn {
+  from { transform: translateX(calc(100% + 24px)); opacity: 0; }
+  to   { transform: translateX(0);                 opacity: 1; }
+}
+
+/* Modal scrim fade-in. */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modal card animate-in. Translates upward 6px while fading. */
+@keyframes modalIn {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* P3 · Trophy settle. One-pass, never repeats. Reads as Monte Carlo
+   samples resolving from a blurred posterior to a sharp render. */
+@keyframes trophySettle {
+  from { filter: blur(4px); opacity: 0.5; transform: translateY(6px); }
+  to   { filter: blur(0);   opacity: 1;   transform: translateY(0); }
+}
+
+/* P2 · Masthead pill pulse. Opacity-only breath, no scale. */
+@keyframes helpPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.85; }
+}
+
+/* Pulse is CSS-driven via the `data-onboarding-seen` attribute that the
+   pre-hydrate script in layout.tsx stamps on <html> before paint. For
+   returning visitors the attribute is "true" before first paint, so
+   the animation rule never matches and the pill renders static. For
+   first-visit visitors the attribute is "false" and the animation runs
+   until any dismissal path writes seen=true (which updates the dataset
+   in writeSeen, see OnboardingController). The pill itself also adds
+   a local `help-pulse-paused` class on click so the pulse stops the
+   moment the visitor clicks even before the modal-close path writes
+   the global flag. */
+html:not([data-onboarding-seen="true"]) .help-pulse:not(.help-pulse-paused) {
+  animation: helpPulse 1500ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Trophy settle is scoped to visitors who have not yet seen the
+   onboarding. The data attribute on <html> is stamped by an inline
+   beforeInteractive script in layout.tsx (mirroring the existing
+   DESKTOP_BANNER_PRE_HYDRATE pattern), so returning visitors get
+   zero animation and zero first-paint flash. */
+html:not([data-onboarding-seen="true"]) .trophy-settle {
+  animation: trophySettle 2400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-pulse,
+  .trophy-settle,
+  html:not([data-onboarding-seen="true"]) .trophy-settle {
+    animation: none !important;
+  }
 }

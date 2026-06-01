@@ -14,11 +14,30 @@
  * because the prior call passed `unoptimized` so the optimizer was
  * already bypassed.
  */
-export function HeroGraphic() {
+/**
+ * cp-08 additive onboarding: when `withSettle` is true the wrapping
+ * <div> gains a `trophy-settle` class that triggers a one-shot
+ * blur-to-sharp settle animation on first paint for visitors who have
+ * not yet seen the onboarding. The CSS rule that drives the animation
+ * is scoped to `html:not([data-onboarding-seen="true"])` in globals.css,
+ * so returning visitors get zero animation and zero first-paint flash
+ * (the inline beforeInteractive script in layout.tsx stamps the
+ * attribute before React hydrates). Reduced-motion users get the same
+ * static final composition.
+ *
+ * Default is `false`: every existing call site that does not pass the
+ * prop renders byte-identically to before.
+ */
+interface HeroGraphicProps {
+  withSettle?: boolean;
+}
+
+export function HeroGraphic({ withSettle = false }: HeroGraphicProps = {}) {
+  const settleClass = withSettle ? " trophy-settle" : "";
   return (
     <div
       aria-hidden="false"
-      className="hidden md:block pointer-events-none select-none"
+      className={`hidden md:block pointer-events-none select-none${settleClass}`}
       style={{ width: 260 }}
     >
       <picture>

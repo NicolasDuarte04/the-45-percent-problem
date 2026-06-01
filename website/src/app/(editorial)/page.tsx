@@ -111,7 +111,12 @@ export default async function Home() {
             remaining
           </p>
         </div>
-        <HeroGraphic />
+        {/* cp-08 additive onboarding: withSettle opts the trophy into a
+            one-shot blur-to-sharp animation on first paint. CSS scope
+            in globals.css (html:not([data-onboarding-seen="true"]))
+            makes the animation a no-op for returning visitors, so the
+            steady-state rendering is unchanged. */}
+        <HeroGraphic withSettle />
         <p
           className="hidden md:block md:col-span-2"
           style={{
