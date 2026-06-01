@@ -1395,11 +1395,17 @@ body[data-has-sticky-meter] {
   50%      { opacity: 0.85; }
 }
 
-/* The pulse is applied to the masthead "First time?" button on first
-   visit only; the button removes the class itself after the visitor
-   dismisses onboarding (the click handler sets `seen=true` and clears
-   the local pulse state). Reduced motion freezes at full opacity. */
-.help-pulse {
+/* Pulse is CSS-driven via the `data-onboarding-seen` attribute that the
+   pre-hydrate script in layout.tsx stamps on <html> before paint. For
+   returning visitors the attribute is "true" before first paint, so
+   the animation rule never matches and the pill renders static. For
+   first-visit visitors the attribute is "false" and the animation runs
+   until any dismissal path writes seen=true (which updates the dataset
+   in writeSeen, see OnboardingController). The pill itself also adds
+   a local `help-pulse-paused` class on click so the pulse stops the
+   moment the visitor clicks even before the modal-close path writes
+   the global flag. */
+html:not([data-onboarding-seen="true"]) .help-pulse:not(.help-pulse-paused) {
   animation: helpPulse 1500ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 

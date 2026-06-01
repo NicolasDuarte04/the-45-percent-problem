@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useOnboardingSeen } from "@/components/onboarding/hooks";
 
 interface Tab {
   id: string;
@@ -102,21 +101,30 @@ interface EditorialMastheadProps {
 // CTA click), the controller broadcasts `45a:onboarding:seen` so this
 // pill clears its pulse without polling.
 function MastheadOnboardingPill() {
-  // `pulse = !seen` is a direct derivation from the shared
-  // useOnboardingSeen hook (useSyncExternalStore under the hood), so
-  // the pill stops pulsing the moment any dismissal path elsewhere
-  // writes `45a.onboarding.seen = "true"` and broadcasts the
-  // `45a:onboarding:seen` custom event. No setState-in-effect.
-  const seen = useOnboardingSeen();
-  const pulse = !seen;
+  // Pulse is CSS-driven (see .help-pulse rule in globals.css, scoped to
+  // html:not([data-onboarding-seen="true"])). The pre-hydrate script in
+  // layout.tsx stamps the dataset attribute before paint, so returning
+  // visitors render with the animation already suppressed: zero flash,
+  // no useSyncExternalStore/hydration race. First-visit visitors get
+  // the breath until any dismissal path elsewhere writes seen=true and
+  // updates the dataset.
+  //
+  // The local `paused` flag adds .help-pulse-paused on this pill the
+  // instant it is clicked, so the breath stops immediately for the
+  // current visit even before the user closes the modal (which is what
+  // actually writes seen). Per Design Package section 10 the pulse
+  // "stops the moment ... the pill itself is clicked"; per the v2
+  // brief, the pill click does NOT itself flag seen (the modal close
+  // path does), so this is the right separation.
+  const [paused, setPaused] = useState(false);
   const [hover, setHover] = useState(false);
 
   function onClick() {
+    setPaused(true);
     // The OnboardingController listens for this event and opens the
     // modal regardless of where the masthead is rendered. The
-    // controller's `closeModal` then writes `seen` and broadcasts the
-    // `45a:onboarding:seen` event, which clears `pulse` here without
-    // any direct setState here.
+    // controller's `closeModal` then writes seen and broadcasts the
+    // `45a:onboarding:seen` event.
     try {
       window.dispatchEvent(new Event("45a:onboarding:open"));
     } catch {
@@ -135,7 +143,7 @@ function MastheadOnboardingPill() {
       // mobile-hiding convention). First-visit visitors on mobile
       // discover onboarding via the chip; re-opening on mobile is
       // currently a localStorage-clear recovery path.
-      className={`no-underline shrink-0 hidden md:inline-flex items-center md:order-5 ${pulse ? "help-pulse" : ""}`}
+      className={`no-underline shrink-0 hidden md:inline-flex items-center md:order-5 help-pulse${paused ? " help-pulse-paused" : ""}`}
       aria-label="First time here? Read a 90-second orientation."
       title="First time here?"
       style={{
