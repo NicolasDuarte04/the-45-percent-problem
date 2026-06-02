@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -75,7 +76,15 @@ SNAPSHOTS_DIR     = WEBSITE_DATA_ROOT / "snapshots"
 MANIFEST_PATH     = WEBSITE_DATA_ROOT / "manifest.json"
 ACTIVE_BATCH_JSON = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 CHAMPION_MODEL_JSON = PROJECT_ROOT / "data" / "calibration" / "champion_model.json"
+FIXTURES_PARQUET = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
 AMENDMENT_POINTER = "osf/amendments/amendment_v1.1_data_completeness.md"
+
+# cp-09 part 2: optional parquet snapshot of the website's `match_outcomes`
+# table. If a future ingestion shim exports this file, the script reads
+# the settled count from there rather than querying Postgres. Path is
+# overridable via the `MATCH_OUTCOMES_PARQUET` env var so a CI job that
+# stages the export elsewhere can wire it without touching this constant.
+MATCH_OUTCOMES_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.parquet"
 
 # Batch team_id (post-Section-1 normalisation) to website canonical-draw
 # display_name. Most teams agree; the entries below are the six cases that
@@ -131,6 +140,181 @@ def _wilson_ci(p: float, n: int, z: float = 1.96) -> tuple[float, float]:
     return max(0.0, centre - spread), min(1.0, centre + spread)
 
 
+# ─── cp-09 part 2: snapshot-metadata derivation ──────────────────────────────
+#
+# Phase-derivation table for WC 2026, indexed by cumulative settled-match
+# count. Confirmed against data/raw/wc2026_fixtures.parquet 2026-06-01:
+#
+#   Group Stage    : 72 matches  (M01-M72)   → cumulative  1..72
+#   Round of 32    : 16 matches  (M73-M88)   → cumulative 73..88
+#   Round of 16    :  8 matches  (M89-M96)   → cumulative 89..96
+#   Quarter-final  :  4 matches  (M97-M100)  → cumulative 97..100
+#   Semi-final     :  2 matches  (M101-M102) → cumulative 101..102
+#   Third Place    :  1 match    (M103)      → cumulative 103
+#   Final          :  1 match    (M104)      → cumulative 104
+#
+# SnapshotMetaSchema.tournament_phase (website/src/lib/data/schemas.ts:29-38)
+# has no `third_place` value; the third-place playoff and the final both
+# live in the `final` phase, which spans cumulative {103, 103}. `completed`
+# fires only when all 104 are settled.
+
+# Phase transitions: (upper-inclusive bound, phase string). The bounds
+# come from the cumulative table above. _derive_phase walks this list
+# and returns the first phase whose bound the settled count does not
+# exceed. Keeping the bounds in a table (rather than as inline literals)
+# makes the test exhaustive: every transition point is data, not code.
+_PHASE_BOUNDS: tuple[tuple[int, str], ...] = (
+    (0,   "pre_tournament"),
+    (72,  "group_stage"),
+    (88,  "round_of_32"),
+    (96,  "round_of_16"),
+    (100, "quarter_final"),
+    (102, "semi_final"),
+    (103, "final"),
+)
+
+
+def _derive_phase(settled: int, total: int) -> str:
+    """Map a settled-match count to a SnapshotMetaSchema.tournament_phase.
+
+    The boundary table is the canonical WC 2026 mapping (see _PHASE_BOUNDS
+    above); changing it requires a matching fixture re-count.
+
+    >>> _derive_phase(0,   104)
+    'pre_tournament'
+    >>> _derive_phase(1,   104)
+    'group_stage'
+    >>> _derive_phase(72,  104)
+    'group_stage'
+    >>> _derive_phase(73,  104)
+    'round_of_32'
+    >>> _derive_phase(96,  104)
+    'round_of_16'
+    >>> _derive_phase(100, 104)
+    'quarter_final'
+    >>> _derive_phase(102, 104)
+    'semi_final'
+    >>> _derive_phase(103, 104)
+    'final'
+    >>> _derive_phase(104, 104)
+    'completed'
+    """
+    if settled < 0:
+        raise ValueError(f"settled count cannot be negative: {settled}")
+    if settled >= total:
+        return "completed"
+    for bound, phase in _PHASE_BOUNDS:
+        if settled <= bound:
+            return phase
+    # The last entry in _PHASE_BOUNDS covers settled == 103. Anything
+    # between 103 (exclusive) and `total` (exclusive) can only happen
+    # with a non-104 total — surface that loudly rather than silently
+    # mapping to "final".
+    raise ValueError(
+        f"settled={settled} falls past the last phase boundary "
+        f"({_PHASE_BOUNDS[-1][0]}) but below total={total}; "
+        f"reconcile _PHASE_BOUNDS with the fixtures parquet."
+    )
+
+
+def _count_total_matches() -> int:
+    """Total WC 2026 fixture count. Read from the fixtures parquet so
+    a future expansion of the schedule (replays, format change) is
+    reflected automatically without editing this script."""
+    if not FIXTURES_PARQUET.exists():
+        # The website ships a 104-match schedule and the regen script
+        # is the only consumer of this count. A missing fixtures
+        # parquet means the upstream data pipeline broke; surface
+        # loudly rather than silently defaulting to a hardcoded 104.
+        raise FileNotFoundError(
+            f"wc2026 fixtures parquet not found at {FIXTURES_PARQUET}; "
+            f"cannot derive matches_remaining."
+        )
+    return int(len(pd.read_parquet(FIXTURES_PARQUET, columns=["match_id"])))
+
+
+def _count_settled_via_parquet(path: Path) -> int | None:
+    """Read settled count from a parquet snapshot of `match_outcomes`.
+
+    Returns None if the file does not exist; raises on a malformed file
+    (so a half-written export does not silently masquerade as zero
+    settled matches). Empty parquet → 0 (the export ran but nothing
+    has settled yet); a missing file → None (the export hasn't run).
+    """
+    if not path.exists():
+        return None
+    df = pd.read_parquet(path, columns=["match_id"])
+    return int(len(df))
+
+
+def _count_settled_via_postgres() -> int | None:
+    """Read settled count from the live Postgres `match_outcomes` table.
+
+    Optional path. Returns None if:
+      - psycopg (v3) or psycopg2 is not installed, or
+      - the DATABASE_URL / POSTGRES_URL env vars are unset, or
+      - the connection or query fails for any reason.
+
+    Failures are logged via print (rather than raised) because this
+    helper is best-effort: a missing DB connection in CI should leave
+    matches_settled at zero (pre-tournament default), not crash the
+    nightly snapshot regeneration. Surfacing the failure to operations
+    is the freshness-monitor's job, not this script's.
+    """
+    url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+    if not url:
+        return None
+    # Try psycopg v3 first (modern), fall back to psycopg2.
+    conn = None
+    try:
+        try:
+            import psycopg  # type: ignore[import-untyped]
+            conn = psycopg.connect(url)
+        except ImportError:
+            import psycopg2  # type: ignore[import-untyped]
+            conn = psycopg2.connect(url)
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM match_outcomes")
+            row = cur.fetchone()
+            return int(row[0]) if row else 0
+    except Exception as exc:  # broad on purpose; see docstring
+        print(f"    [warn] postgres settled-count query failed: {exc}")
+        return None
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
+def _count_settled_matches() -> tuple[int, str]:
+    """Return (settled_count, source_label) for snapshot_meta derivation.
+
+    Source-precedence order:
+      1. Parquet export at MATCH_OUTCOMES_PARQUET (or the path given by
+         the MATCH_OUTCOMES_PARQUET env var). Preferred because the
+         export is reproducible offline — the nightly regen does not
+         need DB access.
+      2. Live Postgres via DATABASE_URL / POSTGRES_URL. Used only if
+         the parquet export is absent.
+      3. Default: 0. Correct pre-tournament; logged so an operator can
+         see why matches_settled stayed at zero.
+
+    The source label is written into the snapshot_meta.notes string so
+    a reviewer can trace which path was active for any given snapshot.
+    """
+    override = os.environ.get("MATCH_OUTCOMES_PARQUET")
+    parquet_path = Path(override) if override else MATCH_OUTCOMES_PARQUET
+    n_parquet = _count_settled_via_parquet(parquet_path)
+    if n_parquet is not None:
+        return n_parquet, f"parquet:{parquet_path.relative_to(PROJECT_ROOT) if parquet_path.is_relative_to(PROJECT_ROOT) else parquet_path}"
+    n_pg = _count_settled_via_postgres()
+    if n_pg is not None:
+        return n_pg, "postgres:match_outcomes"
+    return 0, "default:pre_tournament"
+
+
 def aggregate_team_progression(team_runs: pd.DataFrame) -> dict[str, dict]:
     """Aggregate per-team progression probabilities from team_runs_M2.parquet.
 
@@ -179,6 +363,7 @@ def regenerate_tournament_json(
     new_snapshot_id: str,
     generated_at: str,
     n_runs_per_team: int,
+    model_variant: str,
 ) -> dict:
     """Rebuild tournament.json keeping per-team metadata, replacing probs."""
     new_teams = []
@@ -231,6 +416,13 @@ def regenerate_tournament_json(
         "snapshot_id":      new_snapshot_id,
         "generated_at_utc": generated_at,
         "mc_runs":          n_runs_per_team,
+        # cp-09 part 3 (Fix 4): stamp the locked model identity on every
+        # tournament.json write so served probabilities carry their
+        # model provenance through the React layer. The Zod schema at
+        # website/src/lib/data/schemas.ts now requires this field,
+        # so a snapshot written without it will fail validation at
+        # load time — a built-in tripwire against silent batch swaps.
+        "model_variant":    model_variant,
         "teams":            new_teams,
     }
 
@@ -288,7 +480,35 @@ def main() -> None:
 
     # ── Build new tournament.json from batch + carried-forward metadata ──
     new_tournament = regenerate_tournament_json(
-        existing_tournament, aggregated, new_snapshot_id, new_generated_at, n_runs_per_team,
+        existing_tournament,
+        aggregated,
+        new_snapshot_id,
+        new_generated_at,
+        n_runs_per_team,
+        champion_internal,
+    )
+
+    # ── cp-09 part 2 (Fix 2): derive snapshot metadata from live state ────
+    # The pre-cp-09 script hardcoded `tournament_phase: "pre_tournament"`,
+    # `matches_settled: 0`, and `matches_remaining: 104`. Once the
+    # tournament starts on 2026-06-11 those values are lies the public
+    # surface would assert all the way through the knockouts. The block
+    # below replaces them with values derived from the canonical state.
+    total_matches = _count_total_matches()
+    settled_count, settled_source = _count_settled_matches()
+    if settled_count > total_matches:
+        # Defensive: a corrupt match_outcomes row or a manual admin
+        # mistake could push the count past the schedule. Cap to total
+        # so the JSON stays well-formed, but log loudly.
+        print(
+            f"    [warn] settled_count ({settled_count}) exceeds "
+            f"total_matches ({total_matches}); clamping."
+        )
+        settled_count = total_matches
+    phase = _derive_phase(settled_count, total_matches)
+    print(
+        f"    snapshot_meta   : settled={settled_count}/{total_matches} "
+        f"phase={phase} source={settled_source}"
     )
 
     # ── Build new snapshot_meta.json ──────────────────────────────────────
@@ -301,15 +521,16 @@ def main() -> None:
         "pre_reg_tag":          "v1.0.0-mstar-lock",
         "champion_model":       champion_model_id,
         "mc_runs":              n_runs_per_team,
-        "tournament_phase":     "pre_tournament",
-        "matches_settled":      0,
-        "matches_remaining":    104,
+        "tournament_phase":     phase,
+        "matches_settled":      settled_count,
+        "matches_remaining":    total_matches - settled_count,
         # cp-05: hardcoded False, aligned with cp-04's evaluation_metrics.kill_criteria_check.status="pre_tournament_locked".
         "kill_criteria_active": False,
         "notes": (
             f"Phase 7 M_STAR (= {champion_internal}) snapshot under "
             f"amendment {amendment_v}; per-team probabilities aggregated "
-            f"from batch {active_batch_id}; see {AMENDMENT_POINTER}."
+            f"from batch {active_batch_id}; see {AMENDMENT_POINTER}. "
+            f"matches_settled source: {settled_source}."
         ),
         "active_batch_id":      active_batch_id,
         "amendment_pointer":    AMENDMENT_POINTER,
