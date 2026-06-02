@@ -63,10 +63,29 @@ export const TournamentTeamSchema = z.object({
 });
 export type TournamentTeam = z.infer<typeof TournamentTeamSchema>;
 
+// cp-09 part 3 (Fix 4 / diagnostic §3.5): the served probabilities used
+// to lose their model identity at the JSON boundary — tournament.json
+// carried no `model_variant` stamp, so a silent batch swap upstream
+// could change what "the model" meant without a load-time signal.
+// `model_variant` is now required. The enum accepts the locked
+// champion identifier (`M2_fifa`) used in
+// data/calibration/champion_model.json::m_star_model_id as well as the
+// ablation tags (M0/M1/M2/M3) and the public-facing `M_STAR` alias
+// (which remains the canonical value of snapshot_meta.champion_model).
+const ModelVariantSchema = z.enum([
+  "M2_fifa",
+  "M0",
+  "M1",
+  "M2",
+  "M3",
+  "M_STAR",
+]);
+
 export const TournamentSnapshotSchema = z.object({
   snapshot_id: z.string(),
   generated_at_utc: z.string(),
   mc_runs: z.number().int().min(100),
+  model_variant: ModelVariantSchema,
   teams: z.array(TournamentTeamSchema).min(1),
 });
 export type TournamentSnapshot = z.infer<typeof TournamentSnapshotSchema>;
