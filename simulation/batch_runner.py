@@ -84,13 +84,25 @@ class BatchManifest:
     # the canonical hash convention in models/model_registry.py:561
     # (hashlib.sha256(S.tobytes()).hexdigest()). Variant -> hex digest.
     matrix_sha256_runs: dict[str, str] = field(default_factory=dict)
+    # cp-10: settled-results provenance. settled_count is the number of
+    # group-stage match_outcomes rows used to condition this batch;
+    # settled_source mirrors the cp-09 convention (e.g.
+    # "parquet:data/processed/match_outcomes.parquet",
+    # "postgres:match_outcomes", or "default:pre_tournament").
+    # Old manifests deserialise with the dataclass defaults; from_dict
+    # filters unknown keys so a future field add doesn't break resume.
+    settled_count: int = 0
+    settled_source: str = "default:pre_tournament"
 
     def to_dict(self) -> dict:
         return asdict(self)
 
     @staticmethod
     def from_dict(d: dict) -> "BatchManifest":
-        return BatchManifest(**d)
+        # Filter unknown keys so an older manifest (without cp-10 fields)
+        # and a newer manifest (with future fields) both deserialise.
+        known = {f.name for f in BatchManifest.__dataclass_fields__.values()}  # type: ignore[attr-defined]
+        return BatchManifest(**{k: v for k, v in d.items() if k in known})
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -169,8 +181,17 @@ def _compute_data_hash(variant: str) -> str:
     return hasher.hexdigest()[:32]
 
 
-def _build_runner(variant: str, code_sha: str) -> tuple["MonteCarloRunner", str]:
+def _build_runner(
+    variant: str,
+    code_sha: str,
+    settled_results: Optional[dict] = None,
+) -> tuple["MonteCarloRunner", str]:
     """Build a MonteCarloRunner for the given model variant.
+
+    cp-10: `settled_results` is a `dict[str, MatchResult]` keyed by
+    canonical match_id (M01..M72) for the group stage. Loaded once per
+    batch invocation by `run_batch` and passed through here so every
+    variant's runner shares the same settled set within the batch.
 
     Returns
     -------
@@ -248,6 +269,7 @@ def _build_runner(variant: str, code_sha: str) -> tuple["MonteCarloRunner", str]
         strength_provider=sp,
         code_sha=code_sha,
         tournament_variant="wc2026",
+        settled_results=settled_results,
     )
     return runner, matrix_sha256_run
 
@@ -309,6 +331,18 @@ def run_batch(
     now_utc = datetime.now(timezone.utc)
     batch_timestamp = now_utc.strftime("%Y%m%d_%H%M%SZ")
 
+    # ── cp-10: load settled-results once per batch invocation ─────────────────
+    # Loaded once and shared across every variant's runner so the conditioning
+    # set is consistent within the batch. A resume preserves the manifest's
+    # original (settled_count, settled_source) - see BatchManifest docstring.
+    from simulation.load_settled import load_settled_results
+    settled_results, settled_source = load_settled_results()
+    settled_count = len(settled_results)
+    log.info(
+        "Settled-results loaded for batch",
+        settled_count=settled_count, settled_source=settled_source,
+    )
+
     # ── Resume vs new batch ───────────────────────────────────────────────────
     if resume_from:
         batch_dir = output_root / resume_from
@@ -341,6 +375,8 @@ def run_batch(
             seed_bases=seed_bases,
             start_time_utc=now_utc.isoformat(),
             seed_master=seed_master,
+            settled_count=settled_count,
+            settled_source=settled_source,
         )
         manifest_path = batch_dir / "manifest.json"
         manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
@@ -358,7 +394,9 @@ def run_batch(
         seeds = [(seed_base + i) % (2 ** 32) for i in range(n_runs_per_variant)]
         timestamp_utc = pd.Timestamp(now_utc)
 
-        runner, matrix_sha256_run = _build_runner(variant, code_sha)
+        runner, matrix_sha256_run = _build_runner(
+            variant, code_sha, settled_results=settled_results,
+        )
         manifest.matrix_sha256_runs[variant] = matrix_sha256_run
         manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
         log.info("Strength matrix hashed",

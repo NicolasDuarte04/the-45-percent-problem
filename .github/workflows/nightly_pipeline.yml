@@ -54,6 +54,15 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Regenerate snapshot bundle from locked M2 batch
+        # cp-10: settled-result conditioning reads match_outcomes from
+        # Postgres when no data/processed/match_outcomes.parquet is staged.
+        # DIRECT_URL is preferred over DATABASE_URL to bypass any pgbouncer
+        # pooler - long-running batch scripts hit prepared-statement issues
+        # behind a pooler. Both secrets are already provisioned at the repo
+        # level (see snapshot-deploy.yml for the website CI usage).
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/regenerate_snapshot_from_batch.py
 
       - name: Stage updated website data files
@@ -77,7 +86,7 @@ jobs:
           # this run. --autostash handles any untracked-but-modified files
           # the Python scripts may have left behind (logs, caches, raw
           # parquet outputs). The runner is ephemeral, so we don't care
-          # about restoring the stash post-push — only the committed data
+          # about restoring the stash post-push - only the committed data
           # files matter.
           git pull --rebase --autostash origin main
           git push origin main

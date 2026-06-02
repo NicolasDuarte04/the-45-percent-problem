@@ -1,19 +1,19 @@
 """
 simulation/monte_carlo_runner.py
 =================================
-Phase 5 — Deliverable 4: Monte Carlo Tournament Simulator
+Phase 5 - Deliverable 4: Monte Carlo Tournament Simulator
 
 Implements §6 of Phase5_Simulation_Engine_Design.md.
 
 Single-run loop (§6.1):
-  1. Group stage — 72 matches, sample scorelines from BP+DC model
+  1. Group stage - 72 matches, sample scorelines from BP+DC model
   2. Tiebreakers + bracket seeding
   3. Knockout rounds (R32 → R16 → QF → SF → 3rd-place + Final): 31 matches + 1 = 32
   4. Emit two DataFrames: team_runs (48 rows) and match_runs (104 rows)
 
 Output schema (§6.2):
-  team_runs  — one row per (run, team): group finish, points, qualified_r32, exit_round, etc.
-  match_runs — one row per (run, match): scorelines, ET, penalty outcomes.
+  team_runs  - one row per (run, team): group finish, points, qualified_r32, exit_round, etc.
+  match_runs - one row per (run, match): scorelines, ET, penalty outcomes.
 
 StrengthProvider interface:
   get_lambdas(team_a, team_b, context) → (λ_home, λ_away)
@@ -136,35 +136,52 @@ class SimpleEloProvider:
 # Group fixture lists for FIFA 2026
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# 12 groups (A–L), each with exactly 6 fixtures (round-robin of 4 teams).
+# 12 groups (A-L), each with exactly 6 fixtures (round-robin of 4 teams).
 # Loaded lazily from the WC 2026 fixtures parquet.
 
-def _load_wc2026_fixtures() -> dict[str, list[tuple[str, str]]]:
-    """Load group fixtures from data/raw/wc2026_fixtures.parquet."""
+def _load_wc2026_fixtures() -> dict[str, list[tuple[str, str, str]]]:
+    """Load group fixtures from data/raw/wc2026_fixtures.parquet.
+
+    cp-10: each fixture is now a `(match_id, team_home, team_away)`
+    triple. The canonical M01..M72 match_id carries through to the MC's
+    group-stage loop so the settled-results dict (keyed by match_id)
+    can be looked up without a translator. See
+    docs/onboarding/cp-10-inspection-notes.md §3 option A.
+    """
     parquet_path = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
     if not parquet_path.exists():
         raise FileNotFoundError(f"WC 2026 fixtures not found at {parquet_path}")
     df = pd.read_parquet(parquet_path)
     group_df = df[df["stage"] == "Group Stage"]
-    fixtures: dict[str, list[tuple[str, str]]] = {}
+    fixtures: dict[str, list[tuple[str, str, str]]] = {}
     for _, row in group_df.iterrows():
         g = row["group"]
         if g not in fixtures:
             fixtures[g] = []
-        fixtures[g].append((row["team_home"], row["team_away"]))
+        fixtures[g].append((str(row["match_id"]), row["team_home"], row["team_away"]))
     return fixtures
 
 
 # ── Qatar 2022 fixtures (hardcoded for smoke test, known ground truth) ────────
 
-def _build_qatar2022_fixtures() -> dict[str, list[tuple[str, str]]]:
-    """Generate round-robin fixtures for Qatar 2022 groups."""
-    fixtures: dict[str, list[tuple[str, str]]] = {}
+def _build_qatar2022_fixtures() -> dict[str, list[tuple[str, str, str]]]:
+    """Generate round-robin fixtures for Qatar 2022 groups.
+
+    Returns the same `(match_id, home, away)` triple shape as the
+    WC 2026 loader. Qatar 2022 isn't in the canonical M-id space (it's
+    historical, not WC 2026), so the smoke-test variant synthesizes a
+    `Q22-{group}-{n}` id to keep the loop branch-free. The Qatar path
+    never receives settled_results from cp-10 anyway - it's a
+    determinism/structure smoke test.
+    """
+    fixtures: dict[str, list[tuple[str, str, str]]] = {}
     for g, teams in QATAR2022_GROUPS.items():
-        group_fixtures: list[tuple[str, str]] = []
+        group_fixtures: list[tuple[str, str, str]] = []
+        n = 1
         for i in range(len(teams)):
             for j in range(i + 1, len(teams)):
-                group_fixtures.append((teams[i], teams[j]))
+                group_fixtures.append((f"Q22-{g}-{n}", teams[i], teams[j]))
+                n += 1
         fixtures[g] = group_fixtures
     return fixtures
 
@@ -195,13 +212,24 @@ class MonteCarloRunner:
         strength_provider: StrengthProvider,
         code_sha: str,
         tournament_variant: str = "wc2026",  # "wc2026" or "qatar2022"
+        settled_results: Optional[dict[str, MatchResult]] = None,
     ) -> None:
+        """cp-10: `settled_results` keyed by canonical match_id (M01..M72)
+        replaces the sampled scoreline for any group-stage fixture present
+        in the dict. Pass an empty dict (or None) for pre-tournament
+        behavior - every group match is sampled, identical to pre-cp-10.
+
+        Knockout matches are NEVER conditioned in cp-10 (see scope cut in
+        docs/onboarding/cp-10-inspection-notes.md §7); the dict is checked
+        only inside the group-stage loop.
+        """
         self._mm = match_model
         self._sm = shootout_model
         self._be = bracket_encoder
         self._sp = strength_provider
         self._code_sha = code_sha
         self._variant = tournament_variant
+        self._settled_results: dict[str, MatchResult] = dict(settled_results or {})
 
         # Load fixtures
         if tournament_variant == "qatar2022":
@@ -243,23 +271,42 @@ class MonteCarloRunner:
         }
 
         # ── 1. Group stage ────────────────────────────────────────────────────
+        # cp-10: for each fixture, use the realized scoreline from
+        # settled_results when its match_id is present (no sampling, no
+        # lambdas drawn); otherwise sample from the BP+DC model as before.
+        # The lambda columns are still emitted for sampled rows (provenance);
+        # for settled rows they are NaN-equivalent (the realized scoreline
+        # was not produced by these lambdas, and stamping a value would be
+        # misleading). The `settled: bool` column makes the distinction
+        # explicit downstream.
         group_results: dict[str, list[MatchResult]] = {}
         for group in self._groups:
             fixtures = self._group_fixtures.get(group, [])
             group_match_results: list[MatchResult] = []
-            for match_num, (home, away) in enumerate(fixtures, start=1):
-                lam_h, lam_a = self._sp.get_lambdas(home, away, context="group")
-                h_goals, a_goals = self._mm.sample_scoreline(lam_h, lam_a)
-                mr = MatchResult(home, away, h_goals, a_goals)
+            for match_id, home, away in fixtures:
+                settled = self._settled_results.get(match_id)
+                if settled is not None:
+                    h_goals, a_goals = settled.home_goals, settled.away_goals
+                    mr = MatchResult(home, away, h_goals, a_goals)
+                    lam_h_out: Optional[float] = None
+                    lam_a_out: Optional[float] = None
+                    is_settled = True
+                else:
+                    lam_h, lam_a = self._sp.get_lambdas(home, away, context="group")
+                    h_goals, a_goals = self._mm.sample_scoreline(lam_h, lam_a)
+                    mr = MatchResult(home, away, h_goals, a_goals)
+                    lam_h_out = round(lam_h, 6)
+                    lam_a_out = round(lam_a, 6)
+                    is_settled = False
                 group_match_results.append(mr)
                 match_rows.append({
                     **meta,
-                    "match_id": f"G-{group}-{match_num}",
+                    "match_id": match_id,
                     "phase": "group",
                     "team_home": home,
                     "team_away": away,
-                    "lambda_home": round(lam_h, 6),
-                    "lambda_away": round(lam_a, 6),
+                    "lambda_home": lam_h_out,
+                    "lambda_away": lam_a_out,
                     "reg_home_goals": h_goals,
                     "reg_away_goals": a_goals,
                     "went_to_ET": False,
@@ -269,6 +316,7 @@ class MonteCarloRunner:
                     "pen_home_score": None,
                     "pen_away_score": None,
                     "winner": None,   # draws are valid in group stage
+                    "settled": is_settled,
                 })
             group_results[group] = group_match_results
 
@@ -389,6 +437,9 @@ class MonteCarloRunner:
                     "pen_home_score": pen_h,
                     "pen_away_score": pen_a,
                     "winner": winner,
+                    # cp-10: knockout conditioning is out of scope; KO rows
+                    # are always sampled, so settled is always False.
+                    "settled": False,
                 })
 
             if round_name == "SF":
@@ -454,6 +505,7 @@ class MonteCarloRunner:
                 "pen_home_score": pen_h3,
                 "pen_away_score": pen_a3,
                 "winner": third,
+                "settled": False,
             })
 
         # ── Final ─────────────────────────────────────────────────────────────
@@ -513,6 +565,7 @@ class MonteCarloRunner:
                 "pen_home_score": pen_h_fin,
                 "pen_away_score": pen_a_fin,
                 "winner": champion,
+                "settled": False,
             })
 
         # ── Assemble DataFrames ───────────────────────────────────────────────
@@ -543,5 +596,9 @@ class MonteCarloRunner:
             match_df["went_to_pens"]     = match_df["went_to_pens"].astype(bool)
             match_df["lambda_home"]      = match_df["lambda_home"].astype("float32")
             match_df["lambda_away"]      = match_df["lambda_away"].astype("float32")
+            # cp-10: settled flag is False for every row produced before
+            # cp-10 (no settled column existed); for rows produced after
+            # cp-10 it's set per-row. astype(bool) coerces both shapes.
+            match_df["settled"]          = match_df["settled"].astype(bool)
 
         return team_df, match_df

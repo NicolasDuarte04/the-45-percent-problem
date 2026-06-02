@@ -41,6 +41,14 @@ dependencies = [
 
     # ── Probabilistic modelling ────────────────────────────────────────────────
     "statsmodels>=0.14",
+
+    # ── Database (cp-10 settled-result conditioning) ───────────────────────────
+    # psycopg v3 with the binary wheel: avoids the local libpq dependency on
+    # CI runners. Used by scripts/regenerate_snapshot_from_batch.py and
+    # simulation/load_settled.py to read match_outcomes when no parquet export
+    # is staged. Both helpers prefer DIRECT_URL over DATABASE_URL so the
+    # batch path bypasses any pgbouncer pooler.
+    "psycopg[binary]>=3.1",
 ]
 
 [project.optional-dependencies]
