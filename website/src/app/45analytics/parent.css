@@ -1,0 +1,61 @@
+/* ──────────────────────────────────────────────────────────────────────
+   45 Analytics — parent umbrella homepage styles (Session 01 port).
+   Scoped under [data-canvas="voto"] (the parent reuses the voto design
+   layer's tokens). Mounted at /45analytics during PR1; moves to / in PR2
+   once The 45% Problem relocates to /the-45-percent-problem.
+   ────────────────────────────────────────────────────────────────────── */
+
+[data-canvas="voto"] .pshell { max-width: 1080px; margin: 0 auto; padding-inline: 24px; }
+[data-canvas="voto"] .pmast { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+[data-canvas="voto"] .pmast .wm { font-family: var(--font-serif); font-size: 21px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+[data-canvas="voto"] .pmast .wm b { color: var(--accent-ink); font-weight: 600; }
+[data-canvas="voto"] .pnav { display: flex; gap: 26px; align-items: center; }
+[data-canvas="voto"] .pnav a { font-family: var(--font-sans); font-size: 13.5px; color: var(--ink-3); text-decoration: none; }
+[data-canvas="voto"] .pnav a:hover { color: var(--ink); }
+[data-canvas="voto"] .pnav .tag { font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); letter-spacing: .04em; }
+
+/* Hero */
+[data-canvas="voto"] .phero { padding: 64px 0 48px; }
+[data-canvas="voto"] .phero .eyebrow { margin-bottom: 22px; }
+[data-canvas="voto"] .phero h1 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(40px, 7vw, 72px); line-height: 1.02; letter-spacing: -0.025em; max-width: 15ch; }
+[data-canvas="voto"] .phero h1 em { font-style: normal; color: var(--accent-ink); }
+[data-canvas="voto"] .phero .manifesto { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 60ch; margin-top: 28px; }
+[data-canvas="voto"] .phero .thesis { font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); margin-top: 24px; letter-spacing: .02em; }
+
+/* Two-card switcher */
+[data-canvas="voto"] .switch { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 24px 0 8px; }
+[data-canvas="voto"] .pcard { display: flex; flex-direction: column; padding: 30px; min-height: 300px; text-decoration: none; position: relative; overflow: hidden; transition: box-shadow .16s, transform .16s; }
+[data-canvas="voto"] .pcard:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+[data-canvas="voto"] .pcard .motif { position: absolute; top: 18px; right: 14px; width: 158px; opacity: .5; pointer-events: none; }
+[data-canvas="voto"] .pcard .eyebrow { margin-bottom: auto; position: relative; z-index: 1; }
+[data-canvas="voto"] .pcard h2 { font-family: var(--font-serif); font-weight: 400; font-size: 30px; line-height: 1.1; letter-spacing: -0.02em; margin: 18px 0 0; position: relative; z-index: 1; }
+[data-canvas="voto"] .pcard h2 b { color: var(--accent-ink); font-weight: 600; }
+[data-canvas="voto"] .pcard .desc { font-size: 14.5px; color: var(--ink-3); line-height: 1.55; margin-top: 12px; max-width: 42ch; position: relative; z-index: 1; }
+[data-canvas="voto"] .pcard .stats { display: flex; gap: 24px; margin-top: 22px; position: relative; z-index: 1; }
+[data-canvas="voto"] .pcard .stats .s .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-4); }
+[data-canvas="voto"] .pcard .stats .s .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 20px; color: var(--ink); margin-top: 5px; }
+[data-canvas="voto"] .pcard .enter { font-family: var(--font-sans); font-size: 14px; font-weight: 500; color: var(--accent-ink); margin-top: 24px; display: inline-flex; align-items: center; gap: 7px; position: relative; z-index: 1; }
+[data-canvas="voto"] .pcard .enter .arr { font-family: var(--font-mono); transition: transform .16s; }
+[data-canvas="voto"] .pcard:hover .enter .arr { transform: translateX(4px); }
+[data-canvas="voto"] .pcard .status { position: absolute; top: 30px; right: 30px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-4); z-index: 1; }
+
+/* The 45% card stays cold/academic (neutral graphite); El Voto carries petróleo */
+[data-canvas="voto"] .card-45 { --accent: #5A6472; --accent-ink: #414B59; --accent-line: color-mix(in oklch, #5A6472 34%, transparent); --accent-soft: color-mix(in oklch, #5A6472 12%, transparent); }
+
+/* Daily brief CTA */
+[data-canvas="voto"] .brief { margin: 40px 0; padding: 34px; display: grid; grid-template-columns: 1fr; gap: 18px; align-items: center; }
+[data-canvas="voto"] .brief h3 { font-family: var(--font-serif); font-weight: 400; font-size: 26px; letter-spacing: -0.02em; margin-top: 12px; }
+[data-canvas="voto"] .brief p { font-size: 14.5px; color: var(--ink-3); margin-top: 8px; max-width: 46ch; line-height: 1.55; }
+[data-canvas="voto"] .brief-form { display: flex; gap: 10px; max-width: 420px; }
+[data-canvas="voto"] .brief-form input { flex: 1; height: 48px; padding: 0 14px; font-size: 15px; font-family: var(--font-sans); color: var(--ink); background: var(--panel-elev); border: 1px solid var(--rule-strong); border-radius: var(--radius); outline: none; }
+[data-canvas="voto"] .brief-form input:focus { border-color: var(--accent); }
+[data-canvas="voto"] .brief-form .btn { width: auto; flex: 0 0 auto; padding: 0 22px; }
+
+[data-canvas="voto"] .pfoot { border-top: 1px solid var(--rule); padding: 34px 0 56px; }
+[data-canvas="voto"] .pfoot .mono { font-family: var(--font-mono); font-size: 11.5px; line-height: 1.8; color: var(--ink-4); }
+[data-canvas="voto"] .pfoot a { color: var(--accent-ink); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+
+@media (min-width: 780px) {
+  [data-canvas="voto"] .switch { grid-template-columns: 1fr 1fr; }
+  [data-canvas="voto"] .brief { grid-template-columns: 1.1fr 1fr; }
+}
