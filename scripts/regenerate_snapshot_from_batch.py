@@ -208,7 +208,7 @@ def _derive_phase(settled: int, total: int) -> str:
             return phase
     # The last entry in _PHASE_BOUNDS covers settled == 103. Anything
     # between 103 (exclusive) and `total` (exclusive) can only happen
-    # with a non-104 total — surface that loudly rather than silently
+    # with a non-104 total - surface that loudly rather than silently
     # mapping to "final".
     raise ValueError(
         f"settled={settled} falls past the last phase boundary "
@@ -247,12 +247,33 @@ def _count_settled_via_parquet(path: Path) -> int | None:
     return int(len(df))
 
 
+def _resolve_pg_url() -> str | None:
+    """Resolve the Postgres connection string for batch scripts.
+
+    Preference order:
+      1. DIRECT_URL    (non-pooled; preferred for batch reads - bypasses
+                        any pgbouncer pooler that would otherwise cause
+                        prepared-statement issues on long-running scripts)
+      2. DATABASE_URL  (pooled; the website app uses this for request traffic)
+      3. POSTGRES_URL  (legacy alias kept for compatibility)
+
+    Returns None if none of the three env vars is set. Mirrored in
+    simulation/load_settled.py so the snapshot regen and the MC settled
+    loader pick the same connection.
+    """
+    return (
+        os.environ.get("DIRECT_URL")
+        or os.environ.get("DATABASE_URL")
+        or os.environ.get("POSTGRES_URL")
+    )
+
+
 def _count_settled_via_postgres() -> int | None:
     """Read settled count from the live Postgres `match_outcomes` table.
 
     Optional path. Returns None if:
       - psycopg (v3) or psycopg2 is not installed, or
-      - the DATABASE_URL / POSTGRES_URL env vars are unset, or
+      - none of DIRECT_URL / DATABASE_URL / POSTGRES_URL is set, or
       - the connection or query fails for any reason.
 
     Failures are logged via print (rather than raised) because this
@@ -261,7 +282,7 @@ def _count_settled_via_postgres() -> int | None:
     nightly snapshot regeneration. Surfacing the failure to operations
     is the freshness-monitor's job, not this script's.
     """
-    url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+    url = _resolve_pg_url()
     if not url:
         return None
     # Try psycopg v3 first (modern), fall back to psycopg2.
@@ -294,7 +315,7 @@ def _count_settled_matches() -> tuple[int, str]:
     Source-precedence order:
       1. Parquet export at MATCH_OUTCOMES_PARQUET (or the path given by
          the MATCH_OUTCOMES_PARQUET env var). Preferred because the
-         export is reproducible offline — the nightly regen does not
+         export is reproducible offline - the nightly regen does not
          need DB access.
       2. Live Postgres via DATABASE_URL / POSTGRES_URL. Used only if
          the parquet export is absent.
@@ -313,6 +334,107 @@ def _count_settled_matches() -> tuple[int, str]:
     if n_pg is not None:
         return n_pg, "postgres:match_outcomes"
     return 0, "default:pre_tournament"
+
+
+def _maybe_rebatch_for_settled_delta(active: dict) -> dict:
+    """cp-10: re-batch the full 10k MC when the settled-results set changed.
+
+    Compares the current settled-match count (via cp-09's
+    `_count_settled_matches`) against the value stamped on
+    `active_batch.json::settled_count_at_batch_time`. When they differ - 
+    in either direction, since admin retractions decrease the count - 
+    invokes `simulation.batch_runner.run_batch` to produce a fresh
+    M2 batch with the new settled set, updates `active_batch.json` to
+    point at it (schema_version 1.0 → 1.1, supersession_reason filled
+    in, prior batch preserved for audit), and returns the new active
+    dict. When the count is unchanged, returns the input dict
+    unchanged and re-aggregation proceeds against the existing batch.
+
+    The architectural decision (Q1 of the 2026-06-01 diagnostic) is to
+    re-batch the full 10k Monte Carlo on a settled-count change rather
+    than reweight an existing batch. See
+    docs/audit/architecture-diagnostic-2026-06-01.md §7 Q1.
+    """
+    prior_count = int(active.get("settled_count_at_batch_time", 0))
+    prior_source = active.get("settled_source", "default:pre_tournament")
+
+    current_count, current_source = _count_settled_matches()
+
+    if current_count == prior_count:
+        # No delta. Re-aggregate from the existing active batch (cp-09
+        # behavior). Stamp the source if it was missing (e.g. resuming
+        # a pre-cp-10 active_batch.json) so future runs have full
+        # provenance without forcing an unnecessary re-batch.
+        if "settled_count_at_batch_time" not in active or "settled_source" not in active:
+            active["schema_version"] = "1.1"
+            active["settled_count_at_batch_time"] = current_count
+            active["settled_source"] = current_source
+            ACTIVE_BATCH_JSON.write_text(json.dumps(active, indent=2) + "\n")
+            print(
+                f"    cp-10           : back-filled settled_count_at_batch_time="
+                f"{current_count} source={current_source} into active_batch.json"
+            )
+        else:
+            print(
+                f"    cp-10           : settled-count unchanged at {current_count} "
+                f"({current_source}); re-aggregating existing batch"
+            )
+        return active
+
+    # ── Settled set changed; produce a fresh batch ────────────────────────
+    print(
+        f"    cp-10           : settled-count delta {prior_count} ({prior_source}) "
+        f"-> {current_count} ({current_source}); triggering re-batch"
+    )
+
+    # Imported here (rather than at module load) so the regen script's
+    # zero-delta fast path doesn't pay the joblib + DataLoader import cost.
+    from simulation.batch_runner import run_batch
+
+    # cp-10 conditions only the M2 variant since that's the production
+    # champion and the only batch consumed by the snapshot regen. Other
+    # variants are research artifacts and are re-batched on their own
+    # cadence (or not at all post-lockdown). The 10k count is the
+    # blueprint-locked website setting.
+    new_manifest = run_batch(variants=["M2"], n_runs_per_variant=10_000)
+
+    # Update active_batch.json in place, preserving the audit trail of
+    # the prior active batch. Schema version bumps to 1.1 to reflect the
+    # two new fields.
+    prior_id = active.get("active_batch_id")
+    prior_path = active.get("active_batch_path")
+    # The existing active_batch.json stores active_batch_path as relative to
+    # PROJECT_ROOT; preserve that convention even though BatchManifest.batch_dir
+    # is absolute. A consumer that uses PROJECT_ROOT / active_batch_path keeps
+    # working regardless.
+    new_batch_dir = Path(new_manifest.batch_dir)
+    try:
+        rel_batch_path = str(new_batch_dir.relative_to(PROJECT_ROOT))
+    except ValueError:
+        rel_batch_path = str(new_batch_dir)
+    new_active = {
+        "schema_version":           "1.1",
+        "active_batch_id":          new_manifest.batch_id,
+        "active_batch_path":        rel_batch_path,
+        "activated_at_utc":         _now_utc().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "matrix_sha256_run":        new_manifest.matrix_sha256_runs.get("M2", ""),
+        "matrix_sha256_lock":       active.get("matrix_sha256_lock", ""),
+        "prior_active_batch_id":    prior_id,
+        "prior_active_batch_path":  prior_path,
+        "supersession_reason": (
+            f"cp-10 settled-count delta: was {prior_count} ({prior_source}), "
+            f"now {current_count} ({current_source})."
+        ),
+        "amendment_pointer":            active.get("amendment_pointer", ""),
+        "settled_count_at_batch_time":  new_manifest.settled_count,
+        "settled_source":               new_manifest.settled_source,
+    }
+    ACTIVE_BATCH_JSON.write_text(json.dumps(new_active, indent=2) + "\n")
+    print(
+        f"    cp-10           : new active_batch_id={new_manifest.batch_id} "
+        f"(settled_count={new_manifest.settled_count}, source={new_manifest.settled_source})"
+    )
+    return new_active
 
 
 def aggregate_team_progression(team_runs: pd.DataFrame) -> dict[str, dict]:
@@ -421,7 +543,7 @@ def regenerate_tournament_json(
         # model provenance through the React layer. The Zod schema at
         # website/src/lib/data/schemas.ts now requires this field,
         # so a snapshot written without it will fail validation at
-        # load time — a built-in tripwire against silent batch swaps.
+        # load time - a built-in tripwire against silent batch swaps.
         "model_variant":    model_variant,
         "teams":            new_teams,
     }
@@ -434,6 +556,11 @@ def main() -> None:
 
     # ── Load active batch + locked champion artifact ──────────────────────
     active = json.loads(ACTIVE_BATCH_JSON.read_text())
+    # cp-10: re-batch when the settled-results set has changed since the
+    # active batch was produced. No-op pre-tournament (zero settled both
+    # before and after); during the tournament this is the trigger that
+    # propagates a freshly-settled result into the public bracket.
+    active = _maybe_rebatch_for_settled_delta(active)
     active_batch_id = active["active_batch_id"]
     batch_path = PROJECT_ROOT / active["active_batch_path"]
     team_runs_path = batch_path / "team_runs_M2.parquet"

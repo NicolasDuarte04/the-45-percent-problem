@@ -278,16 +278,17 @@ primary-key prefix of
 
 | Column | Type | Description |
 |---|---|---|
-| `match_id` | string | e.g. `G-A-1`, `KO-R32-1` |
+| `match_id` | string | Group stage: canonical `M01`..`M72` from the fixtures parquet. Knockout: `KO-R32-1`, `KO-3rd-1`, `KO-Final-1` (synthesized; a follow-up checkpoint adopts the canonical `M73`..`M104` for knockout). |
 | `phase` | string | group, R32, R16, QF, SF, 3rd-place, Final |
 | `team_home`, `team_away` | string | |
-| `lambda_home`, `lambda_away` | float32 | Input <InlineMath math="\lambda" /> used (audit) |
+| `lambda_home`, `lambda_away` | float32 \| null | Input <InlineMath math="\lambda" /> used (audit). Null for `settled = true` group rows (the realized scoreline was not produced by these lambdas). |
 | `reg_home_goals`, `reg_away_goals` | int8 | |
 | `went_to_ET` | bool | |
 | `et_home_goals`, `et_away_goals` | int8 \| null | |
 | `went_to_pens` | bool | |
 | `pen_home_score`, `pen_away_score` | int8 \| null | |
 | `winner` | string \| null | Null only for group draws |
+| `settled` | bool | `true` if the row is a realized scoreline from `match_outcomes` (cp-10 conditioning); `false` if sampled from the BP+DC model. Always `false` for knockout rows until the knockout follow-up ships. |
 
 The batch manifest (`manifest.json`) records `code_sha`, per-variant
 `data_hash`, `seed_base`, `run_count`, batch start and end times, and
