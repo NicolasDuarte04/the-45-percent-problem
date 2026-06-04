@@ -1,0 +1,439 @@
+/* ──────────────────────────────────────────────────────────────────────
+   El Voto del 21 de Junio — scoped design layer (Session 01 port).
+
+   Ported from the signed-off prototype's voto.css. EVERY selector is
+   scoped under [data-canvas="voto"] so nothing here leaks onto the WC
+   (The 45% Problem) routes. Typography (--font-serif/sans/mono) is
+   inherited from the app's root layout — the prototype's Google-Fonts
+   @import is intentionally dropped (the families are already loaded via
+   next/font). Base cream / ink / petróleo values match the app's
+   existing tokens; they are re-declared here under prototype names so
+   the ported component CSS reads verbatim.
+
+   RULE: accent = agency / mobilization. NEVER a candidate color.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* ── Base (light / cream — DEFAULT) ──────────────────────────────────── */
+[data-canvas="voto"] {
+  --paper:       #F7F4EC;
+  --panel:       #EEEAE0;
+  --panel-elev:  #FCFAF4;
+  --rule:        rgb(31 31 31 / 0.10);
+  --rule-strong: rgb(31 31 31 / 0.16);
+
+  --ink:    #141414;
+  --ink-2:  #2A2A2A;
+  --ink-3:  #5A5550;
+  --ink-4:  #8A847C;
+
+  /* Prism — candidate split (equal perceptual weight, non-partisan) */
+  --peach: oklch(72% 0.12 50);
+  --plum:  oklch(66% 0.11 318);
+  --mint:  oklch(45% 0.11 150);
+  --rose:  oklch(47% 0.14 22);
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.04), 0 8px 28px rgb(0 0 0 / 0.06);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.06), 0 16px 44px rgb(0 0 0 / 0.10);
+
+  --radius:    10px;
+  --radius-lg: 18px;
+  --radius-sm: 7px;
+
+  --maxw: 460px;
+
+  /* Papel quemado — the brand's smile (secondary accent, <=5% of a screen) */
+  --papel: #C0843E;
+  --papel-ink: #9F6A2C;
+  --papel-soft: color-mix(in oklch, #C0843E 16%, transparent);
+
+  color-scheme: light;
+  /* Override the app's global [data-canvas]{display:flex;flex-direction:column}.
+     The voto screens are normal block-flow documents (matching the prototype);
+     keeping flex-column made margin:0 auto items (.wrap, .topbar) shrink to
+     content width via auto cross-margins, breaking justify-content layouts. */
+  display: block;
+  background: var(--paper);
+  color: var(--ink-2);
+  /* Safe-area: cream extends through the status-bar inset on every route */
+  padding-top: env(safe-area-inset-top, 0px);
+  background-clip: border-box;
+  line-height: 1.6;
+  transition: background .3s ease, color .3s ease;
+}
+
+/* Accent palettes — Petróleo is the default */
+[data-canvas="voto"][data-accent="petroleo"],
+[data-canvas="voto"]:not([data-accent]) {
+  --accent:      #0F6B7D;
+  --accent-ink:  #0A5260;
+  --accent-soft: color-mix(in oklch, #0F6B7D 12%, transparent);
+  --accent-line: color-mix(in oklch, #0F6B7D 36%, transparent);
+}
+[data-canvas="voto"][data-accent="terracota"] {
+  --accent:      #BD5B38;
+  --accent-ink:  #9C472A;
+  --accent-soft: color-mix(in oklch, #BD5B38 13%, transparent);
+  --accent-line: color-mix(in oklch, #BD5B38 38%, transparent);
+}
+
+/* ── Dark mode (warm slate) — reached via the Tweaks toggle ──────────── */
+[data-canvas="voto"][data-theme="dark"] {
+  --paper:       #0F1216;
+  --panel:       #161A20;
+  --panel-elev:  #1C212A;
+  --rule:        #262C35;
+  --rule-strong: #313845;
+
+  --ink:    #EEE8DD;
+  --ink-2:  #D8D2C7;
+  --ink-3:  #A8AFBC;
+  --ink-4:  #767E8C;
+
+  --peach: oklch(80% 0.11 52);
+  --plum:  oklch(76% 0.10 318);
+  --mint:  oklch(80% 0.13 152);
+  --rose:  oklch(72% 0.15 26);
+
+  --papel: #D8A05A;
+  --papel-ink: #E3B677;
+  --papel-soft: color-mix(in oklch, #D8A05A 18%, transparent);
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.30), 0 10px 30px rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 18px 48px rgb(0 0 0 / 0.45);
+  color-scheme: dark;
+}
+[data-canvas="voto"][data-theme="dark"][data-accent="petroleo"],
+[data-canvas="voto"][data-theme="dark"]:not([data-accent]) {
+  --accent:      #46B7CE;
+  --accent-ink:  #6FCBDE;
+  --accent-soft: color-mix(in oklch, #46B7CE 16%, transparent);
+  --accent-line: color-mix(in oklch, #46B7CE 40%, transparent);
+}
+[data-canvas="voto"][data-theme="dark"][data-accent="terracota"] {
+  --accent:      #E08A60;
+  --accent-ink:  #ECA078;
+  --accent-soft: color-mix(in oklch, #E08A60 16%, transparent);
+  --accent-line: color-mix(in oklch, #E08A60 40%, transparent);
+}
+
+/* Pin the body background so overscroll / safe-area never reveals the wrong
+   canvas. Mirrors the app's existing :has() FOUC fix for the quant canvas. */
+body:has([data-canvas="voto"]) { background-color: #F7F4EC; }
+body:has([data-canvas="voto"][data-theme="dark"]) { background-color: #0F1216; }
+
+/* Paper grain — magazine noise, invisible at first read */
+[data-canvas="voto"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.028;
+  mix-blend-mode: multiply;
+}
+[data-canvas="voto"][data-theme="dark"]::after { mix-blend-mode: screen; opacity: 0.04; }
+
+[data-canvas="voto"] img { max-width: 100%; display: block; }
+[data-canvas="voto"] a { color: inherit; }
+
+[data-canvas="voto"] h1,
+[data-canvas="voto"] h2,
+[data-canvas="voto"] h3,
+[data-canvas="voto"] h4 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+[data-canvas="voto"] p { margin: 0; text-wrap: pretty; }
+
+[data-canvas="voto"] .mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum", "cv11";
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Layout primitives ───────────────────────────────────────────────── */
+[data-canvas="voto"] .wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: 20px; }
+[data-canvas="voto"] .stack > * + * { margin-top: var(--gap, 16px); }
+[data-canvas="voto"] .rule { border: 0; border-top: 1px solid var(--rule); margin: 0; }
+
+[data-canvas="voto"] .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+[data-canvas="voto"] .eyebrow .sec { color: var(--papel-ink); }
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+[data-canvas="voto"] .card {
+  background: var(--panel-elev);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+[data-canvas="voto"] .card-pad { padding: 20px; }
+
+/* ── Buttons (tap target >= 48px) ────────────────────────────────────── */
+[data-canvas="voto"] .btn {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .12s ease-out, transform .06s, border-color .12s, color .12s;
+  width: 100%;
+}
+[data-canvas="voto"] .btn:active { transform: translateY(1px); }
+[data-canvas="voto"] .btn-accent { background: var(--accent); color: #FFF8F3; }
+[data-canvas="voto"][data-theme="dark"] .btn-accent { color: #1A0F09; }
+[data-canvas="voto"] .btn-accent:hover { filter: brightness(1.06); }
+[data-canvas="voto"] .btn-ink { background: var(--ink); color: var(--paper); }
+[data-canvas="voto"] .btn-ink:hover { filter: brightness(1.12); }
+[data-canvas="voto"] .btn-ghost { background: transparent; color: var(--ink); border-color: var(--rule-strong); }
+[data-canvas="voto"] .btn-ghost:hover { background: var(--panel); }
+[data-canvas="voto"] .btn .arr { opacity: .55; }
+
+/* ── Pulso Patrio ticker ─────────────────────────────────────────────── */
+[data-canvas="voto"] .ticker {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  height: 36px;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  user-select: none;
+}
+[data-canvas="voto"][data-theme="dark"] .ticker { background: #07090C; }
+[data-canvas="voto"] .ticker-brand {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 15px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.62);
+  border-right: 1px solid rgb(255 255 255 / 0.10);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+[data-canvas="voto"] .ticker-pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-line);
+}
+[data-canvas="voto"] .ticker-live .ticker-pulse-dot { animation: votoPulseDot 2.4s ease-out infinite, votoBreathe 1.5s ease-in-out infinite; }
+@keyframes votoBreathe { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+@keyframes votoPulseDot {
+  0% { box-shadow: 0 0 0 0 var(--accent-line); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+[data-canvas="voto"] .ticker-viewport { flex: 1; position: relative; overflow: hidden; }
+[data-canvas="voto"] .ticker-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  transition: transform .42s cubic-bezier(.4,.0,.2,1);
+}
+[data-canvas="voto"] .ticker-item {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  text-align: left;
+}
+[data-canvas="voto"] .ticker-item .lbl {
+  font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+}
+[data-canvas="voto"] .ticker-item .val { font-size: 13.5px; color: var(--paper); font-weight: 600; letter-spacing: 0.01em; }
+[data-canvas="voto"] .ticker-item .val.fresh { animation: votoFreshFlash 1.1s ease-out; }
+@keyframes votoFreshFlash {
+  0% { color: var(--accent); }
+  100% { color: var(--paper); }
+}
+[data-canvas="voto"] .ticker-item .delta { font-size: 10.5px; }
+[data-canvas="voto"] .delta-up { color: var(--mint); }
+[data-canvas="voto"] .delta-dn { color: var(--rose); }
+
+@media (min-width: 720px) {
+  [data-canvas="voto"] .ticker { height: 40px; }
+  [data-canvas="voto"] .ticker-track { width: 100% !important; transform: none !important; }
+  [data-canvas="voto"] .ticker-item { flex: 1; justify-content: center; border-right: 1px solid rgb(255 255 255 / 0.08); font-size: 13px; }
+  [data-canvas="voto"] .ticker-item:last-child { border-right: 0; }
+}
+
+[data-canvas="voto"] .ticker-drawer {
+  position: sticky; top: 36px; z-index: 49;
+  background: var(--panel-elev);
+  border-bottom: 1px solid var(--rule);
+  max-height: 0; overflow: hidden;
+  transition: max-height .26s cubic-bezier(.4,0,.2,1);
+}
+@media (min-width: 720px) { [data-canvas="voto"] .ticker-drawer { top: 40px; } }
+[data-canvas="voto"] .ticker-drawer.open { max-height: 340px; }
+[data-canvas="voto"] .ticker-drawer-inner { padding: 18px 20px 22px; max-width: var(--maxw); margin: 0 auto; }
+
+/* ── Probability split (candidates — NEVER red/blue, equal weight) ───── */
+[data-canvas="voto"] .psplit-names { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); margin-bottom: 8px; }
+[data-canvas="voto"] .psplit-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--panel); gap: 2px; }
+[data-canvas="voto"] .psplit-a { background: var(--peach); }
+[data-canvas="voto"] .psplit-b { background: var(--plum); }
+[data-canvas="voto"] .psplit-pcts { display: flex; justify-content: space-between; margin-top: 10px; }
+[data-canvas="voto"] .psplit-pcts .p { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 30px; color: var(--ink); line-height: 1; }
+[data-canvas="voto"] .psplit-pcts .p small { font-size: 14px; color: var(--ink-3); }
+[data-canvas="voto"] .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+
+/* ── Campo de votos (dot-field motif) ────────────────────────────────── */
+[data-canvas="voto"] .campo { display: block; width: 100%; height: auto; }
+[data-canvas="voto"] .campo .v-base { fill: var(--ink-4); opacity: .22; }
+[data-canvas="voto"] .campo .v-live { fill: var(--accent); opacity: .46; }
+
+/* Ambient drift — the model running quietly in the background. */
+[data-canvas="voto"] .cdrift { animation-name: none; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-canvas="voto"] .cdrift { animation-name: votoCampoDrift; animation-timing-function: ease-in-out; animation-iteration-count: infinite; will-change: transform; }
+}
+@keyframes votoCampoDrift {
+  0%   { transform: translate(0px, 0px); }
+  25%  { transform: translate(2.4px, -1.6px); }
+  50%  { transform: translate(-1.8px, 1.8px); }
+  75%  { transform: translate(1.6px, 2.4px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+/* ── Signature illustration — posterior distribution as a dotplot ──────── */
+[data-canvas="voto"] .signature { margin: 2px 0 0; }
+[data-canvas="voto"] .sig-svg { display: block; width: 100%; height: auto; overflow: visible; }
+[data-canvas="voto"] .sig-svg .s-base { fill: var(--ink-4); opacity: .30; }
+[data-canvas="voto"] .sig-svg .s-live { fill: var(--accent); opacity: .88; }
+[data-canvas="voto"] .sig-svg .s-rule { stroke: var(--rule-strong); stroke-width: 1; stroke-dasharray: 1.5 5; }
+[data-canvas="voto"] .sig-svg .s-mark { stroke: var(--papel); stroke-width: 1.4; stroke-dasharray: 3 3; opacity: .9; }
+[data-canvas="voto"] .sig-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-4); margin: 8px 0 22px; display: flex; gap: 8px; align-items: center; }
+[data-canvas="voto"] .sig-cap .pq { color: var(--papel-ink); }
+
+/* ── Section ornaments (fleurons, papel quemado) ──────────────────────── */
+[data-canvas="voto"] .orn { display: inline-flex; width: 0.98em; height: 0.98em; color: var(--papel-ink); flex-shrink: 0; }
+[data-canvas="voto"] .orn svg { width: 100%; height: 100%; }
+
+/* ── Hand-drawn underline (papel) on key verbs ────────────────────────── */
+[data-canvas="voto"] .subraya { position: relative; white-space: nowrap; }
+[data-canvas="voto"] .subraya::after {
+  content: ""; position: absolute; left: -0.04em; right: -0.04em; bottom: -0.16em; height: 0.30em;
+  background: var(--papel);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8 C 34 3 58 10 92 6 C 130 2 162 9 197 5' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8 C 34 3 58 10 92 6 C 130 2 162 9 197 5' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+  pointer-events: none;
+}
+
+/* ── Section headers ─────────────────────────────────────────────────── */
+[data-canvas="voto"] .section { padding-block: 36px; }
+[data-canvas="voto"] .section-hd { margin-bottom: 18px; }
+[data-canvas="voto"] .section-hd h2 { font-size: 26px; line-height: 1.15; margin-top: 10px; }
+[data-canvas="voto"] .section-hd .sub { font-size: 14.5px; color: var(--ink-3); margin-top: 8px; line-height: 1.55; }
+
+/* ── Stat / metric ───────────────────────────────────────────────────── */
+[data-canvas="voto"] .stat-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+[data-canvas="voto"] .stat-val { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+[data-canvas="voto"] .foot { border-top: 1px solid var(--rule); margin-top: 24px; padding-block: 32px 48px; }
+[data-canvas="voto"] .foot,
+[data-canvas="voto"] .foot a { color: var(--ink-3); }
+[data-canvas="voto"] .foot .mono { font-size: 11px; line-height: 1.7; }
+[data-canvas="voto"] .foot a { text-decoration: none; border-bottom: 1px solid var(--accent-line); color: var(--accent-ink); }
+
+/* ── Links ───────────────────────────────────────────────────────────── */
+[data-canvas="voto"] .lnk { color: var(--accent-ink); text-decoration: none; font-weight: 500; border-bottom: 1px solid var(--accent-line); transition: color .12s; }
+[data-canvas="voto"] .lnk:hover { color: var(--papel-ink); }
+[data-canvas="voto"] .lnk .arr { font-family: var(--font-mono); }
+
+/* ── Pills / chips ───────────────────────────────────────────────────── */
+[data-canvas="voto"] .pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink);
+}
+
+/* ── Tarjeta del Día (share-card template — shared) ──────────────────── */
+[data-canvas="voto"] .tj {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  container-type: inline-size;
+  font-family: var(--font-sans);
+}
+[data-canvas="voto"] .tj-canvas { position: absolute; inset: 0; padding: 7cqw 7cqw 6cqw; display: flex; flex-direction: column; }
+[data-canvas="voto"] .tj-campo { position: absolute; inset: 0; pointer-events: none; }
+[data-canvas="voto"] .tj-campo .v-base { opacity: .12; }
+[data-canvas="voto"] .tj-campo .v-live { opacity: .34; }
+[data-canvas="voto"] .tj-top { display: flex; justify-content: space-between; align-items: baseline; position: relative; z-index: 1; }
+[data-canvas="voto"] .tj-brand { font-family: var(--font-serif); font-size: 4.4cqw; letter-spacing: -0.02em; color: var(--ink); }
+[data-canvas="voto"] .tj-brand b { color: var(--accent-ink); font-weight: 600; }
+[data-canvas="voto"] .tj-fecha { font-family: var(--font-mono); font-size: 3cqw; letter-spacing: .08em; text-transform: uppercase; color: var(--papel-ink); }
+[data-canvas="voto"] .tj-body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+[data-canvas="voto"] .tj-kicker { font-family: var(--font-mono); font-size: 3cqw; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 2.5cqw; }
+[data-canvas="voto"] .tj-hero { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); line-height: .92; letter-spacing: -0.02em; }
+[data-canvas="voto"] .tj-hero .unit { font-family: var(--font-serif); font-weight: 400; }
+[data-canvas="voto"] .tj-ctx { font-family: var(--font-serif); color: var(--ink-2); margin-top: 3cqw; line-height: 1.25; text-wrap: pretty; }
+[data-canvas="voto"] .tj-split { margin-top: 5cqw; }
+[data-canvas="voto"] .tj-split-bar { display: flex; height: 2.6cqw; border-radius: 999px; overflow: hidden; gap: 1.4cqw; background: var(--panel); }
+[data-canvas="voto"] .tj-split-a { background: var(--peach); }
+[data-canvas="voto"] .tj-split-b { background: var(--plum); }
+[data-canvas="voto"] .tj-split-row { display: flex; justify-content: space-between; margin-top: 2.4cqw; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+[data-canvas="voto"] .tj-split-row .nm { color: var(--ink-3); font-size: 3cqw; }
+[data-canvas="voto"] .tj-split-row .nm b { color: var(--ink); font-weight: 600; }
+[data-canvas="voto"] .tj-foot { display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1; }
+[data-canvas="voto"] .tj-pulso { font-family: var(--font-mono); }
+[data-canvas="voto"] .tj-pulso .pl { font-size: 2.7cqw; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+[data-canvas="voto"] .tj-pulso .pv { font-size: 5cqw; font-weight: 600; color: var(--ink); }
+[data-canvas="voto"] .tj-pulso .pv .up { color: var(--mint); font-size: 3cqw; }
+[data-canvas="voto"] .tj-method { font-family: var(--font-mono); font-size: 2.7cqw; color: var(--ink-3); text-align: right; }
+[data-canvas="voto"] .tj-method b { color: var(--accent-ink); }
+
+/* ── Focus ───────────────────────────────────────────────────────────── */
+[data-canvas="voto"] :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+/* ── Motion guard ────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas="voto"] *,
+  [data-canvas="voto"] *::before,
+  [data-canvas="voto"] *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

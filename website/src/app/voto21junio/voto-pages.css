@@ -1,0 +1,170 @@
+/* ──────────────────────────────────────────────────────────────────────
+   El Voto del 21 de Junio — page/component layout styles (Session 01).
+
+   The prototype kept these per-screen rules in each page's inline <style>.
+   They are collected here, every selector scoped under [data-canvas="voto"]
+   so they stay isolated from WC routes. voto.css owns the shared design
+   layer (tokens, ticker, cards, tarjeta template, motifs); this file owns
+   the home / mapa / tarjeta composition.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* ── Top bar (home + inner pages) ────────────────────────────────────── */
+[data-canvas="voto"] .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 12px; max-width: var(--maxw); margin: 0 auto; }
+[data-canvas="voto"] .wordmark { font-family: var(--font-serif); font-size: 17px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; line-height: 1.05; }
+[data-canvas="voto"] .wordmark b { color: var(--accent-ink); font-weight: 600; }
+[data-canvas="voto"] .wordmark small { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .10em; text-transform: uppercase; color: var(--ink-4); margin-top: 3px; }
+[data-canvas="voto"] .topbar .menu { background: none; border: 0; padding: 8px; color: var(--ink-3); cursor: pointer; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
+[data-canvas="voto"] .back { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; gap: 7px; }
+[data-canvas="voto"] .topbar .wm { font-family: var(--font-serif); font-size: 15px; color: var(--ink); text-decoration: none; }
+[data-canvas="voto"] .topbar .wm b { color: var(--accent-ink); font-weight: 600; }
+
+/* ── §1 hero ─────────────────────────────────────────────────────────── */
+[data-canvas="voto"] .hero { position: relative; padding-top: 8px; }
+[data-canvas="voto"] .hero-campo { position: absolute; top: 14px; right: -26px; width: 54%; max-width: 280px; opacity: .5; pointer-events: none; }
+[data-canvas="voto"] .hero-inner { position: relative; z-index: 1; padding-block: 18px 30px; }
+[data-canvas="voto"] .countdown { display: flex; align-items: baseline; gap: 12px; margin-top: 14px; }
+[data-canvas="voto"] .countdown .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 78px; line-height: .82; letter-spacing: -0.03em; color: var(--ink); }
+[data-canvas="voto"] .countdown .u { font-family: var(--font-serif); font-size: 24px; color: var(--ink-3); }
+[data-canvas="voto"] .hero h1 { font-size: 30px; line-height: 1.12; margin-top: 18px; max-width: 13ch; }
+[data-canvas="voto"] .hero h1 em { font-style: normal; color: var(--accent-ink); }
+[data-canvas="voto"] .hero .lede { font-size: 15.5px; color: var(--ink-3); margin-top: 12px; max-width: 34ch; line-height: 1.55; }
+
+/* §1 probability card */
+[data-canvas="voto"] .prob-card { margin-top: 24px; }
+[data-canvas="voto"] .prob-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+[data-canvas="voto"] .prob-head .ttl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+[data-canvas="voto"] .prob-head .stamp { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-4); }
+[data-canvas="voto"] .disclaim { font-size: 11.5px; color: var(--ink-4); line-height: 1.5; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); }
+
+/* ── §2 orientation ──────────────────────────────────────────────────── */
+[data-canvas="voto"] .orient { padding-top: 10px; padding-bottom: 30px; }
+[data-canvas="voto"] .orient-body { font-family: var(--font-serif); font-size: 18px; line-height: 1.5; color: var(--ink-2); max-width: 40ch; margin-top: 14px; }
+[data-canvas="voto"] .orient-cta { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 18px; }
+[data-canvas="voto"] .orient-cta .lnk { font-size: 14px; }
+
+/* ── §3 tarjeta callout ──────────────────────────────────────────────── */
+[data-canvas="voto"] .tarjeta-wrap { max-width: 340px; margin: 0 auto; }
+[data-canvas="voto"] .tarjeta-row { display: flex; gap: 10px; margin-top: 14px; }
+
+/* ── §4 mapa callout ─────────────────────────────────────────────────── */
+[data-canvas="voto"] .maparow { display: flex; align-items: center; gap: 16px; }
+[data-canvas="voto"] .maparow .campo-mini { width: 96px; flex-shrink: 0; }
+
+/* ── §5 pulso inputs ─────────────────────────────────────────────────── */
+[data-canvas="voto"] .pulso-inputs { display: flex; flex-direction: column; gap: 0; }
+[data-canvas="voto"] .pulso-input { display: grid; grid-template-columns: 1fr 44px; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--rule); }
+[data-canvas="voto"] .pulso-input:first-child { border-top: 0; }
+[data-canvas="voto"] .pulso-input .nm { font-size: 13.5px; color: var(--ink-2); }
+[data-canvas="voto"] .pulso-input .track { grid-column: 1/-1; height: 5px; border-radius: 3px; background: var(--panel); overflow: hidden; margin-top: -4px; }
+[data-canvas="voto"] .pulso-input .track i { display: block; height: 100%; background: var(--accent); border-radius: 3px; opacity: .65; }
+[data-canvas="voto"] .pulso-input .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); font-size: 14px; }
+
+/* ── §6 toolkit ──────────────────────────────────────────────────────── */
+[data-canvas="voto"] .toolkit { display: flex; flex-direction: column; gap: 12px; }
+[data-canvas="voto"] .tk { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 16px; text-decoration: none; }
+[data-canvas="voto"] .tk .gl { font-family: var(--font-mono); font-size: 22px; color: var(--accent-ink); width: 30px; text-align: center; }
+[data-canvas="voto"] .tk h3 { font-family: var(--font-sans); font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: 0; }
+[data-canvas="voto"] .tk p { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+[data-canvas="voto"] .tk .arr { font-family: var(--font-mono); color: var(--ink-4); }
+
+/* ── §7 free brief + Guía (paywall removed) ──────────────────────────── */
+[data-canvas="voto"] .duo { display: grid; grid-template-columns: 1fr; gap: 14px; }
+[data-canvas="voto"] .offer h3 { font-size: 20px; margin-bottom: 6px; margin-top: 12px; }
+[data-canvas="voto"] .offer p { font-size: 13.5px; color: var(--ink-3); line-height: 1.5; margin: 8px 0 0; max-width: 40ch; }
+[data-canvas="voto"] .offer .brief-form { display: flex; gap: 10px; margin-top: 14px; }
+[data-canvas="voto"] .offer .brief-form input { flex: 1; height: 48px; padding: 0 14px; font-size: 15px; font-family: var(--font-sans); color: var(--ink); background: var(--panel-elev); border: 1px solid var(--rule-strong); border-radius: var(--radius); outline: none; }
+[data-canvas="voto"] .offer .brief-form input:focus { border-color: var(--accent); }
+[data-canvas="voto"] .offer .brief-form .btn { width: auto; flex: 0 0 auto; padding: 0 18px; }
+
+/* ── §8 about / founders ─────────────────────────────────────────────── */
+[data-canvas="voto"] .about-note { font-family: var(--font-serif); font-size: 17px; line-height: 1.55; color: var(--ink-2); }
+[data-canvas="voto"] .about-note .lnk { font-family: var(--font-sans); font-size: 15px; }
+
+/* ── Mapa page ───────────────────────────────────────────────────────── */
+[data-canvas="voto"] .lede-h h1 { font-size: 30px; line-height: 1.1; max-width: 14ch; }
+[data-canvas="voto"] .lede-h h1 em { font-style: normal; color: var(--accent-ink); }
+[data-canvas="voto"] .lede-h .sub { font-size: 15px; color: var(--ink-3); margin-top: 12px; max-width: 38ch; line-height: 1.55; }
+[data-canvas="voto"] .muni-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+[data-canvas="voto"] .muni-head h2 { font-size: 30px; line-height: 1; }
+[data-canvas="voto"] .muni-head .dep { font-family: var(--font-mono); font-size: 12px; color: var(--ink-4); white-space: nowrap; }
+[data-canvas="voto"] .hero-num { margin-top: 10px; padding: 22px 0 4px; }
+[data-canvas="voto"] .hero-num .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
+[data-canvas="voto"] .hero-num .big { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 72px; line-height: .86; color: var(--ink); letter-spacing: -0.03em; margin-top: 8px; }
+[data-canvas="voto"] .hero-num .big small { font-size: 30px; color: var(--ink-3); }
+[data-canvas="voto"] .hero-num .cap { font-family: var(--font-serif); font-size: 18px; color: var(--ink-2); margin-top: 12px; max-width: 24ch; line-height: 1.3; }
+
+/* Three-step narrative arc */
+[data-canvas="voto"] .arc { list-style: none; margin: 28px 0 4px; padding: 0; position: relative; }
+[data-canvas="voto"] .arc::before { content: ""; position: absolute; left: 13px; top: 16px; bottom: 20px; width: 1px; background: var(--rule-strong); }
+[data-canvas="voto"] .step { display: grid; grid-template-columns: 28px 1fr; gap: 15px; align-items: start; padding-bottom: 24px; position: relative; }
+[data-canvas="voto"] .step:last-child { padding-bottom: 0; }
+[data-canvas="voto"] .step-n { width: 28px; height: 28px; border-radius: 50%; background: var(--panel-elev); border: 1px solid var(--rule-strong); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); position: relative; z-index: 1; }
+[data-canvas="voto"] .step-key .step-n { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+[data-canvas="voto"] .step-c { padding-top: 1px; }
+[data-canvas="voto"] .step-lbl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--papel-ink); margin-bottom: 7px; }
+[data-canvas="voto"] .step-body { font-family: var(--font-serif); font-size: 17px; line-height: 1.42; color: var(--ink-2); text-wrap: pretty; }
+[data-canvas="voto"] .step-fig { font-family: var(--font-mono); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+[data-canvas="voto"] .step-key .step-body { font-size: 18.5px; color: var(--ink); }
+
+/* Disclosure */
+[data-canvas="voto"] .disc-toggle { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; background: none; border: 0; padding: 8px 0; min-height: 44px; cursor: pointer; font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; color: var(--accent-ink); }
+[data-canvas="voto"] .disc-toggle .ar { transition: transform .2s ease; display: inline-block; }
+[data-canvas="voto"] .disc-toggle[aria-expanded="true"] .ar { transform: rotate(180deg); }
+[data-canvas="voto"] .disc { max-height: 0; overflow: hidden; transition: max-height .28s cubic-bezier(.4,0,.2,1); }
+[data-canvas="voto"] .disc.open { max-height: 520px; }
+[data-canvas="voto"] .nbox { padding: 16px; }
+[data-canvas="voto"] .nbox .k { font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); line-height: 1.3; }
+[data-canvas="voto"] .r1bar { display: flex; height: 11px; border-radius: 999px; overflow: hidden; gap: 2px; background: var(--panel); margin-top: 10px; }
+[data-canvas="voto"] .r1bar .a { background: var(--peach); }
+[data-canvas="voto"] .r1bar .b { background: var(--plum); }
+[data-canvas="voto"] .r1bar .o { background: var(--ink-4); opacity: .4; }
+[data-canvas="voto"] .r1leg { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+
+/* Mapa share card */
+[data-canvas="voto"] .mc { position: relative; aspect-ratio: 1/1; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; container-type: inline-size; }
+[data-canvas="voto"] .mc-campo { position: absolute; inset: 0; pointer-events: none; }
+[data-canvas="voto"] .mc-campo .v-base { opacity: .12; }
+[data-canvas="voto"] .mc-campo .v-live { opacity: .34; }
+[data-canvas="voto"] .mc-in { position: absolute; inset: 0; padding: 7cqw; display: flex; flex-direction: column; }
+[data-canvas="voto"] .mc-top { display: flex; justify-content: space-between; align-items: baseline; position: relative; z-index: 1; }
+[data-canvas="voto"] .mc-brand { font-family: var(--font-serif); font-size: 4.2cqw; color: var(--ink); }
+[data-canvas="voto"] .mc-brand b { color: var(--accent-ink); font-weight: 600; }
+[data-canvas="voto"] .mc-muni { font-family: var(--font-mono); font-size: 3cqw; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+[data-canvas="voto"] .mc-body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+[data-canvas="voto"] .mc-k { font-family: var(--font-mono); font-size: 3.2cqw; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+[data-canvas="voto"] .mc-big { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 34cqw; line-height: .84; color: var(--ink); letter-spacing: -0.03em; margin-top: 1cqw; }
+[data-canvas="voto"] .mc-big small { font-size: .4em; color: var(--ink-3); }
+[data-canvas="voto"] .mc-cap { font-family: var(--font-serif); font-size: 5cqw; color: var(--ink-2); margin-top: 2cqw; line-height: 1.2; }
+[data-canvas="voto"] .mc-foot { display: flex; justify-content: space-between; align-items: flex-end; font-family: var(--font-mono); font-size: 2.8cqw; color: var(--ink-3); position: relative; z-index: 1; }
+[data-canvas="voto"] .mc-foot b { color: var(--accent-ink); }
+[data-canvas="voto"] .share-row { display: flex; gap: 10px; margin-top: 14px; }
+[data-canvas="voto"] .loop-note { font-size: 12px; color: var(--ink-4); text-align: center; margin-top: 14px; line-height: 1.5; }
+
+/* ── Tarjeta page ────────────────────────────────────────────────────── */
+[data-canvas="voto"] .fmt { margin-bottom: 32px; }
+[data-canvas="voto"] .fmt-hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+[data-canvas="voto"] .fmt-hd .nm { font-family: var(--font-sans); font-size: 15px; font-weight: 600; color: var(--ink); }
+[data-canvas="voto"] .fmt-hd .nm span { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--ink-4); margin-top: 3px; letter-spacing: .04em; }
+[data-canvas="voto"] .fmt-hd .dim { font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); white-space: nowrap; }
+[data-canvas="voto"] .fmt-stage { display: flex; justify-content: center; }
+[data-canvas="voto"] .stage-sq { max-width: 330px; width: 100%; }
+[data-canvas="voto"] .stage-wide { max-width: 460px; width: 100%; }
+[data-canvas="voto"] .stage-story { max-width: 230px; width: 100%; }
+[data-canvas="voto"] .actions { display: flex; gap: 10px; margin-top: 14px; max-width: 330px; margin-inline: auto; }
+[data-canvas="voto"] .thumbtest { background: var(--panel); border-radius: var(--radius-lg); padding: 22px; margin-top: 8px; }
+[data-canvas="voto"] .thumbtest .lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px; }
+[data-canvas="voto"] .thumbs { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+[data-canvas="voto"] .thumbs .t1 { width: 100px; }
+[data-canvas="voto"] .thumbs .tw { width: 100px; }
+[data-canvas="voto"] .thumbs .ts { width: 60px; }
+[data-canvas="voto"] .thumbs figcaption { font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); margin-top: 8px; text-align: center; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (min-width: 720px) {
+  [data-canvas="voto"] { --maxw: 640px; }
+  [data-canvas="voto"] .countdown .n { font-size: 104px; }
+  [data-canvas="voto"] .hero h1 { font-size: 38px; }
+  [data-canvas="voto"] .duo { grid-template-columns: 1fr 1fr; }
+  [data-canvas="voto"] .nums { grid-template-columns: 1fr 1fr 1fr; }
+  [data-canvas="voto"] main.voto-tarjeta { --maxw: 720px; }
+}
