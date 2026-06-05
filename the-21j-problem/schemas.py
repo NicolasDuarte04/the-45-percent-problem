@@ -20,6 +20,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from datetime import date, datetime, timezone
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -216,3 +217,126 @@ class Poll(BaseModel):
     def margin(self) -> float:
         """De la Espriella minus Cepeda (positive => De la Espriella leads)."""
         return self.espriella_pct - self.cepeda_pct
+
+
+# =============================================================================
+# Pulso Patrio (Session 05)
+# =============================================================================
+#
+# The Pulso Patrio index is a single 0-100 hourly measure of the INTENSITY and
+# emotional charge of the national runoff conversation. It is candidate-neutral
+# by construction: it does not say who is ahead, it is not a probability, and it
+# is not directional. The candidate probabilities live in the Session 04
+# snapshot; Pulso sits beside them and never replaces them.
+#
+# `InputReading` is the common contract every Pulso input returns. An input that
+# cannot fetch returns `available=False, value=None` — it never guesses a number
+# to fill a gap. `PulsoSnapshot` is the hourly, append-only output the detail
+# page will later read.
+
+
+class InputReading(BaseModel):
+    """
+    One Pulso input's contribution at fetch time.
+
+    Contract: an input that genuinely fetched returns `available=True` with a
+    normalised 0-100 `value`. An input that could not fetch (no accessible API,
+    rate-limited, market does not exist) returns `available=False, value=None`
+    and explains itself in `note`. A reading is never fabricated.
+
+    The combiner only consumes readings whose `available` is True and whose
+    `value` is not None; everything else is recorded for the audit trail and
+    counted toward `inputs_total` but not `inputs_live`.
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    source: str = Field(description="Input label, e.g. 'headlines', 'trends', 'market'")
+    value: float | None = Field(
+        default=None,
+        description="Normalised intensity in [0,100], or None when unavailable",
+    )
+    available: bool = Field(description="True iff this input genuinely produced a value")
+    weight: float = Field(ge=0, description="Pre-registered combine weight this input carries")
+    source_url: str | None = Field(default=None, description="Source URL where applicable")
+    fetched_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="UTC fetch timestamp",
+    )
+    note: str | None = Field(
+        default=None, description="One-line provenance / reason-unavailable"
+    )
+
+    @field_validator("value")
+    @classmethod
+    def _value_in_range(cls, v: float | None) -> float | None:
+        if v is not None and not (0.0 <= v <= 100.0):
+            raise ValueError(f"value must be in [0,100] when present, got {v}")
+        return v
+
+    @model_validator(mode="after")
+    def _coherent_availability(self) -> "InputReading":
+        # An available reading must carry a number; an unavailable one must not.
+        if self.available and self.value is None:
+            raise ValueError("available reading must carry a non-None value")
+        if not self.available and self.value is not None:
+            raise ValueError("unavailable reading must have value=None (no fabrication)")
+        return self
+
+
+class PulsoSnapshot(BaseModel):
+    """
+    One hourly Pulso Patrio snapshot, written append-only.
+
+    `index_value` is the 6-hour-smoothed index; `index_raw` is the pre-smoothing
+    weighted combine of the live inputs. Both are None only in the degenerate
+    case where zero inputs are live (the index degrades honestly rather than
+    inventing a number). `data_sufficiency` is "ok" only with >= 2 live inputs;
+    otherwise "demo", and the detail page labels it as such.
+
+    `methodology` must state, in plain language, that Pulso is intensity /
+    sentiment, not probability and not directional. None of the project's banned
+    prediction / betting tokens may appear in any field.
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    snapshot_hour: datetime = Field(description="UTC hour this snapshot covers (truncated)")
+    generated_at: datetime = Field(description="UTC wall-clock at generation (excluded from hash)")
+    index_value: float | None = Field(
+        default=None, description="6h-smoothed index in [0,100], or None if no live inputs"
+    )
+    index_raw: float | None = Field(
+        default=None, description="Pre-smoothing weighted combine in [0,100], or None"
+    )
+    inputs_live: int = Field(ge=0, description="Count of inputs that genuinely produced a value")
+    inputs_total: int = Field(ge=0, description="Count of inputs wired into the framework")
+    readings: list[InputReading] = Field(description="Every input's reading this hour")
+    data_sufficiency: Literal["ok", "demo"] = Field(
+        description="'ok' iff inputs_live >= 2, else 'demo'"
+    )
+    methodology: str = Field(
+        min_length=1,
+        description="Plain-language statement: intensity/sentiment, not probability, not directional",
+    )
+    code_sha: str = Field(description="Git commit SHA of the generating code")
+    data_hash: str = Field(description="Reproducible hash of the input readings")
+
+    @field_validator("index_value", "index_raw")
+    @classmethod
+    def _index_in_range(cls, v: float | None) -> float | None:
+        if v is not None and not (0.0 <= v <= 100.0):
+            raise ValueError(f"index must be in [0,100] when present, got {v}")
+        return v
+
+    @model_validator(mode="after")
+    def _coherent_counts(self) -> "PulsoSnapshot":
+        if self.inputs_live > self.inputs_total:
+            raise ValueError("inputs_live cannot exceed inputs_total")
+        expected = "ok" if self.inputs_live >= 2 else "demo"
+        if self.data_sufficiency != expected:
+            raise ValueError(
+                f"data_sufficiency {self.data_sufficiency!r} disagrees with "
+                f"inputs_live={self.inputs_live} (expected {expected!r})"
+            )
+        return self

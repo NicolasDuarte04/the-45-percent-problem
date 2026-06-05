@@ -145,3 +145,107 @@ simulator:
 paths_session04:
   snapshot_dir: "data/snapshots/21j"
   latest_pointer: "data/snapshots/21j/latest.json"
+
+# =============================================================================
+# Session 05 — Pulso Patrio index (intensity / sentiment combiner)  [PRE-REGISTERED]
+# =============================================================================
+# Pulso is a single 0-100 hourly measure of the INTENSITY and emotional charge
+# of the runoff conversation. It is candidate-neutral, NOT a probability, and
+# NOT directional. The directional-looking inputs (search divergence, market
+# spread) are folded in as MAGNITUDE / volatility signals only. Once locked,
+# these parameters require a deviation report to change. Read from config;
+# never hardcode them in the pulso/ modules.
+pulso:
+  # Combine weights per input. Weights are renormalised across whatever inputs
+  # are actually live in a given hour, so an unavailable input never drags the
+  # index toward zero; it simply drops out and the rest re-share the mass.
+  weights:
+    headlines: 0.40        # built — the spine; RSS from Colombian outlets
+    trends:    0.20        # built if reachable — Google Trends via pytrends
+    market:    0.15        # conditional — Polymarket CO runoff market IF it exists
+    x:         0.15        # stub — no accessible API; returns unavailable
+    tiktok:    0.10        # stub — no accessible API; returns unavailable
+
+  # 6-hour rolling smoothing over the append-only history (inclusive of the
+  # current hour). index_value = mean of index_raw across snapshots whose
+  # snapshot_hour is within this many hours of the current hour.
+  smoothing_window_hours: 6
+
+  # Below this many live inputs the index is labelled "demo" (honest low
+  # confidence); the detail page surfaces the label.
+  min_inputs_ok: 2
+
+  # ── Headlines input (input_headlines.py) ──────────────────────────────────
+  # Colombian outlet RSS feeds. Runoff-relevance filter + a candidate-neutral
+  # emotional-charge lexicon turn the feed into a 0-100 intensity value.
+  headlines:
+    # Feeds verified reachable + parseable at build time (Session 05). Outlets
+    # that 404'd (El Tiempo /elecciones, El Espectador /arcio paths) are omitted
+    # rather than kept as dead URLs; a feed that goes down is logged and skipped
+    # at runtime, never fabricated.
+    feeds:
+      - { outlet: "El Tiempo",      url: "https://www.eltiempo.com/rss/colombia.xml" }
+      - { outlet: "El Tiempo",      url: "https://www.eltiempo.com/rss/politica.xml" }
+      - { outlet: "Semana",         url: "https://www.semana.com/arc/outboundfeeds/rss/category/nacion/?outputType=xml" }
+      - { outlet: "El Colombiano",  url: "https://www.elcolombiano.com/rss/colombia.xml" }
+      - { outlet: "La Silla Vacía", url: "https://www.lasillavacia.com/feed/" }
+    request_timeout_s: 10
+    # An item is runoff-relevant if its title/summary contains any of these
+    # (accent-insensitive, lowercased). Candidate surnames + runoff vocabulary.
+    relevance_terms:
+      - "segunda vuelta"
+      - "balotaje"
+      - "cepeda"
+      - "espriella"
+      - "21 de junio"
+      - "presidencial"
+      - "eleccion"
+      - "elecciones"
+      - "campana"
+      - "votacion"
+    # Candidate-NEUTRAL emotional-charge lexicon (high-arousal / charged terms,
+    # no direction). Presence raises the emotional-charge component.
+    charge_terms:
+      - "crisis"
+      - "tension"
+      - "ataque"
+      - "polemica"
+      - "escandalo"
+      - "denuncia"
+      - "choque"
+      - "alarma"
+      - "amenaza"
+      - "indignacion"
+      - "rechazo"
+      - "furia"
+      - "guerra"
+      - "fraude"
+      - "urgente"
+      - "grave"
+      - "violencia"
+    # Number of runoff-relevant items that saturates the volume component to 1.0.
+    volume_saturation_items: 25
+    # Blend of the two candidate-neutral components into the 0-100 value.
+    volume_component_weight: 0.5
+    charge_component_weight: 0.5
+
+  # ── Trends input (input_trends.py) ────────────────────────────────────────
+  trends:
+    geo: "CO"
+    timeframe: "now 7-d"
+    terms: ["Cepeda", "Espriella", "segunda vuelta"]
+    request_timeout_s: 15
+
+  # ── Market input (input_market.py) ────────────────────────────────────────
+  # Polymarket Gamma API. We search for a Colombia 2026 runoff market; if none
+  # exists, the input is unavailable and says so. We never substitute another
+  # market or invent a spread. A market spread is folded in as MAGNITUDE only.
+  market:
+    gamma_search_url: "https://gamma-api.polymarket.com/markets"
+    search_terms: ["Colombia", "Cepeda", "Espriella"]
+    request_timeout_s: 12
+
+paths_session05:
+  snapshot_dir: "data/snapshots/pulso"
+  history_jsonl: "data/snapshots/pulso/pulso_history.jsonl"
+  latest_pointer: "data/snapshots/pulso/latest.json"
