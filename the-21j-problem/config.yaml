@@ -41,3 +41,49 @@ pollsters_planned:
   - Yanhaas
   - Guarumo
   - Cifras y Conceptos
+
+# =============================================================================
+# Session 03 — house effects + recency weighting  [PRE-REGISTERED]
+# =============================================================================
+# These parameters feed the Session 04 aggregator and the public number. Once
+# locked they require a deviation report to change. Read from config; never
+# hardcode them in calibrate_house_effects.py.
+calibration:
+  paths:
+    historical_polls_seed: "data/manual/co_historical_polls.csv"
+    house_effects_json: "data/calibration/co_house_effects.json"
+
+  # [PRE-REGISTERED] Recency-decay half-life: weight = 0.5 ** (days_before / H).
+  # Calibrated by grid search; clamped to [min, max].
+  recency_halflife_grid_days: [5, 7, 9, 11, 13, 15, 18, 21, 25, 30, 35, 40, 45]
+  recency_halflife_min_days: 5
+  recency_halflife_max_days: 45
+
+  # [PRE-REGISTERED] A pollster's house effect is "high" confidence only if it
+  # has polls in at least this many distinct election YEARS (transfer evidence).
+  house_effect_min_election_years: 2
+
+  # [PRE-REGISTERED] Ideological-bloc axis. A MODELING ASSUMPTION, not a fact;
+  # mirrored into co_house_effects.json -> assumptions.bloc_map for audit.
+  bloc_map:
+    left:   # left bloc candidate per round
+      "2018_r1": "Petro"
+      "2018_r2": "Petro"
+      "2022_r1": "Petro"
+      "2022_r2": "Petro"
+      "2026_r2": "Cepeda"
+    right:  # right / other bloc candidate per round
+      "2018_r1": "Duque"
+      "2018_r2": "Duque"
+      "2022_r1": "Hernandez"
+      "2022_r2": "Hernandez"
+      "2026_r2": "De la Espriella"
+
+  # [PRE-REGISTERED] Certified Registraduría results per round (percent of total).
+  # left = Petro/Cepeda, right = Duque/Hernandez/De la Espriella. Authoritative;
+  # the corpus CSV repeats these per row and the script cross-checks them.
+  elections:
+    "2018_r1": { date: "2018-05-27", left_certified_pct: 25.08, right_certified_pct: 39.14 }
+    "2018_r2": { date: "2018-06-17", left_certified_pct: 41.81, right_certified_pct: 53.98 }
+    "2022_r1": { date: "2022-05-29", left_certified_pct: 40.32, right_certified_pct: 28.15 }
+    "2022_r2": { date: "2022-06-19", left_certified_pct: 50.44, right_certified_pct: 47.31 }
