@@ -1,0 +1,867 @@
+{
+  "generated_at": "2026-06-05T23:42:00.617083+00:00",
+  "granularity": "departamento",
+  "coverage": {
+    "granularity": "departamento",
+    "total_rows": 34,
+    "geographic_units": 33,
+    "includes_exterior": true,
+    "municipio_coverage": "0 of ~1100 municipios — departamento fallback (municipio file not verifiable)",
+    "note": "Departamento granularity: 32 departamentos + Bogotá D.C. as geographic units, plus the non-geographic Consulados (exterior) bucket kept for the national roll-up. The map UI joins on dane_code and skips code '00'."
+  },
+  "national_2022_margin_pp": -3.202,
+  "national_margin_source": {
+    "source_file": "data/snapshots/21j/latest.json",
+    "snapshot_date": "2026-06-04",
+    "data_sufficiency": "thin",
+    "snapshot_data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad",
+    "margin_mean_pp": 0.818,
+    "margin_ci80_low_pp": -13.076,
+    "margin_ci80_high_pp": 14.656
+  },
+  "swing_delta_pp": {
+    "mean": 4.02,
+    "ci80_low": -9.874,
+    "ci80_high": 17.858
+  },
+  "rollup_check": {
+    "weight": "potential_votes",
+    "reconstructed_margin_pp": 0.5053,
+    "national_margin_pp": 0.818,
+    "residual_pp": -0.3127,
+    "tolerance_pp": 1.0,
+    "passes": true,
+    "note": "Uniform swing is mean-preserving, so the residual reflects censo weighting vs cast-vote weighting, not a broken join. A many-point residual would indicate the baseline or swing is broken."
+  },
+  "assumptions": {
+    "swing_model": "uniform_additive_swing",
+    "swing_model_note": "Uniform additive swing: every unit's certified 2022 two-way margin is shifted by the same national delta (national 2026 margin minus national 2022 margin). No regional/proportional swing is assumed.",
+    "margin_sign": "margin = right - left in pp; positive = De la Espriella (right) ahead.",
+    "bloc_lineage": "left = Petro (2022) -> Cepeda (2026); right = Hernández (2022) -> De la Espriella (2026).",
+    "decisiveness": "1 - |projected_margin_pp| / 100, in [0,1]; civic closeness, candidate-neutral.",
+    "projected_margin_votes": "|projected_margin| as a share of potential_votes; a magnitude, not a direction.",
+    "toss_up_band_pp": 5.0,
+    "is_projection": "All 2026 fields are model estimates, distinct from the certified 2022 baseline.",
+    "uncertainty": "Each unit carries the national 80% credible band, propagated through the uniform delta."
+  },
+  "units": [
+    {
+      "dane_code": "00",
+      "municipio": "Consulados",
+      "departamento": "Consulados",
+      "granularity": "departamento",
+      "potential_votes": 972858,
+      "share_left_2022": 0.381821,
+      "share_right_2022": 0.618179,
+      "margin_2022": 23.6358,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "00",
+        "projected_margin_2026": {
+          "mean": 27.6558,
+          "ci80_low": 13.7618,
+          "ci80_high": 41.4938
+        },
+        "decisiveness": 0.7234,
+        "projected_margin_votes": 269052,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "05",
+      "municipio": "Antioquia",
+      "departamento": "Antioquia",
+      "granularity": "departamento",
+      "potential_votes": 5115179,
+      "share_left_2022": 0.340725,
+      "share_right_2022": 0.659275,
+      "margin_2022": 31.8549,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "05",
+        "projected_margin_2026": {
+          "mean": 35.8749,
+          "ci80_low": 21.9809,
+          "ci80_high": 49.7129
+        },
+        "decisiveness": 0.6413,
+        "projected_margin_votes": 1835065,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "08",
+      "municipio": "Atlántico",
+      "departamento": "Atlántico",
+      "granularity": "departamento",
+      "potential_votes": 2016428,
+      "share_left_2022": 0.68143,
+      "share_right_2022": 0.31857,
+      "margin_2022": -36.2859,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "08",
+        "projected_margin_2026": {
+          "mean": -32.2659,
+          "ci80_low": -46.1599,
+          "ci80_high": -18.4279
+        },
+        "decisiveness": 0.6773,
+        "projected_margin_votes": 650619,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "11",
+      "municipio": "Bogotá",
+      "departamento": "Bogotá",
+      "granularity": "departamento",
+      "potential_votes": 5935784,
+      "share_left_2022": 0.60361,
+      "share_right_2022": 0.39639,
+      "margin_2022": -20.722,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "11",
+        "projected_margin_2026": {
+          "mean": -16.702,
+          "ci80_low": -30.596,
+          "ci80_high": -2.864
+        },
+        "decisiveness": 0.833,
+        "projected_margin_votes": 991395,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "13",
+      "municipio": "Bolívar",
+      "departamento": "Bolívar",
+      "granularity": "departamento",
+      "potential_votes": 1692160,
+      "share_left_2022": 0.620183,
+      "share_right_2022": 0.379817,
+      "margin_2022": -24.0366,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "13",
+        "projected_margin_2026": {
+          "mean": -20.0166,
+          "ci80_low": -33.9106,
+          "ci80_high": -6.1786
+        },
+        "decisiveness": 0.7998,
+        "projected_margin_votes": 338713,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "15",
+      "municipio": "Boyacá",
+      "departamento": "Boyacá",
+      "granularity": "departamento",
+      "potential_votes": 996485,
+      "share_left_2022": 0.410887,
+      "share_right_2022": 0.589113,
+      "margin_2022": 17.8225,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "15",
+        "projected_margin_2026": {
+          "mean": 21.8425,
+          "ci80_low": 7.9485,
+          "ci80_high": 35.6805
+        },
+        "decisiveness": 0.7816,
+        "projected_margin_votes": 217657,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "17",
+      "municipio": "Caldas",
+      "departamento": "Caldas",
+      "granularity": "departamento",
+      "potential_votes": 811192,
+      "share_left_2022": 0.411447,
+      "share_right_2022": 0.588553,
+      "margin_2022": 17.7105,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "17",
+        "projected_margin_2026": {
+          "mean": 21.7305,
+          "ci80_low": 7.8365,
+          "ci80_high": 35.5685
+        },
+        "decisiveness": 0.7827,
+        "projected_margin_votes": 176276,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "18",
+      "municipio": "Caquetá",
+      "departamento": "Caquetá",
+      "granularity": "departamento",
+      "potential_votes": 309361,
+      "share_left_2022": 0.45021,
+      "share_right_2022": 0.54979,
+      "margin_2022": 9.9581,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "18",
+        "projected_margin_2026": {
+          "mean": 13.9781,
+          "ci80_low": 0.0841,
+          "ci80_high": 27.8161
+        },
+        "decisiveness": 0.8602,
+        "projected_margin_votes": 43243,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "19",
+      "municipio": "Cauca",
+      "departamento": "Cauca",
+      "granularity": "departamento",
+      "potential_votes": 1023615,
+      "share_left_2022": 0.807621,
+      "share_right_2022": 0.192379,
+      "margin_2022": -61.5242,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "19",
+        "projected_margin_2026": {
+          "mean": -57.5042,
+          "ci80_low": -71.3982,
+          "ci80_high": -43.6662
+        },
+        "decisiveness": 0.425,
+        "projected_margin_votes": 588622,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "20",
+      "municipio": "Cesar",
+      "departamento": "Cesar",
+      "granularity": "departamento",
+      "potential_votes": 870366,
+      "share_left_2022": 0.538038,
+      "share_right_2022": 0.461962,
+      "margin_2022": -7.6075,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "20",
+        "projected_margin_2026": {
+          "mean": -3.5875,
+          "ci80_low": -17.4815,
+          "ci80_high": 10.2505
+        },
+        "decisiveness": 0.9641,
+        "projected_margin_votes": 31224,
+        "lean": "toss-up",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "23",
+      "municipio": "Córdoba",
+      "departamento": "Córdoba",
+      "granularity": "departamento",
+      "potential_votes": 1319995,
+      "share_left_2022": 0.620748,
+      "share_right_2022": 0.379252,
+      "margin_2022": -24.1496,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "23",
+        "projected_margin_2026": {
+          "mean": -20.1296,
+          "ci80_low": -34.0236,
+          "ci80_high": -6.2916
+        },
+        "decisiveness": 0.7987,
+        "projected_margin_votes": 265710,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "25",
+      "municipio": "Cundinamarca",
+      "departamento": "Cundinamarca",
+      "granularity": "departamento",
+      "potential_votes": 2125275,
+      "share_left_2022": 0.452408,
+      "share_right_2022": 0.547592,
+      "margin_2022": 9.5184,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "25",
+        "projected_margin_2026": {
+          "mean": 13.5384,
+          "ci80_low": -0.3556,
+          "ci80_high": 27.3764
+        },
+        "decisiveness": 0.8646,
+        "projected_margin_votes": 287728,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "27",
+      "municipio": "Chocó",
+      "departamento": "Chocó",
+      "granularity": "departamento",
+      "potential_votes": 333180,
+      "share_left_2022": 0.832428,
+      "share_right_2022": 0.167572,
+      "margin_2022": -66.4857,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "27",
+        "projected_margin_2026": {
+          "mean": -62.4657,
+          "ci80_low": -76.3597,
+          "ci80_high": -48.6277
+        },
+        "decisiveness": 0.3753,
+        "projected_margin_votes": 208123,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "41",
+      "municipio": "Huila",
+      "departamento": "Huila",
+      "granularity": "departamento",
+      "potential_votes": 964850,
+      "share_left_2022": 0.414551,
+      "share_right_2022": 0.585449,
+      "margin_2022": 17.0899,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "41",
+        "projected_margin_2026": {
+          "mean": 21.1099,
+          "ci80_low": 7.2159,
+          "ci80_high": 34.9479
+        },
+        "decisiveness": 0.7889,
+        "projected_margin_votes": 203679,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "44",
+      "municipio": "La Guajira",
+      "departamento": "La Guajira",
+      "granularity": "departamento",
+      "potential_votes": 645715,
+      "share_left_2022": 0.656782,
+      "share_right_2022": 0.343218,
+      "margin_2022": -31.3563,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "44",
+        "projected_margin_2026": {
+          "mean": -27.3363,
+          "ci80_low": -41.2303,
+          "ci80_high": -13.4983
+        },
+        "decisiveness": 0.7266,
+        "projected_margin_votes": 176515,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "47",
+      "municipio": "Magdalena",
+      "departamento": "Magdalena",
+      "granularity": "departamento",
+      "potential_votes": 1024839,
+      "share_left_2022": 0.6123,
+      "share_right_2022": 0.3877,
+      "margin_2022": -22.4601,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "47",
+        "projected_margin_2026": {
+          "mean": -18.4401,
+          "ci80_low": -32.3341,
+          "ci80_high": -4.6021
+        },
+        "decisiveness": 0.8156,
+        "projected_margin_votes": 188981,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "50",
+      "municipio": "Meta",
+      "departamento": "Meta",
+      "granularity": "departamento",
+      "potential_votes": 787706,
+      "share_left_2022": 0.370698,
+      "share_right_2022": 0.629302,
+      "margin_2022": 25.8603,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "50",
+        "projected_margin_2026": {
+          "mean": 29.8803,
+          "ci80_low": 15.9863,
+          "ci80_high": 43.7183
+        },
+        "decisiveness": 0.7012,
+        "projected_margin_votes": 235369,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "52",
+      "municipio": "Nariño",
+      "departamento": "Nariño",
+      "granularity": "departamento",
+      "potential_votes": 1178077,
+      "share_left_2022": 0.824327,
+      "share_right_2022": 0.175673,
+      "margin_2022": -64.8654,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "52",
+        "projected_margin_2026": {
+          "mean": -60.8454,
+          "ci80_low": -74.7394,
+          "ci80_high": -47.0074
+        },
+        "decisiveness": 0.3915,
+        "projected_margin_votes": 716806,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "54",
+      "municipio": "Norte de Santander",
+      "departamento": "Norte de Santander",
+      "granularity": "departamento",
+      "potential_votes": 1296525,
+      "share_left_2022": 0.211388,
+      "share_right_2022": 0.788612,
+      "margin_2022": 57.7224,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "54",
+        "projected_margin_2026": {
+          "mean": 61.7424,
+          "ci80_low": 47.8484,
+          "ci80_high": 75.5804
+        },
+        "decisiveness": 0.3826,
+        "projected_margin_votes": 800506,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "63",
+      "municipio": "Quindío",
+      "departamento": "Quindío",
+      "granularity": "departamento",
+      "potential_votes": 490137,
+      "share_left_2022": 0.428135,
+      "share_right_2022": 0.571865,
+      "margin_2022": 14.3731,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "63",
+        "projected_margin_2026": {
+          "mean": 18.3931,
+          "ci80_low": 4.4991,
+          "ci80_high": 32.2311
+        },
+        "decisiveness": 0.8161,
+        "projected_margin_votes": 90151,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "66",
+      "municipio": "Risaralda",
+      "departamento": "Risaralda",
+      "granularity": "departamento",
+      "potential_votes": 839324,
+      "share_left_2022": 0.475026,
+      "share_right_2022": 0.524974,
+      "margin_2022": 4.9948,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "66",
+        "projected_margin_2026": {
+          "mean": 9.0148,
+          "ci80_low": -4.8792,
+          "ci80_high": 22.8528
+        },
+        "decisiveness": 0.9099,
+        "projected_margin_votes": 75663,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "68",
+      "municipio": "Santander",
+      "departamento": "Santander",
+      "granularity": "departamento",
+      "potential_votes": 1776210,
+      "share_left_2022": 0.262575,
+      "share_right_2022": 0.737425,
+      "margin_2022": 47.4851,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "68",
+        "projected_margin_2026": {
+          "mean": 51.5051,
+          "ci80_low": 37.6111,
+          "ci80_high": 65.3431
+        },
+        "decisiveness": 0.4849,
+        "projected_margin_votes": 914839,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "70",
+      "municipio": "Sucre",
+      "departamento": "Sucre",
+      "granularity": "departamento",
+      "potential_votes": 730364,
+      "share_left_2022": 0.651037,
+      "share_right_2022": 0.348963,
+      "margin_2022": -30.2075,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "70",
+        "projected_margin_2026": {
+          "mean": -26.1875,
+          "ci80_low": -40.0815,
+          "ci80_high": -12.3495
+        },
+        "decisiveness": 0.7381,
+        "projected_margin_votes": 191264,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "73",
+      "municipio": "Tolima",
+      "departamento": "Tolima",
+      "granularity": "departamento",
+      "potential_votes": 1120294,
+      "share_left_2022": 0.393082,
+      "share_right_2022": 0.606918,
+      "margin_2022": 21.3836,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "73",
+        "projected_margin_2026": {
+          "mean": 25.4036,
+          "ci80_low": 11.5096,
+          "ci80_high": 39.2416
+        },
+        "decisiveness": 0.746,
+        "projected_margin_votes": 284595,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "76",
+      "municipio": "Valle del Cauca",
+      "departamento": "Valle del Cauca",
+      "granularity": "departamento",
+      "potential_votes": 3675473,
+      "share_left_2022": 0.653388,
+      "share_right_2022": 0.346612,
+      "margin_2022": -30.6776,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "76",
+        "projected_margin_2026": {
+          "mean": -26.6576,
+          "ci80_low": -40.5516,
+          "ci80_high": -12.8196
+        },
+        "decisiveness": 0.7334,
+        "projected_margin_votes": 979793,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "81",
+      "municipio": "Arauca",
+      "departamento": "Arauca",
+      "granularity": "departamento",
+      "potential_votes": 210490,
+      "share_left_2022": 0.315908,
+      "share_right_2022": 0.684092,
+      "margin_2022": 36.8185,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "81",
+        "projected_margin_2026": {
+          "mean": 40.8385,
+          "ci80_low": 26.9445,
+          "ci80_high": 54.6765
+        },
+        "decisiveness": 0.5916,
+        "projected_margin_votes": 85961,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "85",
+      "municipio": "Casanare",
+      "departamento": "Casanare",
+      "granularity": "departamento",
+      "potential_votes": 304934,
+      "share_left_2022": 0.285049,
+      "share_right_2022": 0.714951,
+      "margin_2022": 42.9902,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "85",
+        "projected_margin_2026": {
+          "mean": 47.0102,
+          "ci80_low": 33.1162,
+          "ci80_high": 60.8482
+        },
+        "decisiveness": 0.5299,
+        "projected_margin_votes": 143350,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "86",
+      "municipio": "Putumayo",
+      "departamento": "Putumayo",
+      "granularity": "departamento",
+      "potential_votes": 243109,
+      "share_left_2022": 0.811679,
+      "share_right_2022": 0.188321,
+      "margin_2022": -62.3357,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "86",
+        "projected_margin_2026": {
+          "mean": -58.3157,
+          "ci80_low": -72.2097,
+          "ci80_high": -44.4777
+        },
+        "decisiveness": 0.4168,
+        "projected_margin_votes": 141771,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "88",
+      "municipio": "San Andrés",
+      "departamento": "San Andrés",
+      "granularity": "departamento",
+      "potential_votes": 51587,
+      "share_left_2022": 0.534263,
+      "share_right_2022": 0.465737,
+      "margin_2022": -6.8526,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "88",
+        "projected_margin_2026": {
+          "mean": -2.8326,
+          "ci80_low": -16.7266,
+          "ci80_high": 11.0054
+        },
+        "decisiveness": 0.9717,
+        "projected_margin_votes": 1461,
+        "lean": "toss-up",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "91",
+      "municipio": "Amazonas",
+      "departamento": "Amazonas",
+      "granularity": "departamento",
+      "potential_votes": 51581,
+      "share_left_2022": 0.55691,
+      "share_right_2022": 0.44309,
+      "margin_2022": -11.382,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "91",
+        "projected_margin_2026": {
+          "mean": -7.362,
+          "ci80_low": -21.256,
+          "ci80_high": 6.476
+        },
+        "decisiveness": 0.9264,
+        "projected_margin_votes": 3797,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "94",
+      "municipio": "Guainía",
+      "departamento": "Guainía",
+      "granularity": "departamento",
+      "potential_votes": 32184,
+      "share_left_2022": 0.533464,
+      "share_right_2022": 0.466536,
+      "margin_2022": -6.6928,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "94",
+        "projected_margin_2026": {
+          "mean": -2.6728,
+          "ci80_low": -16.5668,
+          "ci80_high": 11.1652
+        },
+        "decisiveness": 0.9733,
+        "projected_margin_votes": 860,
+        "lean": "toss-up",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "95",
+      "municipio": "Guaviare",
+      "departamento": "Guaviare",
+      "granularity": "departamento",
+      "potential_votes": 64511,
+      "share_left_2022": 0.455229,
+      "share_right_2022": 0.544771,
+      "margin_2022": 8.9542,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "95",
+        "projected_margin_2026": {
+          "mean": 12.9742,
+          "ci80_low": -0.9198,
+          "ci80_high": 26.8122
+        },
+        "decisiveness": 0.8703,
+        "projected_margin_votes": 8370,
+        "lean": "right",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "97",
+      "municipio": "Vaupés",
+      "departamento": "Vaupés",
+      "granularity": "departamento",
+      "potential_votes": 23447,
+      "share_left_2022": 0.75577,
+      "share_right_2022": 0.24423,
+      "margin_2022": -51.1541,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "97",
+        "projected_margin_2026": {
+          "mean": -47.1341,
+          "ci80_low": -61.0281,
+          "ci80_high": -33.2961
+        },
+        "decisiveness": 0.5287,
+        "projected_margin_votes": 11052,
+        "lean": "left",
+        "is_projection": true
+      }
+    },
+    {
+      "dane_code": "99",
+      "municipio": "Vichada",
+      "departamento": "Vichada",
+      "granularity": "departamento",
+      "potential_votes": 52919,
+      "share_left_2022": 0.400084,
+      "share_right_2022": 0.599916,
+      "margin_2022": 19.9832,
+      "source": "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)",
+      "source_url": "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022",
+      "projection": {
+        "dane_code": "99",
+        "projected_margin_2026": {
+          "mean": 24.0032,
+          "ci80_low": 10.1092,
+          "ci80_high": 37.8412
+        },
+        "decisiveness": 0.76,
+        "projected_margin_votes": 12702,
+        "lean": "right",
+        "is_projection": true
+      }
+    }
+  ],
+  "code_sha": "a6130b527f9f3b3bc37518821a06fd03da4c2727",
+  "data_hash": "793e3d3185f91b4256a195e420452c1d38b9e94d6f3f17ad9247595b7b51ff42"
+}

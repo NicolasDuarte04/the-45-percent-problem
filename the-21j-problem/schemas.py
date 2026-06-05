@@ -340,3 +340,141 @@ class PulsoSnapshot(BaseModel):
                 f"inputs_live={self.inputs_live} (expected {expected!r})"
             )
         return self
+
+
+# =============================================================================
+# Mapa del Voto Decisivo (Session 06)
+# =============================================================================
+#
+# The Mapa turns the national runoff margin into a per-unit number so the UI can
+# answer DÓNDE ESTÁS / QUÉ HARÍA FALTA / QUÉ PUEDES HACER. It is CIVIC and
+# CANDIDATE-NEUTRAL by construction: it shows how close a unit is and how much a
+# vote weighs there, never an instruction to support a candidate and never a unit
+# framed as a target to win for a side. The bloc labels are neutral lineage tags
+# ("left" = Petro→Cepeda lineage,
+# "right" = Hernández→De la Espriella lineage); decisiveness is direction-free.
+#
+# Margin sign convention (matches the Session 04 snapshot's `margin`):
+#   margin = right_share - left_share, in percentage points.
+#   positive => right bloc (De la Espriella) ahead; negative => left (Cepeda).
+#
+# Granularity is recorded explicitly. Municipio granularity is the target; a
+# departamento-level baseline is an accepted fallback when a clean machine-
+# readable municipio file is not verifiable, as long as `granularity` says so.
+
+# DANE DIVIPOLA 2-digit departamento codes (públic standard reference, NOT
+# election data). "Consulados" (votes abroad) is non-geographic; it carries the
+# sentinel "00" so the roll-up can include it while the map UI skips it.
+DANE_DEPT_CODES: dict[str, str] = {
+    "Amazonas": "91", "Antioquia": "05", "Arauca": "81", "Atlántico": "08",
+    "Bogotá": "11", "Bolívar": "13", "Boyacá": "15", "Caldas": "17",
+    "Caquetá": "18", "Casanare": "85", "Cauca": "19", "Cesar": "20",
+    "Chocó": "27", "Córdoba": "23", "Cundinamarca": "25", "Guainía": "94",
+    "Guaviare": "95", "Huila": "41", "La Guajira": "44", "Magdalena": "47",
+    "Meta": "50", "Nariño": "52", "Norte de Santander": "54", "Putumayo": "86",
+    "Quindío": "63", "Risaralda": "66", "San Andrés": "88", "Santander": "68",
+    "Sucre": "70", "Tolima": "73", "Valle del Cauca": "76", "Vaupés": "97",
+    "Vichada": "99", "Consulados": "00",
+}
+
+# Share-sum check for the two-way (left + right) baseline shares.
+TWO_WAY_SHARE_TOLERANCE: float = 0.005
+
+
+def dane_code_for(departamento: str) -> str | None:
+    """DANE departamento code for a name, or None if unknown (never invented)."""
+    return DANE_DEPT_CODES.get(departamento.strip())
+
+
+class MarginBand(BaseModel):
+    """A projected margin with an 80% credible band, in percentage points."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    mean: float = Field(ge=-100, le=100)
+    ci80_low: float = Field(ge=-100, le=100)
+    ci80_high: float = Field(ge=-100, le=100)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> "MarginBand":
+        if not (self.ci80_low <= self.mean <= self.ci80_high):
+            raise ValueError(
+                f"margin band out of order: {self.ci80_low} <= {self.mean} <= {self.ci80_high}"
+            )
+        return self
+
+
+class MunicipioBaseline(BaseModel):
+    """
+    One unit's certified 2022 runoff baseline (FACT, not estimate).
+
+    `municipio` holds the unit label; at departamento granularity it equals
+    `departamento`. Shares are two-way (left + right ≈ 1). Every row carries a
+    real `source_url`; a row without one is never admitted (no fabrication).
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    dane_code: str = Field(min_length=1, description="DANE code (2-digit dept / 5-digit muni)")
+    municipio: str = Field(min_length=1, description="Unit label (= departamento at dept granularity)")
+    departamento: str = Field(min_length=1)
+    granularity: Literal["municipio", "departamento"] = Field(
+        description="The unit granularity this row represents"
+    )
+    potential_votes: int = Field(gt=0, description="Censo electoral (registered voters)")
+    share_left_2022: float = Field(ge=0, le=1, description="Two-way left (Petro) share")
+    share_right_2022: float = Field(ge=0, le=1, description="Two-way right (Hernández) share")
+    margin_2022: float = Field(
+        ge=-100, le=100, description="right_share - left_share, pp; + = right lead"
+    )
+    source: str = Field(min_length=1)
+    source_url: str = Field(min_length=1, description="Required, non-empty, http(s)")
+
+    @field_validator("source_url")
+    @classmethod
+    def _validate_url(cls, v: str) -> str:
+        v = v.strip()
+        if not v.lower().startswith(("http://", "https://")):
+            raise ValueError(f"source_url must be an http(s) URL, got: {v!r}")
+        return v
+
+    @model_validator(mode="after")
+    def _shares_two_way(self) -> "MunicipioBaseline":
+        total = self.share_left_2022 + self.share_right_2022
+        if abs(total - 1.0) > TWO_WAY_SHARE_TOLERANCE:
+            raise ValueError(f"two-way shares sum to {total:.4f}, not ~1.0")
+        expected_margin = (self.share_right_2022 - self.share_left_2022) * 100.0
+        if abs(expected_margin - self.margin_2022) > 0.1:
+            raise ValueError(
+                f"margin_2022 {self.margin_2022} inconsistent with shares "
+                f"(expected {expected_margin:.2f})"
+            )
+        return self
+
+
+class MunicipioProjection(BaseModel):
+    """
+    One unit's 2026 projection under the national swing. Always an ESTIMATE
+    (`is_projection` is always True), distinct from the certified baseline.
+
+    `decisiveness` is a candidate-neutral closeness figure in [0,1]: 1 at a
+    projected tie, falling toward 0 as the projected margin widens.
+    `projected_margin_votes` is the projected margin expressed in votes (a
+    magnitude, direction-free).
+    """
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    dane_code: str = Field(min_length=1)
+    projected_margin_2026: MarginBand
+    decisiveness: float = Field(ge=0, le=1)
+    projected_margin_votes: int = Field(ge=0, description="|margin| in votes (magnitude only)")
+    lean: Literal["left", "right", "toss-up"]
+    is_projection: bool = Field(description="Always True for the 2026 fields")
+
+    @field_validator("is_projection")
+    @classmethod
+    def _must_be_projection(cls, v: bool) -> bool:
+        if v is not True:
+            raise ValueError("is_projection must be True for a 2026 projection")
+        return v
