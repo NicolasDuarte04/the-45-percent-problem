@@ -87,3 +87,61 @@ calibration:
     "2018_r2": { date: "2018-06-17", left_certified_pct: 41.81, right_certified_pct: 53.98 }
     "2022_r1": { date: "2022-05-29", left_certified_pct: 40.32, right_certified_pct: 28.15 }
     "2022_r2": { date: "2022-06-19", left_certified_pct: 50.44, right_certified_pct: 47.31 }
+
+# =============================================================================
+# Session 04 — Bayesian aggregator + Monte Carlo runoff simulator  [PRE-REGISTERED]
+# =============================================================================
+# These parameters turn the ingested polls + calibrated house effects into the
+# public probability. Once locked they require a deviation report to change.
+# Read from config; never hardcode them in aggregate_polls.py / simulate_runoff.py.
+aggregator:
+  # [PRE-REGISTERED] House effects are a SOFT prior (Session 03 decision): the
+  # central estimate is corrected by only `house_effect_shrink` of the estimated
+  # bloc bias (not the full bias as if known exactly), and the un-applied part is
+  # carried as extra variance. shrink=0 reproduces the "house effects off" arm.
+  house_effect_shrink: 0.5
+
+  # [PRE-REGISTERED] Low-confidence firms (single-year house-effect evidence in
+  # the calibration JSON) have their per-poll variance multiplied by this factor,
+  # so an unreliable bias estimate widens uncertainty instead of moving the mean.
+  # The set is data-driven from co_house_effects.json (confidence == "low"); this
+  # list is the audit cross-check and must agree with it.
+  low_confidence_firms: ["AtlasIntel", "GAD3"]
+  low_confidence_variance_mult: 3.0
+
+  # [PRE-REGISTERED] Between-poll heterogeneity. The 2026 runoff pollsters
+  # disagree far beyond sampling error, so a fixed-effect inverse-variance CI
+  # would be dishonestly tight. "random_effects" adds a DerSimonian-Laird tau^2
+  # (closed-form, not MCMC) to every poll's variance before precision-weighting.
+  # "fixed" disables it (the classic inverse-variance update) for sensitivity.
+  heterogeneity: "random_effects"
+
+  # A poll's precision is also scaled by its recency weight 0.5**(days_before/H),
+  # where H is read from the calibration JSON (recency_halflife_days), NOT refit
+  # here. This value is an assertion guard only; the JSON is authoritative.
+  expected_recency_halflife_days: 5.0
+
+  # data_sufficiency is "thin" if fewer than this many runoff polls feed the run.
+  min_polls_ok: 5
+
+simulator:
+  mc_runs: 10000
+  seed: 20260621                     # fixed + recorded; rerun reproduces output
+  decision_threshold: 0.5            # two-way Cepeda share above which Cepeda wins
+
+  # [PRE-REGISTERED] Extra share-space std (0..1) folded into every Monte Carlo
+  # draw for turnout + undecided-allocation uncertainty the polls cannot resolve.
+  turnout_undecided_sigma: 0.02
+
+  # [PRE-REGISTERED] Sensitivity / honesty gate. The probability is recomputed
+  # over the cross-product of these half-lives and house-effect modes. If the
+  # winner flips, or p_cepeda moves more than `flip_p_threshold` across the four
+  # arms, data_sufficiency is forced to "thin".
+  sensitivity:
+    halflife_days: [5.0, 10.0]
+    house_effects_modes: ["off", "on"]
+    flip_p_threshold: 0.10
+
+paths_session04:
+  snapshot_dir: "data/snapshots/21j"
+  latest_pointer: "data/snapshots/21j/latest.json"
