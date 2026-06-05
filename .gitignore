@@ -24,6 +24,20 @@ secrets.yaml
 
 # ─── Data files (reproducible from scripts — don't commit large binaries) ───────
 data/raw/*.parquet
+# cp-10.1: un-ignore the specific input parquets the production nightly pipeline
+# reads on a clean checkout. These are the locked v1.1 calibration input set used
+# to produce batch_20260512_013228Z; treat them as reproducibility artifacts, not
+# disposable binaries. Without them the cron crashes with FileNotFoundError (the
+# fixtures read every run; the other five on the cp-10 re-batch path). SHA-256s
+# recorded in docs/onboarding/cp-10.1-inspection-notes.md §1. Keep this list
+# explicit by filename — do NOT broaden to `!data/raw/*.parquet`, which would
+# re-track miscellaneous odds/scratch parquets the pipeline does not consume.
+!data/raw/wc2026_fixtures.parquet
+!data/raw/elo_ratings.parquet
+!data/raw/historical_matches.parquet
+!data/raw/recent_form.parquet
+!data/raw/fifa_rankings.parquet
+!data/raw/macro_data.parquet
 data/raw/*.csv
 data/raw/*.json
 data/processed/*.parquet
