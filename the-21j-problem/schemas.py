@@ -69,8 +69,12 @@ POLLSTER_NAME_MAP: dict[str, str] = {
     "Datexco":                          "Datexco",
     "Datexco / W Radio":                "Datexco",
     "Yanhaas":                          "Yanhaas",
+    "YanHass":                          "Yanhaas",
     "Cifras y Conceptos":               "Cifras y Conceptos",
     "Cifras & Conceptos":               "Cifras y Conceptos",
+    # Historical-corpus firms (Session 03; 2018/2022 calibration only)
+    "CELAG":                            "CELAG",
+    "Mosqueteros":                      "Mosqueteros",
 }
 
 # The five recognised firms with in-window runoff polls. fetch_polls.py filters
