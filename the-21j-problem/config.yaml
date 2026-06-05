@@ -1,0 +1,43 @@
+# config.yaml — El Voto del 21 de Junio (21J data pipeline)
+# Single source of truth for the poll-ingestion parameters.
+# Self-contained: paths are relative to this project root (the-21j-problem/).
+
+project: "El Voto del 21 de Junio — 21J poll ingestion"
+runoff_date: "2026-06-21"          # 21 de junio de 2026, Cepeda vs De la Espriella
+first_round_date: "2026-05-31"
+
+# Anchor for the 60-day ingestion window. Explicit (not system clock) so the
+# window is reproducible: a poll is in-window iff fieldwork_end >= as_of_date - window_days.
+as_of_date: "2026-06-04"
+
+ingestion:
+  window_days: 60
+  share_sum_target: 100.0          # cepeda + espriella + other + undecided
+  share_sum_tolerance: 2.0         # +/- band; rows outside are excluded + logged
+  candidates: ["cepeda", "espriella"]
+
+paths:
+  manual_seed: "data/manual/polls_seed.csv"
+  output_parquet: "data/raw/polls_co_2026.parquet"
+  snapshot_registry: "data/snapshots/snapshot_registry.jsonl"
+
+# Output sort key (natural key) applied before writing Parquet.
+sort_key: ["fieldwork_end", "poll_id"]
+
+# Recognised firms with in-window second-round polls (canonical labels).
+pollsters:
+  - AtlasIntel
+  - CNC
+  - GAD3
+  - Guarumo
+  - Invamer
+
+# Original planned five from brand/execution_plan.md (Day 2). Partly stale:
+# only Invamer and Guarumo from this list published in-window runoff polls.
+# Kept for provenance; the standardisation map in schemas.py carries them too.
+pollsters_planned:
+  - Invamer
+  - Datexco
+  - Yanhaas
+  - Guarumo
+  - Cifras y Conceptos
