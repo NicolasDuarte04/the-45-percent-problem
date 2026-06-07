@@ -249,3 +249,51 @@ paths_session05:
   snapshot_dir: "data/snapshots/pulso"
   history_jsonl: "data/snapshots/pulso/pulso_history.jsonl"
   latest_pointer: "data/snapshots/pulso/latest.json"
+
+# =============================================================================
+# Session 06 — Mapa del Voto Decisivo (per-unit swing engine)  [PRE-REGISTERED]
+# =============================================================================
+# Turns the national 2026 runoff margin (Session 04 snapshot) into a per-unit
+# number: each unit's certified 2022 baseline, its projected 2026 lean under a
+# uniform swing, and a candidate-neutral decisiveness figure. The Mapa is civic
+# and direction-free; bloc labels (left = Petro→Cepeda, right = Hernández→De la
+# Espriella) are neutral lineage tags, not endorsements. Once locked, these
+# parameters require a deviation report. Read from config; never hardcode them.
+mapa:
+  # Granularity actually shipped. "departamento" is the accepted fallback when a
+  # clean machine-readable municipio file is not verifiable; recorded honestly.
+  granularity: "departamento"
+
+  # [PRE-REGISTERED] Swing model. "uniform_additive_swing": every unit's 2022
+  # two-way margin is shifted by the SAME national delta (national 2026 margin
+  # minus national 2022 margin). The national credible interval is carried
+  # through as each unit's projection band. No regional swing model is assumed.
+  swing_model: "uniform_additive_swing"
+
+  # [PRE-REGISTERED] |projected margin| below this (pp) is labelled "toss-up";
+  # otherwise the unit leans to the bloc that is ahead.
+  toss_up_band_pp: 5.0
+
+  # [PRE-REGISTERED] Roll-up sanity tolerance. The per-unit projections,
+  # potential-vote-weighted, must reconstruct the Session 04 national margin to
+  # within this many pp; otherwise the swing model or the baseline join is
+  # broken and the run reports it rather than shipping a dataset that won't roll
+  # up. (Residual is non-zero because weighting is by censo, not by cast votes.)
+  rollup_tolerance_pp: 1.0
+
+  # National 2022 certified runoff (left = Petro, right = Hernández) is read from
+  # calibration.elections["2022_r2"] above; the two-way margin is derived, not
+  # re-entered here.
+
+  paths:
+    baseline_csv: "data/manual/co_departamento_2022.csv"
+    output_json: "data/processed/mapa_municipios.json"
+
+  # Source for the baseline ingestion (ingestion/fetch_baseline.py). The certified
+  # second-round departmental results, parsed deterministically from raw wikitext
+  # (which cites the Registraduría boletín nacional). Each row carries this URL.
+  baseline_source:
+    label: "Registraduría 2022 segunda vuelta — resultados por departamento (vía Wikipedia, citando el boletín oficial)"
+    wikitext_api: "https://es.wikipedia.org/w/api.php?action=parse&page=Elecciones_presidenciales_de_Colombia_de_2022&prop=wikitext&section=30&format=json"
+    source_url: "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022"
+    request_timeout_s: 30
