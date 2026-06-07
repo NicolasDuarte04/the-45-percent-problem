@@ -70,5 +70,11 @@
     "generated_at_utc": "2026-06-06T01:58:35Z",
     "bundle_url": "/data/snapshots/2026-06-06T01:58Z/",
     "meta_url": "/data/snapshots/2026-06-06T01:58Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-07T02:14Z",
+    "generated_at_utc": "2026-06-07T02:14:27Z",
+    "bundle_url": "/data/snapshots/2026-06-07T02:14Z/",
+    "meta_url": "/data/snapshots/2026-06-07T02:14Z/snapshot_meta.json"
   }
 ]
