@@ -75,6 +75,12 @@ target-version = ["py39"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+# cp-10.2: the El Voto 21J project shares this repo under the-21j-problem/ with
+# its own tooling. Never lint their tree from this (WC) config — a bare
+# `ruff check .` (editor, local, or another workflow) must not sweep it. The CI
+# gate also lists WC paths explicitly; this is the belt-and-suspenders backstop.
+# See PLAN.md Q9 and the 2026-06-05 cross-project coordination.
+exclude = ["the-21j-problem/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
