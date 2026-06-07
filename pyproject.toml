@@ -56,6 +56,11 @@ dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "pytest-asyncio>=0.23",
+    # cp-10.2: tests/test_kelly_sizer.py uses property-based testing. hypothesis
+    # was an undeclared test dependency (present in local venvs, absent on a
+    # fresh `pip install -e ".[dev]"`), so pytest collection failed in CI. The
+    # cp-10.2 gate surfaced it; declaring it here keeps the suite runnable.
+    "hypothesis>=6.0",
     "black>=24.0",
     "ruff>=0.3",
     "mypy>=1.8",
