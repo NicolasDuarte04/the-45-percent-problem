@@ -37,12 +37,15 @@ Files NOT rewritten (deliberate, see Section 7 report for rationale):
   - teams/*.json              (per-team M0-derived narratives; same
                                follow-up class as matches/)
 
-Per-team metadata (display_name, fifa_code, confederation, group, seed,
-elo_current, rank_change_7d) is carried forward from the existing
-tournament.json so the website's canonical-draw conventions
-("United States", "Korea Republic", "Türkiye", etc.) are preserved
-unchanged. Only the probability fields and the n_runs counter are
-replaced from the batch.
+Per-team metadata (display_name, fifa_code, confederation, elo) is, as of
+cp-12, sourced from the clean per-team roster ``teams/<code>.json`` rather
+than carried forward from the prior ``tournament.json`` — the latter had
+silently perpetuated a corrupt roster (COD duplicated, TUN dropped). The
+website's canonical-draw conventions ("United States", "Korea Republic",
+"Türkiye", etc.) live in those per-team files and are preserved unchanged.
+Only the probability fields and the n_runs counter come from the batch.
+``rank_change_7d`` (absent from teams/<code>.json) is carried from the
+prior tournament.json.
 
 Run
 ---
@@ -479,41 +482,65 @@ def aggregate_team_progression(team_runs: pd.DataFrame) -> dict[str, dict]:
     return out
 
 
+def _display_name_to_team_id(display_name: str) -> str:
+    """Inverse of _TEAM_ID_TO_DISPLAY_NAME (identity for unlisted teams)."""
+    for batch_id, mapped in _TEAM_ID_TO_DISPLAY_NAME.items():
+        if mapped == display_name:
+            return batch_id
+    return display_name
+
+
 def regenerate_tournament_json(
-    existing: dict,
+    teams_roster: dict[str, dict],
     aggregated: dict[str, dict],
+    prior_rank_change: dict[str, int],
     new_snapshot_id: str,
     generated_at: str,
     n_runs_per_team: int,
     model_variant: str,
 ) -> dict:
-    """Rebuild tournament.json keeping per-team metadata, replacing probs."""
+    """Rebuild tournament.json from the clean teams/ roster + batch probs.
+
+    cp-12 (structural Fix 5): the team roster is rebuilt from the canonical
+    per-team files (``teams/<code>.json``), NOT carried forward from the
+    prior ``tournament.json``. The previous implementation iterated
+    ``existing["teams"]`` and so silently perpetuated a corrupt roster —
+    Congo DR (COD) duplicated, Tunisia (TUN) dropped — introduced
+    2026-05-12 (commit ``f524ee7``) and never self-healed: both COD rows
+    mapped to a valid batch id, and the missing TUN was simply never
+    iterated, so no error fired. Sourcing the roster from
+    ``teams/<code>.json`` makes the rebuild self-correcting, and the
+    48-unique / completeness assertions below make any *future* roster
+    corruption fail loudly here (and in the cp-10.2 regen smoke test)
+    instead of propagating to the public bracket.
+
+    ``prior_rank_change`` carries each code's ``rank_change_7d`` from the
+    existing tournament.json (``teams/<code>.json`` does not store it;
+    today every value is 0).
+    """
     new_teams = []
-    for row in existing["teams"]:
-        display_name = row["display_name"]
-        # Map canonical-draw display_name back to batch team_id via the
-        # inverse of _TEAM_ID_TO_DISPLAY_NAME.
-        team_id = display_name
-        for batch_id, mapped in _TEAM_ID_TO_DISPLAY_NAME.items():
-            if mapped == display_name:
-                team_id = batch_id
-                break
+    consumed_team_ids: list[str] = []
+    for code, team in sorted(teams_roster.items()):
+        display_name = team["display_name"]
+        # Map canonical display_name back to batch team_id via the inverse
+        # of _TEAM_ID_TO_DISPLAY_NAME.
+        team_id = _display_name_to_team_id(display_name)
         if team_id not in aggregated:
             raise KeyError(
-                f"Display name {display_name!r} maps to team_id {team_id!r}, "
-                f"which is missing from the batch aggregation. Check the "
-                f"_TEAM_ID_TO_DISPLAY_NAME table in this script."
+                f"teams/{code}.json display_name {display_name!r} maps to "
+                f"team_id {team_id!r}, which is missing from the batch "
+                f"aggregation. Check the _TEAM_ID_TO_DISPLAY_NAME table."
             )
-
+        consumed_team_ids.append(team_id)
         agg = aggregated[team_id]
-        # 'group' is optional in TournamentTeamSchema; carry through only
-        # if the existing row had it (today it doesn't, but the field is
-        # supported by the schema so future runs may include it).
-        out_row = {
-            "fifa_code":             row["fifa_code"],
+        # Field shape matches the pre-cp-12 rows exactly (no `group` key,
+        # which the prior roster also omitted) so the diff is the roster
+        # delta + corrected metadata, not a schema change.
+        new_teams.append({
+            "fifa_code":             code,
             "display_name":          display_name,
-            "confederation":         row["confederation"],
-            "seed":                  row["seed"],
+            "confederation":         team["confederation"],
+            "seed":                  0,  # reassigned by p_champion below
             "p_champion":            agg["p_champion"],
             "p_final":               agg["p_final"],
             "p_semifinal":           agg["p_semifinal"],
@@ -521,12 +548,28 @@ def regenerate_tournament_json(
             "p_r16":                 agg["p_r16"],
             "p_group_qualification": agg["p_group_qualification"],
             "ci_95_champion":        agg["ci_95_champion"],
-            "elo_current":           row["elo_current"],
-            "rank_change_7d":        row["rank_change_7d"],
-        }
-        if "group" in row:
-            out_row["group"] = row["group"]
-        new_teams.append(out_row)
+            "elo_current":           float(team["elo_rating"]),
+            "rank_change_7d":        prior_rank_change.get(code, 0),
+        })
+
+    # cp-12: hard roster invariants. The point of Fix 5's roster work is
+    # that a corrupt roster can never again ship silently. A 48-team World
+    # Cup with 48 unique FIFA codes, each consuming exactly one of the 48
+    # batch teams, is the contract; violate it and crash (turning the
+    # cp-10.2 regen smoke test red) rather than write a malformed roster.
+    codes = [t["fifa_code"] for t in new_teams]
+    if len(codes) != 48:
+        raise ValueError(f"roster must have 48 teams; got {len(codes)}")
+    if len(set(codes)) != 48:
+        dupes = sorted({c for c in codes if codes.count(c) > 1})
+        raise ValueError(f"roster has duplicate fifa_codes: {dupes}")
+    if set(consumed_team_ids) != set(aggregated):
+        missing = sorted(set(aggregated) - set(consumed_team_ids))
+        extra = sorted(set(consumed_team_ids) - set(aggregated))
+        raise ValueError(
+            f"roster does not bijectively cover the 48 batch teams; "
+            f"uncovered batch teams: {missing}; unexpected: {extra}"
+        )
 
     # Re-sort by p_champion descending and reassign seed indices so the
     # ledger stays stable.
@@ -594,6 +637,25 @@ def main() -> None:
     n_runs_per_team = max(row["n_runs"] for row in aggregated.values())
     print(f"[2] aggregated {len(aggregated)} teams from {n_runs_per_team} runs each")
 
+    # ── cp-12: load the clean canonical roster from teams/<code>.json ──────
+    # This replaces the corrupt carried-forward tournament.json roster as
+    # the source of truth for the 48-team set (see regenerate_tournament_json
+    # docstring). Loaded once and reused for both tournament.json and the
+    # teams/ progression rewrite below.
+    teams_src_dir = LATEST_DIR / "teams"
+    teams_roster: dict[str, dict] = {}
+    for tf in sorted(teams_src_dir.glob("*.json")):
+        tj = json.loads(tf.read_text())
+        code = tj.get("fifa_code") or tf.stem
+        teams_roster[code] = tj
+    # teams/<code>.json does not carry rank_change_7d; preserve any prior
+    # value from the existing tournament.json (today uniformly 0).
+    prior_rank_change = {
+        r["fifa_code"]: r.get("rank_change_7d", 0)
+        for r in existing_tournament.get("teams", [])
+    }
+    print(f"    roster source   : teams/ ({len(teams_roster)} files)")
+
     now = _now_utc()
     new_snapshot_id  = now.strftime("%Y-%m-%dT%H:%MZ")
     new_generated_at = now.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -607,8 +669,9 @@ def main() -> None:
 
     # ── Build new tournament.json from batch + carried-forward metadata ──
     new_tournament = regenerate_tournament_json(
-        existing_tournament,
+        teams_roster,
         aggregated,
+        prior_rank_change,
         new_snapshot_id,
         new_generated_at,
         n_runs_per_team,
@@ -749,14 +812,16 @@ def main() -> None:
         shutil.rmtree(dst_teams)
     dst_teams.mkdir(parents=True, exist_ok=True)
 
-    code_to_team_id = {}
-    for batch_id in aggregated:
-        display = _TEAM_ID_TO_DISPLAY_NAME.get(batch_id, batch_id)
-        # Find the fifa_code via existing_tournament
-        for trow in existing_tournament["teams"]:
-            if trow["display_name"] == display:
-                code_to_team_id[trow["fifa_code"]] = batch_id
-                break
+    # cp-12: build code -> batch team_id from the clean teams/ roster, not
+    # from the (previously corrupt) carried-forward tournament.json. With
+    # the old construction, a code absent from the corrupt roster (TUN) got
+    # no entry and its teams/<code>.json was carried-through-frozen instead
+    # of rewritten from the batch. Sourcing from teams_roster gives every
+    # one of the 48 codes an entry, so TUN's progression is rewritten too.
+    code_to_team_id = {
+        code: _display_name_to_team_id(team["display_name"])
+        for code, team in teams_roster.items()
+    }
 
     rewritten = 0
     for src_file in sorted(src_teams.glob("*.json")):
