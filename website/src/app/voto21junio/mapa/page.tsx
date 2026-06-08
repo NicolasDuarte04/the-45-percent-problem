@@ -29,7 +29,8 @@ export default function MapaPage() {
             </h1>
             <p className="sub">
               Cuánto pesas en la segunda vuelta, empezando por cuánto del margen nacional está en tus
-              manos. La búsqueda por municipio llega pronto; por ahora mostramos datos de ejemplo.
+              manos. Por ahora la estimación es por departamento y es preliminar; la búsqueda por
+              municipio llega pronto.
             </p>
           </div>
           <MapaResult />

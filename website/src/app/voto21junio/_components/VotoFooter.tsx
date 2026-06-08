@@ -1,12 +1,14 @@
 /**
- * Voto footer (Session 01). Brand line + open-method declaration + demo
- * snapshot stamp. The figures are labeled "datos de ejemplo" per the honesty
- * rule. No paid CTAs anywhere.
+ * Voto footer (Session 01 → wired in Session 08). Brand line + open-method
+ * declaration + the real snapshot stamp (date · poll count · preliminar). Server
+ * component, so it reads the snapshot directly. The stamp is a secondary mark;
+ * the per-section preliminary marks carry the honesty load. No paid CTAs anywhere.
  */
 
-import { SNAPSHOT_STAMP } from "../_lib/demo-data";
+import { getVotoData } from "../_lib/snapshot-source";
 
 export function VotoFooter({ days }: { days: number }) {
+  const { stamp } = getVotoData();
   return (
     <footer className="foot">
       <div className="wrap">
@@ -22,7 +24,7 @@ export function VotoFooter({ days }: { days: number }) {
           método: <a href="/voto21junio#metodo">45analytics.com/voto21junio</a>
         </p>
         <p className="mono" style={{ marginTop: 14, color: "var(--ink-4)" }}>
-          {SNAPSHOT_STAMP} · día {days}
+          {stamp} · día {days}
         </p>
       </div>
     </footer>

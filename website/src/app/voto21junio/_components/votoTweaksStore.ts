@@ -9,7 +9,7 @@
  * applied on the client after hydration.
  */
 
-import { DEFAULT_MUNICIPIO, P_CEPEDA, PULSO } from "../_lib/demo-data";
+import { DEFAULT_MUNICIPIO } from "../_lib/demo-data";
 
 export type Accent = "petroleo" | "terracota";
 export type Theme = "light" | "dark";
@@ -17,16 +17,22 @@ export type Theme = "light" | "dark";
 export interface VotoTweaks {
   accent: Accent;
   theme: Theme;
-  pCepeda: number;
-  pulso: number;
+  /**
+   * Dev-only overrides for the §1 / Pulso figures. `null` means "use the real
+   * snapshot baseline" (from VotoDataProvider); the dev Tweaks bar sets a number
+   * to preview a what-if. In production the Tweaks bar is hidden, so these stay
+   * null and the surface shows the real, snapshot-driven values.
+   */
+  pCepeda: number | null;
+  pulso: number | null;
   municipio: string;
 }
 
 export const DEFAULTS: VotoTweaks = {
   accent: "petroleo",
   theme: "light",
-  pCepeda: P_CEPEDA,
-  pulso: PULSO,
+  pCepeda: null,
+  pulso: null,
   municipio: DEFAULT_MUNICIPIO,
 };
 

@@ -14,6 +14,7 @@
  */
 
 import { useState, useSyncExternalStore } from "react";
+import { useVotoData } from "./VotoDataProvider";
 import { useVotoTweaks } from "./VotoTweaksProvider";
 
 const MUNICIPIOS = ["Bogotá", "Medellín", "Envigado", "Quibdó", "San Andrés"] as const;
@@ -50,6 +51,11 @@ export function TweaksBar() {
   const enabled = useTweaksEnabled();
   const [open, setOpen] = useState(true);
   const t = useVotoTweaks();
+  const { model, pulso } = useVotoData();
+  // The overrides are null until the dev drags a slider; the slider then sits on
+  // the real snapshot baseline.
+  const pCepeda = t.pCepeda ?? model.pCepeda;
+  const pulsoVal = t.pulso ?? pulso.index;
 
   if (!enabled) return null;
 
@@ -130,26 +136,26 @@ export function TweaksBar() {
 
           {/* P(Cepeda) */}
           <label style={{ display: "grid", gap: 6 }}>
-            <span style={labelStyle}>P(Cepeda) · {t.pCepeda.toFixed(1)}%</span>
+            <span style={labelStyle}>P(Cepeda) · {pCepeda.toFixed(1)}%</span>
             <input
               type="range"
               min={40}
               max={55}
               step={0.5}
-              value={t.pCepeda}
+              value={pCepeda}
               onChange={(e) => t.setTweak("pCepeda", Number(e.target.value))}
             />
           </label>
 
           {/* Pulso */}
           <label style={{ display: "grid", gap: 6 }}>
-            <span style={labelStyle}>Pulso Patrio · {t.pulso}</span>
+            <span style={labelStyle}>Pulso Patrio · {pulsoVal}</span>
             <input
               type="range"
               min={0}
               max={100}
               step={1}
-              value={t.pulso}
+              value={pulsoVal}
               onChange={(e) => t.setTweak("pulso", Number(e.target.value))}
             />
           </label>

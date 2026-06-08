@@ -1,7 +1,8 @@
 /**
  * §2 "Qué es esto" orientation block (Session 01). The signature dotplot
- * (posterior distribution) anchors the section; the body is the copy
- * revision's plain-Spanish §2 text in the deliberate *usted* register.
+ * anchors the section; the body is the copy revision's plain-Spanish §2 text in
+ * the deliberate *usted* register. The caption is plain Spanish — the technical
+ * term "distribución posterior" lives only on the methodology page (#78 review).
  */
 
 import { signatureSvg } from "../_lib/voto-runtime";
@@ -17,7 +18,7 @@ export function OrientationBlock() {
         dangerouslySetInnerHTML={{ __html: signatureSvg() }}
       />
       <div className="sig-cap">
-        <span className="pq">▦</span> Distribución posterior · margen nacional, 2ª vuelta
+        <span className="pq">▦</span> Cómo se reparte el margen nacional · 2ª vuelta
       </div>
       <p className="orient-body">
         Esto no es una campaña. No es un sitio para votar. No es una casa de apuestas. Es un grupo de

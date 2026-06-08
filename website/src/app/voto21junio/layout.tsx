@@ -16,8 +16,10 @@ import type { Metadata, Viewport } from "next";
 import "./voto.css";
 import "./voto-pages.css";
 import { VotoTweaksProvider } from "./_components/VotoTweaksProvider";
+import { VotoDataProvider } from "./_components/VotoDataProvider";
 import { PulsoTicker } from "./_components/PulsoTicker";
 import { TweaksBar } from "./_components/TweaksBar";
+import { getVotoData } from "./_lib/snapshot-source";
 
 export const metadata: Metadata = {
   title: "El Voto del 21 de Junio · 45 Analytics",
@@ -32,11 +34,16 @@ export const viewport: Viewport = {
 };
 
 export default function VotoLayout({ children }: { children: React.ReactNode }) {
+  // Read at build time (static). One read shared by the whole subtree via the
+  // React cache() in snapshot-source; seeds the client data context below.
+  const data = getVotoData();
   return (
-    <VotoTweaksProvider>
-      <PulsoTicker />
-      {children}
-      <TweaksBar />
-    </VotoTweaksProvider>
+    <VotoDataProvider data={data}>
+      <VotoTweaksProvider>
+        <PulsoTicker />
+        {children}
+        <TweaksBar />
+      </VotoTweaksProvider>
+    </VotoDataProvider>
   );
 }

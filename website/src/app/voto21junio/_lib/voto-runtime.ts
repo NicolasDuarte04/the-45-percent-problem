@@ -136,7 +136,7 @@ export function campoSvg({
   );
 }
 
-// ── Signature illustration — posterior distribution as a Wilkinson dotplot ──
+// ── Signature illustration — the national-margin spread as a Wilkinson dotplot ──
 export function signatureSvg(): string {
   const W = 620;
   const H = 168;
@@ -171,7 +171,7 @@ export function signatureSvg(): string {
   const mark = `<line x1="${mx}" y1="6" x2="${mx}" y2="${baseY + 9}" class="s-mark"/>`;
   return (
     `<svg class="sig-svg" viewBox="-6 0 ${W + 12} ${H}" preserveAspectRatio="xMidYMid meet" ` +
-    `role="img" aria-label="Distribución posterior del margen de la segunda vuelta">` +
+    `role="img" aria-label="Cómo se reparte el margen nacional de la segunda vuelta">` +
     `${mark}<g class="cdrift" style="animation-duration:54s;animation-delay:-9s">${dots}</g>${rule}</svg>`
   );
 }
