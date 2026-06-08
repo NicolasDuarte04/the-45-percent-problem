@@ -227,9 +227,10 @@ describe("POST /api/cron/eval-predictions", () => {
     // what the evaluator would compute (joint of pS over the four picks),
     // and whose state is still alive with no settled matches. Re-running
     // the cron must not write a log row.
-    // ARG.pS=0.289 BRA.pS=0.3312 FRA.pS=0.227 ENG.pS=0.1472
-    // joint = 0.289 * 0.3312 * 0.227 * 0.1472 ≈ 0.003198
-    // count = round(10000 * 0.003198) = 32
+    // cp-11: TEAM_PROBS is now M2-derived (regenerated from team_runs_M2.parquet).
+    // ARG.pS=0.2701 BRA.pS=0.3045 FRA.pS=0.2848 ENG.pS=0.189
+    // joint = 0.2701 * 0.3045 * 0.2848 * 0.189 ≈ 0.0044270
+    // count = round(10000 * 0.0044270) = 44
     mockDb.select
       .mockReturnValueOnce(chainMock([])) // settled matches
       .mockReturnValueOnce(
@@ -241,8 +242,8 @@ describe("POST /api/cron/eval-predictions", () => {
             mode: "final_four",
             scenario: { semifinalists: ["ARG", "BRA", "FRA", "ENG"] },
             storyLine: "x",
-            countOriginal: 32,
-            countCurrent: 32,
+            countOriginal: 44,
+            countCurrent: 44,
             total: 10000,
             state: "alive",
             killedBy: null,
