@@ -159,6 +159,71 @@
 [data-canvas="voto"] .thumbs .ts { width: 60px; }
 [data-canvas="voto"] .thumbs figcaption { font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); margin-top: 8px; text-align: center; }
 
+/* ── Session 08 · sufficiency / preliminary marks ────────────────────────
+   Persistent (not tooltip-gated) honesty marks. While a source is thin/demo,
+   its figure must read as preliminary, never as a settled call. */
+
+/* The reusable "Preliminar" pill. */
+[data-canvas="voto"] .prelim-chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* §1 hero — the framing line + the margin interval. */
+[data-canvas="voto"] .prob-prelim { margin-top: 16px; }
+[data-canvas="voto"] .prob-frame { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin: 0; }
+[data-canvas="voto"] .prob-range { font-size: 11.5px; color: var(--ink-3); margin: 8px 0 0; font-variant-numeric: tabular-nums; }
+
+/* §5 Pulso — the live-signal mark + greyed unavailable signals. */
+[data-canvas="voto"] .pulso-prelim { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 12px; line-height: 1.45; color: var(--ink-3); }
+[data-canvas="voto"] .pulso-input.is-off { opacity: .55; }
+[data-canvas="voto"] .pulso-input.is-off .nm { color: var(--ink-4); }
+
+/* Mapa — departamento-level / preliminary banner. */
+[data-canvas="voto"] .mapa-prelim {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+/* Share-card watermark — INSIDE the card canvas so it survives a crop / re-share.
+   Used by the Tarjeta (.tj-canvas) and the Mapa share card (.mc-in), both of
+   which are container-type:inline-size, so cqw scales the badge with the card. */
+[data-canvas="voto"] .tj-prelim {
+  position: absolute;
+  top: 4.2cqw;
+  right: 4.2cqw;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 2.6cqw;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: .6cqw 1.8cqw;
+}
+[data-canvas="voto"] .tj-range { font-family: var(--font-mono); font-size: 2.5cqw; color: var(--ink-3); margin-top: 1.6cqw; font-variant-numeric: tabular-nums; }
+
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (min-width: 720px) {
   [data-canvas="voto"] { --maxw: 640px; }

@@ -11,11 +11,13 @@
 import { useState } from "react";
 import { getMuni } from "../_lib/voto-runtime";
 import { useCountUp } from "./useCountUp";
+import { useVotoData } from "./VotoDataProvider";
 import { useVotoTweaks } from "./VotoTweaksProvider";
 import { MapaPanel } from "./MapaPanel";
 import { MapaShareCard } from "./MapaShareCard";
 
 export function MapaResult() {
+  const { mapa } = useVotoData();
   const { municipio } = useVotoTweaks();
   const muni = getMuni(municipio);
   const share = useCountUp(muni.share, { decimals: 1 });
@@ -45,6 +47,13 @@ export function MapaResult() {
 
   return (
     <div className="result">
+      <div className="mapa-prelim">
+        <span className="prelim-chip">Preliminar</span>
+        <span>
+          Estimación por {mapa.granularity}, no por municipio. El reparto por municipio que ves abajo es
+          un ejemplo ilustrativo.
+        </span>
+      </div>
       <div className="muni-head">
         <h2>{muni.name}</h2>
         <span className="dep">{muni.dept}</span>

@@ -28,6 +28,7 @@ export function MapaShareCard({ muni }: { muni: Municipio }) {
         }}
       />
       <div className="mc-in">
+        <div className="tj-prelim">Ejemplo</div>
         <div className="mc-top">
           <div className="mc-brand">
             El Voto <b>·</b> 45 Analytics

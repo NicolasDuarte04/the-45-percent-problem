@@ -1,32 +1,48 @@
 "use client";
 
 /**
- * §1 "Probabilidad del día" card (Session 01). The two-candidate split with
- * count-up percentages that react to the Tweaks bar. Names only, equal visual
- * weight, never a candidate color (peach / plum from the non-partisan prism).
- * The disclaimer carries the real first-round anchor and labels the figures as
- * a model's probabilities, not a prediction.
+ * §1 "Probabilidad del día" card (Session 01 → wired in Session 08).
+ *
+ * Two-candidate win-probability split with count-up percentages. Names only,
+ * equal visual weight, never a candidate color (peach / plum from the
+ * non-partisan prism). The figures are real now: they read from the snapshot
+ * via useVotoData() and gate on the model's data_sufficiency.
+ *
+ *  - "thin" (today): the real probabilities AND the margin credible interval,
+ *    with a persistent "Preliminar" mark and the plain-Spanish framing that the
+ *    race is too close for a firm call. No winner call, no "gana", no "favorito".
+ *  - "ok": the same component, headline framing, still with the interval.
+ *
+ * The dev Tweaks bar can override pCepeda (preview only); the real baseline is
+ * the default.
  */
 
 import { NATIONAL_R1, CEPEDA, ESPRIELLA } from "../_lib/demo-data";
-import { derived } from "../_lib/voto-runtime";
+import { isPreliminary } from "../_lib/voto-data";
 import { useCountUp } from "./useCountUp";
+import { useVotoData } from "./VotoDataProvider";
 import { useVotoTweaks } from "./VotoTweaksProvider";
 
-/** es-CO decimal comma. */
+/** es-CO decimal comma; keeps an explicit sign for signed values. */
 const co = (n: number, d = 1) => n.toFixed(d).replace(".", ",");
+const coSigned = (n: number, d = 1) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${co(Math.abs(n), d)}`;
 
 export function ProbabilidadCard() {
-  const { pCepeda, pulso } = useVotoTweaks();
-  const d = derived(pCepeda, pulso);
-  const pA = useCountUp(d.pC, { decimals: 1 });
-  const pB = useCountUp(d.pE, { decimals: 1 });
+  const { model } = useVotoData();
+  const { pCepeda: override } = useVotoTweaks();
+  const pC = override ?? model.pCepeda;
+  const pE = override != null ? Math.round((100 - override) * 10) / 10 : model.pEspriella;
+  const pA = useCountUp(pC, { decimals: 1 });
+  const pB = useCountUp(pE, { decimals: 1 });
+
+  const prelim = isPreliminary(model.sufficiency);
+  const crossesTie = model.marginLoPp < 0 && model.marginHiPp > 0;
 
   return (
     <div className="card card-pad prob-card">
       <div className="prob-head">
         <span className="ttl">Probabilidad del día · ganar la 2ª vuelta</span>
-        <span className="stamp mono">07:00 COT</span>
+        {prelim ? <span className="prelim-chip">Preliminar</span> : <span className="stamp mono">07:00 COT</span>}
       </div>
       <div className="psplit-names">
         <span>
@@ -39,8 +55,8 @@ export function ProbabilidadCard() {
         </span>
       </div>
       <div className="psplit-bar">
-        <div className="psplit-a" style={{ flex: d.pC }} />
-        <div className="psplit-b" style={{ flex: d.pE }} />
+        <div className="psplit-a" style={{ flex: pC }} />
+        <div className="psplit-b" style={{ flex: pE }} />
       </div>
       <div className="psplit-pcts">
         <span className="p">
@@ -52,6 +68,20 @@ export function ProbabilidadCard() {
           <small>%</small>
         </span>
       </div>
+
+      {prelim ? (
+        <div className="prob-prelim">
+          <p className="prob-frame">
+            Está muy parejo. Por ahora el modelo no da una cifra firme: el resultado puede inclinarse a
+            cualquiera de los dos según los supuestos.
+          </p>
+          <p className="prob-range mono">
+            Margen nacional (intervalo 80%): {coSigned(model.marginLoPp)} a {coSigned(model.marginHiPp)} pp
+            {crossesTie ? " · cruza el empate" : ""}
+          </p>
+        </div>
+      ) : null}
+
       <p className="disclaim">
         Publicación cívica e investigativa. Las cifras son probabilidades de un modelo abierto, no
         pronósticos ni recomendaciones.{" "}
