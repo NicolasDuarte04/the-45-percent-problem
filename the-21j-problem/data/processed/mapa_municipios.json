@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-05T23:42:00.617083+00:00",
+  "generated_at": "2026-06-08T20:38:18.625786+00:00",
   "granularity": "departamento",
   "coverage": {
     "granularity": "departamento",
@@ -12,7 +12,7 @@
   "national_2022_margin_pp": -3.202,
   "national_margin_source": {
     "source_file": "data/snapshots/21j/latest.json",
-    "snapshot_date": "2026-06-04",
+    "snapshot_date": "2026-06-08",
     "data_sufficiency": "thin",
     "snapshot_data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad",
     "margin_mean_pp": 0.818,
@@ -862,6 +862,6 @@
       }
     }
   ],
-  "code_sha": "a6130b527f9f3b3bc37518821a06fd03da4c2727",
-  "data_hash": "793e3d3185f91b4256a195e420452c1d38b9e94d6f3f17ad9247595b7b51ff42"
+  "code_sha": "cf255a8d4d26a9ac1b4179e7b609b49a81c300d9",
+  "data_hash": "5cab5004d0af8e045a48bdff9709da4ab9be70ff0254ff128fe28e894520b585"
 }
