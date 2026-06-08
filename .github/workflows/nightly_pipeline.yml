@@ -65,10 +65,20 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/regenerate_snapshot_from_batch.py
 
+      - name: Regenerate snapshotProbs.ts from M2 batch
+        # cp-11 (Fix 3): close the M0/M2 split-brain. Re-derives the static
+        # evaluator table website/src/lib/sim/snapshotProbs.ts from the active
+        # M2 batch so prediction grading and the bracket serve the same model.
+        # Runs after the snapshot regen (so the active batch + teams/ roster are
+        # current) and before staging (so the file lands in the nightly commit).
+        run: python scripts/generate_snapshot_probs_ts.py
+
       - name: Stage updated website data files
         id: stage
         run: |
-          git add website/public/data/
+          # snapshotProbs.ts lives under website/src/, NOT website/public/data/,
+          # so it must be staged explicitly in addition to the data bundle.
+          git add website/public/data/ website/src/lib/sim/snapshotProbs.ts
           if git diff --staged --quiet; then
             echo "No data changes detected. Skipping commit and push."
             echo "has_changes=false" >> "$GITHUB_OUTPUT"

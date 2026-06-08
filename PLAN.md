@@ -78,6 +78,7 @@ This is the sequence that must ship before 2026-06-11.
 
 **Status:** Not started. Builds on cp-09's one-shot backfill.
 **Scope:** The regenerate script writes `bracket.json` with populated slots on every run, not just the one-shot at cp-09. Also fixes the `BracketBoard.tsx` over-claim (§3.4 of the 2026-06-03 diagnostic): the subtitle "draw-resolved bracket with per-round conditional probabilities" needs either content that matches or copy that doesn't over-claim until that content exists.
+**cp-12 expanded scope (per cp-11 Stage 1 finding, 2026-06-08):** The agent's inspection surfaced that `tournament.json` has Congo DR duplicated and Tunisia missing entirely. The buggy regen path's `code→team_id` map is the root cause. cp-12 will fix this as part of the structural snapshot pipeline work, since cp-12 already owns `bracket.json` + `tournament.json` correctness. User-visible: the bracket page is currently rendering 47 teams with Congo DR shown twice. (cp-11 sidesteps the bug by generating `snapshotProbs.ts` from `team_runs_M2.parquet` directly, not from `tournament.json`.)
 **Acceptance:** Bracket page renders the slots-populated view, the subtitle's claim matches what's rendered, and a nightly run produces both `tournament.json` and `bracket.json` with consistent contents.
 **Effort:** Half to one day depending on whether `BracketBoard` gets a content fix or just a copy fix.
 **Prompt:** To be written after cp-11 ships.
