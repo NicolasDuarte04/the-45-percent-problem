@@ -22,9 +22,11 @@ team_runs_M2.parquet and rewriting the user-facing files:
   - tournament.json           (batch-derived per-team probabilities)
   - freshness.json            (refreshed timestamps)
   - ledger.jsonl              (model_id flipped from "M0" to "M2_fifa")
+  - bracket.json              (cp-12: populated slots rebuilt from the
+                               wc2026_fixtures parquet on every run via
+                               populate_bracket_slots; see Fix 5)
 
 Files NOT rewritten (deliberate, see Section 7 report for rationale):
-  - bracket.json              (currently empty round slots; no content drift)
   - evaluation_metrics.json   (kill_criteria_check already correct after
                                Section 8.4; pre-tournament metrics all null)
   - divergence.json           (M0-derived against synthetic Pinnacle odds;
@@ -592,6 +594,27 @@ def regenerate_tournament_json(
     }
 
 
+def populate_bracket_slots(snapshot_id: str) -> dict:
+    """Build bracket.json with populated slots from the fixtures parquet.
+
+    cp-12 (structural Fix 5): the regen previously carried ``bracket.json``
+    forward verbatim (only bumping ``snapshot_id``), so the populated slots
+    existed on production solely because of cp-09's one-shot
+    ``scripts/backfill_bracket_slots.py``. A fresh clone followed by a regen
+    would have produced an unpopulated bracket. This rebuilds the slots from
+    the git-tracked, static ``wc2026_fixtures.parquet`` on every run, so the
+    bracket page can no longer revert to the unpopulated state. The
+    slot-building logic is imported and reused verbatim from the cp-09
+    backfill (no logic drift); the import is local so the regen module does
+    not pull the ingestion dependency chain unless this function runs.
+    """
+    from scripts.backfill_bracket_slots import build_slots, build_bracket_doc
+
+    fixtures = pd.read_parquet(FIXTURES_PARQUET)
+    slots_by_round = build_slots(fixtures)
+    return build_bracket_doc({"snapshot_id": snapshot_id}, slots_by_round)
+
+
 def main() -> None:
     print("=" * 60)
     print("regenerate_snapshot_from_batch (lockdown 2026-05-11 Section 7)")
@@ -748,9 +771,11 @@ def main() -> None:
     # freshness.json
     (new_dir / "freshness.json").write_text(json.dumps(new_freshness, indent=2))
 
-    # bracket.json: carry through unchanged but update the snapshot_id field
-    bracket = json.loads((LATEST_DIR / "bracket.json").read_text())
-    bracket["snapshot_id"] = new_snapshot_id
+    # bracket.json: cp-12 (structural Fix 5) rebuilds populated slots from
+    # the static wc2026_fixtures parquet on every run (was carried forward
+    # verbatim pre-cp-12, relying on cp-09's one-shot backfill). Determin-
+    # istic from the fixtures, so the only nightly delta is snapshot_id.
+    bracket = populate_bracket_slots(new_snapshot_id)
     (new_dir / "bracket.json").write_text(json.dumps(bracket, indent=2))
 
     # evaluation_metrics.json: carry through unchanged but update snapshot_id

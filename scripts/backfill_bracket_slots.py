@@ -21,8 +21,15 @@ concrete teams and 32 knockout fixtures with bracket-slot placeholders
 from that parquet flips the React component to the slots-populated
 branch and makes the draw-resolved subtitle visible. This is a
 one-shot: the draw is fixed for the tournament, so this script is
-intended to be run once. The structural fix (regen script writes the
-slots on every run) is deferred to cp-12.
+intended to be run once.
+
+cp-12 update (2026-06-08): the structural fix shipped.
+`scripts/regenerate_snapshot_from_batch.py::populate_bracket_slots()`
+imports `build_slots` / `build_bracket_doc` from this module and writes
+the populated `bracket.json` on every nightly run, so the regen path now
+produces the same output this one-shot did. This script is kept as the
+record of how the slots were first populated; re-running it is harmless
+(idempotent against the same fixtures parquet).
 
 Idempotency
 -----------
