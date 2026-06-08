@@ -8,7 +8,7 @@ first_round_date: "2026-05-31"
 
 # Anchor for the 60-day ingestion window. Explicit (not system clock) so the
 # window is reproducible: a poll is in-window iff fieldwork_end >= as_of_date - window_days.
-as_of_date: "2026-06-04"
+as_of_date: "2026-06-08"
 
 ingestion:
   window_days: 60
