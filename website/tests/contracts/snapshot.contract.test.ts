@@ -359,15 +359,32 @@ describe("cross-artifact consistency", () => {
     expect(metrics.snapshot_id).toBe(meta.snapshot_id);
   });
 
-  it("team fifa_codes in tournament.json match files in teams/", () => {
+  it("team fifa_codes in tournament.json exactly match files in teams/ (bidirectional, no duplicates)", () => {
+    // cp-12: tightened from a one-directional subset check (tournament
+    // codes ⊆ teams/ files) to bidirectional set-equality + no-duplicate.
+    // The old check passed the live corruption that shipped 2026-05-12 —
+    // Congo DR (COD) listed twice and Tunisia (TUN) dropped — because every
+    // tournament code (incl. both CODs) still had a teams/ file, and TUN
+    // being present-but-unreferenced was never tested.
     const teamsDir = path.join(LATEST, "teams");
     const teamFiles = new Set(
       fs.readdirSync(teamsDir).filter((f) => f.endsWith(".json")).map((f) => f.replace(".json", ""))
     );
     const tournament = TournamentSnapshotSchema.parse(readJson(path.join(LATEST, "tournament.json")));
-    for (const t of tournament.teams) {
-      expect(teamFiles.has(t.fifa_code), `teams/${t.fifa_code}.json missing`).toBe(true);
-    }
+    const codes = tournament.teams.map((t) => t.fifa_code);
+    const codeSet = new Set(codes);
+
+    // (a) no duplicate fifa_codes in tournament.json (catches COD-twice).
+    const dupes = [...new Set(codes.filter((c, i) => codes.indexOf(c) !== i))];
+    expect(dupes, `duplicate fifa_codes in tournament.json: ${dupes.join(", ")}`).toEqual([]);
+
+    // (b) bidirectional set equality: every tournament code has a teams/
+    //     file AND every teams/ file is in tournament.json (catches the
+    //     dropped-Tunisia case the old subset check missed).
+    const missingFiles = codes.filter((c) => !teamFiles.has(c));
+    expect(missingFiles, `teams/ file missing for: ${missingFiles.join(", ")}`).toEqual([]);
+    const missingFromTournament = [...teamFiles].filter((c) => !codeSet.has(c));
+    expect(missingFromTournament, `tournament.json missing teams present in teams/: ${missingFromTournament.join(", ")}`).toEqual([]);
   });
 
   it("meta.matches_settled equals evaluation_metrics.matches_settled", () => {

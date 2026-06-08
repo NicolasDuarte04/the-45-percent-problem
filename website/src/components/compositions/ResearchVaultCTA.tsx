@@ -33,7 +33,7 @@ const panels: NavPanel[] = [
     href: "/bracket",
     title: "Bracket",
     description:
-      "Full 48-team bracket with per-round conditional probabilities from the current M★ distribution.",
+      "Full 48-team bracket with per-round marginal probabilities from the current M★ distribution.",
     glyph: "▲",
   },
 ];
