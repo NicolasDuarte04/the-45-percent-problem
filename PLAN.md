@@ -76,7 +76,7 @@ This is the sequence that must ship before 2026-06-11.
 
 ### cp-12 — Fix 5 structural: snapshot pipeline populates bracket.json
 
-**Status:** Not started. Builds on cp-09's one-shot backfill.
+**Status:** Shipped via `cp-12-structural-fix5` (2026-06-08, Option B — copy fix for `BracketBoard`; conditional rendering deferred). Builds on cp-09's one-shot backfill; also repaired the `tournament.json` roster corruption at its source and tightened the roster contract test. Closes acceptance criterion #7.
 **Scope:** The regenerate script writes `bracket.json` with populated slots on every run, not just the one-shot at cp-09. Also fixes the `BracketBoard.tsx` over-claim (§3.4 of the 2026-06-03 diagnostic): the subtitle "draw-resolved bracket with per-round conditional probabilities" needs either content that matches or copy that doesn't over-claim until that content exists.
 **cp-12 expanded scope (per cp-11 Stage 1 finding, 2026-06-08):** The agent's inspection surfaced that `tournament.json` has Congo DR duplicated and Tunisia missing entirely. The buggy regen path's `code→team_id` map is the root cause. cp-12 will fix this as part of the structural snapshot pipeline work, since cp-12 already owns `bracket.json` + `tournament.json` correctness. User-visible: the bracket page is currently rendering 47 teams with Congo DR shown twice. (cp-11 sidesteps the bug by generating `snapshotProbs.ts` from `team_runs_M2.parquet` directly, not from `tournament.json`.)
 **Acceptance:** Bracket page renders the slots-populated view, the subtitle's claim matches what's rendered, and a nightly run produces both `tournament.json` and `bracket.json` with consistent contents.
@@ -101,6 +101,8 @@ These are valid product work but not on the live-readiness critical path. They g
 - **Volatility Gate**. The 5 suppression rules from the project blueprint. Decided deferred to post-launch per Q5 of the 2026-06-01 diagnostic.
 - **GO_TO_LAUNCH.md's original Checkpoint 7 (GTM)**. The 14-day launch playbook (daily briefs, press list, social rollout, OSF cross-link audit). Mostly editorial work; happens around the kickoff regardless of code state.
 - **A long-running site audit on a weekly cadence during the tournament**. Periodic adversarial diagnostics, like the 2026-06-01 and 2026-06-03 ones, to catch drift between deployed state and assumed state.
+- **Conditional-probability bracket rendering (cp-12 Option A)**. Render a slot-by-slot tree with per-round conditional (reach-given-survival) probabilities, replacing the marginal matrix when the draw is resolved. Requires new per-slot aggregation from the batch plus a non-trivial slot-tree UI component (est. 1–2 days). cp-12 shipped the honest copy fix (Option B); this is the content build deferred to post-launch.
+- **Wire the contract suite into `ci.yml`**. The roster contract test (tightened in cp-12) is gated by `snapshot-deploy.yml`, which only runs on PRs touching `website/**`. A Python-only PR that regenerates the bundle (or any change outside `website/`) is not contract-checked. Add `pnpm run test:contracts` (and/or `pnpm run test`) to `ci.yml`'s website job so roster/contract violations are caught on every PR, not just website-touching ones.
 
 ## Live-readiness acceptance criteria
 
@@ -114,7 +116,7 @@ The site is live-ready when ALL of the following hold simultaneously:
 4. **Snapshot metadata reflects reality.** After 5 fictional matches are inserted, `snapshot_meta.json` reports `matches_settled: 5` and `tournament_phase: "group_stage"`. Currently works via cp-09 logic; cp-10.1 makes it actually fire in production.
 5. **One model variant served on production probability surfaces.** A grep across the website finds exactly one model-variant string referenced for probability serving. Currently fails (M2 on bracket, M0 in `snapshotProbs.ts`); cp-11 fixes.
 6. **`tournament.json` schema validation in CI rejects payloads missing `model_variant`.** Currently passes locally via `website/tests/unit/snapshotProvenance.test.ts`; cp-10.2's CI gate makes it actually run on every PR.
-7. **`bracket.json` slots are populated by the pipeline and `BracketBoard` renders the slots-populated branch faithfully.** Currently half-shipped: slots populated, branch renders over-claiming copy over an unchanged grid. Cp-12 closes the gap.
+7. **`bracket.json` slots are populated by the pipeline and `BracketBoard` renders the slots-populated branch faithfully.** ✅ **Done (cp-12, 2026-06-08).** The regen now rebuilds `bracket.json`'s 104 slots from the fixtures parquet every run (no longer reliant on cp-09's one-shot backfill), and `BracketBoard`'s slots-populated subtitle was corrected to "per-round marginal probabilities" (Option B — copy fix; matches the grid). cp-12 also repaired the `tournament.json` roster corruption (Congo DR duplicated, Tunisia dropped, surfaced by cp-11's Stage 1) at its source and tightened the roster contract test to bidirectional. The conditional (reach-given-survival) slot-tree rendering (Option A) is deferred to post-launch.
 8. **`/api/admin/match-outcomes` propagates to a visible bracket-page change within 10 minutes.** Currently absent; cp-13 adds.
 
 A pre-tournament dry run executing all eight checks against a staging environment is the recommended go / no-go gate for 2026-06-11.
