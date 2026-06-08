@@ -90,7 +90,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             style={{ color: "var(--text-tertiary)" }}
           >
             {slotsPopulated
-              ? "draw-resolved bracket with per-round conditional probabilities"
+              ? "draw-resolved bracket; per-round marginal probabilities"
               : `pre-tournament bracket · slots unresolved · showing marginal P(reach round) for all ${sortedTeams.length} teams, sorted by champion probability`}
           </div>
         </div>
@@ -138,8 +138,9 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             team, each column is a round, and each cell is the marginal
             probability that the team reaches that round across {" "}
             <span className="mono">10k</span> Monte Carlo simulations. Once
-            the draw resolves, this view augments with slot labels and the
-            conditional (reach-given-survival) probabilities.
+            the draw resolves, this view augments with slot labels; the
+            per-round figures remain marginal probabilities (conditional,
+            reach-given-survival probabilities are a planned enhancement).
           </p>
         </div>
       )}
