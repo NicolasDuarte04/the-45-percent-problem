@@ -124,6 +124,21 @@ aggregator:
   # data_sufficiency is "thin" if fewer than this many runoff polls feed the run.
   min_polls_ok: 5
 
+  # [PRE-REGISTERED] Calibrated-cycle inclusion gate (PR #91 follow-up, Session 10).
+  # A pollster may feed the posterior ONLY IF it has at least one calibrated cycle
+  # (2018 / 2022) in the house-effects corpus — i.e. it appears as a key under
+  # `house_effects` in `eligibility_source` below. Such a firm has an estimable,
+  # correctable bias; a firm we cannot bias-correct is recorded in the snapshot as
+  # excluded (with reason) and never drives the public number. The rule is
+  # CONTENT-NEUTRAL: eligibility depends only on corpus membership, never on which
+  # candidate a poll favours. Enforced at the aggregator boundary
+  # (model/eligibility.py); ingestion still records every real poll it finds. The
+  # eligible set is derived from the file below, never hardcoded as firm names.
+  calibrated_cycle_gate:
+    enabled: true
+    eligibility_source: "data/calibration/co_house_effects.json"   # keys of house_effects
+    exclusion_reason: "no calibrated cycle in house-effects corpus"
+
 simulator:
   mc_runs: 10000
   seed: 20260621                     # fixed + recorded; rerun reproduces output

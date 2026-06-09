@@ -57,6 +57,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from model.aggregate_polls import Posterior, aggregate, load_inputs  # noqa: E402
+from model.eligibility import (  # noqa: E402
+    EligibilityResult,
+    corpus_pollsters_from_record,
+    partition_polls,
+)
 from utils.hasher import DataSnapshotHasher, SnapshotRegistry, hash_dict, hash_file  # noqa: E402
 from utils.logger import get_logger  # noqa: E402
 
@@ -88,6 +93,13 @@ SENS_MODES = list(_SIM["sensitivity"]["house_effects_modes"])
 FLIP_P_THRESHOLD = float(_SIM["sensitivity"]["flip_p_threshold"])
 
 MIN_POLLS_OK = int(CFG["aggregator"]["min_polls_ok"])
+
+# Calibrated-cycle inclusion gate (config; PR #91 follow-up). When enabled, only
+# pollsters with a calibrated cycle in the house-effects corpus feed the
+# posterior; the rest are recorded in the snapshot as excluded, not deleted.
+_GATE_CFG = CFG["aggregator"].get("calibrated_cycle_gate", {})
+GATE_ENABLED = bool(_GATE_CFG.get("enabled", True))
+GATE_REASON = str(_GATE_CFG.get("exclusion_reason", "no calibrated cycle in house-effects corpus"))
 
 # CI mass: 80 percent credible interval (10th / 90th percentiles).
 CI_LOW_Q = 10.0
@@ -250,6 +262,33 @@ def _data_hash(polls: pd.DataFrame, record: dict) -> str:
 # =============================================================================
 
 
+def apply_gate(polls: pd.DataFrame, record: dict) -> EligibilityResult:
+    """
+    Apply the calibrated-cycle inclusion gate at the aggregator boundary.
+
+    Returns the eligible subset that feeds the posterior plus the
+    excluded-with-reason record for the snapshot. When the gate is disabled in
+    config, every poll is considered eligible (the partition is a no-op against an
+    all-inclusive set), so the snapshot still carries the considered/used fields.
+    The eligible set is derived from the house-effects corpus, never hardcoded.
+    """
+    if not GATE_ENABLED:
+        eligible = frozenset(str(p) for p in polls["pollster"].unique())
+        log.info("Calibrated-cycle gate disabled in config — all polls considered eligible")
+    else:
+        eligible = corpus_pollsters_from_record(record)
+    elig = partition_polls(polls, eligible, reason=GATE_REASON)
+    log.info(
+        "Calibrated-cycle gate applied",
+        eligible_firms=len(eligible),
+        n_considered=elig.n_polls_considered,
+        n_used=elig.n_polls_used,
+        included=elig.pollsters_included,
+        excluded=[e["pollster"] for e in elig.pollsters_excluded],
+    )
+    return elig
+
+
 def build_snapshot(
     polls: pd.DataFrame,
     record: dict,
@@ -259,11 +298,22 @@ def build_snapshot(
     halflife: float,
     *,
     generated_at: datetime,
+    eligibility: EligibilityResult | None = None,
 ) -> dict:
     """
     Assemble the website-contract snapshot dict. `generated_at` is added last and
     is the only non-reproducible field (excluded from the snapshot hash).
+
+    `eligibility` carries the calibrated-cycle gate split (included / excluded
+    pollsters, considered vs used counts). When omitted, every poll in `polls` is
+    recorded as considered-and-used (no exclusions), so the snapshot always
+    carries the transparency fields.
     """
+    if eligibility is None:
+        eligibility = partition_polls(
+            polls, frozenset(str(p) for p in polls["pollster"].unique()), reason=GATE_REASON
+        )
+
     n_polls = int(headline_post.n_polls)
 
     # data_sufficiency: thin if the honesty gate trips or too few polls feed it.
@@ -290,6 +340,10 @@ def build_snapshot(
         "share_espriella": headline_mc["share_espriella"],
         "margin": headline_mc["margin"],
         "n_polls": n_polls,
+        "n_polls_considered": eligibility.n_polls_considered,
+        "n_polls_used": eligibility.n_polls_used,
+        "pollsters_included": eligibility.pollsters_included,
+        "pollsters_excluded": eligibility.pollsters_excluded,
         "newest_poll_date": headline_post.newest_poll_date.isoformat(),
         "oldest_poll_date": headline_post.oldest_poll_date.isoformat(),
         "recency_halflife_days": halflife,
@@ -337,6 +391,16 @@ def build_snapshot(
             ),
             "margin_sign": "margin is in percentage points, positive = De la Espriella lead.",
             "units": "p_* and share_* are fractions in [0,1]; margin is percentage points.",
+            "pollster_inclusion": (
+                "Calibrated-cycle gate (content-neutral): a pollster feeds the "
+                "posterior only if it has at least one calibrated cycle (2018/2022) "
+                "in the house-effects corpus, so its bias is estimable and "
+                "correctable. Eligibility depends only on corpus membership, never "
+                "on which candidate a poll favours. Ineligible real polls are "
+                "recorded under pollsters_excluded with a reason, not deleted. "
+                f"{eligibility.n_polls_used} of {eligibility.n_polls_considered} "
+                "considered polls fed the posterior."
+            ),
         },
         "sensitivity": sensitivity,
         "house_effects_corpus_sha": record.get("corpus_sha"),
@@ -368,9 +432,13 @@ def run(force: bool = False) -> Path:
 
     polls, record, halflife = load_inputs()
 
+    log.stage("Calibrated-cycle inclusion gate (corpus eligibility)")
+    elig = apply_gate(polls, record)
+    used = elig.used  # only bias-correctable firms feed the posterior
+
     log.stage("Aggregating runoff polls (house effects ON, calibrated half-life)")
     headline_post = aggregate(
-        polls, record, halflife=halflife, house_effects_on=True, cfg=CFG
+        used, record, halflife=halflife, house_effects_on=True, cfg=CFG
     )
     log.info(
         "Posterior",
@@ -390,7 +458,7 @@ def run(force: bool = False) -> Path:
     )
 
     log.stage("Sensitivity / honesty gate")
-    sensitivity = run_sensitivity(polls, record)
+    sensitivity = run_sensitivity(used, record)
     log.info(
         "Sensitivity",
         spread=sensitivity["p_cepeda_spread"],
@@ -400,8 +468,9 @@ def run(force: bool = False) -> Path:
 
     generated_at = datetime.now(timezone.utc)
     snapshot = build_snapshot(
-        polls, record, headline_post, headline_mc, sensitivity, halflife,
+        used, record, headline_post, headline_mc, sensitivity, halflife,
         generated_at=generated_at,
+        eligibility=elig,
     )
 
     out_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -453,6 +522,9 @@ def print_report(snapshot: dict, snapshot_sha: str) -> str:
         f"  margin (pp, + = Espriella): {s['margin']['mean']:.2f}  "
         f"(CI80 {s['margin']['ci80_low']:.2f} .. {s['margin']['ci80_high']:.2f})",
         f"  n_polls       : {s['n_polls']}  ({s['oldest_poll_date']} .. {s['newest_poll_date']})",
+        f"  inclusion     : {s['n_polls_used']}/{s['n_polls_considered']} considered  "
+        f"included {s['pollsters_included']}  "
+        f"excluded {[e['pollster'] for e in s['pollsters_excluded']]}",
         f"  half-life     : {s['recency_halflife_days']} d   house_effect_mode : {s['house_effect_mode']}",
         f"  mc_runs/seed  : {s['mc_runs']} / {s['seed']}",
         "",

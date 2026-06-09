@@ -222,6 +222,18 @@ def test_latest_pointer_matches_snapshot(snapshot: dict) -> None:
     assert latest["snapshot_date"] == snapshot["snapshot_date"]
 
 
+def test_snapshot_records_pollster_inclusion(snapshot: dict) -> None:
+    # Session 10: the calibrated-cycle gate's transparency fields are present and
+    # consistent. On the real seed every considered poll is used (CB Global Data
+    # was already absent), and exactly the five calibrated firms are included.
+    for k in ("n_polls_considered", "n_polls_used", "pollsters_included", "pollsters_excluded"):
+        assert k in snapshot, f"missing inclusion field: {k}"
+    assert snapshot["n_polls_used"] == snapshot["n_polls"]
+    assert snapshot["n_polls_considered"] == snapshot["n_polls_used"]
+    assert snapshot["pollsters_included"] == ["AtlasIntel", "CNC", "GAD3", "Guarumo", "Invamer"]
+    assert snapshot["pollsters_excluded"] == []
+
+
 def test_no_forbidden_words_in_snapshot(snapshot_path: Path) -> None:
     raw = snapshot_path.read_text(encoding="utf-8").lower()
     for word in FORBIDDEN:
