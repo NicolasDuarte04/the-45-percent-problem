@@ -1,0 +1,144 @@
+# cp-13 (Fix 6). On-demand sibling of nightly_pipeline.yml.
+#
+# Triggered by a GitHub repository_dispatch (event type `regen-snapshot`) that
+# the website match-outcome endpoints fire after a settled outcome is committed
+# (see website/src/lib/regenDispatch.ts). This is what closes acceptance
+# criterion #8: a manual admin entry (or a live ingest batch) re-conditions the
+# Monte Carlo ensemble and rewrites the public bracket JSON within minutes,
+# instead of waiting for the next 00:00 UTC nightly.
+#
+# It is a deliberate copy of nightly_pipeline.yml's job, NOT a refactor of it:
+# the two stay independently reviewable and the nightly is never put at risk by
+# a change here. The ONLY differences from the nightly are:
+#   - the trigger (repository_dispatch + manual workflow_dispatch vs. schedule)
+#   - this header.
+# The steps, env, permissions, and push/deploy logic are identical.
+#
+# Concurrency: SAME group as the nightly (`nightly-pipeline`) with
+# cancel-in-progress: false, so an on-demand run and the nightly can never run
+# at the same time — whichever starts second queues behind the first. This is
+# what makes the endpoint-side 60s debounce sufficient: even if a few dispatches
+# slip through, GitHub serialises the runs and each one regenerates from the
+# current match_outcomes table.
+name: On-Demand Snapshot Regeneration
+
+on:
+  repository_dispatch:
+    types: [regen-snapshot]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run-pipeline:
+    name: Generate snapshot and publish to main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log dispatch context
+        run: |
+          echo "Triggered by: ${{ github.event_name }}"
+          echo "Dispatch id: ${{ github.event.client_payload.dispatch_id }}"
+          echo "Reason: ${{ github.event.client_payload.reason }}"
+          echo "Triggered by match: ${{ github.event.client_payload.triggered_by_match_id }}"
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # Pushes to main use the default GITHUB_TOKEN. The workflow-level
+          # permissions: contents: write block above is sufficient; no PAT
+          # is required. Confirmed empirically on 2026-05-27 by probe run
+          # 26534292687 on branch probe/github-token, which executed the
+          # full pipeline including the push step with no token override.
+          # The previous SNAPSHOT_PUSH_TOKEN dependency was a fine-grained
+          # PAT that expired on its 30-day cycle and caused the 2026-05-27
+          # nightly to fail at checkout; the original "PAT required to
+          # bypass branch protection" rationale was wrong from day one
+          # because this is a free-plan private repo with no branch
+          # protection available.
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Regenerate snapshot bundle from locked M2 batch
+        # cp-10: settled-result conditioning reads match_outcomes from
+        # Postgres when no data/processed/match_outcomes.parquet is staged.
+        # DIRECT_URL is preferred over DATABASE_URL to bypass any pgbouncer
+        # pooler - long-running batch scripts hit prepared-statement issues
+        # behind a pooler. Both secrets are already provisioned at the repo
+        # level (see snapshot-deploy.yml for the website CI usage).
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/regenerate_snapshot_from_batch.py
+
+      - name: Regenerate snapshotProbs.ts from M2 batch
+        # cp-11 (Fix 3): close the M0/M2 split-brain. Re-derives the static
+        # evaluator table website/src/lib/sim/snapshotProbs.ts from the active
+        # M2 batch so prediction grading and the bracket serve the same model.
+        # Runs after the snapshot regen (so the active batch + teams/ roster are
+        # current) and before staging (so the file lands in the nightly commit).
+        run: python scripts/generate_snapshot_probs_ts.py
+
+      - name: Stage updated website data files
+        id: stage
+        run: |
+          # snapshotProbs.ts lives under website/src/, NOT website/public/data/,
+          # so it must be staged explicitly in addition to the data bundle.
+          git add website/public/data/ website/src/lib/sim/snapshotProbs.ts
+          if git diff --staged --quiet; then
+            echo "No data changes detected. Skipping commit and push."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push directly to main
+        if: steps.stage.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): on-demand snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+          # Defensive rebase in case a code change landed on main during
+          # this run. --autostash handles any untracked-but-modified files
+          # the Python scripts may have left behind (logs, caches, raw
+          # parquet outputs). The runner is ephemeral, so we don't care
+          # about restoring the stash post-push - only the committed data
+          # files matter.
+          git pull --rebase --autostash origin main
+          git push origin main
+
+      - name: Trigger Vercel deploy hook (belt-and-braces)
+        if: steps.stage.outputs.has_changes == 'true'
+        run: |
+          set -e
+          HTTP_CODE=$(curl -s -o /tmp/vercel.out -w "%{http_code}" \
+            -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}")
+          echo "Vercel hook HTTP $HTTP_CODE"
+          cat /tmp/vercel.out || true
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::warning::Vercel deploy hook non-2xx ($HTTP_CODE). The push to main should still trigger a deploy via the Git integration."
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## On-Demand Regen Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Dispatch id: ${{ github.event.client_payload.dispatch_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Reason: ${{ github.event.client_payload.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Changes detected: ${{ steps.stage.outputs.has_changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Pushed to main: ${{ steps.stage.outputs.has_changes == 'true' }}" >> $GITHUB_STEP_SUMMARY
