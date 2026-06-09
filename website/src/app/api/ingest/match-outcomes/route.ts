@@ -5,6 +5,8 @@ import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { matchOutcomes } from "@/lib/db/schema";
 import { runEvaluatorAcrossPredictions } from "@/lib/sim/runEvaluator";
+import { revalidatePublicSnapshotRoutes } from "@/lib/revalidation";
+import { triggerOnDemandRegen } from "@/lib/regenDispatch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -168,6 +170,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return jsonError("server", 500);
   }
 
+  // cp-13 (Fix 6): the batch is committed, so refresh the public surface ONCE
+  // for the whole batch (revalidation and the regen dispatch are both
+  // idempotent — N outcomes produce the same regenerated snapshot as 1).
+  // Neither may fail the response; the upsert is already durable. The 60s
+  // debounce in triggerOnDemandRegen also collapses the hourly cron's
+  // back-to-back batches into a single regeneration run.
+  const revalidation = revalidatePublicSnapshotRoutes();
+  const regenDispatch = await triggerOnDemandRegen({
+    reason: "ingest-match-outcomes",
+    triggeredByMatchId: outcomes[0].matchId,
+  });
+
   let transitionsCount = 0;
   try {
     // The trigger field accepts a single matchId. For a batched ingest
@@ -186,6 +200,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         accepted: outcomes.length,
         transitionsCount: 0,
         evaluatorError: "deferred",
+        revalidation,
+        regenDispatch,
       },
       { status: 207 },
     );
@@ -195,5 +211,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ok: true,
     accepted: outcomes.length,
     transitionsCount,
+    revalidation,
+    regenDispatch,
   });
 }

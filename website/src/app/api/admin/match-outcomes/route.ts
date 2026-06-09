@@ -4,6 +4,8 @@ import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { matchOutcomes } from "@/lib/db/schema";
 import { runEvaluatorAcrossPredictions } from "@/lib/sim/runEvaluator";
+import { revalidatePublicSnapshotRoutes } from "@/lib/revalidation";
+import { triggerOnDemandRegen } from "@/lib/regenDispatch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -142,6 +144,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return jsonError("server", 500);
   }
 
+  // cp-13 (Fix 6): the outcome is now durably committed, so refresh the public
+  // surface. Two independent effects, neither of which may fail the response:
+  //   1. revalidatePublicSnapshotRoutes() purges the static render caches
+  //      (forward-compatible; harmless today, load-bearing once a public route
+  //      reads settled data at request time).
+  //   2. triggerOnDemandRegen() fires the snapshot-regeneration workflow — the
+  //      path that actually re-conditions the MC and rewrites the bracket JSON.
+  // Both run regardless of evaluator success, since the upsert is what changes
+  // the public snapshot. Failures are reported in the body, never thrown.
+  const revalidation = revalidatePublicSnapshotRoutes();
+  const regenDispatch = await triggerOnDemandRegen({
+    reason: "admin-match-outcome",
+    triggeredByMatchId: data.matchId,
+  });
+
   let transitionsCount = 0;
   try {
     const result = await runEvaluatorAcrossPredictions({
@@ -154,10 +171,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // response so the admin knows to retry the eval pass (the daily cron
     // would catch the gap regardless).
     return NextResponse.json(
-      { ok: true, transitionsCount: 0, evaluatorError: "deferred" },
+      {
+        ok: true,
+        transitionsCount: 0,
+        evaluatorError: "deferred",
+        revalidation,
+        regenDispatch,
+      },
       { status: 200 },
     );
   }
 
-  return NextResponse.json({ ok: true, transitionsCount });
+  return NextResponse.json({
+    ok: true,
+    transitionsCount,
+    revalidation,
+    regenDispatch,
+  });
 }

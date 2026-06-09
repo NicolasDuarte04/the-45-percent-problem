@@ -85,6 +85,14 @@ describe("POST /api/ingest/match-outcomes", () => {
     // prediction-state-log insert since there are no candidate
     // predictions.
     expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    // cp-13: a single public-surface refresh after the whole batch. The regen
+    // dispatch degrades to not_configured in the test env (no GITHUB_REGEN_PAT),
+    // so no network call is made.
+    expect(json.revalidation).toBeDefined();
+    expect(json.regenDispatch).toMatchObject({
+      skipped: true,
+      reason: "not_configured",
+    });
   });
 
   it("rejects an empty outcomes array (400)", async () => {
