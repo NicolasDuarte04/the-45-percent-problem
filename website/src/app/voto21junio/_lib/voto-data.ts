@@ -65,6 +65,16 @@ export interface ModelData {
   readonly snapshotDate: string;
   readonly nPolls: number;
   readonly newestPollDate: string;
+  /** Pollsters that actually fed the posterior (snapshot pollsters_included). */
+  readonly pollstersIncluded: readonly string[];
+  /** Polls considered before the calibrated-cycle gate (n_polls_considered). */
+  readonly nPollsConsidered: number;
+  /** Polls dropped by the gate (considered minus used). */
+  readonly nPollsExcluded: number;
+  /** Recency half-life H in days, read from the calibration JSON. */
+  readonly recencyHalflifeDays: number;
+  /** Plain reasons the snapshot was flagged thin (data_sufficiency_reasons). */
+  readonly suffReasons: readonly string[];
   /** True when this is the demo fallback, not a real snapshot read. */
   readonly isFallback: boolean;
 }
@@ -82,6 +92,14 @@ export function normalizeModel(raw: Record<string, unknown>): ModelData {
   }
   const margin = (raw.margin ?? {}) as Record<string, number>;
   const shareC = (raw.share_cepeda ?? {}) as Record<string, number>;
+  const included = Array.isArray(raw.pollsters_included)
+    ? (raw.pollsters_included as unknown[]).map(String)
+    : [];
+  const considered = Number(raw.n_polls_considered ?? raw.n_polls ?? 0);
+  const used = Number(raw.n_polls_used ?? raw.n_polls ?? 0);
+  const reasons = Array.isArray(raw.data_sufficiency_reasons)
+    ? (raw.data_sufficiency_reasons as unknown[]).map(String)
+    : [];
   return {
     pCepeda: pct1(pC),
     pEspriella: pct1(pE),
@@ -94,6 +112,11 @@ export function normalizeModel(raw: Record<string, unknown>): ModelData {
     snapshotDate: String(raw.snapshot_date ?? "s/d"),
     nPolls: Number(raw.n_polls ?? 0),
     newestPollDate: String(raw.newest_poll_date ?? "s/d"),
+    pollstersIncluded: included,
+    nPollsConsidered: considered,
+    nPollsExcluded: Math.max(0, considered - used),
+    recencyHalflifeDays: Number(raw.recency_halflife_days ?? 0),
+    suffReasons: reasons,
     isFallback: false,
   };
 }
@@ -111,6 +134,11 @@ export function demoModel(): ModelData {
     snapshotDate: "ejemplo",
     nPolls: 0,
     newestPollDate: "ejemplo",
+    pollstersIncluded: [],
+    nPollsConsidered: 0,
+    nPollsExcluded: 0,
+    recencyHalflifeDays: 0,
+    suffReasons: [],
     isFallback: true,
   };
 }

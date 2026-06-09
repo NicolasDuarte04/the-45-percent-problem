@@ -4,7 +4,13 @@
  * states the position once: we do not want Iván Cepeda to win. Everywhere else
  * the math is the math. Signed "45 Analytics" — no personal byline. No em
  * dashes anywhere. Calm register, no alarmism.
+ *
+ * Session 14: the claim "el código es público y los supuestos están a la vista"
+ * is now backed. The political statement below is UNCHANGED; we only added the
+ * two links that make it verifiable: the methodology page and the public repo.
  */
+
+const REPO_URL = "https://github.com/NicolasDuarte04/el-voto-del-21-de-junio";
 
 export function FoundersNote() {
   return (
@@ -23,6 +29,17 @@ export function FoundersNote() {
       <p style={{ marginBottom: 18 }}>
         No le decimos por quién votar. Le mostramos qué tan apretada está la cosa, cuánto vale su voto
         y qué puede hacer con eso. La decisión es suya.
+      </p>
+      <p style={{ marginBottom: 18 }}>
+        Para que esto no quede en palabra: el método está explicado en la{" "}
+        <a className="lnk" href="/voto21junio/metodologia">
+          página de metodología
+        </a>{" "}
+        y el código completo, con los supuestos y la calibración, está en el{" "}
+        <a className="lnk" href={REPO_URL} target="_blank" rel="noopener noreferrer">
+          repositorio público
+        </a>
+        .
       </p>
       <p className="mono" style={{ fontSize: 13, color: "var(--ink-3)" }}>
         45 Analytics · Bogotá

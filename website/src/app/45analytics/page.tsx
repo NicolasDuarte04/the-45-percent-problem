@@ -7,14 +7,18 @@
  * /the-45-percent-problem in PR2.
  */
 
-import { PULSO } from "../voto21junio/_lib/demo-data";
 import { daysUntil } from "../voto21junio/_lib/voto-runtime";
 import { ProductSwitcherCard } from "@/components/voto/ProductSwitcherCard";
 import { BriefSignup } from "../voto21junio/_components/BriefSignup";
 import { SNAPSHOT_STAMP } from "../voto21junio/_lib/demo-data";
+import { getVotoData } from "../voto21junio/_lib/snapshot-source";
 
 export default function ParentHome() {
   const days = daysUntil();
+  // Live read, never a hardcoded demo constant: the Pulso here is the real
+  // index, framed by how many of its five signals are actually live so the
+  // parent page never shows a bare number as if it were the full composite.
+  const { pulso } = getVotoData();
 
   return (
     <div className="pshell">
@@ -79,7 +83,7 @@ export default function ParentHome() {
             titleBold="21 de Junio"
             desc="La segunda vuelta presidencial, calculada cada mañana. Cuánto vale tu voto, dónde, y por qué."
             stats={[
-              { k: "Pulso Patrio", v: String(PULSO) },
+              { k: `Pulso · ${pulso.inputsLive}/${pulso.inputsTotal}`, v: String(pulso.index) },
               { k: "Faltan", v: `${days} días` },
               { k: "Método", v: "Abierto" },
             ]}
@@ -112,7 +116,7 @@ export default function ParentHome() {
           descriptiva, no consejo de inversión, apuestas ni voto.
           <br />
           Código abierto · <a href="https://github.com/45analytics">github.com/45analytics</a> ·
-          pre-registro <a href="https://osf.io/8b5hd">osf.io/8b5hd</a> · <a href="/voto21junio#metodo">método</a>
+          pre-registro <a href="https://osf.io/8b5hd">osf.io/8b5hd</a> · <a href="/voto21junio/metodologia">método</a>
           <br />
           <span style={{ color: "var(--ink-4)" }}>{SNAPSHOT_STAMP}</span>
         </p>

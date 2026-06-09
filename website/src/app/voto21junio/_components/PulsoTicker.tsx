@@ -58,7 +58,7 @@ export function PulsoTicker() {
   const DETAIL: Record<TickerKey, readonly [string, string]> = {
     pulso: [
       "Pulso Patrio",
-      `Índice compuesto de movilización (0-100), ${pulso.inputsLive} de ${pulso.inputsTotal} señales en vivo. Mide cuánto se habla, no quién va adelante.`,
+      `Pensado para componer ${pulso.inputsTotal} señales de movilización (0-100); hoy solo ${pulso.inputsLive} está en vivo (titulares de prensa). Mide cuánto se habla, no quién va adelante, y no alimenta la probabilidad.`,
     ],
     cepeda: [
       "Cepeda",
@@ -81,7 +81,7 @@ export function PulsoTicker() {
   const items: ReadonlyArray<{ key: TickerKey; lbl: string; val: string; delta?: string; dCls?: string }> = [
     {
       key: "pulso",
-      lbl: "Pulso",
+      lbl: `Pulso · ${pulso.inputsLive}/${pulso.inputsTotal}`,
       val: String(pulsoIndex),
       ...(pulso.delta != null
         ? {
@@ -162,7 +162,7 @@ export function PulsoTicker() {
               <p style={{ fontSize: 13.5, color: "var(--ink-3)", marginTop: 12, maxWidth: "40ch" }}>
                 {DETAIL[openKey][1]}
               </p>
-              <a className="lnk" href="/voto21junio#metodo" style={{ display: "inline-block", marginTop: 14, fontSize: 13 }}>
+              <a className="lnk" href="/voto21junio/metodologia" style={{ display: "inline-block", marginTop: 14, fontSize: 13 }}>
                 Ver detalle del Pulso →
               </a>
             </>

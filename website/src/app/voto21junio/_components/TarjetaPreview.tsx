@@ -80,8 +80,13 @@ export function TarjetaPreview({ ratio, days }: { ratio: TarjetaRatio; days: num
         </div>
         <div className="tj-foot">
           <div className="tj-pulso">
-            <div className="pl">Pulso Patrio</div>
-            <div className="pv">{pulsoIndex}</div>
+            <div className="pl">
+              Pulso · {pulso.inputsLive} de {pulso.inputsTotal}
+            </div>
+            <div className="pv">
+              {pulsoIndex}
+              <span className="pv-note">solo titulares</span>
+            </div>
           </div>
           <div className="tj-method">
             método abierto

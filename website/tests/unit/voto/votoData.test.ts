@@ -29,8 +29,15 @@ const MODEL_FIXTURE = {
   share_cepeda: { mean: 0.4959, ci80_low: 0.4267, ci80_high: 0.5654 },
   margin: { mean: 0.818, ci80_low: -13.076, ci80_high: 14.656 },
   n_polls: 12,
+  n_polls_considered: 12,
+  n_polls_used: 12,
+  pollsters_included: ["AtlasIntel", "CNC", "GAD3", "Guarumo", "Invamer"],
+  recency_halflife_days: 5.0,
   newest_poll_date: "2026-06-02",
   data_sufficiency: "thin",
+  data_sufficiency_reasons: [
+    "sensitivity gate: the winner flips across the house-effect / half-life arms",
+  ],
 };
 
 const PULSO_FIXTURE = {
@@ -91,6 +98,33 @@ describe("normalizeModel", () => {
   it("throws when the core probability is missing", () => {
     expect(() => normalizeModel({ data_sufficiency: "ok" })).toThrow();
   });
+
+  // Session 14: the methodology page renders these directly, so lock the contract.
+  it("carries the real inclusion facts the methodology page shows", () => {
+    const m = normalizeModel(MODEL_FIXTURE);
+    expect(m.pollstersIncluded).toEqual(["AtlasIntel", "CNC", "GAD3", "Guarumo", "Invamer"]);
+    expect(m.nPollsConsidered).toBe(12);
+    expect(m.recencyHalflifeDays).toBe(5);
+    expect(m.suffReasons).toHaveLength(1);
+    expect(m.suffReasons[0]).toContain("winner flips");
+  });
+  it("derives polls excluded by the calibrated-cycle gate as considered minus used", () => {
+    const withExclusion = normalizeModel({
+      ...MODEL_FIXTURE,
+      n_polls_considered: 13,
+      n_polls_used: 12,
+    });
+    expect(withExclusion.nPollsExcluded).toBe(1);
+    // No exclusion in the current snapshot: all considered polls feed the number.
+    expect(normalizeModel(MODEL_FIXTURE).nPollsExcluded).toBe(0);
+  });
+  it("defaults the new fields safely when the snapshot omits them", () => {
+    const sparse = normalizeModel({ p_cepeda: 0.5, p_espriella: 0.5, n_polls: 3 });
+    expect(sparse.pollstersIncluded).toEqual([]);
+    expect(sparse.nPollsExcluded).toBe(0);
+    expect(sparse.recencyHalflifeDays).toBe(0);
+    expect(sparse.suffReasons).toEqual([]);
+  });
 });
 
 describe("normalizePulso", () => {
@@ -137,6 +171,12 @@ describe("demo fallbacks", () => {
     const v = demoVotoData();
     expect(v.anyFallback).toBe(true);
     expect(v.stamp).toMatch(/ejemplo/);
+  });
+  it("demoModel exposes empty inclusion facts so the page falls back to generic prose", () => {
+    const d = demoModel();
+    expect(d.pollstersIncluded).toEqual([]);
+    expect(d.nPollsExcluded).toBe(0);
+    expect(d.recencyHalflifeDays).toBe(0);
   });
 });
 

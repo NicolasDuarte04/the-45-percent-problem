@@ -22,11 +22,14 @@ export function PulsoPanel() {
   const index = override ?? pulso.index;
   const big = useCountUp(index, { decimals: 0 });
   const prelim = pulso.sufficiency !== "ok";
+  const partial = pulso.inputsLive < pulso.inputsTotal;
 
   return (
     <div className="card card-pad">
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-        <span className="stat-lbl">Índice compuesto</span>
+        <span className="stat-lbl">
+          {partial ? `Pulso · ${pulso.inputsLive} de ${pulso.inputsTotal} señales` : "Índice compuesto"}
+        </span>
         {pulso.delta == null ? (
           <span className="mono" style={{ fontSize: 12, color: "var(--ink-4)" }}>
             primer registro
@@ -84,7 +87,7 @@ export function PulsoPanel() {
           </div>
         ))}
       </div>
-      <a className="lnk" href="/voto21junio#metodo" style={{ display: "inline-block", marginTop: 16, fontSize: 13 }}>
+      <a className="lnk" href="/voto21junio/metodologia" style={{ display: "inline-block", marginTop: 16, fontSize: 13 }}>
         Cómo se calcula <span className="arr">→</span>
       </a>
     </div>

@@ -209,20 +209,86 @@
    which are container-type:inline-size, so cqw scales the badge with the card. */
 [data-canvas="voto"] .tj-prelim {
   position: absolute;
-  top: 4.2cqw;
-  right: 4.2cqw;
+  top: max(4px, 4.2cqw);
+  right: max(4px, 4.2cqw);
   z-index: 2;
   font-family: var(--font-mono);
-  font-size: 2.6cqw;
+  /* Floored so the mandatory qualifier survives a WhatsApp thumbnail crop: at a
+     100px card the old 2.6cqw rendered ~2.6px (unreadable); max() pins a legible
+     floor at small sizes while cqw still scales it up on the full card / export. */
+  font-size: max(9px, 3cqw);
+  font-weight: 600;
+  line-height: 1;
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--accent-ink);
   background: var(--accent-soft);
   border: 1px solid var(--accent);
   border-radius: 999px;
-  padding: .6cqw 1.8cqw;
+  padding: max(2px, .7cqw) max(5px, 1.9cqw);
 }
 [data-canvas="voto"] .tj-range { font-family: var(--font-mono); font-size: 2.5cqw; color: var(--ink-3); margin-top: 1.6cqw; font-variant-numeric: tabular-nums; }
+
+/* ── Metodología page (Session 14) ───────────────────────────────────── */
+[data-canvas="voto"] .metodo .section { margin-top: 26px; }
+[data-canvas="voto"] .metodo .card + .card { margin-top: 14px; }
+[data-canvas="voto"] .metodo p { color: var(--ink-2); line-height: 1.5; margin: 0; }
+[data-canvas="voto"] .metodo p + p { margin-top: 12px; }
+[data-canvas="voto"] .metodo .metodo-h {
+  font-family: var(--font-serif); font-size: 19px; line-height: 1.2;
+  color: var(--ink); margin: 0 0 8px;
+}
+[data-canvas="voto"] .metodo .metodo-live {
+  margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+  background: var(--panel); color: var(--ink-2);
+  font-size: 14px; line-height: 1.45;
+}
+[data-canvas="voto"] .metodo .metodo-step { position: relative; padding-left: 56px; }
+[data-canvas="voto"] .metodo .metodo-num {
+  position: absolute; top: 18px; left: 18px;
+  width: 26px; height: 26px; border-radius: 999px;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--accent-ink); background: var(--accent-soft);
+  border: 1px solid var(--accent);
+}
+[data-canvas="voto"] .metodo .metodo-list { margin: 0; padding: 0; list-style: none; }
+[data-canvas="voto"] .metodo .metodo-list li {
+  position: relative; padding-left: 18px; color: var(--ink-2); line-height: 1.5;
+}
+[data-canvas="voto"] .metodo .metodo-list li + li { margin-top: 12px; }
+[data-canvas="voto"] .metodo .metodo-list li::before {
+  content: "·"; position: absolute; left: 4px; top: -1px;
+  color: var(--accent-ink); font-weight: 700;
+}
+[data-canvas="voto"] .metodo .metodo-list strong { color: var(--ink); }
+[data-canvas="voto"] .metodo .metodo-limits li::before { content: "!"; font-size: 13px; }
+
+[data-canvas="voto"] .metodo .metodo-math { margin-top: 14px; }
+[data-canvas="voto"] .metodo .metodo-math > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .04em;
+  color: var(--accent-ink); padding: 5px 0; user-select: none;
+}
+[data-canvas="voto"] .metodo .metodo-math > summary::-webkit-details-marker { display: none; }
+[data-canvas="voto"] .metodo .metodo-math > summary::before {
+  content: "+"; font-weight: 700; font-size: 14px; line-height: 1;
+}
+[data-canvas="voto"] .metodo .metodo-math[open] > summary::before { content: "−"; }
+[data-canvas="voto"] .metodo .metodo-math-body {
+  margin-top: 6px; padding: 12px 14px; border-left: 2px solid var(--accent-soft);
+  background: var(--panel-elev); border-radius: 0 10px 10px 0;
+}
+[data-canvas="voto"] .metodo .metodo-math-body p { font-size: 13.5px; color: var(--ink-3); }
+[data-canvas="voto"] .metodo .metodo-math-body code {
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2);
+  background: var(--panel); padding: 1px 5px; border-radius: 5px;
+}
+[data-canvas="voto"] .metodo .metodo-repo-paths {
+  margin: 14px 0; font-size: 12px; color: var(--ink-4);
+  word-break: break-word; line-height: 1.6;
+}
+[data-canvas="voto"] .metodo .metodo-repo .btn { margin-top: 4px; }
 
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (min-width: 720px) {

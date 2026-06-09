@@ -20,8 +20,11 @@ export function VotoFooter({ days }: { days: number }) {
           <br />
           Probabilidad bajo incertidumbre. No predecimos; calibramos. Publicamos la matemática.
           <br />
-          Código abierto · <a href="https://github.com/45analytics/voto-21-junio">github.com/45analytics/voto-21-junio</a> ·
-          método: <a href="/voto21junio#metodo">45analytics.com/voto21junio</a>
+          Código abierto ·{" "}
+          <a href="https://github.com/NicolasDuarte04/el-voto-del-21-de-junio" target="_blank" rel="noopener noreferrer">
+            github.com/NicolasDuarte04/el-voto-del-21-de-junio
+          </a>{" "}
+          · <a href="/voto21junio/metodologia">método</a>
         </p>
         <p className="mono" style={{ marginTop: 14, color: "var(--ink-4)" }}>
           {stamp} · día {days}
