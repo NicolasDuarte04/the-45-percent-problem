@@ -1,6 +1,6 @@
 {
   "snapshot_date": "2026-06-08",
-  "generated_at": "2026-06-08T20:38:18.300096+00:00",
+  "generated_at": "2026-06-09T00:02:08.624791+00:00",
   "p_cepeda": 0.4637,
   "p_espriella": 0.5363,
   "share_cepeda": {
@@ -19,6 +19,16 @@
     "ci80_high": 14.656
   },
   "n_polls": 12,
+  "n_polls_considered": 12,
+  "n_polls_used": 12,
+  "pollsters_included": [
+    "AtlasIntel",
+    "CNC",
+    "GAD3",
+    "Guarumo",
+    "Invamer"
+  ],
+  "pollsters_excluded": [],
   "newest_poll_date": "2026-06-02",
   "oldest_poll_date": "2026-04-09",
   "recency_halflife_days": 5.0,
@@ -38,7 +48,8 @@
     "recency_halflife_note": "H = 5.0 days, read from the calibration JSON, not refit. This is a recency-dominant boundary solution (the lower edge of the calibrated grid): with the polls 19+ days from the runoff, the most recent poll carries most of the weight.",
     "turnout_model": "Each Monte Carlo draw adds a turnout/undecided share-space std of 0.02 in quadrature with the posterior std, modelling uncertainty in how undecided voters and turnout resolve.",
     "margin_sign": "margin is in percentage points, positive = De la Espriella lead.",
-    "units": "p_* and share_* are fractions in [0,1]; margin is percentage points."
+    "units": "p_* and share_* are fractions in [0,1]; margin is percentage points.",
+    "pollster_inclusion": "Calibrated-cycle gate (content-neutral): a pollster feeds the posterior only if it has at least one calibrated cycle (2018/2022) in the house-effects corpus, so its bias is estimable and correctable. Eligibility depends only on corpus membership, never on which candidate a poll favours. Ineligible real polls are recorded under pollsters_excluded with a reason, not deleted. 12 of 12 considered polls fed the posterior."
   },
   "sensitivity": {
     "arms": {
@@ -54,6 +65,6 @@
     "note": "Each arm reruns the full aggregate + Monte Carlo with one assumption changed and the same seed. winner_flips is true if p_cepeda crosses 0.5 across arms; the gate also trips if p_cepeda moves more than flip_p_threshold."
   },
   "house_effects_corpus_sha": "9037f0f09d83b7f4b6710079312da5b17347cdbe96c810c32728181ee560723b",
-  "code_sha": "cf255a8d4d26a9ac1b4179e7b609b49a81c300d9",
+  "code_sha": "6a1d20ba1951df08bce59ffccf3204da8dd48320",
   "data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad"
 }
