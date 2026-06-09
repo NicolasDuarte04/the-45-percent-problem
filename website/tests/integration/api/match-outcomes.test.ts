@@ -55,6 +55,15 @@ describe("POST /api/admin/match-outcomes", () => {
     expect(json.ok).toBe(true);
     expect(json.transitionsCount).toBe(0);
     expect(mockDb.insert).toHaveBeenCalled();
+    // cp-13: the response now reports the public-surface refresh. The
+    // revalidation field is always present; the regen dispatch degrades to
+    // not_configured here because no GITHUB_REGEN_PAT is set in the test env
+    // (and therefore makes no network call).
+    expect(json.revalidation).toBeDefined();
+    expect(json.regenDispatch).toMatchObject({
+      skipped: true,
+      reason: "not_configured",
+    });
   });
 
   it("rejects a missing Authorization header (401)", async () => {

@@ -38,3 +38,32 @@ If ingestion fails entirely (Football-Data.org outage, API key revoked,
 schema drift), the daily `eval-predictions` cron continues to reconcile
 state from whatever outcomes the admin has manually entered. The
 operator is the safety net, not the single point of failure.
+
+## Public-bracket refresh on settled outcomes (cp-13 / Fix 6)
+
+A settled outcome only changes the public `/bracket` after the snapshot
+pipeline re-conditions the Monte Carlo ensemble and rewrites
+`public/data/latest/{tournament,bracket}.json`. A `match_outcomes` upsert
+alone does not — the quant pages are `force-static` and read build-frozen
+JSON plus structural *identity* from the fixtures DB, neither of which the
+upsert touches. (Why `revalidatePath` alone is insufficient:
+`docs/onboarding/cp-13-inspection-notes.md` §6.)
+
+So after a successful upsert, both endpoints:
+
+1. Call `revalidatePublicSnapshotRoutes()` (`src/lib/revalidation.ts`) to
+   purge the static caches for `/bracket`, `/`, `/ledger`, `/match/[id]`,
+   `/team/[code]`. Forward-compatible cache hook; harmless today.
+2. Call `triggerOnDemandRegen()` (`src/lib/regenDispatch.ts`), which fires a
+   GitHub `repository_dispatch` (`regen-snapshot`) → `on_demand_regen.yml`
+   (a `repository_dispatch` twin of the nightly, sharing the
+   `nightly-pipeline` concurrency group). That run regenerates the JSON,
+   pushes to main, and POSTs the Vercel deploy hook → `/bracket` refreshes
+   within minutes. A 60s module-level debounce collapses the hourly ingest's
+   burst into one regeneration.
+
+Both effects are reported in the response body as `{ revalidation,
+regenDispatch }` and neither can fail the upsert response. The dispatch needs
+the `GITHUB_REGEN_PAT` secret (fine-grained, `actions: write`); without it
+`regenDispatch.reason` is `"not_configured"` and the nightly cron remains the
+safety-net refresh.
