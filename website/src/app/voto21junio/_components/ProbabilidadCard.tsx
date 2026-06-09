@@ -88,7 +88,7 @@ export function ProbabilidadCard() {
         <strong style={{ color: "var(--ink-3)", fontWeight: 600 }}>Primera vuelta (real):</strong>{" "}
         {ESPRIELLA.name.split(" ").slice(-1)} {co(NATIONAL_R1.espriella)}%&nbsp;· {CEPEDA.name.split(" ").slice(-1)}{" "}
         {co(NATIONAL_R1.cepeda)}%&nbsp;· otros {co(NATIONAL_R1.otros)}%. Intervalo y código en{" "}
-        <a className="lnk" href="/voto21junio#metodo">
+        <a className="lnk" href="/voto21junio/metodologia">
           Metodología
         </a>
         .

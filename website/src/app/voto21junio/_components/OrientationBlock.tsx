@@ -28,10 +28,10 @@ export function OrientationBlock() {
         cosa y cuánto vale su voto.
       </p>
       <div className="orient-cta">
-        <a className="lnk" href="/voto21junio#metodo">
+        <a className="lnk" href="/voto21junio/metodologia">
           Cómo funciona <span className="arr">→</span>
         </a>
-        <a className="lnk" href="/voto21junio#metodo">
+        <a className="lnk" href="/voto21junio/quienes-somos">
           Quiénes somos <span className="arr">→</span>
         </a>
       </div>

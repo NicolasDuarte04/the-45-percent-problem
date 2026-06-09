@@ -423,8 +423,9 @@ body:has([data-canvas="voto"][data-theme="dark"]) { background-color: #0F1216; }
 [data-canvas="voto"] .tj-foot { display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1; }
 [data-canvas="voto"] .tj-pulso { font-family: var(--font-mono); }
 [data-canvas="voto"] .tj-pulso .pl { font-size: 2.7cqw; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-[data-canvas="voto"] .tj-pulso .pv { font-size: 5cqw; font-weight: 600; color: var(--ink); }
+[data-canvas="voto"] .tj-pulso .pv { font-size: 4.2cqw; font-weight: 600; color: var(--ink); display: flex; align-items: baseline; gap: 1.4cqw; }
 [data-canvas="voto"] .tj-pulso .pv .up { color: var(--mint); font-size: 3cqw; }
+[data-canvas="voto"] .tj-pulso .pv .pv-note { font-size: 2.1cqw; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-4); }
 [data-canvas="voto"] .tj-method { font-family: var(--font-mono); font-size: 2.7cqw; color: var(--ink-3); text-align: right; }
 [data-canvas="voto"] .tj-method b { color: var(--accent-ink); }
 
