@@ -312,3 +312,55 @@ mapa:
     wikitext_api: "https://es.wikipedia.org/w/api.php?action=parse&page=Elecciones_presidenciales_de_Colombia_de_2022&prop=wikitext&section=30&format=json"
     source_url: "https://es.wikipedia.org/wiki/Elecciones_presidenciales_de_Colombia_de_2022"
     request_timeout_s: 30
+
+# =============================================================================
+# Session 11 — daily publishing cron (scripts/publish_voto_snapshot.py)
+# =============================================================================
+# Settings for the unattended daily refresh. The publish wrapper runs the 21J
+# pipeline (ingestion → aggregator + simulator → build_mapa → run_pulso, with the
+# calibrated-cycle eligibility gate running automatically inside the aggregator),
+# then commits the refreshed snapshots under the-21j-problem/data/ — and NOTHING
+# else. The wrapper is silence-aware and skip-if-unchanged. Read from config;
+# never hardcode these in the wrapper.
+publish:
+  # ── Electoral-silence boundary ────────────────────────────────────────────
+  # ⚠️  LEGAL CONFIRMATION REQUIRED — THIS DATE IS A CONSERVATIVE PLACEHOLDER. ⚠️
+  # Colombia restricts the publication of NEW poll-based electoral numbers in the
+  # days before a vote. The exact legal window for the 2026-06-21 runoff has NOT
+  # been confirmed by counsel. The agent did not (and must not) guess the law:
+  # this date is read from config and flagged in the PR for legal sign-off. Until
+  # confirmed, the conservative interpretation is used (freeze EARLIER rather than
+  # risk a late publish): one week before the runoff.
+  #
+  # On or after this date (compared against the real UTC run date, NOT as_of_date)
+  # the wrapper STOPS ingesting and STOPS publishing fresh poll-driven model
+  # numbers. It freezes the last legally-publishable model snapshot in place and
+  # stamps a visible publication_notice on it. It never silently emits a new
+  # poll-driven number during silence.
+  silence_boundary: "2026-06-14"   # one week before the 2026-06-21 runoff — NEEDS LEGAL CONFIRMATION
+
+  # Pulso Patrio is a sentiment/intensity index, NOT a poll and NOT a probability.
+  # Whether it is exempt from the poll-publication silence is a legal question that
+  # is also UNCONFIRMED. Conservative default: freeze Pulso too during silence
+  # until counsel confirms it is clear. Flip to false only after legal sign-off.
+  silence_freezes_pulso: true      # conservative — NEEDS LEGAL CONFIRMATION
+
+  # Public-facing notice stamped onto the frozen snapshot during silence. Neutral,
+  # non-directional, no banned prediction/betting tokens.
+  silence_notice: >-
+    En cumplimiento de las normas electorales colombianas, durante los días previos
+    a la segunda vuelta no se publican cifras nuevas basadas en encuestas. Se muestra
+    la última cifra del modelo legalmente publicable, congelada hasta después de la
+    jornada electoral.
+
+  # ── Commit identity ───────────────────────────────────────────────────────
+  # The publish commit uses a DISTINCT bot identity, not the World-Cup nightly's
+  # github-actions[bot]. Makes El Voto's automated commits attributable on sight.
+  commit_author_name: "voto-publish-bot"
+  commit_author_email: "voto-publish-bot@users.noreply.github.com"
+
+  # ── Scope guard ───────────────────────────────────────────────────────────
+  # The ONLY directory the wrapper may stage/commit. A hard invariant: if the
+  # pipeline ever dirties a path outside this prefix, the wrapper refuses to
+  # commit rather than touch a World-Cup file, the WC registry, or root config.
+  writable_subtree: "the-21j-problem/data"
