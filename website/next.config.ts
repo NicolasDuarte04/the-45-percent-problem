@@ -52,7 +52,7 @@ import createMDX from "@next/mdx";
  * active-link highlighting may not match. Internal WC links keep pointing
  * at old root paths and arrive via one 301 hop.
  */
-const UMBRELLA_AT_ROOT_CUTOVER = false;
+const UMBRELLA_AT_ROOT_CUTOVER = true;
 
 // Every top-level public WC segment, from the app router tree:
 // (editorial) about brief briefs methodology teams vault
