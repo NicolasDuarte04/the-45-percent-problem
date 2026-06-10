@@ -47,6 +47,10 @@ export function MapaResult() {
 
   return (
     <div className="result">
+      {/* Session 16: .mapa-main / .mapa-side are display:contents below
+          1024px (layout-transparent, mobile unchanged) and become the two
+          columns of the desktop grid. */}
+      <div className="mapa-main">
       <div className="mapa-prelim">
         <span className="prelim-chip">Preliminar</span>
         <span>
@@ -103,20 +107,10 @@ export function MapaResult() {
           </div>
         </div>
       </div>
+      </div>
 
-      <h3
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 11,
-          letterSpacing: ".08em",
-          textTransform: "uppercase",
-          color: "var(--ink-3)",
-          margin: "30px 0 12px",
-          fontWeight: 400,
-        }}
-      >
-        Tu tarjeta para compartir
-      </h3>
+      <aside className="mapa-side">
+      <h3 className="mapa-share-h">Tu tarjeta para compartir</h3>
       <MapaShareCard muni={muni} />
       <div className="share-row">
         <button type="button" className="btn btn-accent" onClick={onShare}>
@@ -135,6 +129,7 @@ export function MapaResult() {
       <p className="loop-note">
         Quien lo reciba verá la cifra de su propio municipio. Así crece la cuenta.
       </p>
+      </aside>
     </div>
   );
 }

@@ -299,3 +299,204 @@
   [data-canvas="voto"] .nums { grid-template-columns: 1fr 1fr 1fr; }
   [data-canvas="voto"] main.voto-tarjeta { --maxw: 720px; }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   Session 16 · desktop refinement (>= 1024px).
+
+   El Voto was designed mobile-first; below this line is the additive
+   desktop layer that brings it to The 45% Problem's editorial bar: a wide
+   page container (1152px incl. padding, matching the WC homepage), real
+   two-column compositions per section, and a typographic scale held at
+   desktop sizes via clamp() so 1440px reads as composed, not stretched.
+   Nothing here fires under 1024px, so the signed-off mobile design
+   (320 to 430) and the existing 720px tablet column are untouched.
+
+   The base (non-media) rules in this block are inert on mobile by
+   construction: .topnav is display:none until 1024, and .mapa-main /
+   .mapa-side are display:contents, i.e. layout-transparent wrappers.
+   The .tarjeta-h1 / .tarjeta-sub / .mapa-share-h / .mapa-callout-h
+   classes carry values byte-identical to the inline styles they replace
+   (inline styles cannot be overridden by a media query, which is the
+   only reason they moved).
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Desktop top-bar nav: hidden everywhere below the desktop layer. */
+[data-canvas="voto"] .topnav { display: none; }
+
+/* Layout-transparent grouping wrappers for the Mapa two-column grid. */
+[data-canvas="voto"] .mapa-main,
+[data-canvas="voto"] .mapa-side { display: contents; }
+
+/* Former inline styles (values unchanged at base size). */
+[data-canvas="voto"] .tarjeta-h1 { font-size: 30px; line-height: 1.1; margin-top: 14px; max-width: 15ch; }
+[data-canvas="voto"] .tarjeta-sub { font-size: 15px; color: var(--ink-3); margin-top: 12px; max-width: 42ch; line-height: 1.55; }
+[data-canvas="voto"] .mapa-share-h {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); margin: 30px 0 12px; font-weight: 400;
+}
+[data-canvas="voto"] .mapa-callout-h { font-size: 23px; line-height: 1.15; }
+
+@media (min-width: 1024px) {
+  /* ── Page container: the WC editorial measure ──────────────────────── */
+  [data-canvas="voto"] { --maxw: 1152px; }
+  [data-canvas="voto"] .wrap { padding-inline: clamp(32px, 4vw, 48px); }
+  [data-canvas="voto"] .section { padding-block: 56px; }
+  [data-canvas="voto"] .section-hd h2 { font-size: 32px; }
+  [data-canvas="voto"] .section-hd .sub { font-size: 15.5px; max-width: 52ch; }
+  [data-canvas="voto"] .card-pad { padding: 24px 26px; }
+  [data-canvas="voto"] .btn { width: auto; padding: 0 26px; }
+
+  /* Top bar: wordmark + inline section nav */
+  [data-canvas="voto"] .topbar { padding: 22px clamp(32px, 4vw, 48px) 18px; }
+  [data-canvas="voto"] .wordmark { font-size: 19px; }
+  [data-canvas="voto"] .topnav { display: flex; gap: 28px; align-items: center; }
+  [data-canvas="voto"] .topnav a {
+    font-family: var(--font-sans); font-size: 13.5px; color: var(--ink-3);
+    text-decoration: none; min-height: 44px; display: inline-flex; align-items: center;
+    transition: color .12s;
+  }
+  [data-canvas="voto"] .topnav a:hover { color: var(--ink); }
+
+  /* ── §1 hero: countdown + headline left, campo over the card right ─── */
+  [data-canvas="voto"] .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 34vw, 460px);
+    column-gap: clamp(56px, 7vw, 104px);
+    align-items: start;
+  }
+  [data-canvas="voto"] .hero-campo {
+    position: static;
+    grid-column: 2;
+    grid-row: 1;
+    width: min(340px, 100%);
+    max-width: none;
+    margin: 4px 0 28px auto;
+    opacity: .55;
+  }
+  [data-canvas="voto"] .hero-inner { grid-column: 1; grid-row: 1 / span 2; padding-block: 24px 64px; }
+  [data-canvas="voto"] .hero .prob-card { grid-column: 2; grid-row: 2; margin-top: 0; align-self: start; }
+  [data-canvas="voto"] .countdown .n { font-size: clamp(120px, 11vw, 156px); }
+  [data-canvas="voto"] .countdown .u { font-size: 28px; }
+  [data-canvas="voto"] .hero h1 { font-size: clamp(40px, 3.6vw, 48px); max-width: 16ch; margin-top: 24px; }
+  [data-canvas="voto"] .hero .lede { font-size: 17px; max-width: 44ch; margin-top: 16px; }
+
+  /* ── §2 orientation: prose left, signature dotplot right ───────────── */
+  [data-canvas="voto"] .orient {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    column-gap: clamp(64px, 8vw, 120px);
+    padding-bottom: 56px;
+  }
+  [data-canvas="voto"] .orient > div:first-child { grid-column: 1; grid-row: 1; align-self: end; }
+  [data-canvas="voto"] .orient .orient-body { grid-column: 1; grid-row: 2; font-size: 20px; max-width: 46ch; margin-top: 18px; }
+  [data-canvas="voto"] .orient .orient-cta { grid-column: 1; grid-row: 3; align-self: start; margin-top: 26px; }
+  [data-canvas="voto"] .orient .signature { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin: 0; }
+  [data-canvas="voto"] .orient .sig-cap { grid-column: 2; grid-row: 3; margin: 10px 0 0; align-self: start; }
+
+  /* ── §3 tarjeta callout: copy left, card preview right ─────────────── */
+  [data-canvas="voto"] .home-tarjeta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: clamp(64px, 8vw, 120px);
+    align-items: center;
+  }
+  [data-canvas="voto"] .home-tarjeta .section-hd { grid-column: 1; margin-bottom: 0; }
+  [data-canvas="voto"] .home-tarjeta .section-hd .sub { max-width: 44ch; }
+  [data-canvas="voto"] .home-tarjeta .tarjeta-wrap { grid-column: 2; width: 100%; max-width: 400px; margin: 0; }
+  [data-canvas="voto"] .tarjeta-row .btn { flex: 0 0 auto; }
+
+  /* ── §4 mapa callout card ───────────────────────────────────────────── */
+  [data-canvas="voto"] .home-mapa .card.card-pad { padding: 36px 40px; }
+  [data-canvas="voto"] .home-mapa .maparow { gap: clamp(40px, 5vw, 72px); }
+  [data-canvas="voto"] .home-mapa .maparow > div:first-child { max-width: 56ch; }
+  [data-canvas="voto"] .home-mapa .mapa-callout-h { font-size: 30px; }
+  [data-canvas="voto"] .home-mapa .maparow .sub { font-size: 15.5px; color: var(--ink-3); max-width: 52ch; }
+  [data-canvas="voto"] .home-mapa .campo-mini { width: 200px; margin-left: auto; }
+
+  /* ── §5 pulso: header column left, signal panel right ──────────────── */
+  [data-canvas="voto"] .home-pulso {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: clamp(56px, 7vw, 104px);
+    align-items: start;
+  }
+  [data-canvas="voto"] .home-pulso .section-hd { grid-column: 1; margin-bottom: 0; }
+  [data-canvas="voto"] .home-pulso .section-hd .sub { max-width: 34ch; }
+  [data-canvas="voto"] .home-pulso > .card { grid-column: 2; }
+
+  /* ── §6 toolkit: three cards across ─────────────────────────────────── */
+  [data-canvas="voto"] .toolkit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  [data-canvas="voto"] .tk { align-items: start; padding: 20px; }
+
+  /* ── §7 free duo / §8 founders ──────────────────────────────────────── */
+  [data-canvas="voto"] .duo { gap: 20px; }
+  [data-canvas="voto"] .offer h3 { font-size: 24px; }
+  [data-canvas="voto"] .home-about .card.card-pad { padding: 36px 40px; }
+  [data-canvas="voto"] .about-note { font-size: 18px; max-width: 62ch; }
+
+  /* ── Footer: brand + method left, stamp right ───────────────────────── */
+  [data-canvas="voto"] .foot { margin-top: 48px; padding-block: 44px 64px; }
+  [data-canvas="voto"] .foot .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 64px; }
+  [data-canvas="voto"] .foot .wrap > div { grid-column: 1; }
+  [data-canvas="voto"] .foot .wrap > p.mono { grid-column: 1; }
+  [data-canvas="voto"] .foot .wrap > p.mono + p.mono { grid-column: 2; grid-row: 2; text-align: right; align-self: end; }
+
+  /* ── Mapa page: narrative left, share card right ────────────────────── */
+  [data-canvas="voto"] .lede-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 64px; }
+  [data-canvas="voto"] .lede-h h1 { font-size: clamp(40px, 3.6vw, 48px); }
+  [data-canvas="voto"] .lede-h .sub { max-width: 44ch; font-size: 15.5px; margin-bottom: 6px; }
+  [data-canvas="voto"] .result {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: clamp(64px, 7vw, 104px);
+    margin-top: 16px;
+  }
+  [data-canvas="voto"] .mapa-main { display: block; grid-column: 1; }
+  [data-canvas="voto"] .mapa-side { display: block; grid-column: 2; }
+  [data-canvas="voto"] .mapa-side .mapa-share-h { margin-top: 6px; }
+  [data-canvas="voto"] .mapa-side .mc { max-width: 460px; }
+  [data-canvas="voto"] .mapa-side .share-row,
+  [data-canvas="voto"] .mapa-side .loop-note { max-width: 460px; }
+  [data-canvas="voto"] .muni-head h2 { font-size: 36px; }
+  [data-canvas="voto"] .hero-num .big { font-size: clamp(96px, 9vw, 120px); }
+  [data-canvas="voto"] .hero-num .big small { font-size: 40px; }
+  [data-canvas="voto"] .hero-num .cap { font-size: 20px; max-width: 28ch; }
+
+  /* ── Tarjeta page: spec-sheet rows (format label left, stage right) ── */
+  [data-canvas="voto"] main.voto-tarjeta { --maxw: 1024px; }
+  [data-canvas="voto"] .tarjeta-h1 { font-size: clamp(38px, 3.4vw, 44px); }
+  [data-canvas="voto"] .tarjeta-sub { font-size: 15.5px; max-width: 46ch; }
+  [data-canvas="voto"] .fmt {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    column-gap: clamp(48px, 6vw, 88px);
+    border-top: 1px solid var(--rule);
+    padding-top: 30px;
+    margin-bottom: 44px;
+  }
+  [data-canvas="voto"] .fmt-hd { display: block; grid-column: 1; grid-row: 1 / -1; align-self: center; margin-bottom: 0; }
+  [data-canvas="voto"] .fmt-hd .nm { font-size: 17px; }
+  [data-canvas="voto"] .fmt-hd .nm span { margin-top: 6px; }
+  [data-canvas="voto"] .fmt-hd .dim { display: block; margin-top: 14px; }
+  [data-canvas="voto"] .fmt-stage { grid-column: 2; }
+  [data-canvas="voto"] .fmt .actions { grid-column: 2; }
+  [data-canvas="voto"] .stage-sq { max-width: 380px; }
+  [data-canvas="voto"] .stage-wide { max-width: 560px; }
+  [data-canvas="voto"] .stage-story { max-width: 260px; }
+  [data-canvas="voto"] .thumbtest { padding: 32px 36px; }
+  [data-canvas="voto"] .thumbs { gap: 28px; }
+
+  /* ── Metodología: a single reading column at the vault's measure ───── */
+  [data-canvas="voto"] main.metodo { --maxw: 880px; }
+  [data-canvas="voto"] .metodo .section { margin-top: 8px; padding-block: 32px; }
+  [data-canvas="voto"] .metodo .card.card-pad { padding: 28px 32px; }
+  [data-canvas="voto"] .metodo p { font-size: 16px; line-height: 1.6; }
+  [data-canvas="voto"] .metodo .metodo-h { font-size: 22px; }
+  [data-canvas="voto"] .metodo .metodo-step { padding-left: 84px; }
+  [data-canvas="voto"] .metodo .metodo-num { top: 30px; left: 32px; width: 30px; height: 30px; font-size: 14px; }
+
+  /* ── Quiénes somos: a quiet reading column ──────────────────────────── */
+  [data-canvas="voto"] main.quienes { --maxw: 880px; }
+  [data-canvas="voto"] .quienes .card.card-pad { padding: 40px 48px; }
+  [data-canvas="voto"] .quienes .about-note { font-size: 19px; line-height: 1.65; }
+}

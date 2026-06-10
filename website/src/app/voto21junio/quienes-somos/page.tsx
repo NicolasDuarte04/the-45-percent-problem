@@ -16,7 +16,7 @@ export default function QuienesSomosPage() {
   return (
     <>
       <TopBar variant="inner" />
-      <main className="wrap">
+      <main className="wrap quienes">
         <section className="section" style={{ paddingTop: 18 }}>
           <SectionHeader n="" label="Posición y método" title="Quiénes somos" />
           <div className="card card-pad" style={{ marginTop: 18 }}>
