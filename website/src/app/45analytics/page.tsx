@@ -2,9 +2,10 @@
  * 45 Analytics — parent umbrella homepage (Session 01).
  *
  * The §0 laboratory block (plain-Spanish revision), the two-product switcher,
- * and a free daily-brief CTA. Mounted at /45analytics for PR1; the card to The
- * 45% Problem points at "/" (its current home) and gets repointed to
- * /the-45-percent-problem in PR2.
+ * and a free daily-brief CTA. Mounted at /45analytics for PR1; Session 15
+ * PR-B1 repointed the card to The 45% Problem at /the-45-percent-problem
+ * (live via the additive rewrite in next.config.ts). PR-B2 moves this page
+ * to "/" by rewrite at cutover.
  */
 
 import { daysUntil } from "../voto21junio/_lib/voto-runtime";
@@ -70,7 +71,10 @@ export default function ParentHome() {
               { k: "Fase", v: "Grupos" },
             ]}
             cta="Entrar"
-            href="/"
+            // Session 15 PR-B1: the WC card points at the product's
+            // post-migration canonical path, served today by the additive
+            // rewrite; the old root paths keep working unchanged.
+            href="/the-45-percent-problem"
             cold
             motifSeed={21}
             motifLive={0.22}
