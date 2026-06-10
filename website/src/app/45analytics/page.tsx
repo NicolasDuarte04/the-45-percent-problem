@@ -11,6 +11,7 @@
 import { daysUntil } from "../voto21junio/_lib/voto-runtime";
 import { ProductSwitcherCard } from "@/components/voto/ProductSwitcherCard";
 import { BriefSignup } from "../voto21junio/_components/BriefSignup";
+import { DotPattern } from "../voto21junio/_components/DotPattern";
 import { SNAPSHOT_STAMP } from "../voto21junio/_lib/demo-data";
 import { getVotoData } from "../voto21junio/_lib/snapshot-source";
 
@@ -36,6 +37,19 @@ export default function ParentHome() {
 
       {/* §0 · El laboratorio */}
       <section className="phero">
+        {/* Session 16: desktop-only campo-de-votos motif (display:none
+            below 1024px, so mobile is untouched). Masked toward the
+            headline to keep the dot safe-zone. */}
+        <DotPattern
+          className="phero-campo"
+          cols={16}
+          rows={12}
+          live={0.18}
+          gap={14}
+          r={2.6}
+          seed={17}
+          mask="linear-gradient(245deg,#000 42%,transparent 88%)"
+        />
         <div className="eyebrow">
           <span className="sec">§ 0</span> · El laboratorio
         </div>

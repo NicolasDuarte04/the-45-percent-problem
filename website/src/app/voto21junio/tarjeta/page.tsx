@@ -25,10 +25,10 @@ export default function TarjetaPage() {
           <div className="eyebrow">
             <span className="sec">§ 2</span> · El activo de la campaña
           </div>
-          <h1 style={{ fontSize: 30, lineHeight: 1.1, marginTop: 14, maxWidth: "15ch" }}>
-            La Tarjeta del Día
-          </h1>
-          <p className="sub" style={{ fontSize: 15, color: "var(--ink-3)", marginTop: 12, maxWidth: "42ch", lineHeight: 1.55 }}>
+          {/* Session 16: former inline styles moved to classes (values
+              unchanged at base size) so the desktop layer can scale them. */}
+          <h1 className="tarjeta-h1">La Tarjeta del Día</h1>
+          <p className="tarjeta-sub">
             Una imagen al día, hecha sola a las 07:00 de la mañana. La cifra del día, lista para mandar
             por WhatsApp. Hecha para reenviar, no para clicar.
           </p>

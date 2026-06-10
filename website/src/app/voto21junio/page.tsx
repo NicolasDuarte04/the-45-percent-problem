@@ -36,7 +36,7 @@ export default function VotoHome() {
         <OrientationBlock />
 
         {/* §3 · La Tarjeta del Día */}
-        <section className="section wrap">
+        <section className="section wrap home-tarjeta">
           <SectionHeader
             n="3"
             label="El activo de la campaña"
@@ -59,12 +59,12 @@ export default function VotoHome() {
         <hr className="rule wrap" style={{ border: 0 }} />
 
         {/* §4 · Mapa callout */}
-        <section className="section wrap">
+        <section className="section wrap home-mapa">
           <div className="card card-pad">
             <SectionHeader n="4" label="Función destacada" />
             <div className="maparow" style={{ marginTop: 14 }}>
               <div>
-                <h2 style={{ fontSize: 23, lineHeight: 1.15 }}>El Mapa del Voto Decisivo</h2>
+                <h2 className="mapa-callout-h">El Mapa del Voto Decisivo</h2>
                 <p className="sub" style={{ marginTop: 8 }}>
                   Cuatro cifras sobre <strong>tu propio municipio</strong>: cuántos votos lo inclinan,
                   y cuánto del margen nacional puede mover.
@@ -79,7 +79,7 @@ export default function VotoHome() {
         </section>
 
         {/* §5 · Pulso Patrio */}
-        <section className="section wrap">
+        <section className="section wrap home-pulso">
           <SectionHeader
             n="5"
             label="El índice"
@@ -146,7 +146,7 @@ export default function VotoHome() {
         </section>
 
         {/* §8 · Position + method → founders' note */}
-        <section className="section wrap" id="metodo">
+        <section className="section wrap home-about" id="metodo">
           <div className="card card-pad">
             <SectionHeader n="8" label="Posición y método" />
             <p className="about-note" style={{ marginTop: 14 }}>

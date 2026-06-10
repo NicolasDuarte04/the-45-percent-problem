@@ -59,3 +59,50 @@
   [data-canvas="voto"] .switch { grid-template-columns: 1fr 1fr; }
   [data-canvas="voto"] .brief { grid-template-columns: 1.1fr 1fr; }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   Session 16 · desktop refinement (>= 1024px). Additive layer matching
+   The 45% Problem's editorial measure (1152px incl. padding); nothing
+   below fires under 1024px so mobile and tablet are untouched. The hero
+   gains the campo-de-votos motif on the right (desktop only; the element
+   is display:none below this layer).
+   ────────────────────────────────────────────────────────────────────── */
+
+[data-canvas="voto"] .phero { position: relative; }
+[data-canvas="voto"] .phero-campo { display: none; }
+
+@media (min-width: 1024px) {
+  [data-canvas="voto"] .pshell { max-width: 1152px; padding-inline: clamp(32px, 4vw, 48px); }
+  [data-canvas="voto"] .pmast { padding: 26px 0; }
+  [data-canvas="voto"] .pmast .wm { font-size: 23px; }
+
+  [data-canvas="voto"] .phero { padding: 88px 0 64px; }
+  [data-canvas="voto"] .phero-campo {
+    display: block;
+    position: absolute;
+    top: 56px;
+    right: 0;
+    width: clamp(280px, 26vw, 380px);
+    opacity: .5;
+    pointer-events: none;
+  }
+  [data-canvas="voto"] .phero h1 { font-size: clamp(56px, 6vw, 78px); }
+  [data-canvas="voto"] .phero .manifesto { font-size: 20px; max-width: 62ch; margin-top: 30px; }
+  [data-canvas="voto"] .phero .thesis { margin-top: 28px; }
+
+  [data-canvas="voto"] .switch { gap: 24px; padding-top: 28px; }
+  [data-canvas="voto"] .pcard { padding: 36px 38px; min-height: 360px; }
+  [data-canvas="voto"] .pcard .motif { width: 190px; top: 24px; right: 20px; }
+  [data-canvas="voto"] .pcard h2 { font-size: 36px; }
+  [data-canvas="voto"] .pcard .desc { font-size: 15px; }
+  [data-canvas="voto"] .pcard .stats { gap: 32px; }
+  [data-canvas="voto"] .pcard .stats .s .v { font-size: 22px; }
+  [data-canvas="voto"] .pcard .status { top: 36px; right: 38px; }
+
+  [data-canvas="voto"] .brief { padding: 44px 48px; margin: 56px 0; column-gap: 64px; }
+  [data-canvas="voto"] .brief h3 { font-size: 30px; }
+  [data-canvas="voto"] .brief p { font-size: 15px; }
+
+  [data-canvas="voto"] .pfoot { padding: 40px 0 72px; }
+  [data-canvas="voto"] .pfoot .mono { font-size: 12px; }
+}
