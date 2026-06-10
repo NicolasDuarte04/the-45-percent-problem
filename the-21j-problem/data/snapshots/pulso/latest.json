@@ -1,19 +1,19 @@
 {
   "snapshot_hour": "2026-06-10T17:00:00Z",
-  "generated_at": "2026-06-10T17:28:10.100869Z",
-  "index_value": 83.32,
-  "index_raw": 83.8,
+  "generated_at": "2026-06-10T17:32:57.516251Z",
+  "index_value": 84.22,
+  "index_raw": 85.61,
   "inputs_live": 1,
   "inputs_total": 5,
   "readings": [
     {
       "source": "headlines",
-      "value": 83.8,
+      "value": 85.61,
       "available": true,
       "weight": 0.4,
       "source_url": "https://www.eltiempo.com/rss/colombia.xml",
-      "fetched_at": "2026-06-10T17:28:10.885866Z",
-      "note": "5/5 feeds reachable; 71 runoff-relevant of 153 items, 48 carrying a charged term"
+      "fetched_at": "2026-06-10T17:32:58.850167Z",
+      "note": "4/5 feeds reachable; 66 runoff-relevant of 143 items, 47 carrying a charged term"
     },
     {
       "source": "trends",
@@ -21,7 +21,7 @@
       "available": false,
       "weight": 0.2,
       "source_url": "https://trends.google.com/trends/explore",
-      "fetched_at": "2026-06-10T17:28:10.888255Z",
+      "fetched_at": "2026-06-10T17:32:58.852498Z",
       "note": "pytrends not available (No module named 'pytrends'); Google Trends not ingested"
     },
     {
@@ -30,7 +30,7 @@
       "available": false,
       "weight": 0.15,
       "source_url": "https://gamma-api.polymarket.com/markets",
-      "fetched_at": "2026-06-10T17:28:11.606091Z",
+      "fetched_at": "2026-06-10T17:32:59.652987Z",
       "note": "no Colombia 2026 runoff market on Polymarket (no substitute used)"
     },
     {
@@ -39,7 +39,7 @@
       "available": false,
       "weight": 0.15,
       "source_url": null,
-      "fetched_at": "2026-06-10T17:28:11.608208Z",
+      "fetched_at": "2026-06-10T17:32:59.655142Z",
       "note": "no accessible X/Twitter API for tone (stub; implement later)"
     },
     {
@@ -48,12 +48,12 @@
       "available": false,
       "weight": 0.1,
       "source_url": null,
-      "fetched_at": "2026-06-10T17:28:11.609851Z",
+      "fetched_at": "2026-06-10T17:32:59.656846Z",
       "note": "no accessible TikTok API for hashtag velocity (stub; implement later)"
     }
   ],
   "data_sufficiency": "demo",
   "methodology": "El Pulso Patrio mide la intensidad y la carga emocional de la conversacion sobre la segunda vuelta. Es una medida de cuanto y con que fuerza se habla, no una probabilidad y no dice quien va adelante. Las probabilidades por candidato viven aparte, en el snapshot del modelo. Las senales que parecen direccionales (divergencia de busquedas, spread de mercado) entran solo como magnitud y volatilidad. Se combinan unicamente las entradas disponibles, renormalizando sus pesos; con menos de dos entradas vivas el indice se marca como demo.",
-  "code_sha": "0385299c835655a50a03717e33aee6c0ce867fdb",
-  "data_hash": "ece5a9374ef6a68eae02eed5a1a08b706ce5240f8e4c0e37556be170f1b01579"
+  "code_sha": "5730579a7e75d5b0913ebd654c66913560f72a99",
+  "data_hash": "7a9aa7d96786577cc7d58b20c066e0a89c2b5ef6beb4f3a516fc16c20a3fe1c0"
 }
