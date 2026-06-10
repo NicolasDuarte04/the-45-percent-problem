@@ -63,11 +63,14 @@ jobs:
           pip install eval_type_backport
 
       - name: Configure publish-bot git identity
-        # Distinct from the WC nightly's github-actions[bot]. The wrapper also
-        # sets this per-commit, but the rebase below may need an identity too.
+        # Session 15: github-actions[bot] — the identity Vercel's Git
+        # integration accepts (the original voto-publish-bot author was
+        # "Deployment was blocked" on 2026-06-10; see publish.commit_author_*
+        # in the-21j-problem/config.yaml). The wrapper sets the same identity
+        # per-commit; this repo-level config covers the rebase below.
         run: |
-          git config user.name "voto-publish-bot"
-          git config user.email "voto-publish-bot@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Refresh and commit the 21J snapshot
         id: publish

@@ -354,10 +354,15 @@ publish:
     jornada electoral.
 
   # ── Commit identity ───────────────────────────────────────────────────────
-  # The publish commit uses a DISTINCT bot identity, not the World-Cup nightly's
-  # github-actions[bot]. Makes El Voto's automated commits attributable on sight.
-  commit_author_name: "voto-publish-bot"
-  commit_author_email: "voto-publish-bot@users.noreply.github.com"
+  # Session 15: github-actions[bot], the SAME identity the World-Cup nightly
+  # uses. The original distinct "voto-publish-bot" identity made Vercel's Git
+  # integration refuse to deploy the push ("Deployment was blocked",
+  # 2026-06-10 run 27288185577): the commit author email belongs to no GitHub
+  # account the Vercel team recognises, while github-actions[bot] is allowed.
+  # El Voto's automated commits stay attributable via the "chore(voto):"
+  # commit-message prefix instead.
+  commit_author_name: "github-actions[bot]"
+  commit_author_email: "github-actions[bot]@users.noreply.github.com"
 
   # ── Scope guard ───────────────────────────────────────────────────────────
   # The ONLY directory the wrapper may stage/commit. A hard invariant: if the
