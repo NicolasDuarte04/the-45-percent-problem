@@ -124,5 +124,11 @@
     "generated_at_utc": "2026-06-10T21:18:37Z",
     "bundle_url": "/data/snapshots/2026-06-10T21:18Z/",
     "meta_url": "/data/snapshots/2026-06-10T21:18Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-11T02:31Z",
+    "generated_at_utc": "2026-06-11T02:31:03Z",
+    "bundle_url": "/data/snapshots/2026-06-11T02:31Z/",
+    "meta_url": "/data/snapshots/2026-06-11T02:31Z/snapshot_meta.json"
   }
 ]
