@@ -66,5 +66,11 @@
   },
   "house_effects_corpus_sha": "9037f0f09d83b7f4b6710079312da5b17347cdbe96c810c32728181ee560723b",
   "code_sha": "6a1d20ba1951df08bce59ffccf3204da8dd48320",
-  "data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad"
+  "data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad",
+  "publication_notice": {
+    "status": "electoral_silence",
+    "message": "En cumplimiento de las normas electorales colombianas, durante los días previos a la segunda vuelta no se publican cifras nuevas basadas en encuestas. Se muestra la última cifra del modelo legalmente publicable, congelada hasta después de la jornada electoral.",
+    "silence_boundary": "2026-06-14",
+    "frozen_snapshot_date": "2026-06-08"
+  }
 }
