@@ -778,9 +778,15 @@ def main() -> None:
     bracket = populate_bracket_slots(new_snapshot_id)
     (new_dir / "bracket.json").write_text(json.dumps(bracket, indent=2))
 
-    # evaluation_metrics.json: carry through unchanged but update snapshot_id
+    # evaluation_metrics.json: carry through the locked metric values but
+    # recompute matches_settled from the live source, the same way
+    # snapshot_meta.matches_settled is computed above. Pre-fix, this field was
+    # carried forward verbatim (stuck at the pre-tournament 0) while
+    # snapshot_meta advanced with the tournament, so the two artifacts drifted
+    # apart and the cross-artifact consistency contract failed mid-tournament.
     eval_metrics = json.loads((LATEST_DIR / "evaluation_metrics.json").read_text())
     eval_metrics["snapshot_id"] = new_snapshot_id
+    eval_metrics["matches_settled"] = settled_count
     (new_dir / "evaluation_metrics.json").write_text(json.dumps(eval_metrics, indent=2))
 
     # divergence.json: carry through unchanged but update snapshot_id and
