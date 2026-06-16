@@ -236,10 +236,17 @@ describe("POST /api/cron/eval-predictions", () => {
     // what the evaluator would compute (joint of pS over the four picks),
     // and whose state is still alive with no settled matches. Re-running
     // the cron must not write a log row.
-    // cp-11: TEAM_PROBS is now M2-derived (regenerated from team_runs_M2.parquet).
-    // ARG.pS=0.2701 BRA.pS=0.3045 FRA.pS=0.2848 ENG.pS=0.189
-    // joint = 0.2701 * 0.3045 * 0.2848 * 0.189 ≈ 0.0044270
-    // count = round(10000 * 0.0044270) = 44
+    // The persisted count must equal what the evaluator recomputes from the
+    // CURRENT TEAM_PROBS (snapshotProbs.ts), or a (spurious) transition fires
+    // and the idempotency assertion breaks. These values drift whenever the M2
+    // batch is regenerated, so they are derived from the live table, not a
+    // historical constant. As of the committed snapshotProbs.ts:
+    // ARG.pS=0.2748 BRA.pS=0.3071 FRA.pS=0.2811 ENG.pS=0.197
+    // joint = 0.2748 * 0.3071 * 0.2811 * 0.197 ≈ 0.0046733
+    // count = round(10000 * 0.0046733) = 47
+    // NOTE (brittleness): this hard-codes the count against the current probs.
+    // A robust follow-up would mock TEAM_PROBS to fixed values so the fixture
+    // can't drift with the nightly batch. Tracked as a test-infra cleanup.
     mockDb.select
       .mockReturnValueOnce(chainMock([])) // settled matches
       .mockReturnValueOnce(
@@ -251,8 +258,8 @@ describe("POST /api/cron/eval-predictions", () => {
             mode: "final_four",
             scenario: { semifinalists: ["ARG", "BRA", "FRA", "ENG"] },
             storyLine: "x",
-            countOriginal: 44,
-            countCurrent: 44,
+            countOriginal: 47,
+            countCurrent: 47,
             total: 10000,
             state: "alive",
             killedBy: null,
