@@ -7,6 +7,7 @@ import {
   useCallback,
   useTransition,
   useEffect,
+  type CSSProperties,
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -33,6 +34,11 @@ import { MARKET_LABELS } from "@/lib/markets";
 // so the table fits the 1056px container without horizontal scroll.
 const COL_GRID =
   "6rem 2.5rem minmax(0,1fr) 4.5rem 3rem 5rem 5rem 5rem 5.5rem 3rem 5rem";
+
+// A row is "settled / in-progress" (and drops to the collapsible reference
+// section) once its kickoff is more than this far in the past. The 4h buffer
+// keeps an in-progress match visible in the live table during its game window.
+const SETTLED_BUFFER_MS = 4 * 60 * 60 * 1000;
 
 // ── Sort model ────────────────────────────────────────────────────────────────
 
@@ -450,6 +456,269 @@ function SortHeader({
   );
 }
 
+// ── Reusable grid ─────────────────────────────────────────────────────────────
+// The header + virtualized body, rendered identically by both the live table
+// and the collapsible settled section. Each instance owns its own virtualizer
+// and scroll container but shares sort state, expand state, and handlers with
+// the parent so the two sections behave as one table split in two.
+
+function DivergenceGrid({
+  rows,
+  sortKey,
+  sortDir,
+  onSort,
+  expandedIds,
+  onToggleExpand,
+  containerStyle,
+  ariaLabel,
+}: {
+  rows: DivergenceRow[];
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (colId: SortKey) => void;
+  expandedIds: Set<string>;
+  onToggleExpand: (id: string) => void;
+  containerStyle?: CSSProperties;
+  ariaLabel: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: (i) => (expandedIds.has(rows[i]?.row_id ?? "") ? 280 : 52),
+    overscan: 8,
+    measureElement:
+      typeof window !== "undefined"
+        ? (el) => el?.getBoundingClientRect().height ?? 52
+        : undefined,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  useEffect(() => {
+    virtualizer.measure();
+  }, [expandedIds, virtualizer]);
+
+  return (
+    <div
+      className="overflow-x-auto"
+      role="grid"
+      aria-label={ariaLabel}
+      aria-rowcount={rows.length}
+    >
+      {/* ── Column header row; outside the vertical scroll container */}
+      <div
+        role="row"
+        aria-label="Column headers"
+        className="border-b text-[11px] font-medium"
+        style={{
+          display: "grid",
+          gridTemplateColumns: COL_GRID,
+          minWidth: "920px",
+          alignItems: "center",
+          backgroundColor: "var(--bg-panel)",
+          borderColor: "var(--border-subtle)",
+          color: "var(--text-tertiary)",
+        }}
+      >
+        <div role="columnheader" className="py-3 pl-3 pr-2">
+          <SortHeader label="Kickoff (UTC)" colId="kickoff_utc" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        </div>
+        <div role="columnheader" className="py-3 px-2">
+          <SortHeader label="Round" colId="round" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        </div>
+        <div role="columnheader" className="py-3 px-2">Matchup</div>
+        <div role="columnheader" className="py-3 px-2">Market</div>
+        <div role="columnheader" className="py-3 px-2">Outcome</div>
+        <div role="columnheader" className="py-3 px-2">
+          <SortHeader label="p (model)" colId="p_model" sortKey={sortKey} sortDir={sortDir} onSort={onSort} align="right" />
+        </div>
+        <div role="columnheader" className="py-3 px-2">
+          <SortHeader label="q (mkt)" colId="q_market_devigged" sortKey={sortKey} sortDir={sortDir} onSort={onSort} align="right" />
+        </div>
+        <div role="columnheader" data-guide-id="col-divergence" className="py-3 px-2">Divergence</div>
+        <div role="columnheader" data-guide-id="col-edge" className="py-3 px-2">
+          <SortHeader label="Edge E" colId="absEdge" sortKey={sortKey} sortDir={sortDir} onSort={onSort} align="right" />
+        </div>
+        <div
+          role="columnheader"
+          className="py-3 px-2 text-right"
+          aria-label="Pre-registered edge threshold"
+        >
+          ε
+        </div>
+        <div role="columnheader" data-guide-id="col-gate" className="py-3 px-2">
+          <SortHeader label="Gate" colId="gate_status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+        </div>
+      </div>
+
+      {/* ── Vertical scroll container; div height is respected, unlike tbody */}
+      <div
+        ref={containerRef}
+        style={{
+          maxHeight: "calc(100vh - 300px)",
+          overflowY: "auto",
+          minWidth: "920px",
+          ...containerStyle,
+        }}
+      >
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            position: "relative",
+            width: "100%",
+          }}
+        >
+          {virtualItems.map((vItem) => {
+            const row = rows[vItem.index];
+            if (!row) return null;
+            const isExpanded = expandedIds.has(row.row_id);
+            const isFired = row.gate_status === "FIRED";
+
+            return (
+              <div
+                key={row.row_id}
+                data-index={vItem.index}
+                ref={virtualizer.measureElement}
+                role="row"
+                aria-expanded={isExpanded}
+                aria-rowindex={vItem.index + 1}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  transform: `translateY(${vItem.start}px)`,
+                  width: "100%",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  ...(isFired ? { borderLeft: "2px solid var(--gate-fired)" } : {}),
+                }}
+              >
+                {/* ── Clickable data row ─────────────────────────────── */}
+                <div
+                  role="presentation"
+                  className="divergence-row transition-colors duration-[120ms] cursor-pointer text-[12.5px]"
+                  data-pinned={isExpanded ? "" : undefined}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: COL_GRID,
+                    alignItems: "center",
+                    backgroundColor: isExpanded ? "var(--bg-panel-elev)" : undefined,
+                  }}
+                  onClick={() => onToggleExpand(row.row_id)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onToggleExpand(row.row_id);
+                    }
+                  }}
+                  aria-label={`${isExpanded ? "Collapse" : "Expand"} details for ${row.home.display_name} vs ${row.away.display_name} ${MARKET_LABELS[row.market] ?? row.market} ${row.outcome}`}
+                >
+                  {/* Kickoff */}
+                  <div role="gridcell" className="py-3.5 pl-3 pr-2">
+                    <span
+                      className="mono"
+                      aria-label={`kickoff ${formatUtcShort(row.kickoff_utc)}`}
+                    >
+                      {formatUtcShort(row.kickoff_utc)}
+                    </span>
+                  </div>
+                  {/* Round */}
+                  <div role="gridcell" className="py-3.5 px-2 mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                    {row.round}
+                  </div>
+                  {/* Matchup */}
+                  <div role="gridcell" className="py-3.5 px-2 min-w-0 overflow-hidden">
+                    <Link
+                      href={`/match/${row.match_id}`}
+                      className="transition-colors duration-[120ms] block truncate font-medium"
+                      style={{ color: "var(--text-primary)" }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
+                        {row.home.fifa_code}
+                      </span>{" "}
+                      <Flag code={row.home.fifa_code} size={16} />{" "}
+                      {row.home.display_name}{" "}
+                      <span style={{ color: "var(--text-quiet)" }}>‒</span>{" "}
+                      {row.away.display_name}{" "}
+                      <Flag code={row.away.fifa_code} size={16} />{" "}
+                      <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
+                        {row.away.fifa_code}
+                      </span>
+                    </Link>
+                  </div>
+                  {/* Market */}
+                  <div role="gridcell" data-cell="market" className="py-3.5 px-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                    {MARKET_LABELS[row.market] ?? row.market}
+                  </div>
+                  {/* Outcome */}
+                  <div role="gridcell" className="py-3.5 px-2 mono text-[11px]" style={{ color: "var(--text-secondary)" }}>
+                    {row.outcome}
+                  </div>
+                  {/* p_model */}
+                  <div role="gridcell" className="py-3.5 px-2 text-right">
+                    <NumericCell
+                      value={row.p_model}
+                      formatter={(p) => formatProbability(p, 1)}
+                      ariaLabel={`${(row.p_model * 100).toFixed(1)} percent`}
+                    />
+                  </div>
+                  {/* q_market */}
+                  <div role="gridcell" className="py-3.5 px-2 text-right">
+                    <NumericCell
+                      value={row.q_market_devigged}
+                      formatter={(p) => formatProbability(p, 1)}
+                      ariaLabel={`${(row.q_market_devigged * 100).toFixed(1)} percent`}
+                    />
+                  </div>
+                  {/* Divergence bar */}
+                  <div role="gridcell" className="py-3.5 px-2">
+                    <DivergenceBar p_model={row.p_model} q_market={row.q_market_devigged} />
+                  </div>
+                  {/* Edge E */}
+                  <div role="gridcell" data-cell="edge" className="py-3.5 px-2 text-right">
+                    <EdgeBadge edge={row.edge_E} threshold={row.edge_threshold} />
+                    <div
+                      className="divergence-edge-bps mono"
+                      aria-label={`exact edge ${(row.edge_E * 10000).toFixed(0)} basis points, ${(row.edge_E * 100).toFixed(3)} percentage points`}
+                    >
+                      <span className="divergence-edge-bps-value">
+                        {row.edge_E >= 0 ? "+" : "−"}
+                        {Math.round(Math.abs(row.edge_E) * 10000)} bps
+                      </span>
+                      <span className="divergence-edge-bps-sep">·</span>
+                      <span className="divergence-edge-bps-pct">
+                        {(Math.abs(row.edge_E) * 100).toFixed(3)}%
+                      </span>
+                    </div>
+                  </div>
+                  {/* Threshold ε */}
+                  <div role="gridcell" className="py-3.5 px-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                    <span aria-label={`threshold ${(row.edge_threshold * 100).toFixed(0)} percent`}>
+                      {formatMono(row.edge_threshold * 100, 0)}%
+                    </span>
+                  </div>
+                  {/* Gate */}
+                  <div role="gridcell" className="py-3.5 px-2 text-center">
+                    <GateStatusPill
+                      status={row.gate_status}
+                      rulesTripped={row.gate_rules_tripped}
+                    />
+                  </div>
+                </div>
+
+                {/* Disclosure panel */}
+                {isExpanded && <RowDisclosure row={row} />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function DivergenceTable({
@@ -485,6 +754,20 @@ export function DivergenceTable({
       return next;
     });
   }, []);
+
+  // ── Live/settled partition clock ───────────────────────────────────────────
+  // The route is force-static, so `now` must come from the client to avoid a
+  // hydration mismatch. It stays null through SSR + the first hydration paint
+  // (everything renders as "live", matching the prerendered HTML); the effect
+  // sets it after mount, which partitions played matches into the settled
+  // section below. Client-side only, as the brief specifies.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
+
+  // Settled reference section is collapsed by default.
+  const [settledOpen, setSettledOpen] = useState(false);
 
   // ── URL update helpers ─────────────────────────────────────────────────────
   // Single-key change: used by all filter <select>s.
@@ -570,39 +853,39 @@ export function DivergenceTable({
     });
   }, [rows, activeRound, activeMarket, activeGate, activeEdge, teamInput]);
 
-  // ── Sort ───────────────────────────────────────────────────────────────────
-  const sortedRows = useMemo(() => {
-    const out = filteredRows.slice();
-    out.sort((a, b) => {
+  // ── Partition (live vs settled) + sort ─────────────────────────────────────
+  // Presentation-only: every filtered row is rendered in exactly one of the two
+  // sections — no divergence row is dropped. Each section is sorted by the same
+  // active sort key/dir. Filters (round/market/gate/edge/team) already applied
+  // upstream in `filteredRows`, so both partitions reflect them.
+  const { liveSorted, settledSorted } = useMemo(() => {
+    const cmp = (a: DivergenceRow, b: DivergenceRow) => {
       const av = sortValue(a, sortKey);
       const bv = sortValue(b, sortKey);
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
-    });
-    return out;
-  }, [filteredRows, sortKey, sortDir]);
+    };
 
-  // ── Virtualizer ────────────────────────────────────────────────────────────
-  const containerRef = useRef<HTMLDivElement>(null);
+    // Pre-hydration (now === null): render everything as live so SSR markup is
+    // stable; the settled section materialises after mount.
+    if (now === null) {
+      return { liveSorted: filteredRows.slice().sort(cmp), settledSorted: [] as DivergenceRow[] };
+    }
 
-  const virtualizer = useVirtualizer({
-    count: sortedRows.length,
-    getScrollElement: () => containerRef.current,
-    estimateSize: (i) =>
-      expandedIds.has(sortedRows[i]?.row_id ?? "") ? 280 : 52,
-    overscan: 8,
-    measureElement:
-      typeof window !== "undefined"
-        ? (el) => el?.getBoundingClientRect().height ?? 52
-        : undefined,
-  });
-
-  const virtualItems = virtualizer.getVirtualItems();
-
-  useEffect(() => {
-    virtualizer.measure();
-  }, [expandedIds, virtualizer]);
+    const threshold = now - SETTLED_BUFFER_MS;
+    const live: DivergenceRow[] = [];
+    const settled: DivergenceRow[] = [];
+    for (const r of filteredRows) {
+      const ko = Date.parse(r.kickoff_utc);
+      // Unparseable kickoff → keep it live so a row never silently disappears.
+      if (Number.isNaN(ko) || ko >= threshold) live.push(r);
+      else settled.push(r);
+    }
+    live.sort(cmp);
+    settled.sort(cmp);
+    return { liveSorted: live, settledSorted: settled };
+  }, [filteredRows, sortKey, sortDir, now]);
 
   // ── Column sort handler ────────────────────────────────────────────────────
   // Cycle: new column → desc → asc → reset to default (absEdge desc).
@@ -721,227 +1004,71 @@ export function DivergenceTable({
         </div>
       )}
 
-      {/* ── Grid table ──────────────────────────────────────────────────── */}
+      {/* ── Live table + settled reference ──────────────────────────────── */}
       {!isEmpty && (
         <>
-          {/* Outer horizontal scroll wrapper; column header + rows scroll as one unit.
-              minWidth on children forces the outer div to create a scrollbar at narrow viewports,
-              ensuring the 1fr matchup column always has real space. */}
-          <div
-            className="overflow-x-auto"
-            role="grid"
-            aria-label={`Divergence terminal. ${sortedRows.length} rows`}
-            aria-rowcount={sortedRows.length}
-          >
-            {/* ── Column header row; outside the vertical scroll container */}
+          {/* ── Live + upcoming markets ───────────────────────────────────── */}
+          {liveSorted.length > 0 ? (
+            <DivergenceGrid
+              rows={liveSorted}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+              expandedIds={expandedIds}
+              onToggleExpand={toggleExpand}
+              containerStyle={staleStyle}
+              ariaLabel={`Divergence terminal, live and upcoming markets. ${liveSorted.length} rows`}
+            />
+          ) : (
             <div
-              role="row"
-              aria-label="Column headers"
-              className="border-b text-[11px] font-medium"
+              className="px-4 py-6 text-[12.5px] border-b"
               style={{
-                display: "grid",
-                gridTemplateColumns: COL_GRID,
-                minWidth: "920px",
-                alignItems: "center",
-                backgroundColor: "var(--bg-panel)",
                 borderColor: "var(--border-subtle)",
                 color: "var(--text-tertiary)",
+                backgroundColor: "var(--bg-panel)",
               }}
             >
-              <div role="columnheader" className="py-3 pl-3 pr-2">
-                <SortHeader label="Kickoff (UTC)" colId="kickoff_utc" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-              </div>
-              <div role="columnheader" className="py-3 px-2">
-                <SortHeader label="Round" colId="round" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-              </div>
-              <div role="columnheader" className="py-3 px-2">Matchup</div>
-              <div role="columnheader" className="py-3 px-2">Market</div>
-              <div role="columnheader" className="py-3 px-2">Outcome</div>
-              <div role="columnheader" className="py-3 px-2">
-                <SortHeader label="p (model)" colId="p_model" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
-              </div>
-              <div role="columnheader" className="py-3 px-2">
-                <SortHeader label="q (mkt)" colId="q_market_devigged" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
-              </div>
-              <div role="columnheader" data-guide-id="col-divergence" className="py-3 px-2">Divergence</div>
-              <div role="columnheader" data-guide-id="col-edge" className="py-3 px-2">
-                <SortHeader label="Edge E" colId="absEdge" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} align="right" />
-              </div>
-              <div
-                role="columnheader"
-                className="py-3 px-2 text-right"
-                aria-label="Pre-registered edge threshold"
+              No hay partidos en vivo o próximos en este snapshot. Los partidos ya
+              jugados aparecen abajo como referencia histórica.
+            </div>
+          )}
+
+          {/* ── Settled / in-progress reference (collapsible) ─────────────── */}
+          {settledSorted.length > 0 && (
+            <div className="border-t" style={{ borderColor: "var(--border-subtle)" }}>
+              <button
+                type="button"
+                onClick={() => setSettledOpen((o) => !o)}
+                aria-expanded={settledOpen}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-[12px] font-medium transition-colors duration-[120ms]"
+                style={{ backgroundColor: "var(--bg-panel)", color: "var(--text-secondary)" }}
               >
-                ε
-              </div>
-              <div role="columnheader" data-guide-id="col-gate" className="py-3 px-2">
-                <SortHeader label="Gate" colId="gate_status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-              </div>
+                <span className="mono text-[10px]" aria-hidden>
+                  {settledOpen ? "▾" : "▸"}
+                </span>
+                Partidos jugados (referencia histórica)
+                <span
+                  className="mono text-[10px] rounded px-1.5 py-0.5"
+                  style={{ backgroundColor: "var(--bg-panel-elev)", color: "var(--text-tertiary)" }}
+                  aria-label={`${settledSorted.length} partidos jugados`}
+                >
+                  {settledSorted.length}
+                </span>
+              </button>
+              {settledOpen && (
+                <DivergenceGrid
+                  rows={settledSorted}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSort={handleSort}
+                  expandedIds={expandedIds}
+                  onToggleExpand={toggleExpand}
+                  containerStyle={{ opacity: isStale ? 0.6 : 0.7 }}
+                  ariaLabel={`Settled and in-progress markets. ${settledSorted.length} rows`}
+                />
+              )}
             </div>
-
-            {/* ── Vertical scroll container; div height is respected, unlike tbody */}
-            <div
-              ref={containerRef}
-              style={{
-                maxHeight: "calc(100vh - 300px)",
-                overflowY: "auto",
-                minWidth: "920px",
-                ...staleStyle,
-              }}
-            >
-              <div
-                style={{
-                  height: virtualizer.getTotalSize(),
-                  position: "relative",
-                  width: "100%",
-                }}
-              >
-              {virtualItems.map((vItem) => {
-                const row = sortedRows[vItem.index];
-                if (!row) return null;
-                const isExpanded = expandedIds.has(row.row_id);
-                const isFired = row.gate_status === "FIRED";
-
-                return (
-                  <div
-                    key={row.row_id}
-                    data-index={vItem.index}
-                    ref={virtualizer.measureElement}
-                    role="row"
-                    aria-expanded={isExpanded}
-                    aria-rowindex={vItem.index + 1}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      transform: `translateY(${vItem.start}px)`,
-                      width: "100%",
-                      borderBottom: "1px solid var(--border-subtle)",
-                      ...(isFired ? { borderLeft: "2px solid var(--gate-fired)" } : {}),
-                    }}
-                  >
-                    {/* ── Clickable data row ─────────────────────────────── */}
-                    <div
-                      role="presentation"
-                      className="divergence-row transition-colors duration-[120ms] cursor-pointer text-[12.5px]"
-                      data-pinned={isExpanded ? "" : undefined}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: COL_GRID,
-                        alignItems: "center",
-                        backgroundColor: isExpanded ? "var(--bg-panel-elev)" : undefined,
-                      }}
-                      onClick={() => toggleExpand(row.row_id)}
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggleExpand(row.row_id);
-                        }
-                      }}
-                      aria-label={`${isExpanded ? "Collapse" : "Expand"} details for ${row.home.display_name} vs ${row.away.display_name} ${MARKET_LABELS[row.market] ?? row.market} ${row.outcome}`}
-                    >
-                      {/* Kickoff */}
-                      <div role="gridcell" className="py-3.5 pl-3 pr-2">
-                        <span
-                          className="mono"
-                          aria-label={`kickoff ${formatUtcShort(row.kickoff_utc)}`}
-                        >
-                          {formatUtcShort(row.kickoff_utc)}
-                        </span>
-                      </div>
-                      {/* Round */}
-                      <div role="gridcell" className="py-3.5 px-2 mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                        {row.round}
-                      </div>
-                      {/* Matchup */}
-                      <div role="gridcell" className="py-3.5 px-2 min-w-0 overflow-hidden">
-                        <Link
-                          href={`/match/${row.match_id}`}
-                          className="transition-colors duration-[120ms] block truncate font-medium"
-                          style={{ color: "var(--text-primary)" }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
-                            {row.home.fifa_code}
-                          </span>{" "}
-                          <Flag code={row.home.fifa_code} size={16} />{" "}
-                          {row.home.display_name}{" "}
-                          <span style={{ color: "var(--text-quiet)" }}>‒</span>{" "}
-                          {row.away.display_name}{" "}
-                          <Flag code={row.away.fifa_code} size={16} />{" "}
-                          <span className="mono text-[11px] font-normal" style={{ color: "var(--text-quiet)" }}>
-                            {row.away.fifa_code}
-                          </span>
-                        </Link>
-                      </div>
-                      {/* Market */}
-                      <div role="gridcell" data-cell="market" className="py-3.5 px-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                        {MARKET_LABELS[row.market] ?? row.market}
-                      </div>
-                      {/* Outcome */}
-                      <div role="gridcell" className="py-3.5 px-2 mono text-[11px]" style={{ color: "var(--text-secondary)" }}>
-                        {row.outcome}
-                      </div>
-                      {/* p_model */}
-                      <div role="gridcell" className="py-3.5 px-2 text-right">
-                        <NumericCell
-                          value={row.p_model}
-                          formatter={(p) => formatProbability(p, 1)}
-                          ariaLabel={`${(row.p_model * 100).toFixed(1)} percent`}
-                        />
-                      </div>
-                      {/* q_market */}
-                      <div role="gridcell" className="py-3.5 px-2 text-right">
-                        <NumericCell
-                          value={row.q_market_devigged}
-                          formatter={(p) => formatProbability(p, 1)}
-                          ariaLabel={`${(row.q_market_devigged * 100).toFixed(1)} percent`}
-                        />
-                      </div>
-                      {/* Divergence bar */}
-                      <div role="gridcell" className="py-3.5 px-2">
-                        <DivergenceBar p_model={row.p_model} q_market={row.q_market_devigged} />
-                      </div>
-                      {/* Edge E */}
-                      <div role="gridcell" data-cell="edge" className="py-3.5 px-2 text-right">
-                        <EdgeBadge edge={row.edge_E} threshold={row.edge_threshold} />
-                        <div
-                          className="divergence-edge-bps mono"
-                          aria-label={`exact edge ${(row.edge_E * 10000).toFixed(0)} basis points, ${(row.edge_E * 100).toFixed(3)} percentage points`}
-                        >
-                          <span className="divergence-edge-bps-value">
-                            {row.edge_E >= 0 ? "+" : "−"}
-                            {Math.round(Math.abs(row.edge_E) * 10000)} bps
-                          </span>
-                          <span className="divergence-edge-bps-sep">·</span>
-                          <span className="divergence-edge-bps-pct">
-                            {(Math.abs(row.edge_E) * 100).toFixed(3)}%
-                          </span>
-                        </div>
-                      </div>
-                      {/* Threshold ε */}
-                      <div role="gridcell" className="py-3.5 px-2 text-right mono text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                        <span aria-label={`threshold ${(row.edge_threshold * 100).toFixed(0)} percent`}>
-                          {formatMono(row.edge_threshold * 100, 0)}%
-                        </span>
-                      </div>
-                      {/* Gate */}
-                      <div role="gridcell" className="py-3.5 px-2 text-center">
-                        <GateStatusPill
-                          status={row.gate_status}
-                          rulesTripped={row.gate_rules_tripped}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Disclosure panel */}
-                    {isExpanded && <RowDisclosure row={row} />}
-                  </div>
-                );
-              })}
-            </div>
-            </div>
-          </div>
+          )}
 
           {/* ── Row count footer ────────────────────────────────────────── */}
           <div
@@ -952,8 +1079,9 @@ export function DivergenceTable({
               backgroundColor: "var(--bg-panel)",
             }}
           >
-            {sortedRows.length} row{sortedRows.length !== 1 ? "s" : ""}
-            {rows.length !== sortedRows.length && ` (filtered from ${rows.length})`}
+            <span className="mono">{liveSorted.length}</span> live{" · "}
+            <span className="mono">{settledSorted.length}</span> settled
+            {rows.length !== filteredRows.length && ` (filtered from ${rows.length})`}
             {" · "}snapshot{" "}
             <span className="mono">{snapshotId}</span>
             {" · "}click any row to expand model breakdown and edge history
