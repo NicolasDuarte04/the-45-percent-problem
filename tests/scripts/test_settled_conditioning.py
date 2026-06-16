@@ -16,50 +16,72 @@ the website's match_outcomes table and threads it into
 MonteCarloRunner via batch_runner. Here we skip the loader and
 construct the dict directly so the test is hermetic.
 
-## Divergence from the diagnostic's literal threshold
+## cp-15 hardening: single-loss magnitude is directional, not a fixed
+## relative-percentage floor
 
-The 2026-06-01 architecture diagnostic stated:
-  "After manually inserting a 0-3 Mexico loss into match_outcomes and
-   running a 1k-batch dev pipeline, Mexico's p_champion in the produced
-   tournament.json is less than 0.005."
+The 2026-06-01 architecture diagnostic stated that a single 0-3 Mexico
+loss should drop p_champion below 0.005. That was the diagnostic
+author's prior, not a measurement (a static audit with no code run).
+cp-10 replaced it with measured invariants, including a "single 0-3
+opener drops p_champion by at least 20% relative to baseline" floor.
+At 10k runs against the locked Elo (Mexico = 1858, RSA = 1524) the
+effect is real and large:
+  Baseline       p_champion(Mexico) ~ 0.0168
+  Single 0-3     p_champion(Mexico) ~ 0.0118  (about 30% relative drop)
+  All 3 losses   p_champion(Mexico) = 0.0000  (math elimination)
 
-That threshold was the diagnostic author's prior, not a measurement - 
-the diagnostic was a static audit with no code executed. Measured
-behavior at 10k runs against the project's locked Elo (Mexico = 1858,
-RSA = 1524) shows:
-  - Baseline       p_champion(Mexico) = 0.0171
-  - Single 0-3     p_champion(Mexico) = 0.0118  (31% relative drop)
-  - All 3 losses   p_champion(Mexico) = 0.0000  (math elimination)
+cp-15 removed the fixed 20% relative floor because it is not a stable
+invariant at this test's sample size, which made it flake in CI:
+  1. The test runs its own Monte Carlo (it does not read a snapshot), so
+     every probability is a multiple of 1/N_RUNS. At N_RUNS = 1000 the
+     baseline is only about 17 champion runs out of 1000.
+  2. Mexico is a long shot. The single-loss effect removes about a third
+     of those runs, but the relative drop between two small integer
+     counts is noise-dominated: across Monte Carlo draws it ranges from
+     about 14% to 31% at 1000 runs and only stabilizes near 30% at
+     10000 runs (the production run count). A 20% floor sits inside that
+     band, so some runs cleared it and some did not.
+  3. The 1000-run aggregate is additionally sensitive to PYTHONHASHSEED.
+     simulation/bracket_encoder.py builds the group-ranking team list
+     via list(set(...)), so the order in which the RNG is consumed
+     during tiebreaks shifts with the interpreter hash seed. Each CI
+     process gets a fresh hash seed, so the same code produced different
+     aggregates run to run. Pinning that ordering is a simulation-engine
+     change and is out of scope for a test-only checkpoint; it is
+     recorded as a cp-15 follow-up in the PR.
 
-A single 0-3 opener does not collapse Mexico below 0.005 with the
-real strength matrix - Mexico has two more group games to recover,
-the best-thirds gateway, and Elo 1858 in R32+. The conditioning
-*works*, it just doesn't push Mexico that far that fast with one
-match.
+The invariants cp-15 asserts instead hold across the whole tournament
+data range and do not depend on the noise-dominated p_champion count:
+  1. Deterministic floor (unchanged): when all three of Mexico's group
+     games are settled as losses, p_champion and p_r16 are both exactly
+     0. The strongest acceptance, independent of sampling noise.
+  2. Single-loss strict decrease, gated by baseline mass: a 0-3 opener
+     strictly lowers Mexico's p_champion while the baseline carries
+     enough Monte Carlo mass to make the decrease reliable (at or above
+     MIN_BASELINE_STRICT, which the current Elo clears with margin).
+     Because baseline and conditioned runs share one RNG stream, unwired
+     or sign-flipped conditioning makes the two equal and fails the
+     strict branch, so this is a real acceptance test and not a no-op.
+     Below that mass the championship count is a handful of runs of pure
+     sampling noise (it can even tick up via bracket reshuffle), so no
+     p_champion claim is made there; that low-baseline state is the one
+     that broke the old fixed-percentage floor.
+  3. Magnitude and the low-baseline direction are asserted where they are
+     statistically stable: on p_r16, not p_champion. Mexico's p_r16
+     (about 0.4 baseline, hundreds of counts, and decided at group
+     qualification before the hash-sensitive bracket tiebreaks) drops by
+     at least 10 percentage points, South Africa's rises by at least 10,
+     and the Group A aggregate rises. Those large-count quantities carry
+     the "a settled loss conditions progression downward by a sensible
+     amount" claim that the relative p_champion floor used to carry.
 
-The test below replaces the diagnostic's single-number threshold
-with a richer set of invariants:
-  1. Deterministic floor: when all three of Mexico's group games are
-     conditioned to losses, Mexico's p_champion and p_r16 are both
-     exactly 0. This is the strongest acceptance - it passes only if
-     settled-result conditioning is fully wired into the runner.
-  2. Single-loss measurable drop: Mexico's p_champion drops by at
-     least 20% relative to baseline after one 0-3 opener; Mexico's
-     p_r16 drops by at least 10 percentage points.
-  3. Single-loss redistribution direction: South Africa (the winner
-     of M01) gains at least 10 percentage points of p_r16; the
-     aggregate p_r16 of the three other Group A teams rises versus
-     baseline.
+test_single_loss_small_baseline_does_not_break exercises the relaxed
+branch with a deliberately weakened Mexico so a future low-baseline
+tournament state cannot silently re-break this file.
 
-The diagnostic's "each other team's p_r16 rises" wording is replaced
-with the aggregate redistribution claim above. With the real Elo,
-South Africa absorbs almost all of Mexico's lost mass; South Korea
-and Czechia individually shift only marginally (and can fall slightly
-under single-loss noise). The aggregate rise is the directionally
-meaningful invariant.
-
-Reasoning recorded in docs/onboarding/cp-10-inspection-notes.md and
-in the cp-10 PR description.
+Reasoning recorded in the cp-15 PR description. The 20% floor was test
+scaffolding (PLAN.md Q7, 2026-06-03), not pre-registered methodology,
+so removing it needs no OSF deviation.
 
 Run:
   pytest tests/scripts/test_settled_conditioning.py -v
@@ -105,6 +127,19 @@ N_RUNS = 1000
 # stream - every match that isn't conditioned is sampled identically
 # across the two passes, so directional comparisons are clean.
 SEED_BASE = 20260611
+
+# Baseline p_champion (as a fraction of N_RUNS) below which a strict
+# decrease is no longer reliable. At a handful of champion runs out of
+# N_RUNS a correctly-wired single-loss conditioning is pure sampling
+# noise: the count can stay flat or even tick up via bracket reshuffle
+# (a forced group loss changes the seeding path), so neither a strict nor
+# a non-increase claim holds. Above this floor the strict decrease is
+# robust; below it no p_champion claim is asserted and the conditioning
+# signal is read from p_r16 instead (a large, hash-stable count). Mexico's
+# current baseline is about 0.017 (17 runs / 1000), comfortably above
+# this; a weakened-Mexico fixture below exercises the relaxed branch at
+# about 1 to 2 runs / 1000.
+MIN_BASELINE_STRICT = 0.010
 
 
 def _build_elo_ratings() -> dict[str, float]:
@@ -227,6 +262,85 @@ def mexico_full_elimination(elo: dict[str, float]) -> dict[str, dict[str, float]
     return _aggregate(runner)
 
 
+@pytest.fixture(scope="module")
+def weak_mexico_elo(elo: dict[str, float]) -> dict[str, float]:
+    """Elo map with Mexico weakened into the small-baseline regime.
+
+    At the locked Elo Mexico's p_champion baseline is about 0.017. This
+    override drops Mexico's rating so the baseline falls well below
+    MIN_BASELINE_STRICT (measured around 0.001 to 0.002 at 1k runs). It
+    models a future tournament state in which Mexico has conditioned down
+    to a long-shot's long shot, which is the state that broke the old
+    fixed-percentage floor.
+    """
+    weak = dict(elo)
+    weak["Mexico"] = 1700.0
+    return weak
+
+
+@pytest.fixture(scope="module")
+def weak_baseline(weak_mexico_elo: dict[str, float]) -> dict[str, dict[str, float]]:
+    """1k-run baseline with the weakened-Mexico Elo, no settled results."""
+    runner = _build_runner(weak_mexico_elo, settled_results=None)
+    return _aggregate(runner)
+
+
+@pytest.fixture(scope="module")
+def weak_mexico_single_loss(
+    weak_mexico_elo: dict[str, float],
+) -> dict[str, dict[str, float]]:
+    """1k-run on M01 = Mexico 0-3 South Africa with the weakened Elo."""
+    settled = {
+        "M01": MatchResult(
+            home="Mexico",
+            away="South Africa",
+            home_goals=0,
+            away_goals=3,
+        )
+    }
+    runner = _build_runner(weak_mexico_elo, settled_results=settled)
+    return _aggregate(runner)
+
+
+# ── Directional invariant shared by current- and small-baseline tests ────────
+
+def _assert_settled_loss_reduces_p_champion(
+    baseline: dict[str, dict[str, float]],
+    conditioned: dict[str, dict[str, float]],
+) -> None:
+    """Assert a single settled Mexico loss strictly lowers p_champion,
+    when the baseline carries enough Monte Carlo mass to make that claim
+    reliable.
+
+    A strict decrease is asserted only when the baseline is at or above
+    MIN_BASELINE_STRICT. At that mass the single-loss effect (about a
+    third of Mexico's championship runs) reliably removes at least one
+    run, so equality is a real failure signal: baseline and conditioned
+    share one RNG stream, so unwired or sign-flipped conditioning yields
+    conditioned == baseline and fails this assertion. That makes the
+    strict branch a genuine acceptance test, not a no-op.
+
+    Below MIN_BASELINE_STRICT no p_champion claim is made: at a handful of
+    runs out of N_RUNS the count is pure sampling noise and can even tick
+    up under bracket reshuffle, so not even a non-increase claim holds.
+    The relative magnitude of the drop is likewise not asserted here; on
+    this noise-dominated count it is not a stable invariant at 1k runs
+    (see module docstring). Magnitude and the low-baseline directional
+    signal both live on the large-count, hash-stable p_r16 tests.
+    """
+    b = baseline.get("Mexico", {}).get("p_champion", 0.0)
+    c = conditioned.get("Mexico", {}).get("p_champion", 1.0)
+    if b >= MIN_BASELINE_STRICT:
+        assert c < b, (
+            f"Mexico p_champion did not strictly drop after a 0-3 M01 "
+            f"loss: baseline={b:.4f}, conditioned={c:.4f}. With a "
+            f"baseline at or above {MIN_BASELINE_STRICT:.3f} the "
+            f"single-loss conditioning must remove at least one "
+            f"championship run; equality means settled_results is not "
+            f"flowing into the MC's group loop."
+        )
+
+
 # ── Acceptance test 1: deterministic floor ───────────────────────────────────
 
 def test_mexico_full_elimination_zero_champion(
@@ -263,22 +377,58 @@ def test_mexico_single_loss_drops_p_champion(
     baseline: dict[str, dict[str, float]],
     mexico_single_loss: dict[str, dict[str, float]],
 ) -> None:
-    """A single 0-3 opening loss must measurably reduce Mexico's
-    p_champion. The 31% drop measured at 10k runs gives ample headroom
-    for the 20% relative-drop threshold at 1k runs.
+    """A single 0-3 opening loss must condition Mexico's p_champion
+    downward: never up, and strictly down at the current baseline.
+
+    The magnitude of the drop is asserted on p_r16 (test below), not on
+    this count: at 1k runs Mexico's p_champion is about 17 runs out of
+    1000, so a fixed relative-percentage floor is noise-dominated and
+    flakes (see module docstring). The directional invariant is robust
+    and, thanks to the shared RNG stream, still fails if conditioning is
+    unwired or sign-flipped.
     """
-    b = baseline.get("Mexico", {}).get("p_champion", 0.0)
-    c = mexico_single_loss.get("Mexico", {}).get("p_champion", 1.0)
-    assert c < b, (
-        f"Mexico p_champion did not drop after a 0-3 M01 loss: "
-        f"baseline={b:.4f}, conditioned={c:.4f}."
+    _assert_settled_loss_reduces_p_champion(baseline, mexico_single_loss)
+
+
+# ── Acceptance test 2b: small-baseline regression guard for the test ─────────
+
+def test_single_loss_small_baseline_does_not_break(
+    weak_baseline: dict[str, dict[str, float]],
+    weak_mexico_single_loss: dict[str, dict[str, float]],
+) -> None:
+    """Guard the test against a future low-baseline tournament state.
+
+    This protects the test file, not the engine. As Mexico's Elo
+    conditions down over the tournament its p_champion baseline shrinks
+    toward a couple of runs out of 1000, where the championship count is
+    pure noise. The old fixed-percentage floor re-broke exactly there.
+    This test proves the cp-15 design does not: the p_champion helper
+    relaxes (asserts nothing) instead of flaking, and the conditioning
+    signal is still verifiable on the stable, hash-independent p_r16
+    count, which drops about 0.18 even when Mexico is a long shot.
+    """
+    b_champ = weak_baseline.get("Mexico", {}).get("p_champion", 0.0)
+    assert b_champ < MIN_BASELINE_STRICT, (
+        f"weak_mexico_elo baseline p_champion={b_champ:.4f} is not below "
+        f"MIN_BASELINE_STRICT={MIN_BASELINE_STRICT:.3f}, so this test is "
+        f"not exercising the relaxed branch it claims to. Lower Mexico's "
+        f"override rating in the weak_mexico_elo fixture."
     )
-    # Relative drop floor. At 10k the measured drop is ~31 %; at 1k
-    # the noise band is wider, so 20 % is a calibrated lower bound.
-    rel_drop = (b - c) / b if b > 0 else 0.0
-    assert rel_drop >= 0.20, (
-        f"Mexico p_champion drop was only {rel_drop:.1%}: "
-        f"baseline={b:.4f}, conditioned={c:.4f}. cp-10 expects ≥ 20%."
+    # The p_champion helper (used by the current-baseline acceptance test)
+    # must relax here rather than raise on the 1-to-2-run noise.
+    _assert_settled_loss_reduces_p_champion(weak_baseline, weak_mexico_single_loss)
+    # Conditioning is still demonstrably sign-correct at low baseline on
+    # the stable statistic: Mexico's R16 reach falls. p_r16 is decided by
+    # group qualification, before the bracket tiebreaks that carry the
+    # PYTHONHASHSEED sensitivity, so this drop is tight (about 0.18 across
+    # hash seeds). The 0.05 floor leaves wide margin while staying a real
+    # check.
+    r16_b = weak_baseline.get("Mexico", {}).get("p_r16", 0.0)
+    r16_c = weak_mexico_single_loss.get("Mexico", {}).get("p_r16", 1.0)
+    assert r16_b - r16_c >= 0.05, (
+        f"Weakened Mexico p_r16 did not drop after a 0-3 M01 loss: "
+        f"baseline={r16_b:.3f}, conditioned={r16_c:.3f}. Conditioning "
+        f"must still reduce R16 reach at a small championship baseline."
     )
 
 
