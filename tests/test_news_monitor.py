@@ -288,7 +288,14 @@ class TestNewsMonitor:
             return raw, 200
 
         monitor = _make_monitor(fetch_fn=fake_fetch)
-        now = datetime.now(timezone.utc)
+        # Use the fixed reference clock (not datetime.now): _make_event stamps
+        # the event at a fixed ts (2026-06-15T10:00Z) and get_window prunes
+        # anything older than now - _WINDOW_RETENTION_HOURS (24h). Under the
+        # real wall clock the fixture event ages out of the window and this
+        # assertion silently flips to 0 — which it did once real time passed
+        # 2026-06-16T10:00Z. _NOW keeps the event 2h inside the window, matching
+        # the other window tests in this module.
+        now = _NOW
         monitor._poll_source("http://fake.example.com/feed", tier=1, now=now)
         window = monitor.get_window(now)
         assert len(window) == 1

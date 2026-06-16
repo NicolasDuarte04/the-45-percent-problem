@@ -132,9 +132,13 @@ describe("snapshot_meta.json", () => {
     const d = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
     expect(d.snapshot_id).toBe(SNAPSHOT_ID);
   });
-  it("matches_settled is 0", () => {
+  it("matches_settled is a non-negative integer", () => {
+    // Relaxed from a hard `=== 0` pin: the tournament is live, so matches
+    // settle as it progresses. The binding invariant is cross-artifact
+    // consistency with evaluation_metrics (asserted below), not a fixed value.
     const d = SnapshotMetaSchema.parse(readJson(path.join(LATEST, "snapshot_meta.json")));
-    expect(d.matches_settled).toBe(0);
+    expect(Number.isInteger(d.matches_settled)).toBeTrue();
+    expect(d.matches_settled).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -289,9 +293,13 @@ describe("evaluation_metrics.json", () => {
     const r = EvaluationMetricsSchema.safeParse(readJson(path.join(LATEST, "evaluation_metrics.json")));
     if (!r.success) throw new Error(JSON.stringify(r.error.issues));
   });
-  it("matches_settled is 0", () => {
+  it("matches_settled is a non-negative integer", () => {
+    // Relaxed from `=== 0`: evaluation_metrics.matches_settled is now sourced
+    // from the live match_outcomes count (same as snapshot_meta), so it tracks
+    // the tournament. Cross-artifact consistency is the real invariant (below).
     const d = EvaluationMetricsSchema.parse(readJson(path.join(LATEST, "evaluation_metrics.json")));
-    expect(d.matches_settled).toBe(0);
+    expect(Number.isInteger(d.matches_settled)).toBeTrue();
+    expect(d.matches_settled).toBeGreaterThanOrEqual(0);
   });
 });
 
