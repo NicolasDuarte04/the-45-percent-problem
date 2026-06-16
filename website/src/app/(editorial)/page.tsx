@@ -79,8 +79,10 @@ export default async function Home() {
           >
             Probabilistic pricing for FIFA World Cup 2026. M&#9733; is a
             bivariate Poisson model with Dixon-Coles correction, calibrated on
-            international match data and compared nightly to bookmaker-implied
-            probabilities. The &#8220;45% problem&#8221; refers to a systematic
+            international match data. Model-implied probabilities come from
+            10,000 Monte Carlo simulations per nightly snapshot; a
+            market-comparison layer against bookmaker-implied probabilities is
+            in development. The &#8220;45% problem&#8221; refers to a systematic
             divergence documented in Phase 1: market-implied championship
             probabilities for mid-tier contenders cluster near 45% of their
             model-implied values, suggesting a persistent structural

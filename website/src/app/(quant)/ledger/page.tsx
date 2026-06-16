@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { loadLedger, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { LedgerSummaryPanel } from "@/components/compositions/LedgerSummaryPanel";
+import { TransparencyNote } from "@/components/compositions/TransparencyNote";
 import { LedgerTable } from "@/components/compositions/LedgerTable";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
@@ -241,6 +242,24 @@ export default function LedgerPage() {
           .
         </div>
       </div>
+
+      {/* ── Pending-data disclosure (cp-14-pre) ───────────────────────────── */}
+      <TransparencyNote id="ledger-pending" ariaLabel="Ledger data transparency">
+        <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
+          Transparency note.
+        </span>{" "}
+        Forecast logging and calibration scoring are still being wired up. The
+        entries below are placeholder forecasts, and the aggregate scoring
+        metrics (Brier, log-loss, RPS) are pending the first settled-match
+        scoring run.{" "}
+        <Link
+          href="/vault/evaluation"
+          className="underline underline-offset-2"
+          style={{ color: "var(--accent-focus)" }}
+        >
+          See methodology.
+        </Link>
+      </TransparencyNote>
 
       <div className="max-w-[1152px] mx-auto px-4 md:px-12 py-6 space-y-8">
         {/* ── §7.3 Summary panel ────────────────────────────────────────── */}

@@ -78,9 +78,11 @@ export default async function MethodologyEntryPage({
             maxWidth: 640,
           }}
         >
-          10,000 Monte Carlo simulations per night. Bookmaker odds de-vigged
-          via the power method. Edges flagged above a 3% mainline threshold
-          (5% for derivatives). Suppressed when the volatility gate triggers.
+          10,000 Monte Carlo simulations per nightly snapshot. The
+          pre-registered market layer de-vigs bookmaker odds via the power
+          method, flags edges above a 3% mainline threshold (5% for
+          derivatives), and suppresses them when the volatility gate triggers.
+          This layer is in development pending live odds ingestion.
           The full specification: every parameter, every calibration step,
           every kill criterion: lives in the vault.
         </p>

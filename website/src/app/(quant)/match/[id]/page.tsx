@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   loadLedger,
@@ -17,6 +18,7 @@ import { GoalMatrixHeatmap } from "@/components/compositions/GoalMatrixHeatmap";
 import { StrengthInputsPanel } from "@/components/compositions/StrengthInputsPanel";
 import { RelatedLedgerRecords } from "@/components/compositions/RelatedLedgerRecords";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
+import { TransparencyNote } from "@/components/compositions/TransparencyNote";
 
 export const dynamic = "force-static";
 
@@ -296,6 +298,23 @@ export default async function MatchDetailPage({
           </p>
         </div>
       </div>
+
+      {/* ── Frozen-data disclosure (cp-14-pre) ────────────────────────────── */}
+      <TransparencyNote id="match-frozen" ariaLabel="Match data transparency">
+        <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
+          Transparency note.
+        </span>{" "}
+        Per-match settled scores and model-vs-market divergence are not yet
+        joined into this view; the market column shows pre-tournament synthetic
+        odds, not live bookmaker lines.{" "}
+        <Link
+          href="/bracket"
+          className="underline underline-offset-2"
+          style={{ color: "var(--accent-focus)" }}
+        >
+          See the tournament bracket for results.
+        </Link>
+      </TransparencyNote>
 
       <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6 flex flex-col gap-6">
         <MatchHeader match={match} />

@@ -80,7 +80,7 @@ export default function ParentHome() {
             titleTail="Problem"
             desc="La Copa del Mundo, calculada partido por partido. Modelo abierto, revisable, registrado."
             stats={[
-              { k: "Brier", v: "0.1842" },
+              { k: "Calibración", v: "Pendiente" },
               { k: "Pre-registro", v: "OSF" },
               { k: "Fase", v: "Grupos" },
             ]}
