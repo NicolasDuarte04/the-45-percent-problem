@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { loadStructuralMaps, mergeDivergence } from "@/lib/db/structuralMerge";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
+import { TerminalTransparencyBanner } from "@/components/compositions/TerminalTransparencyBanner";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
 import { TERMINAL_STEPS, TERMINAL_DURATION_SEC } from "./_steps";
@@ -96,6 +97,9 @@ export default async function TerminalPage({
           .
         </div>
       </div>
+
+      {/* ── Methodological transparency banner (pre cp-14) ────────────────── */}
+      <TerminalTransparencyBanner />
 
       {/* ── All-gated banner ─────────────────────────────────────────────── */}
       {allGated && (
