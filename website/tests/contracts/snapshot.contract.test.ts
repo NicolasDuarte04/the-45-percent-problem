@@ -153,9 +153,17 @@ describe("divergence.json schema", () => {
     expect(result.success, result.success ? "" : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it("contains rows with required fields", () => {
+  it("contains priced rows, unless in the cp-14 pending (no-odds) state", () => {
     const data = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
-    expect(data.rows.length).toBeGreaterThan(0);
+    if (data.status === "pending") {
+      // cp-14 Decision B: when no real odds are ingested the divergence is
+      // "pending" — zero rows and no source_book stamped anywhere. That is a
+      // valid published state; rows populate once live Pinnacle lines land.
+      expect(data.rows.length).toBe(0);
+    } else {
+      // A live divergence snapshot must carry de-vigged rows.
+      expect(data.rows.length).toBeGreaterThan(0);
+    }
   });
 
   it("all rows have gate_status OPEN or FIRED", () => {

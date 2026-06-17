@@ -189,9 +189,17 @@ describe("divergence.json", () => {
     const r = DivergenceSnapshotSchema.safeParse(readJson(path.join(LATEST, "divergence.json")));
     if (!r.success) throw new Error(JSON.stringify(r.error.issues));
   });
-  it("has rows", () => {
+  it("has priced rows, unless in the cp-14 pending (no-odds) state", () => {
     const d = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
-    expect(d.rows.length).toBeGreaterThan(0);
+    if (d.status === "pending") {
+      // cp-14 Decision B: when no real odds are ingested the divergence is
+      // "pending" — zero rows and no source_book stamped. That is a valid
+      // published state; rows populate once live Pinnacle lines land.
+      expect(d.rows.length).toBe(0);
+    } else {
+      // A live divergence snapshot must carry de-vigged rows.
+      expect(d.rows.length).toBeGreaterThan(0);
+    }
   });
   it("edge_E = p_model - q_market_devigged (within tolerance)", () => {
     const d = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
