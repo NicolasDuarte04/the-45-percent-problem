@@ -105,11 +105,11 @@ export function SnapshotPicker({
           color: "var(--text-tertiary)",
         }}
       >
-        MODEL STATE · {selectedDate}
+        FORECAST SNAPSHOT · {selectedDate}
       </div>
       <div style={{ display: "flex", gap: 6 }}>
         <PickerButton
-          label="CURRENT"
+          label="LATEST"
           selected={selectedId === current.id}
           onClick={() => goTo(current.id)}
         />
@@ -148,7 +148,7 @@ interface SnapshotBannerProps {
 
 /**
  * Banner shown only when viewing a non-current snapshot. Provides the
- * `[ Return to current ]` affordance back to the live model state.
+ * `[ Return to latest ]` affordance back to the latest forecast snapshot.
  */
 export function SnapshotBanner({ selected, current, basePath }: SnapshotBannerProps) {
   const router = useRouter();
@@ -183,7 +183,9 @@ export function SnapshotBanner({ selected, current, basePath }: SnapshotBannerPr
       }}
     >
       <span>
-        Viewing snapshot from {selected.daysOld} days ago.
+        Viewing a forecast snapshot from {selected.daysOld} days ago. Both this
+        and the latest snapshot are the same frozen pre-tournament forecast; any
+        difference reflects Monte Carlo resampling, not settled results.
       </span>
       <button
         type="button"
@@ -201,7 +203,7 @@ export function SnapshotBanner({ selected, current, basePath }: SnapshotBannerPr
           cursor: "pointer",
         }}
       >
-        [ Return to current ]
+        [ Return to latest ]
       </button>
     </div>
   );

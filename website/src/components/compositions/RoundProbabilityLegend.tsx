@@ -39,6 +39,15 @@ export function RoundProbabilityLegend() {
         one in four MC runs has the team in the QF, not that half of those
         reaching R16 then advance.
       </div>
+      <div
+        className="mono text-[11px] leading-5 mt-2"
+        style={{ color: "var(--text-tertiary)" }}
+      >
+        These are the frozen pre-tournament probabilities from the locked Monte
+        Carlo batch. They do not yet condition on settled results: a team that
+        has won or been knocked out still shows its pre-tournament marginal.
+        Conditioning the bracket on live results is a separate, planned feature.
+      </div>
     </div>
   );
 }
