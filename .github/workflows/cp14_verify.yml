@@ -1,0 +1,63 @@
+# cp-14 settled-set verification (read-only).
+#
+# Runs the FD <-> M{NN} <-> batch-slot bijection against the REAL match_outcomes
+# table on the branch it is dispatched from, then emits the full settled-set
+# mapping table + the computed champion metrics for review before merge.
+#
+# This is the only path that exercises the live settled set on a feature branch:
+# nightly_pipeline.yml and on_demand_regen.yml both hardcode `ref: main`, so they
+# cannot validate this PR. This workflow checks out the dispatched ref instead.
+#
+# It NEVER pushes or publishes. scripts/build_forecast_mapping.py exits non-zero
+# (code 3) on any bijection failure, so a bad settled match fails this job and is
+# surfaced loudly. The mapping table is uploaded as an artifact and written to the
+# job summary on every run (if: always()).
+
+name: cp-14 settled-set verify
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify settled-set bijection against real match_outcomes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the dispatched ref (the branch under review)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run settled-set verify (exits non-zero on bijection failure)
+        # Same DB secret references the nightly uses, copied verbatim. DIRECT_URL
+        # is preferred over DATABASE_URL to bypass any pgbouncer pooler. The
+        # script reads match_outcomes read-only; it writes no data and pushes
+        # nothing. A MappingError (no-fixture / score-conflict / double-claim /
+        # orientation / id-vs-team) exits 3 and fails this step.
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/build_forecast_mapping.py --reference-date "$(date -u +%Y-%m-%d)"
+
+      - name: Upload settled-set table + audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp14-settled-set-verification
+          path: |
+            data/processed/cp14_settled_table.md
+            data/processed/forecast_mapping_audit.json
+          if-no-files-found: warn

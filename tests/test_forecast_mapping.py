@@ -136,14 +136,39 @@ def test_swapped_orientation_halts(model_map: pd.DataFrame) -> None:
         map_settled(model_map, [swapped])
 
 
-def test_phantom_duplicate_collision_halts(model_map: pd.DataFrame) -> None:
+def test_score_conflict_halts(model_map: pd.DataFrame) -> None:
+    """Two settled rows on one fixture with different scores: halt, named."""
     a = model_map.iloc[0]
     outcomes = [
         _outcome(a, 2, 0, "FD4001", "2026-06-11T21:00:00Z"),
-        _outcome(a, 0, 0, "FD4002", "2026-06-11T21:00:00Z"),  # duplicate fixture
+        _outcome(a, 0, 0, "FD4002", "2026-06-11T21:00:00Z"),
     ]
-    with pytest.raises(MappingError, match="collide"):
+    with pytest.raises(MappingError, match="score-conflict"):
         map_settled(model_map, outcomes)
+
+
+def test_double_claim_halts(model_map: pd.DataFrame) -> None:
+    """Two distinct source ids on one fixture at the same score: double-claim
+    (the mixed admin M{NN} + cron FD{id} pathology). Halt, named."""
+    a = model_map.iloc[0]
+    outcomes = [
+        _outcome(a, 1, 0, "FD4001", "2026-06-11T21:00:00Z"),
+        _outcome(a, 1, 0, a["match_id"], "2026-06-11T21:00:00Z"),  # admin M{NN} dup id
+    ]
+    with pytest.raises(MappingError, match="double-claim"):
+        map_settled(model_map, outcomes)
+
+
+def test_exact_identical_duplicate_collapses(model_map: pd.DataFrame) -> None:
+    """The same row ingested twice (same id, same score) collapses to one,
+    logged, not halted."""
+    a = model_map.iloc[0]
+    row = _outcome(a, 2, 1, "FD4001", "2026-06-11T21:00:00Z")
+    result = map_settled(model_map, [dict(row), dict(row)])
+    assert len(result["scored"]) == 1
+    assert len(result["collapsed"]) == 1
+    assert result["collapsed"][0]["rule"] == "exact_identical_duplicate"
+    assert result["collapsed"][0]["kept"] == "FD4001"
 
 
 def test_canonical_id_disagrees_with_teams_halts(model_map: pd.DataFrame) -> None:

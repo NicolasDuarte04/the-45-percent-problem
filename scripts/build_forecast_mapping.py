@@ -49,8 +49,15 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from evaluation.forecast_mapping import (  # noqa: E402
     MappingError,
     build_model_map,
-    map_settled,
 )
+from evaluation.match_score_join import resolve_scored  # noqa: E402
+from evaluation.reconstruct_forecasts import (  # noqa: E402
+    build_ledger_rows,
+    reconstruct_distributions,
+)
+from evaluation.aggregate_metrics import compute_champion_metrics  # noqa: E402
+
+SETTLED_TABLE = PROJECT_ROOT / "data" / "processed" / "cp14_settled_table.md"
 
 MATCH_OUTCOMES_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.parquet"
 COMMITTED_AUDIT = PROJECT_ROOT / "docs" / "cp-14" / "forecast_mapping.md"
@@ -58,36 +65,108 @@ RUNTIME_AUDIT = PROJECT_ROOT / "data" / "processed" / "forecast_mapping_audit.js
 ACTIVE_BATCH = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 
 
-def _resolve_pg_url() -> Optional[str]:
-    return (
-        os.environ.get("DIRECT_URL")
-        or os.environ.get("DATABASE_URL")
-        or os.environ.get("POSTGRES_URL")
+def _emit(text: str) -> None:
+    """Write the table to disk, print it, and append to the Actions job summary."""
+    SETTLED_TABLE.parent.mkdir(parents=True, exist_ok=True)
+    SETTLED_TABLE.write_text(text)
+    print(text)
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a") as fh:
+            fh.write(text + "\n")
+
+
+def _write_settled_table(
+    scored,
+    ledger_rows,
+    res: dict,
+    prov: dict,
+    code_sha: str,
+    *,
+    metrics: Optional[dict] = None,
+    halted: Optional[str] = None,
+) -> None:
+    """Emit the reviewable settled-set table accounting for every settled row."""
+    lines: list[str] = ["# cp-14 settled-set verification", ""]
+    lines.append(f"- Champion batch: `{prov['active_batch_id']}` activated `{prov['activated_at_utc']}`")
+    lines.append(f"- Settled source: `{res.get('source')}`")
+    lines.append(f"- Code SHA: `{code_sha}`")
+    lines.append("")
+
+    if halted is not None:
+        lines.append("## RESULT: HALTED (bijection failure)")
+        lines.append("")
+        lines.append(f"Named reason: `{halted}`")
+        lines.append("")
+        lines.append(
+            "No ledger or metrics were produced. Resolve the flagged settled "
+            "row(s) before this can merge."
+        )
+        _emit("\n".join(lines) + "\n")
+        return
+
+    if res["status"] == "no_source":
+        lines.append("## RESULT: settled set NOT validated (no DB / no parquet)")
+        lines.append("")
+        lines.append(
+            "Run this with database access to validate the FD-side bijection "
+            "and emit the per-match table."
+        )
+        _emit("\n".join(lines) + "\n")
+        return
+
+    ledger_by_id = {r["match_id"]: r for r in (ledger_rows or [])}
+    n_scored = len(scored) if scored is not None else 0
+    deferred = res.get("deferred", [])
+    collapsed = res.get("collapsed", [])
+
+    lines.append("## Classification of every settled row")
+    lines.append("")
+    lines.append(f"- mapped + scored: **{n_scored}**")
+    lines.append(f"- deferred (non-group, not scored): **{len(deferred)}** {deferred or ''}")
+    lines.append(
+        f"- collapsed (exact-identical duplicate): **{len(collapsed)}** "
+        + (str(collapsed) if collapsed else "")
     )
+    lines.append("- halted: **0** (any halt exits non-zero before this point)")
+    lines.append("")
 
+    if metrics is not None:
+        lines.append(
+            f"## Champion metrics (n={metrics['n']}): "
+            f"Brier `{metrics['brier']}` · RPS `{metrics['rps']}` · "
+            f"log-loss `{metrics['log_loss']}`"
+        )
+        lines.append("")
+        lines.append("A small sample is suggestive, not a track record.")
+        lines.append("")
 
-def _load_outcomes(outcomes_parquet: Optional[Path]) -> tuple[Optional[pd.DataFrame], str]:
-    """Return (outcomes_df, source_label). df is None when no source is reachable."""
-    path = outcomes_parquet or MATCH_OUTCOMES_PARQUET
-    if path and Path(path).exists():
-        return pd.read_parquet(path), f"parquet:{path}"
-
-    url = _resolve_pg_url()
-    if url:
-        try:
-            import psycopg  # type: ignore
-
-            with psycopg.connect(url) as conn:
-                df = pd.read_sql(
-                    "SELECT match_id, stage, home_team, away_team, "
-                    "home_goals, away_goals, settled_at FROM match_outcomes",
-                    conn,
-                )
-            return df, "postgres:match_outcomes"
-        except Exception as exc:  # best-effort; absence is not fatal here
-            print(f"[warn] Postgres read failed: {type(exc).__name__}: {exc}")
-
-    return None, "none"
+    lines.append("## Per-match settled table")
+    lines.append("")
+    lines.append(
+        "| FD id | M id | slot | teams | kickoff (UTC) | score | outcome | "
+        "recon champion 1X2 (H/D/A) | Brier contrib |"
+    )
+    lines.append("|---|---|---|---|---|---|---|---|---|")
+    if scored is not None:
+        for _, row in scored.sort_values("match_id").iterrows():
+            mid = str(row["match_id"])
+            lr = ledger_by_id.get(mid, {})
+            d = lr.get("outcome_predicted_distribution", {})
+            recon = (
+                f"{d.get('1', float('nan')):.3f}/{d.get('X', float('nan')):.3f}/{d.get('2', float('nan')):.3f}"
+                if d
+                else "-"
+            )
+            lines.append(
+                f"| {row['fd_match_id']} | {mid} | {row['batch_slot']} | "
+                f"{row['home_code']} v {row['away_code']} | {row['kickoff_utc']} | "
+                f"{int(row['home_goals'])}-{int(row['away_goals'])} | "
+                f"{lr.get('outcome_realized', '-')} | {recon} | "
+                f"{lr.get('brier_contribution', '-')} |"
+            )
+    lines.append("")
+    _emit("\n".join(lines) + "\n")
 
 
 def _batch_provenance() -> dict[str, str]:
@@ -180,6 +259,7 @@ def main() -> int:
     args = parser.parse_args()
 
     prov = _batch_provenance()
+    matches_src = PROJECT_ROOT / "website" / "public" / "data" / "latest" / "matches"
     print(f"[info] champion batch {prov['active_batch_id']} activated {prov['activated_at_utc']}")
 
     try:
@@ -192,45 +272,57 @@ def main() -> int:
     _write_committed_audit(model_map, args.reference_date, prov)
     print(f"[ok] wrote committed audit -> {COMMITTED_AUDIT.relative_to(PROJECT_ROOT)}")
 
-    outcomes, source = _load_outcomes(args.outcomes_parquet)
+    # Settled-side: resolve through the bijection gate. mapping_error is a HARD
+    # STOP (non-zero exit) so this verify run fails exactly as the regen would,
+    # rather than reporting a partial table.
+    res = resolve_scored(matches_dir=matches_src, parquet_path=args.outcomes_parquet)
+    code_sha = _git_sha()
     audit: dict[str, Any] = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "code_sha": _git_sha(),
+        "code_sha": code_sha,
         "champion_batch": prov,
-        "settled_source": source,
+        "settled_source": res["source"],
         "model_side_matches": int(len(model_map)),
+        "settled_status": res["status"],
     }
 
-    if outcomes is None:
+    if res["status"] == "mapping_error":
+        print(f"[HALT] settled-set bijection FAILED: {res['error']}", file=sys.stderr)
+        audit["error"] = res["error"]
+        RUNTIME_AUDIT.parent.mkdir(parents=True, exist_ok=True)
+        RUNTIME_AUDIT.write_text(json.dumps(audit, indent=2, default=str))
+        _write_settled_table(None, None, res, prov, code_sha, halted=res["error"])
+        return 3
+
+    if res["status"] == "no_source":
         print(
-            "[info] no settled-outcome source reachable. FD-side bijection "
-            "deferred to a secrets-enabled pipeline run."
+            "[info] no settled-outcome source reachable "
+            f"({res['source']}); FD-side table needs a secrets-enabled run."
         )
-        audit["settled_status"] = "deferred_no_source"
         audit["scored"] = []
         audit["deferred_outcomes"] = []
-    else:
-        try:
-            result = map_settled(model_map, outcomes)
-        except MappingError as exc:
-            print(f"[HALT] settled bijection failed (fall back to forward-only): {exc}")
-            RUNTIME_AUDIT.parent.mkdir(parents=True, exist_ok=True)
-            audit["settled_status"] = "mapping_error"
-            audit["error"] = str(exc)
-            RUNTIME_AUDIT.write_text(json.dumps(audit, indent=2))
-            return 3
-        scored = result["scored"]
-        audit["settled_status"] = "ok"
-        audit["scored"] = scored.to_dict("records")
-        audit["deferred_outcomes"] = result["deferred"]
-        print(
-            f"[ok] settled bijection: {len(scored)} group matches scored, "
-            f"{len(result['deferred'])} deferred (non-group)"
-        )
+        _write_settled_table(None, None, res, prov, code_sha)
+        RUNTIME_AUDIT.parent.mkdir(parents=True, exist_ok=True)
+        RUNTIME_AUDIT.write_text(json.dumps(audit, indent=2, default=str))
+        return 0
 
+    # status == ok: reconstruct, score, and emit the full reviewable table.
+    dists = reconstruct_distributions(res["model_map"])
+    ledger_rows = build_ledger_rows(res["scored"], dists, code_sha)
+    metrics = compute_champion_metrics(ledger_rows)
+    audit["scored"] = res["scored"].to_dict("records")
+    audit["deferred_outcomes"] = res["deferred"]
+    audit["collapsed"] = res.get("collapsed", [])
+    audit["champion_metrics"] = metrics
+    print(
+        f"[ok] settled bijection: {len(ledger_rows)} scored, "
+        f"{len(res['deferred'])} deferred, {len(res.get('collapsed', []))} collapsed; "
+        f"brier={metrics['brier']} rps={metrics['rps']} log_loss={metrics['log_loss']} n={metrics['n']}"
+    )
+    _write_settled_table(res["scored"], ledger_rows, res, prov, code_sha, metrics=metrics)
     RUNTIME_AUDIT.parent.mkdir(parents=True, exist_ok=True)
     RUNTIME_AUDIT.write_text(json.dumps(audit, indent=2, default=str))
-    print(f"[ok] wrote runtime audit -> {RUNTIME_AUDIT.relative_to(PROJECT_ROOT)}")
+    print(f"[ok] wrote settled table -> {SETTLED_TABLE.relative_to(PROJECT_ROOT)}")
     return 0
 
 

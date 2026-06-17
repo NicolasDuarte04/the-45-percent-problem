@@ -800,7 +800,11 @@ def main() -> None:
     # absent settled source disables scoring for the entire ledger
     # (forward-only / honest pending), never a mis-joined or invented row.
     from evaluation.forecast_mapping import build_model_map
-    from evaluation.match_score_join import join_scores, resolve_scored
+    from evaluation.match_score_join import (
+        halt_if_mapping_error,
+        join_scores,
+        resolve_scored,
+    )
     from evaluation.reconstruct_forecasts import (
         build_ledger_rows,
         reconstruct_distributions,
@@ -808,6 +812,24 @@ def main() -> None:
 
     matches_src = LATEST_DIR / "matches"
     score_res = resolve_scored(matches_dir=matches_src)
+
+    # cp-14 ARMED GATE. Three explicit, distinct branches:
+    #   mapping_error: a settled match failed the bijection (no-fixture,
+    #     score-conflict, double-claim, orientation, or id-vs-team disagreement).
+    #     HALT with a non-zero exit BEFORE writing any artifact. The snapshot is
+    #     not swapped into latest/ (that happens far below), the workflow's
+    #     commit step is gated on a clean regen, so a bad settled match is never
+    #     auto-published. This is a hard stop, never a silent fallback.
+    #   no_source: no settled data is reachable (the common no-DB CI path). A
+    #     clean, clearly-logged skip; the ledger is simply empty. Exit stays 0
+    #     so the cp-09 smoke (which runs with no DB) stays green.
+    #   ok: proceed and reconstruct.
+    halt_if_mapping_error(score_res)  # SystemExit(2) before any artifact write
+    if score_res["status"] == "no_source":
+        print(
+            f"    [cp-14] DB unavailable, settled join skipped "
+            f"(source: {score_res['source']}); ledger empty until matches settle"
+        )
 
     # Build the model map + frozen champion distributions once (committed,
     # outcome-blind data). Reused by the reconstructed ledger and the gated
@@ -824,23 +846,21 @@ def main() -> None:
     # re-run) against the realised result, tagged with the source batch id and
     # activation timestamp. Empty until a settled source is reachable. Market /
     # CLV fields are null: there are no committed market lines yet.
+    # status is "ok" or "no_source" here (mapping_error already halted above).
     ledger_rows: list = []
     if score_res["status"] == "ok":
         ledger_rows = build_ledger_rows(score_res["scored"], dists, code_sha_str)
+        collapsed = score_res.get("collapsed") or []
         print(
             f"    [cp-14] reconstructed ledger: {len(ledger_rows)} settled "
-            "forecasts scored against frozen M2 batch"
+            f"forecasts scored against frozen M2 batch"
+            + (f"; {len(collapsed)} exact-identical duplicate(s) collapsed" if collapsed else "")
         )
-    elif score_res["status"] == "mapping_error":
-        print(
-            "    [cp-14][HALT] ledger left empty (forward-only); settled "
-            f"bijection failed: {score_res['error']}"
-        )
-    else:
-        print(
-            f"    [cp-14] no settled source ({score_res['source']}); ledger "
-            "empty until matches settle"
-        )
+        if score_res.get("deferred"):
+            print(
+                f"    [cp-14] {len(score_res['deferred'])} non-group settled "
+                f"outcome(s) deferred: {score_res['deferred']}"
+            )
     with open(new_dir / "ledger.jsonl", "w") as fh:
         for row in ledger_rows:
             fh.write(json.dumps(row) + "\n")

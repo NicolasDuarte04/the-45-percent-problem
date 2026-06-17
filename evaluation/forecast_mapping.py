@@ -253,7 +253,7 @@ def map_settled(
     deferred = sorted(out.loc[out["stage"] != stage_scope, "match_id"].tolist())
     scoped = out[out["stage"] == stage_scope].copy()
     if scoped.empty:
-        return {"scored": _empty_scored(), "deferred": deferred}
+        return {"scored": _empty_scored(), "deferred": deferred, "collapsed": []}
 
     scoped["_key"] = scoped["home_code"] + ">" + scoped["away_code"]
     lookup = model_map.assign(_key=model_map["home_code"] + ">" + model_map["away_code"])
@@ -268,15 +268,41 @@ def map_settled(
             f"orientation failure): {detail}"
         )
 
-    # 2. No two settled outcomes may collide on one fixture.
-    collisions = (
-        scoped.groupby("_key")["match_id"].apply(list).loc[lambda s: s.str.len() > 1]
-    )
-    if len(collisions):
+    # 2. Resolve fixtures carrying more than one settled row, explicitly:
+    #      - exact-identical duplicates (same source id AND same score) collapse
+    #        to a single row with a logged rule;
+    #      - any remaining distinct rows on one fixture are a data pathology and
+    #        HALT, with a named reason: different scores -> score-conflict;
+    #        different source ids at one score -> double-claim.
+    #    Nothing is silently dropped.
+    collapsed: list[dict[str, Any]] = []
+    keep_idx: list[Any] = []
+    for key, grp in scoped.groupby("_key"):
+        if len(grp) == 1:
+            keep_idx.extend(grp.index.tolist())
+            continue
+        deduped = grp.drop_duplicates(subset=["match_id", "home_goals", "away_goals"])
+        if len(deduped) == 1:
+            keep_idx.append(deduped.index[0])
+            collapsed.append(
+                {
+                    "fixture_key": key,
+                    "kept": str(deduped.iloc[0]["match_id"]),
+                    "n_rows": int(len(grp)),
+                    "rule": "exact_identical_duplicate",
+                }
+            )
+            continue
+        detail = deduped[["match_id", "home_goals", "away_goals"]].to_dict("records")
+        distinct_scores = deduped[["home_goals", "away_goals"]].drop_duplicates()
+        if len(distinct_scores) > 1:
+            raise MappingError(
+                f"score-conflict: distinct scorelines for fixture {key}: {detail}"
+            )
         raise MappingError(
-            "multiple settled outcomes collide on one fixture (phantom or "
-            f"duplicate row): {collisions.to_dict()}"
+            f"double-claim: multiple distinct settled rows for fixture {key}: {detail}"
         )
+    scoped = scoped.loc[keep_idx].copy()
 
     joined = scoped.merge(
         lookup[["_key", "match_id", "batch_slot", "kickoff_utc", "home_name", "away_name"]],
@@ -335,7 +361,7 @@ def map_settled(
         .sort_values("match_id")
         .reset_index(drop=True)
     )
-    return {"scored": scored, "deferred": deferred}
+    return {"scored": scored, "deferred": deferred, "collapsed": collapsed}
 
 
 def _empty_scored() -> pd.DataFrame:

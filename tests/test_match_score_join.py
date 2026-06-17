@@ -15,10 +15,12 @@ import pandas as pd
 import pytest
 
 from evaluation.match_score_join import (
+    halt_if_mapping_error,
     join_scores,
     regulation_outcome,
     resolve_scored,
 )
+from evaluation.forecast_mapping import build_model_map
 
 
 def test_regulation_outcome() -> None:
@@ -88,4 +90,46 @@ def test_resolve_scored_no_source(monkeypatch, tmp_path: Path) -> None:
     # point the parquet at a path that does not exist
     res = resolve_scored(parquet_path=tmp_path / "nope.parquet")
     assert res["status"] == "no_source"
+    assert res["scored"] is None
+
+
+# --------------------------------------------------------------------------- #
+# Armed gate: case (c) must fail the run; cases (a)/(b) must not.
+# --------------------------------------------------------------------------- #
+
+def test_gate_halts_on_mapping_error() -> None:
+    """case (c): a bijection failure exits non-zero (code 2) so nothing publishes."""
+    with pytest.raises(SystemExit) as exc:
+        halt_if_mapping_error({"status": "mapping_error", "error": "double-claim x"})
+    assert exc.value.code == 2
+
+
+def test_gate_passes_on_no_source_and_ok() -> None:
+    """case (a)/(b): clean statuses never raise (the cp-09 no-DB path stays green)."""
+    assert halt_if_mapping_error({"status": "no_source", "source": "none"}) is None
+    assert halt_if_mapping_error({"status": "ok"}) is None
+
+
+def test_score_conflict_parquet_resolves_to_mapping_error(monkeypatch, tmp_path: Path) -> None:
+    """End-to-end: a score-conflict in the settled parquet surfaces as status
+    mapping_error (which the gate then halts on), not a silent fallback."""
+    for var in ("DIRECT_URL", "DATABASE_URL", "POSTGRES_URL", "MATCH_OUTCOMES_PARQUET"):
+        monkeypatch.delenv(var, raising=False)
+    mm = build_model_map()
+    a = mm.iloc[0]
+    df = pd.DataFrame(
+        [
+            {"match_id": "FD1", "stage": "group", "home_team": a["home_code"],
+             "away_team": a["away_code"], "home_goals": 2, "away_goals": 0,
+             "settled_at": "2026-06-11T21:00:00Z"},
+            {"match_id": "FD2", "stage": "group", "home_team": a["home_code"],
+             "away_team": a["away_code"], "home_goals": 0, "away_goals": 0,
+             "settled_at": "2026-06-11T21:00:00Z"},
+        ]
+    )
+    pq = tmp_path / "conflict.parquet"
+    df.to_parquet(pq)
+    res = resolve_scored(parquet_path=pq)
+    assert res["status"] == "mapping_error"
+    assert "score-conflict" in res["error"]
     assert res["scored"] is None

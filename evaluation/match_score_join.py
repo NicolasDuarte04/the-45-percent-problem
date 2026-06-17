@@ -88,7 +88,29 @@ def resolve_scored(
         "scored": result["scored"],
         "model_map": model_map,
         "deferred": result["deferred"],
+        "collapsed": result.get("collapsed", []),
     }
+
+
+def halt_if_mapping_error(score_res: dict, *, writer=None) -> None:
+    """Armed gate. HARD STOP on a settled-set bijection failure.
+
+    Call this immediately after resolve_scored and BEFORE writing any artifact.
+    On status "mapping_error" it prints the named reason and raises SystemExit(2)
+    so the whole regen run fails and nothing is published (the workflow's commit
+    step is gated on a clean regen). For "ok" and "no_source" it returns
+    normally: a missing settled source is a clean skip, not a failure. The two
+    cases are deliberately distinct, never collapsed into one catch.
+    """
+    import sys
+
+    emit = writer if writer is not None else (lambda m: print(m, file=sys.stderr))
+    if score_res.get("status") == "mapping_error":
+        emit(
+            "    [cp-14][HALT] settled-set bijection FAILED; refusing to publish. "
+            f"reason: {score_res.get('error')}"
+        )
+        raise SystemExit(2)
 
 
 def regulation_outcome(home_goals: int, away_goals: int) -> str:
