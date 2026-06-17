@@ -294,6 +294,23 @@ export default async function MatchDetailPage({
             <span className="mono">{match.kickoff_utc}</span> · snapshot{" "}
             <span className="mono">{meta.snapshot_id}</span>
           </p>
+          {match.score ? (
+            <p
+              className="text-[14px] mt-1.5 mono font-medium"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {match.home.fifa_code} {match.score.home}-{match.score.away}{" "}
+              {match.away.fifa_code}
+              {match.settled_at_utc ? (
+                <span
+                  className="text-[11px] ml-2"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  settled <span className="mono">{match.settled_at_utc}</span>
+                </span>
+              ) : null}
+            </p>
+          ) : null}
         </div>
       </div>
 

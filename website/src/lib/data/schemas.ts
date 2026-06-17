@@ -163,6 +163,15 @@ export const MatchDetailSchema = z.object({
     fifa_rank_away: z.number().int(),
   }),
   forecast_ids: z.array(z.string()),
+  // cp-14 commit 2: real settled result, joined from match_outcomes during
+  // nightly regen. Absent on unplayed matches; the nightly leaves those files
+  // untouched, so these are optional and nullable.
+  score: z
+    .object({ home: z.number().int(), away: z.number().int() })
+    .nullable()
+    .optional(),
+  outcome_realized: z.enum(["H", "D", "A"]).nullable().optional(),
+  settled_at_utc: z.string().nullable().optional(),
 });
 export type MatchDetail = z.infer<typeof MatchDetailSchema>;
 

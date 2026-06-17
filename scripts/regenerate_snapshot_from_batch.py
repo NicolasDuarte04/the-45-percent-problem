@@ -831,6 +831,38 @@ def main() -> None:
     if src.exists():
         shutil.copytree(src, dst)
 
+    # cp-14 commit 2: overlay real settled scores onto the copied played-match
+    # files so a played match stops rendering as unplayed. Display-only,
+    # additive (score / outcome_realized / settled_at_utc); the model block is
+    # untouched. Outcomes are mapped onto the frozen champion fixtures through
+    # the bijection hard-stop (evaluation/forecast_mapping). A mapping break or
+    # an absent settled source leaves the matches unplayed-looking (honest
+    # pending) rather than risking a mis-joined score.
+    from evaluation.match_score_join import join_scores, resolve_scored
+
+    score_res = resolve_scored(matches_dir=src)
+    if score_res["status"] == "ok":
+        n_joined = join_scores(dst, score_res["scored"])
+        print(
+            f"    [cp-14] joined real scores into {n_joined} played match files "
+            f"(source: {score_res['source']})"
+        )
+        if score_res["deferred"]:
+            print(
+                f"    [cp-14] {len(score_res['deferred'])} non-group settled "
+                f"outcomes deferred (not yet mappable): {score_res['deferred']}"
+            )
+    elif score_res["status"] == "mapping_error":
+        print(
+            "    [cp-14][HALT] settled-score bijection failed; matches left "
+            f"unplayed (forward-only). reason: {score_res['error']}"
+        )
+    else:
+        print(
+            f"    [cp-14] no settled-outcome source ({score_res['source']}); "
+            f"matches carried forward unplayed"
+        )
+
     # teams/ subdirectory: rewrite each per-team JSON's progression block
     # from the batch aggregation. Keep all other fields (fifa_code,
     # display_name, group, confederation, elo_rating, history,
