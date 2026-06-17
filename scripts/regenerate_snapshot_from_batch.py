@@ -849,6 +849,21 @@ def main() -> None:
         for row in ledger_rows:
             fh.write(json.dumps(row) + "\n")
 
+    # cp-14 commit 4: compute the champion proper-scoring metrics (Brier / RPS /
+    # log-loss) from the reconstructed ledger and overwrite the carry-forward
+    # evaluation_metrics.json written above. M0-M3 stay null (ablation needs
+    # per-model batches); market metrics (CLV / Nyberg / DM) stay null until odds
+    # ingestion. champion_metric_n records the honest, often-small sample size.
+    from evaluation.aggregate_metrics import update_evaluation_metrics
+
+    em = json.loads((new_dir / "evaluation_metrics.json").read_text())
+    em = update_evaluation_metrics(em, ledger_rows)
+    (new_dir / "evaluation_metrics.json").write_text(json.dumps(em, indent=2))
+    print(
+        f"    [cp-14] champion metrics: n={em.get('champion_metric_n', 0)} "
+        f"brier_M_STAR={em['brier']['M_STAR']} log_loss_M_STAR={em['log_loss']['M_STAR']}"
+    )
+
     # matches/ subdirectory: carry through verbatim, then overlay real settled
     # scores (display-only, additive: score / outcome_realized / settled_at_utc;
     # the model block is untouched) using the same mapped result as the ledger.

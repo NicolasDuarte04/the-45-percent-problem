@@ -10,6 +10,7 @@
 
 import { daysUntil } from "../voto21junio/_lib/voto-runtime";
 import { ProductSwitcherCard } from "@/components/voto/ProductSwitcherCard";
+import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { BriefSignup } from "../voto21junio/_components/BriefSignup";
 import { DotPattern } from "../voto21junio/_components/DotPattern";
 import { SNAPSHOT_STAMP } from "../voto21junio/_lib/demo-data";
@@ -21,6 +22,16 @@ export default function ParentHome() {
   // index, framed by how many of its five signals are actually live so the
   // parent page never shows a bare number as if it were the full composite.
   const { pulso } = getVotoData();
+
+  // cp-14: the Academico Brier stat is the computed champion metric over the
+  // settled tournament, never a hardcoded literal. The sample size is shown
+  // inline so a small, noisy sample never reads as a settled track record;
+  // before any match settles it reads "pendiente".
+  const wcMetrics = loadEvaluationMetrics();
+  const wcBrier = wcMetrics.brier.M_STAR;
+  const wcBrierN = wcMetrics.champion_metric_n ?? 0;
+  const academicoBrier =
+    wcBrier !== null ? `${wcBrier.toFixed(3)} · n=${wcBrierN}` : "pendiente";
 
   return (
     <div className="pshell">
@@ -80,7 +91,7 @@ export default function ParentHome() {
             titleTail="Problem"
             desc="La Copa del Mundo, calculada partido por partido. Modelo abierto, revisable, registrado."
             stats={[
-              { k: "Brier", v: "0.1842" },
+              { k: "Brier", v: academicoBrier },
               { k: "Pre-registro", v: "OSF" },
               { k: "Fase", v: "Grupos" },
             ]}

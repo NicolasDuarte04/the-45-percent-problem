@@ -251,6 +251,10 @@ const ModelMetricsSchema = z.object({
 export const EvaluationMetricsSchema = z.object({
   snapshot_id: z.string(),
   matches_settled: z.number().int().min(0),
+  // cp-14: number of settled forecasts actually scored into the champion
+  // metrics (the bijection-validated subset). Shown verbatim as the sample
+  // size; absent on pre-cp-14 snapshots.
+  champion_metric_n: z.number().int().min(0).optional(),
   brier: ModelMetricsSchema,
   log_loss: ModelMetricsSchema,
   rps: ModelMetricsSchema,
