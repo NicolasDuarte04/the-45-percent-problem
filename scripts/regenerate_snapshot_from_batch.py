@@ -806,24 +806,52 @@ def main() -> None:
     )
     (new_dir / "divergence.json").write_text(json.dumps(divergence, indent=2))
 
-    # ledger.jsonl: flip model_id from "M0" to "M_STAR" (the schema enum
-    # for the production champion; the internal id stays at champion_internal).
-    ledger_rows = []
-    for line in (LATEST_DIR / "ledger.jsonl").read_text().splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        if row.get("model_id") == "M0":
-            row["model_id"] = champion_model_id
-        ledger_rows.append(row)
+    # cp-14 commit 2+3: resolve settled outcomes ONCE, mapped onto the frozen
+    # champion fixtures through the bijection hard-stop (evaluation/
+    # forecast_mapping). The same result feeds both the reconstructed ledger
+    # (below) and the per-match score join (further down). A mapping break or an
+    # absent settled source disables scoring for the entire ledger
+    # (forward-only / honest pending), never a mis-joined or invented row.
+    from evaluation.match_score_join import join_scores, resolve_scored
+    from evaluation.reconstruct_forecasts import (
+        build_ledger_rows,
+        reconstruct_distributions,
+    )
+
+    matches_src = LATEST_DIR / "matches"
+    score_res = resolve_scored(matches_dir=matches_src)
+
+    # ledger.jsonl: Decision A reconstruction. The legacy synthetic placeholders
+    # (ARG/CAN, GER/JAP) are gone. Each settled group match scores its frozen
+    # pre-tournament M2 distribution (aggregated from the committed batch, never
+    # re-run) against the realised result, tagged with the source batch id and
+    # activation timestamp. Empty until a settled source is reachable. Market /
+    # CLV fields are null: there are no committed market lines yet.
+    ledger_rows: list = []
+    if score_res["status"] == "ok":
+        dists = reconstruct_distributions(score_res["model_map"])
+        ledger_rows = build_ledger_rows(score_res["scored"], dists, code_sha_str)
+        print(
+            f"    [cp-14] reconstructed ledger: {len(ledger_rows)} settled "
+            "forecasts scored against frozen M2 batch"
+        )
+    elif score_res["status"] == "mapping_error":
+        print(
+            "    [cp-14][HALT] ledger left empty (forward-only); settled "
+            f"bijection failed: {score_res['error']}"
+        )
+    else:
+        print(
+            f"    [cp-14] no settled source ({score_res['source']}); ledger "
+            "empty until matches settle"
+        )
     with open(new_dir / "ledger.jsonl", "w") as fh:
         for row in ledger_rows:
             fh.write(json.dumps(row) + "\n")
 
-    # matches/ subdirectory: carry through verbatim. The M2 re-derivation
-    # of per-match lambdas is a follow-up (depends on bridging
-    # match_runs_M2.parquet into the per-match schema; not in Section 7
-    # scope).
+    # matches/ subdirectory: carry through verbatim, then overlay real settled
+    # scores (display-only, additive: score / outcome_realized / settled_at_utc;
+    # the model block is untouched) using the same mapped result as the ledger.
     src = LATEST_DIR / "matches"
     dst = new_dir / "matches"
     if dst.exists():
@@ -831,16 +859,6 @@ def main() -> None:
     if src.exists():
         shutil.copytree(src, dst)
 
-    # cp-14 commit 2: overlay real settled scores onto the copied played-match
-    # files so a played match stops rendering as unplayed. Display-only,
-    # additive (score / outcome_realized / settled_at_utc); the model block is
-    # untouched. Outcomes are mapped onto the frozen champion fixtures through
-    # the bijection hard-stop (evaluation/forecast_mapping). A mapping break or
-    # an absent settled source leaves the matches unplayed-looking (honest
-    # pending) rather than risking a mis-joined score.
-    from evaluation.match_score_join import join_scores, resolve_scored
-
-    score_res = resolve_scored(matches_dir=src)
     if score_res["status"] == "ok":
         n_joined = join_scores(dst, score_res["scored"])
         print(
@@ -852,16 +870,8 @@ def main() -> None:
                 f"    [cp-14] {len(score_res['deferred'])} non-group settled "
                 f"outcomes deferred (not yet mappable): {score_res['deferred']}"
             )
-    elif score_res["status"] == "mapping_error":
-        print(
-            "    [cp-14][HALT] settled-score bijection failed; matches left "
-            f"unplayed (forward-only). reason: {score_res['error']}"
-        )
     else:
-        print(
-            f"    [cp-14] no settled-outcome source ({score_res['source']}); "
-            f"matches carried forward unplayed"
-        )
+        print("    [cp-14] matches carried forward unplayed (no scored set)")
 
     # teams/ subdirectory: rewrite each per-team JSON's progression block
     # from the batch aggregation. Keep all other fields (fifa_code,

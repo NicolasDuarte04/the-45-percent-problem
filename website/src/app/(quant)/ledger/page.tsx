@@ -109,24 +109,30 @@ function TopMissesNarrative({ records }: { records: LedgerRecord[] }) {
               >
                 {realizedP}%
               </span>
-              ). Edge at close:{" "}
-              <span className="mono">
-                {r.edge_E_at_close >= 0 ? "+" : "−"}
-                {(Math.abs(r.edge_E_at_close) * 100).toFixed(1)}pp
-              </span>
-              . Gate:{" "}
-              <span
-                className="mono"
-                style={{
-                  color:
-                    r.gate_status_at_close === "FIRED"
-                      ? "var(--gate-fired)"
-                      : "var(--text-tertiary)",
-                }}
-              >
-                {r.gate_status_at_close === "FIRED" ? "Gate tripped" : "Open"}
-              </span>
-              .
+              ).
+              {r.edge_E_at_close !== null && r.gate_status_at_close !== null ? (
+                <>
+                  {" "}
+                  Edge at close:{" "}
+                  <span className="mono">
+                    {r.edge_E_at_close >= 0 ? "+" : "-"}
+                    {(Math.abs(r.edge_E_at_close) * 100).toFixed(1)}pp
+                  </span>
+                  . Gate:{" "}
+                  <span
+                    className="mono"
+                    style={{
+                      color:
+                        r.gate_status_at_close === "FIRED"
+                          ? "var(--gate-fired)"
+                          : "var(--text-tertiary)",
+                    }}
+                  >
+                    {r.gate_status_at_close === "FIRED" ? "Gate tripped" : "Open"}
+                  </span>
+                  .
+                </>
+              ) : null}
             </p>
 
             <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-tertiary)" }}>

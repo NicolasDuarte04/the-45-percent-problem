@@ -95,12 +95,20 @@ export default async function ForecastDetailPage({
             <span
               className="mono text-[12px] px-2 py-0.5 rounded border"
               style={{
-                borderColor: LABEL_COLOR[record.hit_miss_label],
-                color: LABEL_COLOR[record.hit_miss_label],
+                borderColor: record.hit_miss_label
+                  ? LABEL_COLOR[record.hit_miss_label]
+                  : "var(--border-default)",
+                color: record.hit_miss_label
+                  ? LABEL_COLOR[record.hit_miss_label]
+                  : "var(--text-tertiary)",
               }}
-              aria-label={record.hit_miss_label.toLowerCase()}
+              aria-label={
+                record.hit_miss_label
+                  ? record.hit_miss_label.toLowerCase()
+                  : "market pending"
+              }
             >
-              {record.hit_miss_label}
+              {record.hit_miss_label ?? "MARKET PENDING"}
             </span>
           </div>
           <p
@@ -220,20 +228,50 @@ export default async function ForecastDetailPage({
                   />
                 </FieldRow>
                 <FieldRow label="q_market_devigged_on_realized">
-                  <NumericCell
-                    value={record.q_market_devigged_on_realized}
-                    formatter={(x) => formatProbability(x, 1)}
-                    ariaLabel={`${(record.q_market_devigged_on_realized * 100).toFixed(1)} percent`}
-                  />
+                  {record.q_market_devigged_on_realized !== null ? (
+                    <NumericCell
+                      value={record.q_market_devigged_on_realized}
+                      formatter={(x) => formatProbability(x, 1)}
+                      ariaLabel={`${(record.q_market_devigged_on_realized * 100).toFixed(1)} percent`}
+                    />
+                  ) : (
+                    <span
+                      className="mono"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      pending (no odds ingested)
+                    </span>
+                  )}
                 </FieldRow>
                 <FieldRow label="edge_E_at_close">
-                  <EdgeBadge edge={record.edge_E_at_close} threshold={0.03} />
+                  {record.edge_E_at_close !== null ? (
+                    <EdgeBadge edge={record.edge_E_at_close} threshold={0.03} />
+                  ) : (
+                    <span
+                      className="mono"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      pending
+                    </span>
+                  )}
                 </FieldRow>
                 <FieldRow label="gate_status_at_close">
-                  <GateStatusPill
-                    status={record.gate_status_at_close}
-                    rulesTripped={[]}
-                  />
+                  {record.gate_status_at_close !== null ? (
+                    <GateStatusPill
+                      status={record.gate_status_at_close}
+                      rulesTripped={[]}
+                    />
+                  ) : (
+                    <span
+                      className="mono"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      pending
+                    </span>
+                  )}
                 </FieldRow>
                 <FieldRow label="brier_contribution">
                   <NumericCell
@@ -277,9 +315,13 @@ export default async function ForecastDetailPage({
                 <FieldRow label="hit_miss_label">
                   <span
                     className="mono"
-                    style={{ color: LABEL_COLOR[record.hit_miss_label] }}
+                    style={{
+                      color: record.hit_miss_label
+                        ? LABEL_COLOR[record.hit_miss_label]
+                        : "var(--text-tertiary)",
+                    }}
                   >
-                    {record.hit_miss_label}
+                    {record.hit_miss_label ?? "pending (market)"}
                   </span>
                 </FieldRow>
                 <FieldRow label="settled_at_utc">

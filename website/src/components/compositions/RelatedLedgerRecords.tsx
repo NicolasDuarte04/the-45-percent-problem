@@ -110,17 +110,47 @@ export function RelatedLedgerRecords({
                 />
               </span>
               <span className="text-right">
-                <NumericCell
-                  value={r.q_market_devigged_on_realized}
-                  formatter={(p) => formatProbability(p, 2)}
-                  ariaLabel={`${(r.q_market_devigged_on_realized * 100).toFixed(2)} percent`}
-                />
+                {r.q_market_devigged_on_realized !== null ? (
+                  <NumericCell
+                    value={r.q_market_devigged_on_realized}
+                    formatter={(p) => formatProbability(p, 2)}
+                    ariaLabel={`${(r.q_market_devigged_on_realized * 100).toFixed(2)} percent`}
+                  />
+                ) : (
+                  <span
+                    className="mono"
+                    style={{ color: "var(--text-tertiary)" }}
+                    aria-label="market pending"
+                  >
+                    -
+                  </span>
+                )}
               </span>
               <span className="text-right">
-                <EdgeBadge edge={r.edge_E_at_close} />
+                {r.edge_E_at_close !== null ? (
+                  <EdgeBadge edge={r.edge_E_at_close} />
+                ) : (
+                  <span
+                    className="mono"
+                    style={{ color: "var(--text-tertiary)" }}
+                    aria-label="market pending"
+                  >
+                    -
+                  </span>
+                )}
               </span>
               <span className="text-right">
-                <HitMissChip label={r.hit_miss_label} />
+                {r.hit_miss_label !== null ? (
+                  <HitMissChip label={r.hit_miss_label} />
+                ) : (
+                  <span
+                    className="mono text-[11px]"
+                    style={{ color: "var(--text-tertiary)" }}
+                    aria-label="market pending"
+                  >
+                    pending
+                  </span>
+                )}
               </span>
             </Link>
           ))}

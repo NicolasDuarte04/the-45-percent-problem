@@ -78,6 +78,7 @@ def resolve_scored(
             "status": "mapping_error",
             "source": source,
             "scored": None,
+            "model_map": None,
             "deferred": [],
             "error": str(exc),
         }
@@ -85,6 +86,7 @@ def resolve_scored(
         "status": "ok",
         "source": source,
         "scored": result["scored"],
+        "model_map": model_map,
         "deferred": result["deferred"],
     }
 

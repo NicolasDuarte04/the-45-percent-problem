@@ -214,18 +214,27 @@ export const LedgerRecordSchema = z.object({
   outcome_predicted_distribution: z.record(z.string(), z.number().min(0).max(1)),
   outcome_realized: z.string(),
   p_model_on_realized: probability(),
-  q_market_devigged_on_realized: probability(),
-  edge_E_at_close: z.number(),
-  gate_status_at_close: z.enum(["OPEN", "FIRED"]),
+  // cp-14: the market layer is pending real odds ingestion (Pinnacle / Odds
+  // API). Reconstructed forecasts score the frozen pre-tournament champion
+  // distribution against results (Brier / RPS / log-loss only); they carry no
+  // market lines, so the market-dependent fields are null until odds are live.
+  q_market_devigged_on_realized: probability().nullable(),
+  edge_E_at_close: z.number().nullable(),
+  gate_status_at_close: z.enum(["OPEN", "FIRED"]).nullable(),
   brier_contribution: z.number(),
   log_loss_contribution: z.number(),
   rps_contribution: z.number(),
   clv_bps: z.number().nullable(),
-  hit_miss_label: z.enum(["HIT", "MISS", "NEUTRAL"]),
+  hit_miss_label: z.enum(["HIT", "MISS", "NEUTRAL"]).nullable(),
   code_sha: z.string(),
   data_sha: z.string(),
   mc_seed: z.number().int(),
-  settled_at_utc: z.string(),
+  settled_at_utc: z.string().nullable(),
+  // cp-14 Decision A provenance: present on reconstructed rows so every
+  // forecast traces back to the frozen committed batch it was scored from.
+  provenance: z.string().optional(),
+  source_batch_id: z.string().optional(),
+  source_batch_activated_utc: z.string().optional(),
 });
 export type LedgerRecord = z.infer<typeof LedgerRecordSchema>;
 

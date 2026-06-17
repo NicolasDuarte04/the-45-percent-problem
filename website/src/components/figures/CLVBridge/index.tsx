@@ -19,16 +19,26 @@ export function CLVBridge({ snapshotId = "latest", mode = "interactive" }: Props
   const ledger = loadLedger(sid);
   const meta = loadSnapshotMeta(sid);
 
-  const mstarRecords = ledger.filter((r) => r.model_id === "M_STAR");
+  // CLV is a market-divergence figure: it needs de-vigged market lines. Until
+  // odds ingestion is live, reconstructed forecasts carry null market fields,
+  // so this filter yields zero points and the chart renders an honest n=0
+  // rather than fabricating a model-vs-market scatter.
+  const mstarRecords = ledger.filter(
+    (r) =>
+      r.model_id === "M_STAR" &&
+      r.q_market_devigged_on_realized !== null &&
+      r.edge_E_at_close !== null &&
+      r.hit_miss_label !== null,
+  );
 
   const points: CLVPoint[] = mstarRecords.map((r) => ({
     forecastId: r.forecast_id,
     matchId: r.match_id,
     pModel: r.p_model_on_realized,
-    qMarket: r.q_market_devigged_on_realized,
-    edgeE: r.edge_E_at_close,
+    qMarket: r.q_market_devigged_on_realized as number,
+    edgeE: r.edge_E_at_close as number,
     clvBps: r.clv_bps,
-    hitMiss: r.hit_miss_label,
+    hitMiss: r.hit_miss_label as "HIT" | "MISS" | "NEUTRAL",
   }));
 
   const noscriptRows = points
