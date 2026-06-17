@@ -789,22 +789,9 @@ def main() -> None:
     eval_metrics["matches_settled"] = settled_count
     (new_dir / "evaluation_metrics.json").write_text(json.dumps(eval_metrics, indent=2))
 
-    # divergence.json: carry through unchanged but update snapshot_id and
-    # flag the M0-vs-M2 model_version drift in a top-level note. The full
-    # M2 re-derivation depends on real Pinnacle data (see
-    # PINNACLE_INGESTION_READINESS.md gap 5.2).
-    divergence = json.loads((LATEST_DIR / "divergence.json").read_text())
-    divergence["snapshot_id"] = new_snapshot_id
-    divergence["notes"] = (
-        f"Carried forward from snapshot {existing_tournament['snapshot_id']}; "
-        f"row-level model_version stamps were emitted under the prior M0 "
-        f"snapshot pipeline. Re-derivation under {champion_model_id} is "
-        f"pending the Pinnacle real-data ingestion documented in "
-        f"PINNACLE_INGESTION_READINESS.md gap 5.2; per-team tournament "
-        f"probabilities in tournament.json are the M2 batch outputs and "
-        f"are the authoritative pre-tournament numbers."
-    )
-    (new_dir / "divergence.json").write_text(json.dumps(divergence, indent=2))
+    # divergence.json is regenerated (gated) in the cp-14 block below, where the
+    # champion distributions are available. It is no longer carried forward: the
+    # frozen synthetic rows falsely stamped PINNACLE are retired (Decision B).
 
     # cp-14 commit 2+3: resolve settled outcomes ONCE, mapped onto the frozen
     # champion fixtures through the bijection hard-stop (evaluation/
@@ -812,6 +799,7 @@ def main() -> None:
     # (below) and the per-match score join (further down). A mapping break or an
     # absent settled source disables scoring for the entire ledger
     # (forward-only / honest pending), never a mis-joined or invented row.
+    from evaluation.forecast_mapping import build_model_map
     from evaluation.match_score_join import join_scores, resolve_scored
     from evaluation.reconstruct_forecasts import (
         build_ledger_rows,
@@ -821,6 +809,15 @@ def main() -> None:
     matches_src = LATEST_DIR / "matches"
     score_res = resolve_scored(matches_dir=matches_src)
 
+    # Build the model map + frozen champion distributions once (committed,
+    # outcome-blind data). Reused by the reconstructed ledger and the gated
+    # divergence. Reuse the bijection-validated map from the scored result when
+    # available; otherwise build it independently (divergence needs no outcomes).
+    model_map = score_res.get("model_map")
+    if model_map is None:
+        model_map = build_model_map(matches_dir=matches_src)
+    dists = reconstruct_distributions(model_map)
+
     # ledger.jsonl: Decision A reconstruction. The legacy synthetic placeholders
     # (ARG/CAN, GER/JAP) are gone. Each settled group match scores its frozen
     # pre-tournament M2 distribution (aggregated from the committed batch, never
@@ -829,7 +826,6 @@ def main() -> None:
     # CLV fields are null: there are no committed market lines yet.
     ledger_rows: list = []
     if score_res["status"] == "ok":
-        dists = reconstruct_distributions(score_res["model_map"])
         ledger_rows = build_ledger_rows(score_res["scored"], dists, code_sha_str)
         print(
             f"    [cp-14] reconstructed ledger: {len(ledger_rows)} settled "
@@ -863,6 +859,45 @@ def main() -> None:
         f"    [cp-14] champion metrics: n={em.get('champion_metric_n', 0)} "
         f"brier_M_STAR={em['brier']['M_STAR']} log_loss_M_STAR={em['log_loss']['M_STAR']}"
     )
+
+    # cp-14 commit 5: gated divergence (Decision B). If real odds are present
+    # (the producer ran a real tier), de-vig them against the champion
+    # distribution and stamp PINNACLE honestly. Otherwise emit the pending state:
+    # zero rows, no PINNACLE stamp. The frozen synthetic table is retired.
+    from market.divergence_generator import (
+        build_divergence,
+        odds_are_synthetic,
+        pending_divergence,
+    )
+
+    odds_df = None
+    odds_path = PROJECT_ROOT / "data" / "raw" / "odds_pinnacle.parquet"
+    if odds_path.exists():
+        try:
+            odds_df = pd.read_parquet(odds_path)
+        except Exception as exc:  # best-effort; absence/error -> pending
+            print(f"    [cp-14] odds parquet read failed ({exc}); divergence pending")
+
+    if odds_are_synthetic(odds_df):
+        divergence = pending_divergence(
+            new_snapshot_id, new_generated_at, "no real odds ingested"
+        )
+        print("    [cp-14] divergence: pending (no real odds; zero rows, no PINNACLE stamp)")
+    else:
+        divergence = build_divergence(
+            new_snapshot_id,
+            new_generated_at,
+            odds_df,
+            dists,
+            model_map,
+            code_sha_str,
+            n_runs=n_runs_per_team,
+        )
+        print(
+            f"    [cp-14] divergence: live, {len(divergence['rows'])} real "
+            "de-vigged Pinnacle rows"
+        )
+    (new_dir / "divergence.json").write_text(json.dumps(divergence, indent=2))
 
     # matches/ subdirectory: carry through verbatim, then overlay real settled
     # scores (display-only, additive: score / outcome_realized / settled_at_utc;

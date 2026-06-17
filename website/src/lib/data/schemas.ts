@@ -133,6 +133,12 @@ export const DivergenceSnapshotSchema = z.object({
   snapshot_id: z.string(),
   generated_at_utc: z.string(),
   rows: z.array(DivergenceRowSchema),
+  // cp-14: "pending" means no real odds are ingested yet, so rows is empty and
+  // no source_book is stamped anywhere (Decision B). "live" means the rows are
+  // real de-vigged Pinnacle lines. Absent on pre-cp-14 snapshots.
+  status: z.enum(["live", "pending"]).optional(),
+  pending_reason: z.string().optional(),
+  notes: z.string().optional(),
 });
 export type DivergenceSnapshot = z.infer<typeof DivergenceSnapshotSchema>;
 
