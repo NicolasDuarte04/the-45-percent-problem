@@ -23,8 +23,12 @@ const TABS: Tab[] = [
   {
     id: "matches",
     label: "Matches",
-    href: "/terminal",
-    match: (p) => p.startsWith("/match") || p.startsWith("/terminal"),
+    href: "/matches",
+    // Highlights on the index (/matches) and on any per-match detail
+    // page (/match/M01). Both are covered by the "/match" prefix. The
+    // Divergence Terminal keeps its own route and is no longer the
+    // "Matches" destination.
+    match: (p) => p.startsWith("/match"),
   },
   {
     id: "ledger",
