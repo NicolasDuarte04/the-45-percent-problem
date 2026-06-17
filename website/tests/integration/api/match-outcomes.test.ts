@@ -10,6 +10,29 @@ vi.mock("@/lib/db", () => {
   return { db, schema: {} };
 });
 
+// Pin the per-team marginals the evaluator reads so the idempotency fixture's
+// count cannot drift with the nightly M2 batch. snapshotProbs.ts is
+// auto-generated (regenerated on every nightly and pushed to main); under the
+// pull_request *merge* checkout the test ran main's freshly-regenerated probs
+// against this file's hard-coded count, so any batch-to-batch Monte Carlo
+// noise flipped the idempotency assertion. Mocking TEAM_PROBS to fixed values
+// removes that coupling. This realises the test-infra follow-up the
+// "real idempotency" case documented inline. Only pS is read by the Final
+// Four evaluator; the remaining fields satisfy the TeamProbs shape.
+vi.mock("@/lib/sim/snapshotProbs", () => {
+  const t = (pS: number) => ({ pG: 0.9, pR: 0.7, pQ: 0.5, pS, pF: 0.1, pC: 0.05 });
+  return {
+    TEAM_PROBS: {
+      ARG: t(0.28),
+      BRA: t(0.3),
+      FRA: t(0.28),
+      ENG: t(0.2),
+      MEX: t(0.25),
+      ESP: t(0.3),
+    },
+  };
+});
+
 import { db } from "@/lib/db";
 import { POST as PostMatchOutcome } from "@/app/api/admin/match-outcomes/route";
 import { POST as PostCron } from "@/app/api/cron/eval-predictions/route";
@@ -236,17 +259,12 @@ describe("POST /api/cron/eval-predictions", () => {
     // what the evaluator would compute (joint of pS over the four picks),
     // and whose state is still alive with no settled matches. Re-running
     // the cron must not write a log row.
-    // The persisted count must equal what the evaluator recomputes from the
-    // CURRENT TEAM_PROBS (snapshotProbs.ts), or a (spurious) transition fires
-    // and the idempotency assertion breaks. These values drift whenever the M2
-    // batch is regenerated, so they are derived from the live table, not a
-    // historical constant. As of the committed snapshotProbs.ts:
-    // ARG.pS=0.2748 BRA.pS=0.3071 FRA.pS=0.2811 ENG.pS=0.197
-    // joint = 0.2748 * 0.3071 * 0.2811 * 0.197 ≈ 0.0046733
-    // count = round(10000 * 0.0046733) = 47
-    // NOTE (brittleness): this hard-codes the count against the current probs.
-    // A robust follow-up would mock TEAM_PROBS to fixed values so the fixture
-    // can't drift with the nightly batch. Tracked as a test-infra cleanup.
+    // The persisted count must equal what the evaluator recomputes from
+    // TEAM_PROBS. To keep this deterministic and immune to nightly M2-batch
+    // regeneration, TEAM_PROBS is mocked above to fixed values:
+    // ARG.pS=0.28 BRA.pS=0.30 FRA.pS=0.28 ENG.pS=0.20
+    // joint = 0.28 * 0.30 * 0.28 * 0.20 = 0.004704
+    // count = round(10000 * 0.004704) = 47
     mockDb.select
       .mockReturnValueOnce(chainMock([])) // settled matches
       .mockReturnValueOnce(
