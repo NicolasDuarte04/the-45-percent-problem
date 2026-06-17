@@ -65,9 +65,18 @@ export default async function BracketPage() {
                   className="text-[12px] mt-0.5"
                   style={{ color: "var(--text-tertiary)" }}
                 >
-                  Per-round marginal probabilities · snapshot{" "}
+                  Frozen pre-tournament forecast · per-round marginal
+                  probabilities from the locked Monte Carlo batch · snapshot{" "}
                   <span className="mono">{meta.snapshot_id}</span> · phase{" "}
                   <span className="mono">{meta.tournament_phase.replace(/_/g, " ")}</span>
+                </p>
+                <p
+                  className="text-[12px] mt-1"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  These probabilities do not yet condition on settled results.
+                  They are the pre-tournament forecast the public ledger grades,
+                  held fixed as matches play out.
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-wrap">

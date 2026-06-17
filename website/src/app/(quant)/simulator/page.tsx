@@ -111,7 +111,7 @@ export default async function ScenarioSimulatorPage() {
           result here will propagate through the bracket below.
         </p>
         <ol className="overflow-hidden rounded-md border border-stone-200 dark:border-stone-800">
-          {groupMatches.slice(0, 10).map((m) => {
+          {groupMatches.map((m) => {
             const venue = venueByKey.get(m.venue_key);
             const dt = new Date(m.kickoff_utc);
             return (
