@@ -1,14 +1,9 @@
 import { loadFreshness, loadSnapshotMeta } from "@/lib/data/loadSnapshot";
+import { LiveFreshnessStatus } from "./LiveFreshnessStatus";
 
 export function FreshnessBanner() {
   const freshness = loadFreshness();
   const meta = loadSnapshotMeta();
-
-  const isStale = freshness.status === "STALE" || freshness.status === "BROKEN";
-  const stalenessLabel =
-    freshness.status !== "BROKEN"
-      ? ` · ${freshness.current_staleness_hours.toFixed(1)}h`
-      : "";
 
   const phaseLabel = meta.tournament_phase.replace(/_/g, " ");
 
@@ -29,20 +24,10 @@ export function FreshnessBanner() {
         snapshot: {freshness.snapshot_id}
       </span>
 
-      <span
-        className="inline-flex items-center gap-1.5"
-        style={{ color: isStale ? "var(--text-tertiary)" : "var(--text-quiet)" }}
-        aria-label={`status ${freshness.status}${stalenessLabel}`}
-      >
-        {isStale && (
-          <span
-            className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ backgroundColor: "var(--prism-sun)" }}
-            aria-hidden
-          />
-        )}
-        {freshness.status}{stalenessLabel}
-      </span>
+      <LiveFreshnessStatus
+        generatedAtUtc={freshness.generated_at_utc}
+        maxStalenessHours={freshness.max_expected_staleness_hours}
+      />
 
       <span className="mono" aria-label={`code sha ${meta.code_sha}`}>
         code: {meta.code_sha}
