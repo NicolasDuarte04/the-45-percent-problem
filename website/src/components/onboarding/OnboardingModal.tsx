@@ -195,14 +195,14 @@ export function OnboardingModal({
             .
           </ClaimRow>
           <ClaimRow n="03">
-            It compares those numbers to{" "}
+            It logs every forecast in an append-only ledger; hits and misses
+            carry identical weight. A market-comparison layer against{" "}
             <strong
               style={{ fontWeight: 600, color: "var(--text-primary)" }}
             >
               bookmaker odds
             </strong>{" "}
-            and publishes every divergence: hits and misses with identical
-            weight.
+            is in development.
           </ClaimRow>
         </div>
 
