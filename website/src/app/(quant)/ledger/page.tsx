@@ -109,24 +109,30 @@ function TopMissesNarrative({ records }: { records: LedgerRecord[] }) {
               >
                 {realizedP}%
               </span>
-              ). Edge at close:{" "}
-              <span className="mono">
-                {r.edge_E_at_close >= 0 ? "+" : "−"}
-                {(Math.abs(r.edge_E_at_close) * 100).toFixed(1)}pp
-              </span>
-              . Gate:{" "}
-              <span
-                className="mono"
-                style={{
-                  color:
-                    r.gate_status_at_close === "FIRED"
-                      ? "var(--gate-fired)"
-                      : "var(--text-tertiary)",
-                }}
-              >
-                {r.gate_status_at_close === "FIRED" ? "Gate tripped" : "Open"}
-              </span>
-              .
+              ).
+              {r.edge_E_at_close !== null && r.gate_status_at_close !== null ? (
+                <>
+                  {" "}
+                  Edge at close:{" "}
+                  <span className="mono">
+                    {r.edge_E_at_close >= 0 ? "+" : "-"}
+                    {(Math.abs(r.edge_E_at_close) * 100).toFixed(1)}pp
+                  </span>
+                  . Gate:{" "}
+                  <span
+                    className="mono"
+                    style={{
+                      color:
+                        r.gate_status_at_close === "FIRED"
+                          ? "var(--gate-fired)"
+                          : "var(--text-tertiary)",
+                    }}
+                  >
+                    {r.gate_status_at_close === "FIRED" ? "Gate tripped" : "Open"}
+                  </span>
+                  .
+                </>
+              ) : null}
             </p>
 
             <p className="mt-1.5 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
@@ -168,6 +174,14 @@ export default function LedgerPage() {
   const totalHits = records.filter((r) => r.hit_miss_label === "HIT").length;
   const totalMisses = records.filter((r) => r.hit_miss_label === "MISS").length;
   const totalNeutral = records.filter((r) => r.hit_miss_label === "NEUTRAL").length;
+  // cp-14: HIT/MISS is a market-edge verdict. Reconstructed forecasts score
+  // calibration only (no odds yet), so when every row lacks a verdict the
+  // header reports calibration scoring with the honest sample size instead of
+  // an all-zero HIT/MISS line that would read as an empty track record.
+  const marketPending =
+    records.length > 0 && records.every((r) => r.hit_miss_label === null);
+  const brierMStar = metrics.brier.M_STAR;
+  const championN = metrics.champion_metric_n ?? records.length;
 
   return (
     <div
@@ -193,19 +207,46 @@ export default function LedgerPage() {
             style={{ color: "var(--text-secondary)" }}
           >
             Append-only forecast record ·{" "}
-            <span className="mono">{records.length}</span> records ·{" "}
-            <span className="mono" style={{ color: "var(--ledger-hit)" }}>
-              {totalHits} HIT
-            </span>{" "}
-            ·{" "}
-            <span className="mono" style={{ color: "var(--ledger-miss)" }}>
-              {totalMisses} MISS
-            </span>{" "}
-            ·{" "}
-            <span className="mono" style={{ color: "var(--text-tertiary)" }}>
-              {totalNeutral} NEUTRAL
-            </span>
+            <span className="mono">{records.length}</span> records
+            {marketPending ? (
+              <>
+                {" "}
+                ·{" "}
+                <span className="mono" style={{ color: "var(--text-tertiary)" }}>
+                  calibration scoring · market verdict pending
+                </span>
+              </>
+            ) : (
+              <>
+                {" "}
+                ·{" "}
+                <span className="mono" style={{ color: "var(--ledger-hit)" }}>
+                  {totalHits} HIT
+                </span>{" "}
+                ·{" "}
+                <span className="mono" style={{ color: "var(--ledger-miss)" }}>
+                  {totalMisses} MISS
+                </span>{" "}
+                ·{" "}
+                <span className="mono" style={{ color: "var(--text-tertiary)" }}>
+                  {totalNeutral} NEUTRAL
+                </span>
+              </>
+            )}
           </p>
+          {brierMStar !== null ? (
+            <p
+              className="text-[11px] mt-0.5"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              Champion Brier{" "}
+              <span className="mono" style={{ color: "var(--text-secondary)" }}>
+                {brierMStar.toFixed(4)}
+              </span>{" "}
+              over <span className="mono">n={championN}</span> settled group
+              matches. A small sample is suggestive, not a track record.
+            </p>
+          ) : null}
           </div>
           <Suspense fallback={null}>
             <TourTriggerButton

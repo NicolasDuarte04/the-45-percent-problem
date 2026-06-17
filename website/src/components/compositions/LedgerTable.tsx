@@ -98,8 +98,8 @@ export function LedgerTable({ records }: LedgerTableProps) {
       let av: string | number, bv: string | number;
       switch (sortKey) {
         case "settled_at_utc":
-          av = a.settled_at_utc;
-          bv = b.settled_at_utc;
+          av = a.settled_at_utc ?? "";
+          bv = b.settled_at_utc ?? "";
           break;
         case "model_id":
           av = a.model_id;
@@ -114,16 +114,16 @@ export function LedgerTable({ records }: LedgerTableProps) {
           bv = b.p_model_on_realized;
           break;
         case "edge_E_at_close":
-          av = Math.abs(a.edge_E_at_close);
-          bv = Math.abs(b.edge_E_at_close);
+          av = Math.abs(a.edge_E_at_close ?? 0);
+          bv = Math.abs(b.edge_E_at_close ?? 0);
           break;
         case "brier_contribution":
           av = a.brier_contribution;
           bv = b.brier_contribution;
           break;
         case "hit_miss_label":
-          av = a.hit_miss_label;
-          bv = b.hit_miss_label;
+          av = a.hit_miss_label ?? "";
+          bv = b.hit_miss_label ?? "";
           break;
         default:
           return 0;
@@ -229,9 +229,9 @@ export function LedgerTable({ records }: LedgerTableProps) {
                 <td className="py-1.5 px-2 text-right whitespace-nowrap">
                   <span
                     className="mono"
-                    aria-label={`settled at ${r.settled_at_utc}`}
+                    aria-label={`settled at ${r.settled_at_utc ?? "unknown"}`}
                   >
-                    {formatUtcShort(r.settled_at_utc)}
+                    {r.settled_at_utc ? formatUtcShort(r.settled_at_utc) : "-"}
                   </span>
                 </td>
 
@@ -285,26 +285,56 @@ export function LedgerTable({ records }: LedgerTableProps) {
                   />
                 </td>
 
-                {/* q market devigged on realized */}
+                {/* q market devigged on realized · null until odds ingestion */}
                 <td className="py-1.5 px-2 text-right">
-                  <NumericCell
-                    value={r.q_market_devigged_on_realized}
-                    formatter={(p) => formatProbability(p, 1)}
-                    ariaLabel={`${(r.q_market_devigged_on_realized * 100).toFixed(1)} percent`}
-                  />
+                  {r.q_market_devigged_on_realized !== null ? (
+                    <NumericCell
+                      value={r.q_market_devigged_on_realized}
+                      formatter={(p) => formatProbability(p, 1)}
+                      ariaLabel={`${(r.q_market_devigged_on_realized * 100).toFixed(1)} percent`}
+                    />
+                  ) : (
+                    <span
+                      className="mono"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      -
+                    </span>
+                  )}
                 </td>
 
-                {/* Edge at close */}
+                {/* Edge at close · null until odds ingestion */}
                 <td className="py-1.5 px-2 text-right">
-                  <EdgeBadge edge={r.edge_E_at_close} threshold={0.03} />
+                  {r.edge_E_at_close !== null ? (
+                    <EdgeBadge edge={r.edge_E_at_close} threshold={0.03} />
+                  ) : (
+                    <span
+                      className="mono"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      -
+                    </span>
+                  )}
                 </td>
 
-                {/* Gate */}
+                {/* Gate · null until odds ingestion */}
                 <td className="py-1.5 px-2 text-right">
-                  <GateStatusPill
-                    status={r.gate_status_at_close}
-                    rulesTripped={[]}
-                  />
+                  {r.gate_status_at_close !== null ? (
+                    <GateStatusPill
+                      status={r.gate_status_at_close}
+                      rulesTripped={[]}
+                    />
+                  ) : (
+                    <span
+                      className="mono"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      -
+                    </span>
+                  )}
                 </td>
 
                 {/* Brier */}
@@ -369,9 +399,20 @@ export function LedgerTable({ records }: LedgerTableProps) {
                   )}
                 </td>
 
-                {/* Label: the ONLY visual delta between HIT and MISS */}
+                {/* Label: the ONLY visual delta between HIT and MISS · null
+                    (market pending) renders a neutral marker, not a verdict */}
                 <td className="py-1.5 px-2 text-center">
-                  <LabelChip label={r.hit_miss_label} />
+                  {r.hit_miss_label !== null ? (
+                    <LabelChip label={r.hit_miss_label} />
+                  ) : (
+                    <span
+                      className="mono text-[11px]"
+                      style={{ color: "var(--text-tertiary)" }}
+                      aria-label="market pending"
+                    >
+                      pending
+                    </span>
+                  )}
                 </td>
 
                 {/* Audit hash chips */}

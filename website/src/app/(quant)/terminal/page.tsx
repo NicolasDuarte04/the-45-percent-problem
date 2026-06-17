@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { loadStructuralMaps, mergeDivergence } from "@/lib/db/structuralMerge";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
-import { TerminalTransparencyBanner } from "@/components/compositions/TerminalTransparencyBanner";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
 import { TERMINAL_STEPS, TERMINAL_DURATION_SEC } from "./_steps";
@@ -30,6 +29,12 @@ export default async function TerminalPage({
   const allGated =
     divergence.rows.length > 0 &&
     divergence.rows.every((r) => r.gate_status === "FIRED");
+
+  // cp-14 Decision B: when no real odds are ingested, the divergence is pending
+  // (zero rows, no PINNACLE stamp). Show an honest pending panel instead of the
+  // table and the retired synthetic-disclosure banner.
+  const isPending =
+    divergence.status === "pending" || divergence.rows.length === 0;
 
   return (
     <div
@@ -98,11 +103,8 @@ export default async function TerminalPage({
         </div>
       </div>
 
-      {/* ── Methodological transparency banner (pre cp-14) ────────────────── */}
-      <TerminalTransparencyBanner />
-
       {/* ── All-gated banner ─────────────────────────────────────────────── */}
-      {allGated && (
+      {!isPending && allGated && (
         <div
           data-guide-id="all-gated-banner"
           className="shrink-0 px-4 md:px-6 py-2 text-[12px] font-medium"
@@ -121,14 +123,52 @@ export default async function TerminalPage({
         </div>
       )}
 
-      {/* ── Main table ───────────────────────────────────────────────────── */}
+      {/* ── Main table, or honest pending panel ──────────────────────────── */}
       <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6">
-        <DivergenceTable
-          rows={divergence.rows}
-          snapshotId={divergence.snapshot_id}
-          isStale={isStale}
-          initialParams={params}
-        />
+        {isPending ? (
+          <div
+            className="border rounded-md px-5 py-8 text-center"
+            style={{
+              borderColor: "var(--border-default)",
+              backgroundColor: "var(--bg-panel)",
+            }}
+            role="status"
+          >
+            <p
+              className="text-[13px] font-medium"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Live odds ingestion pending
+            </p>
+            <p
+              className="text-[12px] mt-1.5 max-w-[640px] mx-auto"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              No real bookmaker lines are ingested yet, so no divergence rows are
+              published. The earlier synthetic, Elo-derived rows (which carried a
+              bookmaker source attribution they did not come from) have been
+              retired rather than shown behind a disclaimer. Real de-vigged
+              divergence appears here once the odds producer runs with a
+              provisioned key. The model-vs-market method is documented at{" "}
+              <a
+                href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--accent-focus)" }}
+              >
+                osf.io/spmkg
+              </a>
+              .
+            </p>
+          </div>
+        ) : (
+          <DivergenceTable
+            rows={divergence.rows}
+            snapshotId={divergence.snapshot_id}
+            isStale={isStale}
+            initialParams={params}
+          />
+        )}
       </div>
 
       {/* ── Column legend ─────────────────────────────────────────────────── */}

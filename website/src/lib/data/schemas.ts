@@ -133,6 +133,12 @@ export const DivergenceSnapshotSchema = z.object({
   snapshot_id: z.string(),
   generated_at_utc: z.string(),
   rows: z.array(DivergenceRowSchema),
+  // cp-14: "pending" means no real odds are ingested yet, so rows is empty and
+  // no source_book is stamped anywhere (Decision B). "live" means the rows are
+  // real de-vigged Pinnacle lines. Absent on pre-cp-14 snapshots.
+  status: z.enum(["live", "pending"]).optional(),
+  pending_reason: z.string().optional(),
+  notes: z.string().optional(),
 });
 export type DivergenceSnapshot = z.infer<typeof DivergenceSnapshotSchema>;
 
@@ -163,6 +169,15 @@ export const MatchDetailSchema = z.object({
     fifa_rank_away: z.number().int(),
   }),
   forecast_ids: z.array(z.string()),
+  // cp-14 commit 2: real settled result, joined from match_outcomes during
+  // nightly regen. Absent on unplayed matches; the nightly leaves those files
+  // untouched, so these are optional and nullable.
+  score: z
+    .object({ home: z.number().int(), away: z.number().int() })
+    .nullable()
+    .optional(),
+  outcome_realized: z.enum(["H", "D", "A"]).nullable().optional(),
+  settled_at_utc: z.string().nullable().optional(),
 });
 export type MatchDetail = z.infer<typeof MatchDetailSchema>;
 
@@ -205,18 +220,27 @@ export const LedgerRecordSchema = z.object({
   outcome_predicted_distribution: z.record(z.string(), z.number().min(0).max(1)),
   outcome_realized: z.string(),
   p_model_on_realized: probability(),
-  q_market_devigged_on_realized: probability(),
-  edge_E_at_close: z.number(),
-  gate_status_at_close: z.enum(["OPEN", "FIRED"]),
+  // cp-14: the market layer is pending real odds ingestion (Pinnacle / Odds
+  // API). Reconstructed forecasts score the frozen pre-tournament champion
+  // distribution against results (Brier / RPS / log-loss only); they carry no
+  // market lines, so the market-dependent fields are null until odds are live.
+  q_market_devigged_on_realized: probability().nullable(),
+  edge_E_at_close: z.number().nullable(),
+  gate_status_at_close: z.enum(["OPEN", "FIRED"]).nullable(),
   brier_contribution: z.number(),
   log_loss_contribution: z.number(),
   rps_contribution: z.number(),
   clv_bps: z.number().nullable(),
-  hit_miss_label: z.enum(["HIT", "MISS", "NEUTRAL"]),
+  hit_miss_label: z.enum(["HIT", "MISS", "NEUTRAL"]).nullable(),
   code_sha: z.string(),
   data_sha: z.string(),
   mc_seed: z.number().int(),
-  settled_at_utc: z.string(),
+  settled_at_utc: z.string().nullable(),
+  // cp-14 Decision A provenance: present on reconstructed rows so every
+  // forecast traces back to the frozen committed batch it was scored from.
+  provenance: z.string().optional(),
+  source_batch_id: z.string().optional(),
+  source_batch_activated_utc: z.string().optional(),
 });
 export type LedgerRecord = z.infer<typeof LedgerRecordSchema>;
 
@@ -233,6 +257,10 @@ const ModelMetricsSchema = z.object({
 export const EvaluationMetricsSchema = z.object({
   snapshot_id: z.string(),
   matches_settled: z.number().int().min(0),
+  // cp-14: number of settled forecasts actually scored into the champion
+  // metrics (the bijection-validated subset). Shown verbatim as the sample
+  // size; absent on pre-cp-14 snapshots.
+  champion_metric_n: z.number().int().min(0).optional(),
   brier: ModelMetricsSchema,
   log_loss: ModelMetricsSchema,
   rps: ModelMetricsSchema,
