@@ -41,6 +41,7 @@ data/raw/*.parquet
 data/raw/*.csv
 data/raw/*.json
 data/processed/*.parquet
+data/processed/forecast_mapping_audit.json
 data/snapshots/*.parquet
 data/snapshots/*.jsonl
 !data/raw/.gitkeep
