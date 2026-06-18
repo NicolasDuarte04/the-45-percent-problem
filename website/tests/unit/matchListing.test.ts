@@ -8,6 +8,9 @@ import {
   modalScoreline,
   formatDayLabel,
   formatKickoffTime,
+  utcDayKeyFromMs,
+  partitionToday,
+  filterByTeam,
 } from "@/lib/data/matchListing";
 import type { MatchDetail } from "@/lib/data/schemas";
 
@@ -126,5 +129,79 @@ describe("formatDayLabel", () => {
 describe("formatKickoffTime", () => {
   it("renders a UTC clock label", () => {
     expect(formatKickoffTime("2026-06-11T19:00:00+00:00")).toBe("19:00Z");
+  });
+});
+
+describe("utcDayKeyFromMs", () => {
+  it("derives the UTC calendar day from a timestamp", () => {
+    const ms = Date.parse("2026-06-17T23:30:00Z");
+    expect(utcDayKeyFromMs(ms)).toBe("2026-06-17");
+  });
+
+  it("uses UTC, not local time, across the day boundary", () => {
+    // 00:30Z is still the 18th in UTC even where local time is the 17th.
+    expect(utcDayKeyFromMs(Date.parse("2026-06-18T00:30:00Z"))).toBe(
+      "2026-06-18",
+    );
+  });
+});
+
+describe("partitionToday", () => {
+  const a = makeMatch({ match_id: "M01", kickoff_utc: "2026-06-17T20:00:00Z" });
+  const b = makeMatch({ match_id: "M02", kickoff_utc: "2026-06-17T23:00:00Z" });
+  const c = makeMatch({ match_id: "M03", kickoff_utc: "2026-06-19T03:00:00Z" });
+
+  it("splits today's fixtures from the rest by UTC day", () => {
+    const { today, rest } = partitionToday([a, b, c], "2026-06-17");
+    expect(today.map((m) => m.match_id)).toEqual(["M01", "M02"]);
+    expect(rest.map((m) => m.match_id)).toEqual(["M03"]);
+  });
+
+  it("returns an empty today set when nothing kicks off today", () => {
+    const { today, rest } = partitionToday([a, b, c], "2026-06-18");
+    expect(today).toEqual([]);
+    expect(rest.map((m) => m.match_id)).toEqual(["M01", "M02", "M03"]);
+  });
+
+  it("preserves input order within each partition", () => {
+    const { rest } = partitionToday([c, a, b], "2026-06-17");
+    expect(rest.map((m) => m.match_id)).toEqual(["M03"]);
+  });
+});
+
+describe("filterByTeam", () => {
+  const mex = makeMatch({
+    match_id: "M01",
+    home: { fifa_code: "MEX", display_name: "Mexico" },
+    away: { fifa_code: "KOR", display_name: "South Korea" },
+  });
+  const eng = makeMatch({
+    match_id: "M02",
+    home: { fifa_code: "ENG", display_name: "England" },
+    away: { fifa_code: "CRO", display_name: "Croatia" },
+  });
+
+  it("returns the list unchanged for a blank query", () => {
+    expect(filterByTeam([mex, eng], "")).toHaveLength(2);
+    expect(filterByTeam([mex, eng], "   ")).toHaveLength(2);
+  });
+
+  it("matches on display name, case-insensitively, either side", () => {
+    expect(filterByTeam([mex, eng], "korea").map((m) => m.match_id)).toEqual([
+      "M01",
+    ]);
+    expect(filterByTeam([mex, eng], "ENGLAND").map((m) => m.match_id)).toEqual([
+      "M02",
+    ]);
+  });
+
+  it("matches on FIFA code", () => {
+    expect(filterByTeam([mex, eng], "cro").map((m) => m.match_id)).toEqual([
+      "M02",
+    ]);
+  });
+
+  it("returns nothing when no side matches", () => {
+    expect(filterByTeam([mex, eng], "brazil")).toEqual([]);
   });
 });

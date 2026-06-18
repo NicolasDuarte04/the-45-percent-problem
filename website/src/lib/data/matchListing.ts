@@ -121,3 +121,51 @@ export function formatKickoffTime(kickoffUtc: string): string {
   const mm = String(d.getUTCMinutes()).padStart(2, "0");
   return `${hh}:${mm}Z`;
 }
+
+/**
+ * UTC calendar-day key ("YYYY-MM-DD") for a millisecond timestamp. Used to
+ * derive "today" from the client clock so it lines up with `dayKey`, which
+ * keys fixtures on their UTC kickoff day.
+ */
+export function utcDayKeyFromMs(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/**
+ * Split an upcoming (unplayed) list into the fixtures kicking off on
+ * `todayKey` (UTC) and everything else, preserving the input order. `today`
+ * is the set whose UTC kickoff day equals todayKey; `rest` is the remainder
+ * (future days, plus any earlier-dated fixture not yet settled). Pass the
+ * already-sorted upcoming list so both partitions stay chronological.
+ */
+export function partitionToday(
+  upcoming: MatchDetail[],
+  todayKey: string,
+): { today: MatchDetail[]; rest: MatchDetail[] } {
+  const today: MatchDetail[] = [];
+  const rest: MatchDetail[] = [];
+  for (const m of upcoming) {
+    (dayKey(m.kickoff_utc) === todayKey ? today : rest).push(m);
+  }
+  return { today, rest };
+}
+
+/**
+ * Case-insensitive filter on team identity: a fixture is kept when the query
+ * is a substring of either side's display name or FIFA code. A blank query
+ * returns the list unchanged (referential identity preserved).
+ */
+export function filterByTeam(
+  matches: MatchDetail[],
+  query: string,
+): MatchDetail[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return matches;
+  return matches.filter(
+    (m) =>
+      m.home.display_name.toLowerCase().includes(q) ||
+      m.away.display_name.toLowerCase().includes(q) ||
+      m.home.fifa_code.toLowerCase().includes(q) ||
+      m.away.fifa_code.toLowerCase().includes(q),
+  );
+}

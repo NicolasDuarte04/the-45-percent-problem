@@ -20,6 +20,8 @@
  *                   teams are determined by group results.
  */
 
+import { KICKOFF_OVERRIDES } from "./wc2026-kickoffs";
+
 export type Confederation =
   | "CONMEBOL"
   | "UEFA"
@@ -341,9 +343,10 @@ function buildGroupMatches(): GroupMatch[] {
   const out: GroupMatch[] = [];
   let n = 1;
   for (const md of [1, 2, 3] as const) {
-    // TODO: The uniform +5d / +10d shifts are approximations (~1-3 days off
-    // for some fixtures). A per-match kickoff override map is needed for
-    // accurate live-odds joins. Out of scope until exact dates are confirmed.
+    // The uniform +5d/+10d shift only approximates the real schedule (it was
+    // documented as "~1-3 days off" for some fixtures). KICKOFF_OVERRIDES
+    // carries the exact FD-sourced kickoff per match id; when a match is in
+    // the map we use it verbatim, otherwise we fall back to the anchor shift.
     const dayOffset = (md - 1) * 5; // MD2 +5d, MD3 +10d (FIFA's MD spacing)
     for (const g of "ABCDEFGHIJKL".split("") as GroupLetter[]) {
       const teams = GROUP_TEAMS[g];
@@ -361,13 +364,15 @@ function buildGroupMatches(): GroupMatch[] {
         // local kickoff and venue, shifted by +5/+10 days. This is faithful
         // to FIFA's per-group rotation pattern published in the master schedule.
         const anchor = anchors[slot];
+        const matchId = `M${String(n).padStart(2, "0")}`;
         out.push({
-          match_id: `M${String(n).padStart(2, "0")}`,
+          match_id: matchId,
           matchday: md,
           group: g,
           home_code: home,
           away_code: away,
-          kickoff_utc: shiftDays(anchor.kickoff_utc, dayOffset),
+          kickoff_utc:
+            KICKOFF_OVERRIDES[matchId] ?? shiftDays(anchor.kickoff_utc, dayOffset),
           venue_key: anchor.venue_key,
         });
         n++;
@@ -390,7 +395,7 @@ export const GROUP_MATCHES: GroupMatch[] = buildGroupMatches();
 // Bracket pathway follows the published 2026 FIFA bracket diagram. Groups
 // are paired so two teams from the same group cannot meet before the QFs.
 
-export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
+const KNOCKOUT_MATCHES_RAW: KnockoutMatch[] = [
   // ── Round of 32 · 16 matches, 28 Jun · 3 Jul ────────────────────────────────
   { match_id: "M73", round: "R32", kickoff_utc: "2026-06-28T19:00:00Z", venue_key: "ATT",        home_slot: "1A", away_slot: "BEST3-CDEFI" },
   { match_id: "M74", round: "R32", kickoff_utc: "2026-06-28T22:00:00Z", venue_key: "MercedesBenz", home_slot: "1L", away_slot: "BEST3-EHIJK" },
@@ -435,6 +440,13 @@ export const KNOCKOUT_MATCHES: KnockoutMatch[] = [
   // ── Final · 19 Jul ──────────────────────────────────────────────────────────
   { match_id: "M104", round: "FIN", kickoff_utc: "2026-07-19T19:00:00Z", venue_key: "MetLife",   home_slot: "WM101", away_slot: "WM102" },
 ];
+
+// Apply the FD-sourced kickoff overrides (same map as the group stage). The
+// raw literals above stay as the fallback for any knockout id not in the map.
+export const KNOCKOUT_MATCHES: KnockoutMatch[] = KNOCKOUT_MATCHES_RAW.map((m) => ({
+  ...m,
+  kickoff_utc: KICKOFF_OVERRIDES[m.match_id] ?? m.kickoff_utc,
+}));
 
 // ─── Convenience helpers ──────────────────────────────────────────────────────
 

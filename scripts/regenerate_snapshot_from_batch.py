@@ -82,6 +82,10 @@ MANIFEST_PATH     = WEBSITE_DATA_ROOT / "manifest.json"
 ACTIVE_BATCH_JSON = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 CHAMPION_MODEL_JSON = PROJECT_ROOT / "data" / "calibration" / "champion_model.json"
 FIXTURES_PARQUET = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
+# cp-19: FD-sourced kickoff overrides (match_id -> ISO Z), produced by
+# scripts/build_wc2026_schedule.py. Used to heal the kickoffs that this regen
+# otherwise carries forward verbatim (see overlay_kickoffs).
+KICKOFFS_JSON = PROJECT_ROOT / "data" / "raw" / "wc2026_kickoffs.json"
 AMENDMENT_POINTER = "osf/amendments/amendment_v1.1_data_completeness.md"
 
 # cp-09 part 2: optional parquet snapshot of the website's `match_outcomes`
@@ -90,6 +94,43 @@ AMENDMENT_POINTER = "osf/amendments/amendment_v1.1_data_completeness.md"
 # overridable via the `MATCH_OUTCOMES_PARQUET` env var so a CI job that
 # stages the export elsewhere can wire it without touching this constant.
 MATCH_OUTCOMES_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.parquet"
+
+
+# cp-19: kickoff healing ------------------------------------------------------
+def load_kickoff_overrides(path: Path = KICKOFFS_JSON) -> dict[str, str]:
+    """Load the FD-sourced kickoff map (match_id -> ISO Z). Empty if absent."""
+    if not path.exists():
+        return {}
+    doc = json.loads(path.read_text())
+    return doc.get("kickoffs", {}) or {}
+
+
+def overlay_kickoffs(matches_dir: Path, kickoffs: dict[str, str]) -> int:
+    """Heal carried-forward match kickoffs from the authoritative FD map.
+
+    This regen copies ``matches/*.json`` forward verbatim, so a kickoff baked
+    into an older snapshot would otherwise persist even after the source was
+    corrected. This rewrites ``kickoff_utc`` for any match id present in
+    ``kickoffs``, normalised to the same ``+00:00`` ISO form the published
+    files already use. Additive and idempotent: ids absent from the map are
+    untouched, so a partial map is strictly an improvement. Returns the number
+    of files changed.
+    """
+    if not kickoffs:
+        return 0
+    changed = 0
+    for jf in sorted(Path(matches_dir).glob("*.json")):
+        doc = json.loads(jf.read_text())
+        new = kickoffs.get(doc.get("match_id"))
+        if not new:
+            continue
+        normalised = datetime.fromisoformat(new.replace("Z", "+00:00")).isoformat()
+        if doc.get("kickoff_utc") != normalised:
+            doc["kickoff_utc"] = normalised
+            jf.write_text(json.dumps(doc, indent=2) + "\n")
+            changed += 1
+    return changed
+
 
 # Batch team_id (post-Section-1 normalisation) to website canonical-draw
 # display_name. Most teams agree; the entries below are the six cases that
@@ -928,6 +969,13 @@ def main() -> None:
         shutil.rmtree(dst)
     if src.exists():
         shutil.copytree(src, dst)
+
+    # cp-19: heal kickoffs that copytree carried forward verbatim. The FD-sourced
+    # map is the authoritative display time; this overlay is the one place the
+    # frozen carry-forward gets corrected on every regen.
+    n_kickoffs = overlay_kickoffs(dst, load_kickoff_overrides())
+    if n_kickoffs:
+        print(f"    [cp-19] healed {n_kickoffs} kickoff(s) from {KICKOFFS_JSON.name}")
 
     if score_res["status"] == "ok":
         n_joined = join_scores(dst, score_res["scored"])
