@@ -37,8 +37,13 @@ export function MatchHeader({ match }: MatchHeaderProps) {
       </div>
 
       <div
-        className="grid items-center"
-        style={{ gridTemplateColumns: "auto 1fr auto", columnGap: 24 }}
+        // Stacks to a single column below md so the two team blocks and the
+        // probability block do not have to share a 360 to 430px row. The
+        // three-column "auto 1fr auto" layout (which needs roughly 200px per
+        // team side plus the probability block, well over a phone width and
+        // which previously crushed the middle column so its 1X2 figures
+        // collided) is restored from md upwards, leaving desktop unchanged.
+        className="grid items-center gap-y-5 gap-x-6 grid-cols-1 md:grid-cols-[auto_1fr_auto]"
       >
         <TeamSide team={home} align="start" />
 
@@ -126,10 +131,12 @@ function TeamSide({
 }) {
   return (
     <div
-      className="flex flex-col gap-2.5"
+      // The 200px floor is desktop-only: on a phone the block stacks full
+      // width, so a hard min-width there only reintroduced horizontal
+      // overflow. min-w-0 below md lets it shrink to the column.
+      className="flex flex-col gap-2.5 min-w-0 md:min-w-[200px]"
       style={{
         alignItems: align === "start" ? "flex-start" : "flex-end",
-        minWidth: 200,
         textAlign: align === "start" ? "left" : "right",
       }}
     >
