@@ -79,6 +79,13 @@ KICKOFFS_JSON = PROJECT_ROOT / "data" / "raw" / "wc2026_kickoffs.json"
 KICKOFFS_TS = (
     PROJECT_ROOT / "website" / "src" / "lib" / "data" / "wc2026-kickoffs.ts"
 )
+# Published per-match JSON: the baseline the diff report compares FD against, so
+# a reviewer sees which live kickoffs FD would move and by how much.
+PUBLISHED_MATCHES_DIR = (
+    PROJECT_ROOT / "website" / "public" / "data" / "latest" / "matches"
+)
+# Moves at or above this many minutes are flagged for human review.
+DIFF_FLAG_MINUTES = 30
 
 # Canonical draw round code -> a stage key shared with FD's STAGE_MAP values.
 DRAW_ROUND_TO_KEY: dict[str, str] = {
@@ -100,7 +107,10 @@ KO_STAGE_MAP: dict[str, str] = {**STAGE_MAP, "THIRD_PLACE": "3p"}
 OFFICIAL_ANCHORS: dict[str, str] = {
     "M23": "2026-06-17T20:00:00Z",  # England v Croatia
     "M24": "2026-06-17T23:00:00Z",  # Ghana v Panama
-    "M25": "2026-06-19T03:00:00Z",  # Mexico v Korea Republic
+    # M25 was 03:00Z from imperfect early research; the verified-true kickoff
+    # is 01:00Z on 19 Jun (21:00 ET 18 Jun / 19:00 Guadalajara), which is also
+    # what Football-Data returns. Corrected so the gate checks the real time.
+    "M25": "2026-06-19T01:00:00Z",  # Mexico v Korea Republic
 }
 
 
@@ -225,6 +235,94 @@ def verify_anchors(
     log.success("Anchor verification passed", anchors=len(anchors))
 
 
+def anchor_results(
+    kmap: dict[str, str], anchors: dict[str, str] = OFFICIAL_ANCHORS
+) -> list[dict[str, Any]]:
+    """Every anchor check (pass and fail), so report mode shows the full list."""
+    rows: list[dict[str, Any]] = []
+    for mid, expected in anchors.items():
+        got = kmap.get(mid)
+        ok = got is not None and _to_z(got) == _to_z(expected)
+        rows.append({"match_id": mid, "fd": got, "anchor": expected, "ok": ok})
+    return rows
+
+
+def _published_baseline() -> dict[str, str]:
+    """Currently-published kickoffs (match_id -> Z), the diff baseline."""
+    baseline: dict[str, str] = {}
+    if not PUBLISHED_MATCHES_DIR.exists():
+        return baseline
+    for jf in sorted(PUBLISHED_MATCHES_DIR.glob("*.json")):
+        try:
+            doc = json.loads(jf.read_text())
+            if doc.get("kickoff_utc"):
+                baseline[doc["match_id"]] = _to_z(doc["kickoff_utc"])
+        except (ValueError, KeyError):
+            continue
+    return baseline
+
+
+def diff_vs_published(kmap: dict[str, str]) -> list[dict[str, Any]]:
+    """FD-vs-previously-published moves, largest first.
+
+    Only matches that already have a published kickoff are compared (the public
+    listing is the 72 group fixtures). Each row carries the delta in minutes and
+    whether it crosses the review threshold.
+    """
+    baseline = _published_baseline()
+    rows: list[dict[str, Any]] = []
+    for mid, new in kmap.items():
+        prev = baseline.get(mid)
+        if prev is None:
+            continue
+        delta_min = round(
+            (datetime.fromisoformat(_to_z(new).replace("Z", "+00:00"))
+             - datetime.fromisoformat(prev.replace("Z", "+00:00"))).total_seconds()
+            / 60
+        )
+        if delta_min == 0:
+            continue
+        rows.append(
+            {
+                "match_id": mid,
+                "previous": prev,
+                "fd": _to_z(new),
+                "delta_min": delta_min,
+                "flag": abs(delta_min) >= DIFF_FLAG_MINUTES,
+            }
+        )
+    rows.sort(key=lambda r: abs(r["delta_min"]), reverse=True)
+    return rows
+
+
+def report(kmap: dict[str, str]) -> None:
+    """Report-all: print every anchor check and every FD-vs-published move.
+
+    Writes nothing and never raises on an anchor mismatch, so the full scope is
+    visible before deciding how to fix. A flagged move (>= DIFF_FLAG_MINUTES) is
+    a prompt for human review, not a hard stop.
+    """
+    print("\n=== Anchor checks (FD vs official) ===")
+    for r in anchor_results(kmap):
+        status = "OK" if r["ok"] else "MISMATCH"
+        print(f"  [{status}] {r['match_id']}: FD={r['fd']} official={r['anchor']}")
+
+    moves = diff_vs_published(kmap)
+    flagged = [m for m in moves if m["flag"]]
+    print(
+        f"\n=== FD vs published kickoffs: {len(moves)} moved, "
+        f"{len(flagged)} over {DIFF_FLAG_MINUTES} min ==="
+    )
+    for m in moves:
+        mark = "FLAG" if m["flag"] else "    "
+        sign = "+" if m["delta_min"] > 0 else ""
+        print(
+            f"  {mark} {m['match_id']}: {m['previous']} -> {m['fd']} "
+            f"({sign}{m['delta_min']} min)"
+        )
+    print("")
+
+
 # =============================================================================
 # Output
 # =============================================================================
@@ -295,6 +393,7 @@ def _match_sort_key(mid: str) -> int:
 def run(
     fixture: Optional[Path] = None,
     check_only: bool = False,
+    report_only: bool = False,
 ) -> dict[str, str]:
     if not CANONICAL_DRAW_JSON.exists():
         raise FileNotFoundError(
@@ -317,12 +416,23 @@ def run(
 
     kmap = build_kickoff_map(payload, draw)
     log.info("Built kickoff map", matches=len(kmap))
+
+    # Report-all: surface every anchor check and every FD-vs-published move
+    # without applying the hard gate or writing anything.
+    if report_only:
+        report(kmap)
+        log.success("Report complete; no files written", matches=len(kmap))
+        return kmap
+
     verify_anchors(kmap)
 
     if check_only:
         log.success("Check passed; no files written", matches=len(kmap))
         return kmap
 
+    # Surface the FD-vs-published diff on the publish path too, as a review
+    # artifact (informational; the anchor gate above is the hard stop).
+    report(kmap)
     write_outputs(kmap)
     return kmap
 
@@ -343,9 +453,16 @@ def main() -> None:
         action="store_true",
         help="Verify the anchor gate only; do not write any files.",
     )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Report-all: print every anchor check and every FD-vs-published "
+        "move, write nothing, and never fail on a mismatch. Use to see scope "
+        "before publishing.",
+    )
     args = parser.parse_args()
     try:
-        run(fixture=args.fixture, check_only=args.check)
+        run(fixture=args.fixture, check_only=args.check, report_only=args.report)
     except VerificationError as exc:
         log.error("Verification failed", error=str(exc))
         raise SystemExit(2)

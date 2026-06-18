@@ -22,7 +22,13 @@
 name: Refresh WC 2026 kickoff schedule
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "report = list every FD-vs-anchor mismatch and FD-vs-published move, write nothing; publish = run the gate and publish."
+        type: choice
+        options: [report, publish]
+        default: publish
 
 jobs:
   refresh:
@@ -61,12 +67,20 @@ jobs:
       - name: Install project (Python)
         run: pip install -e .
 
+      - name: Report-all (FD vs anchors and vs published; writes nothing)
+        if: inputs.mode == 'report'
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        run: python scripts/build_wc2026_schedule.py --report
+
       - name: Re-source kickoffs from Football-Data (verification-gated)
+        if: inputs.mode == 'publish'
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
         run: python scripts/build_wc2026_schedule.py
 
       - name: Heal published snapshot kickoffs
+        if: inputs.mode == 'publish'
         run: |
           python -c "from pathlib import Path; \
           from scripts.regenerate_snapshot_from_batch import load_kickoff_overrides, overlay_kickoffs; \
@@ -75,6 +89,7 @@ jobs:
 
       - name: Stage corrected schedule files
         id: stage
+        if: inputs.mode == 'publish'
         run: |
           git add data/raw/wc2026_kickoffs.json \
                   website/src/lib/data/wc2026-kickoffs.ts \

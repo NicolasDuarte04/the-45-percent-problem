@@ -47,7 +47,7 @@ PAYLOAD = {
         },
         {
             "stage": "GROUP_STAGE",
-            "utcDate": "2026-06-19T03:00:00Z",
+            "utcDate": "2026-06-19T01:00:00Z",
             "homeTeam": {"name": "Mexico"},
             "awayTeam": {"name": "Korea Republic"},
         },
@@ -69,7 +69,7 @@ def test_group_fixtures_join_by_team_pair():
     kmap = build_kickoff_map(PAYLOAD, DRAW)
     assert kmap["M23"] == "2026-06-17T20:00:00Z"
     assert kmap["M24"] == "2026-06-17T23:00:00Z"
-    assert kmap["M25"] == "2026-06-19T03:00:00Z"
+    assert kmap["M25"] == "2026-06-19T01:00:00Z"
 
 
 def test_group_pair_is_orientation_independent():
