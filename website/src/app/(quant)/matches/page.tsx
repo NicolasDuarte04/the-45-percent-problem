@@ -34,7 +34,8 @@ export default async function MatchesPage() {
           <p className="text-[12px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
             Every World Cup 2026 fixture with the model&rsquo;s 1X2 probabilities
             and modal scoreline. Played matches carry their real final score and
-            outcome; times are UTC. Each row opens the full per-match breakdown.
+            outcome; days and kickoff times are Colombia time (COT, UTC-5). Each
+            row opens the full per-match breakdown.
           </p>
         </div>
       </div>

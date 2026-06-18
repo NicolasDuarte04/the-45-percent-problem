@@ -3,11 +3,25 @@
  *
  * The page reads the published per-match JSON via loadAllMatches() and needs to
  * (a) split fixtures into played vs upcoming, (b) order them chronologically,
- * (c) group them by calendar (UTC) day for the date dividers, and (d) derive
- * the modal scoreline from the model's goal grid. All of that is pure data
+ * (c) group them by calendar day for the date dividers, and (d) derive the
+ * modal scoreline from the model's goal grid. All of that is pure data
  * transformation, kept here so it can be unit-tested without rendering.
+ *
+ * Day grouping uses a fixed AUDIENCE timezone (America/Bogota), not UTC. A late
+ * local-evening kickoff that crosses UTC midnight (e.g. Mexico vs Korea at
+ * 01:00Z, which is 8:00 PM the previous day in Bogota) must land on the day the
+ * Latin American audience actually experiences it. `dayKey` is the single basis
+ * shared by the matches page AND the daily share card (which imports it), so the
+ * two surfaces can never disagree about which day a fixture belongs to.
  */
 import type { MatchDetail } from "./schemas";
+
+/**
+ * The audience timezone for all civil-day grouping and clock display.
+ * America/Bogota is a fixed UTC-5 with no daylight saving, so the day boundary
+ * is stable year round. Anchored here as the one source of truth.
+ */
+export const AUDIENCE_TZ = "America/Bogota";
 
 /** A fixture counts as "played" once the nightly regen has joined a score. */
 export function isPlayed(m: MatchDetail): boolean {
@@ -41,15 +55,24 @@ export function splitPlayedUpcoming(matches: MatchDetail[]): {
   return { played, upcoming };
 }
 
-/** UTC calendar day key, e.g. "2026-06-11". Used to group rows under a date. */
+/** Formats a Date as a "YYYY-MM-DD" civil-day key in the audience timezone. */
+const AUDIENCE_DAY_FMT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: AUDIENCE_TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/**
+ * Audience-local (America/Bogota) calendar day key, e.g. "2026-06-11". Used to
+ * group rows under a date. A kickoff of 01:00Z on June 19 is 8:00 PM on June 18
+ * in Bogota and therefore keys to "2026-06-18", matching the local listings the
+ * audience sees. en-CA yields ISO-ordered YYYY-MM-DD parts.
+ */
 export function dayKey(kickoffUtc: string): string {
-  // kickoff_utc is an ISO string; the first 10 chars are YYYY-MM-DD in UTC.
-  // Fall back to a Date round-trip if the string is not already ISO-prefixed.
-  if (/^\d{4}-\d{2}-\d{2}/.test(kickoffUtc)) return kickoffUtc.slice(0, 10);
   const d = new Date(kickoffUtc);
-  const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dy = String(d.getUTCDate()).padStart(2, "0");
-  return `${d.getUTCFullYear()}-${mo}-${dy}`;
+  if (Number.isNaN(d.getTime())) return kickoffUtc.slice(0, 10);
+  return AUDIENCE_DAY_FMT.format(d);
 }
 
 export interface MatchDayGroup {
@@ -113,30 +136,45 @@ export function formatDayLabel(day: string): string {
   }).format(d);
 }
 
-/** Kickoff clock label in UTC, e.g. "19:00Z". */
+/** Formats a Date as a 12-hour time-of-day in the audience timezone, e.g. "8:00 PM". */
+const AUDIENCE_TIME_FMT = new Intl.DateTimeFormat("en-US", {
+  timeZone: AUDIENCE_TZ,
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+/**
+ * Kickoff clock label in the audience timezone, with an explicit zone tag so it
+ * can never be misread as UTC, e.g. "8:00 PM COT". COT is Colombia Time (UTC-5).
+ * A match grouped under June 18 whose kickoff is 01:00Z June 19 reads "8:00 PM",
+ * not a confusing "01:00Z".
+ */
 export function formatKickoffTime(kickoffUtc: string): string {
   const d = new Date(kickoffUtc);
   if (Number.isNaN(d.getTime())) return kickoffUtc.slice(11, 16);
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${hh}:${mm}Z`;
+  // Some ICU builds separate the AM/PM with a narrow no-break space; normalise
+  // to a plain space so the label is stable across environments.
+  const clock = AUDIENCE_TIME_FMT.format(d).replace(/[\u202f\u00a0]/g, " ");
+  return `${clock} COT`;
 }
 
 /**
- * UTC calendar-day key ("YYYY-MM-DD") for a millisecond timestamp. Used to
- * derive "today" from the client clock so it lines up with `dayKey`, which
- * keys fixtures on their UTC kickoff day.
+ * Audience-local (America/Bogota) calendar-day key ("YYYY-MM-DD") for a
+ * millisecond timestamp. Used to derive "today" from the client clock so it
+ * lines up with `dayKey`, which keys fixtures on their audience-local kickoff
+ * day. Late-evening "today" matches that cross UTC midnight stay under today.
  */
-export function utcDayKeyFromMs(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
+export function audienceDayKeyFromMs(ms: number): string {
+  return AUDIENCE_DAY_FMT.format(new Date(ms));
 }
 
 /**
  * Split an upcoming (unplayed) list into the fixtures kicking off on
- * `todayKey` (UTC) and everything else, preserving the input order. `today`
- * is the set whose UTC kickoff day equals todayKey; `rest` is the remainder
- * (future days, plus any earlier-dated fixture not yet settled). Pass the
- * already-sorted upcoming list so both partitions stay chronological.
+ * `todayKey` and everything else, preserving the input order. `today` is the
+ * set whose audience-local kickoff day equals todayKey; `rest` is the
+ * remainder (future days, plus any earlier-dated fixture not yet settled).
+ * Pass the already-sorted upcoming list so both partitions stay chronological.
  */
 export function partitionToday(
   upcoming: MatchDetail[],

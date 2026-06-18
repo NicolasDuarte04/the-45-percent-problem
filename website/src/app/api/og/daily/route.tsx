@@ -4,11 +4,11 @@
  * Renders a branded PNG from the live published snapshot so the operator can
  * post a polished daily card instead of a raw terminal screenshot. Two
  * variants, selected by `?variant=recap|preview`:
- *   - recap   : the matches PLAYED on the most recent UTC day with results,
- *               each with its real final score and the probability the model
- *               gave the result, plus a champion calibration strip.
- *   - preview : the fixtures on the earliest UTC day still to be played, with
- *               the model's modal scoreline and top 1X2 outcome.
+ *   - recap   : the matches PLAYED on the most recent audience-local day with
+ *               results, each with its real final score and the probability the
+ *               model gave the result, plus a champion calibration strip.
+ *   - preview : the fixtures on the earliest audience-local day still to be
+ *               played, with the model's modal scoreline and top 1X2 outcome.
  * An explicit `?day=YYYY-MM-DD` override pins the subject day for either
  * variant. Auto-selection means the card regenerates daily with no manual work.
  *

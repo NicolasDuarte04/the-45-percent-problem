@@ -106,6 +106,40 @@ describe("matchesForCard", () => {
   });
 });
 
+// Regression: the card groups on the same America/Bogota basis as the /matches
+// page, so a late-evening kickoff that crosses UTC midnight stays on its local
+// day. Mexico vs Korea (M25, 01:00Z June 19) belongs on the June 18 preview
+// card alongside Canada vs Qatar (M27, 22:00Z June 18), not on June 19.
+describe("audience-local day basis (M25 boundary)", () => {
+  const m27 = makeMatch({
+    match_id: "M27",
+    kickoff_utc: "2026-06-18T22:00:00+00:00",
+  });
+  const m25 = makeMatch({
+    match_id: "M25",
+    kickoff_utc: "2026-06-19T01:00:00+00:00",
+  });
+  const m31 = makeMatch({
+    match_id: "M31",
+    kickoff_utc: "2026-06-19T19:00:00+00:00",
+  });
+  const fixtures = [m27, m25, m31];
+
+  it("preview selects June 18 as the earliest unplayed local day", () => {
+    expect(selectPreviewDay(fixtures)).toBe("2026-06-18");
+  });
+
+  it("puts Mexico vs Korea and Canada vs Qatar on the June 18 card", () => {
+    const rows = matchesForCard(fixtures, "2026-06-18", "preview");
+    expect(rows.map((m) => m.match_id)).toEqual(["M27", "M25"]);
+  });
+
+  it("keeps June 18 anchored to Día 8 and June 19 to Día 9", () => {
+    expect(dayNumber("2026-06-18")).toBe(8);
+    expect(dayNumber("2026-06-19")).toBe(9);
+  });
+});
+
 describe("realizedOutcome", () => {
   it("prefers the stamped outcome", () => {
     expect(realizedOutcome(makeMatch({ score: { home: 0, away: 0 }, outcome_realized: "A" }))).toBe("A");
