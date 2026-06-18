@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { Flag } from "@/components/primitives/Flag";
 import { formatProbability } from "@/lib/formatters";
 import type { MatchDetail } from "@/lib/data/schemas";
@@ -231,6 +232,51 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
   );
 }
 
+/**
+ * Download affordance for the daily Instagram share card. Each link hits the
+ * /api/og/daily route, which renders a branded 1080x1350 PNG from the live
+ * snapshot (recap = the latest played day, preview = the next day to be
+ * played). The PNG content is Colombian Spanish; this operator-facing control
+ * matches the rest of the English page chrome.
+ */
+function ShareCard() {
+  const linkStyle = {
+    border: "1px solid var(--border-default)",
+    background: "var(--bg-panel)",
+    color: "var(--text-primary)",
+  } as const;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span
+        className="mono text-[10px] uppercase tracking-[.08em]"
+        style={{ color: "var(--text-tertiary)" }}
+      >
+        Daily share card
+      </span>
+      <div className="flex gap-2 flex-wrap">
+        <a
+          href="/api/og/daily?variant=recap"
+          download="45analytics-dia-recap.png"
+          className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
+          style={linkStyle}
+        >
+          <Download size={14} aria-hidden="true" />
+          Results recap
+        </a>
+        <a
+          href="/api/og/daily?variant=preview"
+          download="45analytics-dia-preview.png"
+          className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
+          style={linkStyle}
+        >
+          <Download size={14} aria-hidden="true" />
+          Today&rsquo;s preview
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
   const [query, setQuery] = useState("");
   // The route is force-static, so "now" must come from the client to avoid a
@@ -276,6 +322,9 @@ export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
 
   return (
     <div className="flex flex-col gap-10">
+      {/* ── Daily share card ────────────────────────────────────────────── */}
+      <ShareCard />
+
       {/* ── Search ──────────────────────────────────────────────────────── */}
       <div role="search" className="flex flex-col gap-1.5">
         <label
