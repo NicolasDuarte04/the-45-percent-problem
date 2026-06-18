@@ -40,6 +40,9 @@ data/raw/*.parquet
 !data/raw/macro_data.parquet
 data/raw/*.csv
 data/raw/*.json
+# cp-19: the FD-sourced kickoff override map is a committed input (consumed by
+# the snapshot regen + the website override). Track it like the parquets above.
+!data/raw/wc2026_kickoffs.json
 data/processed/*.parquet
 data/processed/forecast_mapping_audit.json
 data/processed/cp14_settled_table.md

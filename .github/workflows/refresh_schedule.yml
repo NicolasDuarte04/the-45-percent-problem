@@ -1,0 +1,113 @@
+# cp-19. Re-source the WC 2026 kickoff schedule from Football-Data.org and
+# publish the corrected display times.
+#
+# Why a separate, manual workflow: the live Football-Data key only exists in CI
+# (FOOTBALL_DATA_API_KEY repository secret), and the correction is gated by a
+# hard verification check against the official anchor times. The operator runs
+# this when the schedule needs a refresh; it never fires on a schedule, so it
+# can't surprise-publish.
+#
+# What it does (all safe-by-construction):
+#   1. Regenerate the canonical-draw sidecar from the TS source of truth.
+#   2. Fetch every WC fixture from Football-Data (all statuses) and build the
+#      per-match kickoff map. The build HARD-STOPS if the FD times disagree
+#      with the official anchors, so a bad feed commits nothing.
+#   3. Heal the published latest/matches/*.json kickoffs from that map.
+#   4. Commit the map, the website override, and the healed snapshot to main,
+#      then ping the Vercel deploy hook.
+#
+# Required repository secret: FOOTBALL_DATA_API_KEY (the same free-tier key the
+# hourly outcome ingest already uses).
+
+name: Refresh WC 2026 kickoff schedule
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # Guard against forks running this with their own secrets.
+    if: github.repository == 'NicolasDuarte04/the-45-percent-problem'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install website dependencies
+        working-directory: ./website
+        run: pnpm install --frozen-lockfile
+
+      - name: Regenerate canonical-draw sidecar from the TS source of truth
+        working-directory: ./website
+        run: pnpm tsx scripts/export-canonical-draw-json.ts
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install project (Python)
+        run: pip install -e .
+
+      - name: Re-source kickoffs from Football-Data (verification-gated)
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        run: python scripts/build_wc2026_schedule.py
+
+      - name: Heal published snapshot kickoffs
+        run: |
+          python -c "from pathlib import Path; \
+          from scripts.regenerate_snapshot_from_batch import load_kickoff_overrides, overlay_kickoffs; \
+          n = overlay_kickoffs(Path('website/public/data/latest/matches'), load_kickoff_overrides()); \
+          print(f'healed {n} kickoff(s) in latest/matches')"
+
+      - name: Stage corrected schedule files
+        id: stage
+        run: |
+          git add data/raw/wc2026_kickoffs.json \
+                  website/src/lib/data/wc2026-kickoffs.ts \
+                  website/public/data/latest/matches/
+          if git diff --staged --quiet; then
+            echo "No schedule changes detected."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push to main
+        if: steps.stage.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): refresh WC 2026 kickoff schedule from Football-Data $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase --autostash origin main
+          git push origin main
+
+      - name: Trigger Vercel deploy hook
+        if: steps.stage.outputs.has_changes == 'true'
+        run: |
+          set -e
+          HTTP_CODE=$(curl -s -o /tmp/vercel.out -w "%{http_code}" \
+            -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}")
+          echo "Vercel hook HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::warning::Vercel deploy hook non-2xx ($HTTP_CODE). The push to main should still deploy via the Git integration."
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Kickoff schedule refresh" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Changes published: ${{ steps.stage.outputs.has_changes }}" >> "$GITHUB_STEP_SUMMARY"
