@@ -128,14 +128,13 @@ export default async function Home() {
             lineHeight: 1.5,
             color: "var(--text-tertiary)",
             textAlign: "left",
-            margin: "-48px 0 0",
+            margin: 0,
           }}
         >
           {HERO_TROPHY_CAPTION}
         </p>
         <div
           className="md:col-span-2 flex flex-wrap items-center gap-3"
-          style={{ marginTop: -32 }}
         >
           <Link
             href="/brief"
