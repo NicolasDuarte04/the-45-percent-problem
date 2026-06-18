@@ -2,17 +2,22 @@
  * Pure helpers for the daily Instagram share card (/api/og/daily).
  *
  * The card has two variants:
- *   - "recap"   : the matches PLAYED on a given UTC day, with their real
- *                 final score and the probability the model gave the result.
- *   - "preview" : the fixtures NOT yet played on a given UTC day, with the
- *                 model's modal scoreline and top 1X2 outcome.
+ *   - "recap"   : the matches PLAYED on a given day, with their real final
+ *                 score and the probability the model gave the result.
+ *   - "preview" : the fixtures NOT yet played on a given day, with the model's
+ *                 modal scoreline and top 1X2 outcome.
+ *
+ * Days are keyed in the audience timezone (America/Bogota) via the shared
+ * `dayKey` from matchListing, the same basis the /matches page groups by, so
+ * the card and the page can never disagree about which day a fixture is on.
  *
  * Subject-day auto-selection (zero manual work, regenerates daily):
- *   - recap   -> the most recent UTC day that has at least one played match.
- *   - preview -> the earliest UTC day that still has an unplayed fixture.
+ *   - recap   -> the most recent audience-local day with at least one played match.
+ *   - preview -> the earliest audience-local day that still has an unplayed fixture.
  * The route also accepts an explicit ?day=YYYY-MM-DD override.
  *
- * "Día N" is derived from the tournament start (2026-06-11 = Día 1).
+ * "Día N" is derived from the tournament start (2026-06-11 = Día 1), counted on
+ * the same audience-local day basis.
  *
  * Everything here is pure data transformation so it can be unit-tested
  * without rendering. The card JSX lives in
@@ -108,9 +113,12 @@ export function spanishName(code: string, fallback: string): string {
 }
 
 /**
- * Tournament day number for a "YYYY-MM-DD" UTC day key. 2026-06-11 -> 1.
- * Days before the start return 0 or negative; callers show these dates only
- * when they come from real fixtures, so that case does not arise in practice.
+ * Tournament day number for a "YYYY-MM-DD" audience-local day key. The constant
+ * TOURNAMENT_START is itself the Bogota civil day of the opener, and dayNumber
+ * differences two such keys, so the count stays anchored on the same basis:
+ * 2026-06-18 -> 8, 2026-06-19 -> 9. 2026-06-11 -> 1. Days before the start
+ * return 0 or negative; callers show these dates only when they come from real
+ * fixtures, so that case does not arise in practice.
  */
 export function dayNumber(day: string): number {
   const start = Date.parse(`${TOURNAMENT_START}T00:00:00Z`);
@@ -131,7 +139,7 @@ export function formatSpanishDate(day: string): string {
   }).format(d);
 }
 
-/** Most recent UTC day that has at least one played match, or null. */
+/** Most recent audience-local day that has at least one played match, or null. */
 export function selectRecapDay(matches: MatchDetail[]): string | null {
   let best: string | null = null;
   for (const m of matches) {
@@ -142,7 +150,7 @@ export function selectRecapDay(matches: MatchDetail[]): string | null {
   return best;
 }
 
-/** Earliest UTC day that still has an unplayed fixture, or null. */
+/** Earliest audience-local day that still has an unplayed fixture, or null. */
 export function selectPreviewDay(matches: MatchDetail[]): string | null {
   let best: string | null = null;
   for (const m of matches) {

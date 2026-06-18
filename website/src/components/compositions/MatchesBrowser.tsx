@@ -11,7 +11,7 @@ import {
   groupByDay,
   partitionToday,
   filterByTeam,
-  utcDayKeyFromMs,
+  audienceDayKeyFromMs,
   modalScoreline,
   formatDayLabel,
   formatKickoffTime,
@@ -298,7 +298,7 @@ export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
     [filtered],
   );
 
-  const todayKey = now != null ? utcDayKeyFromMs(now) : null;
+  const todayKey = now != null ? audienceDayKeyFromMs(now) : null;
   const { today, rest } = useMemo(() => {
     if (todayKey == null) return { today: [] as MatchDetail[], rest: upcoming };
     return partitionToday(upcoming, todayKey);

@@ -8,7 +8,7 @@ import {
   modalScoreline,
   formatDayLabel,
   formatKickoffTime,
-  utcDayKeyFromMs,
+  audienceDayKeyFromMs,
   partitionToday,
   filterByTeam,
 } from "@/lib/data/matchListing";
@@ -84,8 +84,15 @@ describe("splitPlayedUpcoming", () => {
 });
 
 describe("dayKey", () => {
-  it("takes the UTC calendar day from an ISO string", () => {
+  it("keys an ISO string to its America/Bogota civil day", () => {
+    // 19:00Z is 2:00 PM in Bogota, same calendar day.
     expect(dayKey("2026-06-11T19:00:00+00:00")).toBe("2026-06-11");
+  });
+
+  it("keys a late-evening kickoff that crosses UTC midnight to the local day", () => {
+    // Mexico vs Korea (M25): 01:00Z June 19 is 8:00 PM June 18 in Bogota, so it
+    // groups under June 18 alongside the rest of that local evening, not June 19.
+    expect(dayKey("2026-06-19T01:00:00+00:00")).toBe("2026-06-18");
   });
 });
 
@@ -99,6 +106,19 @@ describe("groupByDay", () => {
     expect(groups.map((g) => g.day)).toEqual(["2026-06-11", "2026-06-12"]);
     expect(groups[0].matches.map((m) => m.match_id)).toEqual(["M01", "M02"]);
     expect(groups[1].matches.map((m) => m.match_id)).toEqual(["M03"]);
+  });
+
+  it("groups a UTC-midnight-crossing kickoff with its local evening", () => {
+    // Canada vs Qatar (22:00Z) and Mexico vs Korea (01:00Z next day) are the
+    // same June 18 evening in Bogota, so they share one bucket.
+    const groups = groupByDay([
+      makeMatch({ match_id: "M27", kickoff_utc: "2026-06-18T22:00:00+00:00" }),
+      makeMatch({ match_id: "M25", kickoff_utc: "2026-06-19T01:00:00+00:00" }),
+      makeMatch({ match_id: "M31", kickoff_utc: "2026-06-19T19:00:00+00:00" }),
+    ]);
+    expect(groups.map((g) => g.day)).toEqual(["2026-06-18", "2026-06-19"]);
+    expect(groups[0].matches.map((m) => m.match_id)).toEqual(["M27", "M25"]);
+    expect(groups[1].matches.map((m) => m.match_id)).toEqual(["M31"]);
   });
 });
 
@@ -121,44 +141,58 @@ describe("modalScoreline", () => {
 });
 
 describe("formatDayLabel", () => {
-  it("renders a UTC-stable long day label", () => {
+  it("renders a build-TZ-stable long day label", () => {
     expect(formatDayLabel("2026-06-11")).toBe("Thursday, 11 June 2026");
   });
 });
 
 describe("formatKickoffTime", () => {
-  it("renders a UTC clock label", () => {
-    expect(formatKickoffTime("2026-06-11T19:00:00+00:00")).toBe("19:00Z");
+  it("renders a Bogota clock label with an explicit zone tag", () => {
+    // 19:00Z is 2:00 PM in Bogota (UTC-5).
+    expect(formatKickoffTime("2026-06-11T19:00:00+00:00")).toBe("2:00 PM COT");
+  });
+
+  it("renders the local evening time for a UTC-midnight-crossing kickoff", () => {
+    // 01:00Z June 19 is 8:00 PM June 18 in Bogota, never a confusing 01:00Z.
+    expect(formatKickoffTime("2026-06-19T01:00:00+00:00")).toBe("8:00 PM COT");
   });
 });
 
-describe("utcDayKeyFromMs", () => {
-  it("derives the UTC calendar day from a timestamp", () => {
+describe("audienceDayKeyFromMs", () => {
+  it("derives the America/Bogota calendar day from a timestamp", () => {
     const ms = Date.parse("2026-06-17T23:30:00Z");
-    expect(utcDayKeyFromMs(ms)).toBe("2026-06-17");
+    expect(audienceDayKeyFromMs(ms)).toBe("2026-06-17");
   });
 
-  it("uses UTC, not local time, across the day boundary", () => {
-    // 00:30Z is still the 18th in UTC even where local time is the 17th.
-    expect(utcDayKeyFromMs(Date.parse("2026-06-18T00:30:00Z"))).toBe(
-      "2026-06-18",
+  it("uses Bogota local time across the UTC day boundary", () => {
+    // 00:30Z June 18 is 7:30 PM June 17 in Bogota, so "today" is still the 17th.
+    expect(audienceDayKeyFromMs(Date.parse("2026-06-18T00:30:00Z"))).toBe(
+      "2026-06-17",
     );
   });
 });
 
 describe("partitionToday", () => {
+  // a, b are June 17 in Bogota; c (03:00Z June 19) is 10:00 PM June 18 there.
   const a = makeMatch({ match_id: "M01", kickoff_utc: "2026-06-17T20:00:00Z" });
   const b = makeMatch({ match_id: "M02", kickoff_utc: "2026-06-17T23:00:00Z" });
   const c = makeMatch({ match_id: "M03", kickoff_utc: "2026-06-19T03:00:00Z" });
 
-  it("splits today's fixtures from the rest by UTC day", () => {
+  it("splits today's fixtures from the rest by audience-local day", () => {
     const { today, rest } = partitionToday([a, b, c], "2026-06-17");
     expect(today.map((m) => m.match_id)).toEqual(["M01", "M02"]);
     expect(rest.map((m) => m.match_id)).toEqual(["M03"]);
   });
 
-  it("returns an empty today set when nothing kicks off today", () => {
+  it("keeps a UTC-midnight-crossing kickoff under its local today", () => {
+    // todayKey is June 18 in Bogota; c kicks off 10:00 PM that local day.
     const { today, rest } = partitionToday([a, b, c], "2026-06-18");
+    expect(today.map((m) => m.match_id)).toEqual(["M03"]);
+    expect(rest.map((m) => m.match_id)).toEqual(["M01", "M02"]);
+  });
+
+  it("returns an empty today set when nothing kicks off today", () => {
+    const { today, rest } = partitionToday([a, b, c], "2026-06-16");
     expect(today).toEqual([]);
     expect(rest.map((m) => m.match_id)).toEqual(["M01", "M02", "M03"]);
   });
