@@ -7,11 +7,12 @@ import { getPromoCard } from "@/lib/sim/promoCards";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { getOneInN } from "@/lib/sim/getOneInN";
+import { scenarioShareMetadata } from "@/lib/sim/scenarioShareMetadata";
 import { COUNTRY_NAMES } from "@/lib/flags/countries";
 import type { TeamCode } from "@/lib/sim/types";
 
 interface PageProps {
-  searchParams: Promise<{ card?: string; teams?: string }>;
+  searchParams: Promise<{ card?: string; teams?: string; s?: string }>;
 }
 
 /**
@@ -51,11 +52,15 @@ function parseTeamsParam(raw: string | undefined): TeamCode[] | null {
 export async function generateMetadata({
   searchParams,
 }: PageProps): Promise<Metadata> {
-  const { card: slug } = await searchParams;
+  const { card: slug, s } = await searchParams;
   const base: Metadata = {
     title: "Final Four · Scenario Simulator",
     description: "Pick the four semifinalists. See how often the model agrees.",
   };
+
+  // A shared `?s=` scenario takes precedence over the `?card=` promo unfurl.
+  const shared = scenarioShareMetadata(s, "/scenario/final-four", base);
+  if (shared !== base) return shared;
 
   if (!slug) return base;
   const card = getPromoCard(slug);

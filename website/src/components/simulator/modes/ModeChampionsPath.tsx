@@ -48,6 +48,12 @@ import { renderStoryLine } from "@/lib/sim/renderStoryLine";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
+import {
+  decodeScenarioDraft,
+  readScenarioParam,
+  urlWithoutScenarioParam,
+} from "@/lib/sim/scenarioUrl";
+import { ScenarioShareControls } from "@/components/simulator/ScenarioShareControls";
 import { track, claimFirstPick } from "@/lib/analytics/track";
 import type { ChampionsPathScenario, TeamCode } from "@/lib/sim/types";
 import { COUNTRY_NAMES, type FifaCode } from "@/lib/flags/countries";
@@ -191,6 +197,32 @@ function toSubmissionScenario(state: BuildState): ChampionsPathScenario | null {
   return out;
 }
 
+/**
+ * Map a (possibly partial) shared scenario into the build state. Tolerant:
+ * fields are sanitized one by one, so a partial `?s=` reopens as far as it
+ * can rather than throwing.
+ */
+function buildStateFromScenario(scenario: Record<string, unknown>): BuildState {
+  const base = emptyState();
+  const team = (scenario as { team?: unknown }).team;
+  if (typeof team === "string" && /^[A-Z]{3}$/.test(team)) {
+    base.team = team as TeamCode;
+  }
+  for (const s of STAGE_KEYS) {
+    const stage = (scenario as Record<string, unknown>)[s];
+    if (!stage || typeof stage !== "object") continue;
+    const opp = (stage as { opponent?: unknown }).opponent;
+    const res = (stage as { result?: unknown }).result;
+    if (typeof opp === "string" && /^[A-Z]{3}$/.test(opp)) {
+      base[s].opponent = opp as TeamCode;
+    }
+    if (res === "W" || res === "L") {
+      base[s].result = res;
+    }
+  }
+  return base;
+}
+
 function hydrate(): BuildState {
   const cached = readInflightForMode("champions_path") as Partial<BuildState> | null;
   if (!cached || typeof cached !== "object") return emptyState();
@@ -316,6 +348,13 @@ export function ModeChampionsPath({
     () => ({ r16: 0, qf: 0, sf: 0, f: 0 }),
   );
   const hydratedRef = useRef(false);
+  // Snapshot of a scenario hydrated from a shared `?s=` link. While the
+  // visitor has not edited it, we do not persist to their localStorage, so
+  // opening a shared link never clobbers a different draft they had saved.
+  const sharedSnapshotRef = useRef<string | null>(null);
+  // Skip the persist effect's first (stale pre-hydration) run, which shares
+  // the mount commit. See the note in ModeFinalFour.
+  const persistArmedRef = useRef(false);
   const layoutTransition = useReducedMotionAware("layout");
 
   const sensors = useSensors(
@@ -326,15 +365,35 @@ export function ModeChampionsPath({
 
   useEffect(() => {
     if (hydratedRef.current) return;
-    setState(hydrate());
+    // A shared `?s=` scenario takes precedence over the localStorage
+    // carve-out so a shared link reopens the exact scenario it encodes.
+    const sharedDraft = decodeScenarioDraft(readScenarioParam());
+    const fromShare = sharedDraft?.mode === "champions_path";
+    const hydrated = fromShare
+      ? buildStateFromScenario(sharedDraft!.scenario)
+      : hydrate();
+    setState(hydrated);
+    if (fromShare) {
+      sharedSnapshotRef.current = JSON.stringify(hydrated);
+    }
     hydratedRef.current = true;
     track("simulator_opened", { mode: "champions_path", surface: "page" });
   }, []);
 
   useEffect(() => {
     if (!hydratedRef.current) return;
+    if (!persistArmedRef.current) {
+      persistArmedRef.current = true;
+      return;
+    }
+    if (sharedSnapshotRef.current !== null) {
+      if (JSON.stringify(state) === sharedSnapshotRef.current) return;
+      // First edit of a shared view: take ownership, strip `?s=`, persist.
+      sharedSnapshotRef.current = null;
+      router.replace(urlWithoutScenarioParam(), { scroll: false });
+    }
     writeInflight("champions_path", state);
-  }, [state]);
+  }, [state, router]);
 
   // Codes already used somewhere in the build; disable in the picker.
   const usedCodes = useMemo(() => {
@@ -766,6 +825,16 @@ export function ModeChampionsPath({
             variant="compact"
           />
         </div>
+
+        {/* Share the current path as a `?s=` link (exploratory, no submit).
+            Shown once the path resolves into a complete, projectable
+            scenario. */}
+        {submissionScenario ? (
+          <ScenarioShareControls
+            mode="champions_path"
+            scenario={submissionScenario}
+          />
+        ) : null}
 
         {/* CP-03: submit affordance lives in the sticky meter below; the
             in-flow button is removed to avoid two competing submit CTAs.

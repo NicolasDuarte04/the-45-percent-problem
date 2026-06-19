@@ -48,6 +48,12 @@ import { submitPrediction } from "@/lib/sim/predictionsApi";
 import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
+import {
+  decodeScenarioDraft,
+  readScenarioParam,
+  urlWithoutScenarioParam,
+} from "@/lib/sim/scenarioUrl";
+import { ScenarioShareControls } from "@/components/simulator/ScenarioShareControls";
 import { track, claimFirstPick, claimPromoLanded } from "@/lib/analytics/track";
 import type { TeamCode } from "@/lib/sim/types";
 
@@ -97,6 +103,23 @@ interface InflightFinalFour {
 interface HydratedInflight {
   slots: (TeamCode | null)[];
   interacted: boolean;
+}
+
+/**
+ * Map a (possibly partial) shared scenario's semifinalists into the slot
+ * row. Tolerant: non-string / malformed entries become empty slots, so a
+ * partial `?s=` reopens as far as it can.
+ */
+function slotsFromScenario(scenario: Record<string, unknown>): (TeamCode | null)[] {
+  const out = Array(SLOT_COUNT).fill(null) as (TeamCode | null)[];
+  const sf = (scenario as { semifinalists?: unknown }).semifinalists;
+  if (Array.isArray(sf)) {
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      const v = sf[i];
+      if (typeof v === "string" && /^[A-Z]{3}$/.test(v)) out[i] = v as TeamCode;
+    }
+  }
+  return out;
 }
 
 function hydrate(): HydratedInflight {
@@ -230,6 +253,17 @@ export function ModeFinalFour({
   const [hasInteracted, setHasInteracted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const hydratedRef = useRef(false);
+  // When the view was hydrated from a shared `?s=` link, this holds a
+  // snapshot of those slots. While the visitor has not edited (slots still
+  // equal the snapshot), we do NOT persist to their localStorage, so a
+  // shared link never clobbers a different draft they had saved. On the
+  // first edit we clear the snapshot, strip `?s=`, and resume persisting.
+  const sharedSnapshotRef = useRef<string | null>(null);
+  // The persist effect and the mount (hydrate) effect run in the same first
+  // commit, so the persist effect's first run sees the stale pre-hydration
+  // slots. Skip that one run so persistence (and the no-clobber comparison)
+  // only acts on the hydrated state and on genuine user edits afterward.
+  const persistArmedRef = useRef(false);
   const layoutTransition = useReducedMotionAware("layout");
 
   const sensors = useSensors(
@@ -241,6 +275,11 @@ export function ModeFinalFour({
   // Hydrate from inflight on mount (client-only, guarded by useEffect).
   useEffect(() => {
     if (hydratedRef.current) return;
+    // A shared `?s=` scenario takes precedence over both the localStorage
+    // carve-out and the promo `?card=` pre-fill, so a shared link always
+    // reopens the exact scenario it encodes.
+    const sharedDraft = decodeScenarioDraft(readScenarioParam());
+    const fromShare = sharedDraft?.mode === "final_four";
     const cached = hydrate();
     // Promo card pre-fill (P0.7). When `initialScenario` is present and
     // shaped correctly, it overrides the inflight buffer for this
@@ -252,12 +291,21 @@ export function ModeFinalFour({
     // without `?card=` rehydrates the same scenario.
     const isValidInitial =
       Array.isArray(initialScenario) && initialScenario.length === SLOT_COUNT;
-    const hydratedSlots = isValidInitial
-      ? [...(initialScenario as TeamCode[])]
-      : cached.slots;
-    const hydratedInteracted = isValidInitial ? false : cached.interacted;
+    const hydratedSlots = fromShare
+      ? slotsFromScenario(sharedDraft!.scenario)
+      : isValidInitial
+        ? [...(initialScenario as TeamCode[])]
+        : cached.slots;
+    const hydratedInteracted = fromShare
+      ? false
+      : isValidInitial
+        ? false
+        : cached.interacted;
     setSlots(hydratedSlots);
     setHasInteracted(hydratedInteracted);
+    if (fromShare) {
+      sharedSnapshotRef.current = JSON.stringify(hydratedSlots);
+    }
     hydratedRef.current = true;
     setHydrated(true);
     track("simulator_opened", {
@@ -273,11 +321,25 @@ export function ModeFinalFour({
   // Persist on every change once hydrated.
   useEffect(() => {
     if (!hydratedRef.current) return;
+    if (!persistArmedRef.current) {
+      // Skip the stale pre-hydration run that shares the mount commit.
+      persistArmedRef.current = true;
+      return;
+    }
+    if (sharedSnapshotRef.current !== null) {
+      // Hydrated from a shared link and not yet edited: do not touch the
+      // visitor's own saved draft.
+      if (JSON.stringify(slots) === sharedSnapshotRef.current) return;
+      // First edit: take ownership, drop the stale `?s=` so a reload reads
+      // their own draft, and resume normal persistence.
+      sharedSnapshotRef.current = null;
+      router.replace(urlWithoutScenarioParam(), { scroll: false });
+    }
     writeInflight("final_four", {
       semifinalists: slots,
       interacted: hasInteracted,
     });
-  }, [slots, hasInteracted]);
+  }, [slots, hasInteracted, router]);
 
   const filled = slots.filter((c): c is TeamCode => Boolean(c));
   const allFilled = filled.length === SLOT_COUNT;
@@ -551,6 +613,17 @@ export function ModeFinalFour({
             variant="compact"
           />
         </div>
+
+        {/* Share the current scenario as a `?s=` link (exploratory, no
+            submit). Shown once all four slots are filled, i.e. once there
+            is a complete, projectable scenario to encode and render a card
+            for. */}
+        {allFilled ? (
+          <ScenarioShareControls
+            mode="final_four"
+            scenario={{ semifinalists: filled }}
+          />
+        ) : null}
 
         {/* Helper line + error panel. The page-variant submit affordance
             lives in the sticky StickyProgressMeter (CP-03); for the
