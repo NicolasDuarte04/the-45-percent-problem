@@ -20,7 +20,7 @@
  * (no CSS variables, oklch, or color-mix). The hex values mirror the dark
  * canvas tokens in globals.css and the live MatchesBrowser 1X2 bar.
  */
-import type { DailyVariant } from "@/lib/data/dailyShareCard";
+import type { DailyVariant, ScorelineChip } from "@/lib/data/dailyShareCard";
 
 // ── Design tokens (mirror the dark canvas in globals.css). ───────────────────
 
@@ -35,6 +35,11 @@ export const DAILY_C = {
   home:   "#F9B88A", // --prism-peach
   draw:   "#F5D76E", // --prism-sun
   away:   "#7ED0E8", // --prism-cyan
+  // Top-3 scoreline strip (preview only):
+  slPanel:     "#11161D", // mini-card panel, a shade under the row panel
+  slInk:       "#D7DEE5", // neutral scoreline number (#2 and #3)
+  green:       "#88E0B6", // #1 scoreline emphasis
+  slBorderTop: "#24332A", // green-tinted border on the #1 mini-card
 } as const;
 
 const VARIANT_LABEL: Record<DailyVariant, string> = {
@@ -51,12 +56,18 @@ export interface DailyRow {
   homeFlag: string | null;
   awayFlag: string | null;
   p: { H: number; D: number; A: number };
-  /** Centre value: "2-0" for a score or modal scoreline; "vs" when absent. */
+  /** Centre value: "2-0" for a final score; "vs" when absent (recap only). */
   center: string;
-  /** Sublabel under the centre value. */
+  /** Sublabel under the centre value (recap only). */
   centerLabel: string;
   /** One-line calibration note (Spanish), or null when undeterminable. */
   note: string | null;
+  /**
+   * Top-3 modal scorelines for preview rows. Non-empty switches the row to the
+   * preview layout (no centre value, no note, a scoreline strip under the bar);
+   * empty keeps the recap layout. Always empty on recap rows.
+   */
+  scorelines: ScorelineChip[];
 }
 
 export interface DailyCardProps {
@@ -85,6 +96,13 @@ interface RowSizes {
   pct: number;
   note: number;
   rowGap: number;
+  // Top-3 scoreline strip (preview rows):
+  slLabel: number; // "marcadores más probables" label
+  slLabelMb: number; // label-to-cards gap
+  slScore: number; // scoreline number (serif)
+  slPct: number; // probability under it (mono)
+  slGap: number; // gap between the three mini-cards
+  slPad: string; // mini-card vertical padding
 }
 
 const COMFORTABLE: RowSizes = {
@@ -97,6 +115,12 @@ const COMFORTABLE: RowSizes = {
   pct: 14,
   note: 15,
   rowGap: 12,
+  slLabel: 12,
+  slLabelMb: 7,
+  slScore: 26,
+  slPct: 14,
+  slGap: 10,
+  slPad: "8px 0",
 };
 
 const COMPACT: RowSizes = {
@@ -109,6 +133,33 @@ const COMPACT: RowSizes = {
   pct: 13,
   note: 14,
   rowGap: 10,
+  slLabel: 11,
+  slLabelMb: 5,
+  slScore: 22,
+  slPct: 12,
+  slGap: 8,
+  slPad: "5px 0",
+};
+
+// The busiest preview days carry 6 fixtures, and each preview row also holds
+// the top-3 scoreline strip. A third, tighter tier keeps those rows clear of
+// the footer. Recap tops out at 4 played fixtures, so it never reaches here.
+const ULTRA: RowSizes = {
+  pad: "8px 22px",
+  gap: 5,
+  flag: 32,
+  name: 21,
+  score: 28,
+  bar: 9,
+  pct: 12,
+  note: 13,
+  rowGap: 8,
+  slLabel: 10,
+  slLabelMb: 4,
+  slScore: 19,
+  slPct: 11,
+  slGap: 7,
+  slPad: "4px 0",
 };
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -145,9 +196,77 @@ function FlagTile({ uri, w = 46 }: { uri: string | null; w?: number }) {
   );
 }
 
+// Top-3 modal scorelines: a mono label over three equal-width mini-cards. The
+// #1 scoreline is emphasised in green with a green-tinted border; the other two
+// use the neutral ink and the normal border. Preview rows only.
+function ScorelineStrip({ chips, s }: { chips: ScorelineChip[]; s: RowSizes }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <span
+        style={{
+          display: "flex",
+          fontFamily: "'JetBrains Mono'",
+          fontSize: s.slLabel,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: DAILY_C.quiet,
+          marginBottom: s.slLabelMb,
+        }}
+      >
+        marcadores más probables
+      </span>
+      <div style={{ display: "flex", flexDirection: "row", gap: s.slGap }}>
+        {chips.map((c, i) => {
+          const top = i === 0;
+          return (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                flex: 1,
+                backgroundColor: DAILY_C.slPanel,
+                border: `1px solid ${top ? DAILY_C.slBorderTop : DAILY_C.border}`,
+                borderRadius: 8,
+                padding: s.slPad,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Source Serif 4'",
+                  fontSize: s.slScore,
+                  lineHeight: 1,
+                  color: top ? DAILY_C.green : DAILY_C.slInk,
+                }}
+              >
+                {c.score}
+              </span>
+              <span
+                style={{
+                  display: "flex",
+                  fontFamily: "'JetBrains Mono'",
+                  fontSize: s.slPct,
+                  color: DAILY_C.soft,
+                  marginTop: 4,
+                }}
+              >
+                {c.pct}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
   const { p } = row;
   const total = p.H + p.D + p.A || 1;
+  // Preview rows carry a top-3 strip and drop the centre value and the note;
+  // recap (and any unpriced preview) keeps the original centre-value layout.
+  const showStrip = row.scorelines.length > 0;
   return (
     <div
       style={{
@@ -179,32 +298,34 @@ function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
           </span>
         </div>
 
-        {/* Centre */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            width: 150,
-            flexShrink: 0,
-          }}
-        >
-          <span style={{ fontFamily: "'JetBrains Mono'", fontSize: s.score, lineHeight: 1, color: DAILY_C.ink }}>
-            {row.center}
-          </span>
-          <span
+        {/* Centre (recap only; preview drops it for the scoreline strip) */}
+        {!showStrip && (
+          <div
             style={{
-              fontFamily: "'JetBrains Mono'",
-              fontSize: 11,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: DAILY_C.quiet,
-              marginTop: 5,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: 150,
+              flexShrink: 0,
             }}
           >
-            {row.centerLabel}
-          </span>
-        </div>
+            <span style={{ fontFamily: "'JetBrains Mono'", fontSize: s.score, lineHeight: 1, color: DAILY_C.ink }}>
+              {row.center}
+            </span>
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono'",
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: DAILY_C.quiet,
+                marginTop: 5,
+              }}
+            >
+              {row.centerLabel}
+            </span>
+          </div>
+        )}
 
         {/* Away */}
         <div
@@ -248,8 +369,10 @@ function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
         {`L ${Math.round((p.H / total) * 100)}%  ·  E ${Math.round((p.D / total) * 100)}%  ·  V ${Math.round((p.A / total) * 100)}%`}
       </span>
 
-      {/* Calibration note */}
-      {row.note ? (
+      {/* Preview: top-3 scoreline strip. Recap: calibration note. */}
+      {showStrip ? (
+        <ScorelineStrip chips={row.scorelines} s={s} />
+      ) : row.note ? (
         <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: s.note, color: DAILY_C.soft }}>
           {row.note}
         </span>
@@ -268,9 +391,16 @@ export function DailyCard({
   metrics,
   emptyNote,
 }: DailyCardProps) {
-  // Up to 4 fixtures use the comfortable layout; 5 to 6 switch to compact so
-  // the busiest WC days still fit above the footer.
-  const s = rows.length >= 5 ? COMPACT : COMFORTABLE;
+  // Up to 4 fixtures use the comfortable layout; 5 switches to compact. A 6-row
+  // PREVIEW day also carries the taller scoreline strips, so it drops to the
+  // ultra-compact tier to stay above the footer. Recap keeps its original
+  // compact tier at 5 to 6 rows so its output never changes.
+  const s =
+    variant === "preview" && rows.length >= 6
+      ? ULTRA
+      : rows.length >= 5
+        ? COMPACT
+        : COMFORTABLE;
   return (
     <div
       style={{
