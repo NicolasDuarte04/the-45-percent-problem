@@ -187,7 +187,7 @@ export function GoalMatrixHeatmap({
         </div>
       </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 220px" }}>
+      <div className="gm-layout">
         <div>
           <div className="mb-5">
             <div
@@ -335,13 +335,7 @@ export function GoalMatrixHeatmap({
           </div>
         </div>
 
-        <aside
-          className="flex flex-col gap-5"
-          style={{
-            borderLeft: "1px solid var(--border-subtle)",
-            paddingLeft: 20,
-          }}
-        >
+        <aside className="gm-rail flex flex-col gap-5">
           <div>
             <div
               className="mono text-[10px] uppercase tracking-[.08em] mb-2"
@@ -796,5 +790,33 @@ const styles = `
 }
 .gm-tri-row[data-active] {
   background: color-mix(in oklch, var(--text-secondary) 7%, transparent);
+}
+
+/* Two-column layout: heatmap (1fr) + fixed 220px readout rail. Moved off the
+   inline style so the narrow-viewport stack can be media-queried. The rail's
+   left border / padding live here (not inline) so the breakpoint can flip them
+   to a top border without !important. Desktop (>720px) is unchanged. */
+.gm-layout {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr 220px;
+}
+.gm-rail {
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 20px;
+}
+/* Below 720px the fixed 220px rail would shear off-screen under the global
+   overflow-x:clip and squash the 7x7 grid. Stack the rail beneath the grid so
+   it stays fully visible and the grid takes the full card width. */
+@media (max-width: 720px) {
+  .gm-layout {
+    grid-template-columns: 1fr;
+  }
+  .gm-rail {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 20px;
+  }
 }
 `;
