@@ -699,12 +699,30 @@ body[data-has-sticky-meter] {
 
   /* FOUC fix · §2.1 dual-canvas: when a quant-canvas div is present anywhere
      in the tree (terminal, ledger, bracket, match, team routes), promote the
-     slate background to <body> so overscroll/pull-to-refresh never reveals
+     slate background up the tree so overscroll/pull-to-refresh never reveals
      the editorial cream. Uses :has() which is supported in all evergreen
-     browsers since 2023; no fallback needed for this site's audience. */
+     browsers since 2023; no fallback needed for this site's audience.
+
+     The slate must be promoted all the way to <html>, not just <body>: with
+     viewport-fit=cover the iOS safe-area insets (notch, home indicator) are
+     painted by the propagated root-element background. Because html carries a
+     non-transparent background (the `html, body` rule above), html's own
+     background is what propagates to the canvas, so a body-only rule never
+     reaches the insets and the cream --bg-root bleeds through as thin edge
+     lines. Painting html slate on the dark canvases fills the insets edge to
+     edge. Editorial routes carry data-canvas="editorial" (no match here) so
+     html stays cream; on desktop the insets are 0 so this is a no-op.
+
+     Value is the literal slate token (#0F1216), byte-identical to the slate
+     that --bg-root resolves to under [data-canvas="quant"] / ="simulator"
+     (lines 121 / 203), so the inset slate and the inner-canvas slate are the
+     same hue with no two-tone seam. The earlier rule referenced an undefined
+     --slate-canvas and was inert; --color-slate-canvas is the real token. */
+  html:has([data-canvas="quant"]),
+  html:has([data-canvas="simulator"]),
   body:has([data-canvas="quant"]),
   body:has([data-canvas="simulator"]) {
-    background-color: var(--slate-canvas);
+    background-color: var(--color-slate-canvas);
   }
 
   * {
