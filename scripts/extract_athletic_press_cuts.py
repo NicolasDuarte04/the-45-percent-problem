@@ -19,14 +19,21 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-ACTIVE_BATCH_JSON = PROJECT_ROOT / "data/calibration/active_batch.json"
-_ACTIVE = json.loads(ACTIVE_BATCH_JSON.read_text())
-BATCH_DIR = PROJECT_ROOT / _ACTIVE["active_batch_path"]
-BATCH_ID = _ACTIVE["active_batch_id"]
-LOCK_SHA = _ACTIVE["matrix_sha256_lock"]
-AMENDMENT_POINTER = _ACTIVE.get(
-    "amendment_pointer", "osf/amendments/amendment_v1.1_data_completeness.md"
+# cp-16 step (a): the press packets are derived from the locked Phase 5 10k
+# batch, so the batch identity is pinned via frozen_batch.py rather than read
+# from active_batch.json (which the nightly rebatch repoints). The matrix-sha
+# chain-of-custody assert below now verifies the frozen batch's own
+# acceptance_report against this locked sha.
+from frozen_batch import (  # noqa: E402
+    FROZEN_BATCH_ID,
+    FROZEN_BATCH_PATH,
+    FROZEN_STRENGTH_MATRIX_SHA256,
 )
+
+BATCH_DIR = FROZEN_BATCH_PATH
+BATCH_ID = FROZEN_BATCH_ID
+LOCK_SHA = FROZEN_STRENGTH_MATRIX_SHA256
+AMENDMENT_POINTER = "osf/amendments/amendment_v1.1_data_completeness.md"
 OUT_ROOT = PROJECT_ROOT / "press_packets"
 
 KNOCKOUT_BUCKETS = {

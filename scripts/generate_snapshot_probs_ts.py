@@ -52,12 +52,16 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import pandas as pd
 
+from frozen_batch import (  # noqa: E402
+    FROZEN_BATCH_ACTIVATED_UTC,
+    FROZEN_BATCH_ID,
+    FROZEN_TEAM_RUNS_M2,
+)
 from scripts.regenerate_snapshot_from_batch import (
     _TEAM_ID_TO_DISPLAY_NAME,
     aggregate_team_progression,
 )
 
-ACTIVE_BATCH_JSON = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 TEAMS_DIR = PROJECT_ROOT / "website" / "public" / "data" / "latest" / "teams"
 OUTPUT_TS = PROJECT_ROOT / "website" / "src" / "lib" / "sim" / "snapshotProbs.ts"
 
@@ -104,24 +108,26 @@ def _build_code_map() -> dict[str, str]:
 
 def build_team_probs() -> tuple[dict[str, dict[str, float]], str, str]:
     """Return (probs_by_code, batch_id, batch_timestamp_utc)."""
-    active = json.loads(ACTIVE_BATCH_JSON.read_text())
-    batch_id = active["active_batch_id"]
-    batch_path = PROJECT_ROOT / active["active_batch_path"]
-    team_runs_path = batch_path / "team_runs_M2.parquet"
+    # cp-16 step (a): snapshotProbs.ts is the FROZEN pre-tournament progression
+    # table (bracket page + pick evaluator grade against it). Pin it to the
+    # frozen batch via frozen_batch.py, NOT active_batch.json which the nightly
+    # rebatch repoints. Same frozen marginal as tournament.json, in TS form.
+    batch_id = FROZEN_BATCH_ID
+    team_runs_path = FROZEN_TEAM_RUNS_M2
     if not team_runs_path.exists():
-        raise FileNotFoundError(f"Active batch missing M2 outputs: {team_runs_path}")
+        raise FileNotFoundError(f"Frozen batch missing M2 outputs: {team_runs_path}")
 
     team_runs = pd.read_parquet(team_runs_path)
     aggregated = aggregate_team_progression(team_runs)
 
-    # Batch production time — intrinsic to the batch, so the generated file
+    # Batch production time (intrinsic to the batch), so the generated file
     # is deterministic per batch and only changes when the batch changes
-    # (no spurious nightly timestamp churn). Falls back to active_batch.json.
+    # (no spurious nightly timestamp churn). Falls back to the frozen pin.
     if "timestamp_utc" in team_runs.columns and len(team_runs):
         ts = pd.Timestamp(team_runs["timestamp_utc"].max())
         batch_ts = ts.tz_convert("UTC").strftime("%Y-%m-%dT%H:%M:%SZ")
     else:
-        batch_ts = active.get("activated_at_utc", "unknown")
+        batch_ts = FROZEN_BATCH_ACTIVATED_UTC
 
     display_to_code = _build_code_map()
 

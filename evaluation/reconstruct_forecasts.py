@@ -26,7 +26,6 @@ back to the frozen artifact it was reconstructed from.
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 from typing import Optional
@@ -38,8 +37,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from evaluation.accuracy_metrics import brier, log_loss, rps  # noqa: E402
+from frozen_batch import FROZEN_MATCH_RUNS_M2, frozen_provenance  # noqa: E402
 
-ACTIVE_BATCH = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 GROUP_PHASE = "group"
 
 # Website ledger outcome labels: "1" home, "X" draw, "2" away.
@@ -47,14 +46,15 @@ _OUTCOME_LABEL = {"H": "1", "D": "X", "A": "2"}
 
 
 def batch_provenance() -> dict:
-    """Frozen-batch provenance tags written onto every reconstructed row."""
-    active = json.loads(ACTIVE_BATCH.read_text())
-    return {
-        "source_batch_id": active.get("active_batch_id", ""),
-        "source_batch_activated_utc": active.get("activated_at_utc", ""),
-        "source_strength_matrix_sha": active.get("matrix_sha256_lock", ""),
-        "active_batch_path": active.get("active_batch_path", ""),
-    }
+    """Frozen-batch provenance tags written onto every reconstructed row.
+
+    cp-16 step (a): pinned to the frozen pre-registered batch via
+    ``frozen_batch.py`` rather than ``data/calibration/active_batch.json``. The
+    nightly rebatch repoints active_batch.json whenever the settled count
+    changes; the scored ledger is a frozen pre-tournament forecast and must not
+    follow it.
+    """
+    return frozen_provenance()
 
 
 def reconstruct_distributions(
@@ -68,9 +68,8 @@ def reconstruct_distributions(
     and sum to 1 exactly. This is a pure aggregation of committed samples; the
     model is never re-run.
     """
-    prov = batch_provenance()
     if batch_parquet is None:
-        batch_parquet = PROJECT_ROOT / prov["active_batch_path"] / "match_runs_M2.parquet"
+        batch_parquet = FROZEN_MATCH_RUNS_M2
     batch = pd.read_parquet(
         batch_parquet,
         columns=["match_id", "phase", "reg_home_goals", "reg_away_goals", "seed"],
