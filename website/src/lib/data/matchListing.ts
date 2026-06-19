@@ -95,31 +95,54 @@ export function groupByDay(matches: MatchDetail[]): MatchDayGroup[] {
   return groups;
 }
 
+/** One ranked exact scoreline: home/away goals and their joint probability. */
+export interface ScoreCell {
+  home: number;
+  away: number;
+  p: number;
+}
+
 /**
- * The most likely exact scoreline under the model, read off the joint goal
- * matrix p_model_goals[home_goals][away_goals]. Returns null when the grid is
- * missing or empty (knockout fixtures that haven't been priced).
+ * The `n` most probable exact scorelines under the model, ranked by joint
+ * probability descending, read off p_model_goals[home_goals][away_goals].
+ *
+ * This is the single ranking shared by the match detail page's goal-matrix
+ * heatmap (GoalMatrixHeatmap), the daily share card, and `modalScoreline`. To
+ * stay byte-identical with what the detail page shows, it mirrors that
+ * component exactly: the grid is clipped to the 0..6 goal range (7x7), cells
+ * are walked in row-major order (home outer, away inner), and ties resolve by
+ * that order via a stable sort (lower home, then lower away). Returns fewer
+ * than `n` (possibly empty) when the grid is missing or smaller.
+ */
+export function topScorelines(
+  grid: number[][] | undefined | null,
+  n: number,
+): ScoreCell[] {
+  if (!grid || grid.length === 0) return [];
+  const clipped = grid.slice(0, 7).map((row) => row.slice(0, 7));
+  const cells: ScoreCell[] = [];
+  for (let h = 0; h < clipped.length; h++) {
+    const row = clipped[h];
+    if (!row) continue;
+    for (let a = 0; a < row.length; a++) {
+      cells.push({ home: h, away: a, p: row[a] });
+    }
+  }
+  cells.sort((x, y) => y.p - x.p);
+  return cells.slice(0, Math.max(0, n));
+}
+
+/**
+ * The most likely exact scoreline under the model. Thin wrapper over
+ * `topScorelines` so there is one ranking implementation. Returns null when the
+ * grid is missing or empty (knockout fixtures that haven't been priced).
  */
 export function modalScoreline(
   grid: number[][] | undefined | null,
 ): { home: number; away: number } | null {
-  if (!grid || grid.length === 0) return null;
-  let best = -1;
-  let homeGoals = 0;
-  let awayGoals = 0;
-  for (let h = 0; h < grid.length; h++) {
-    const row = grid[h];
-    if (!row) continue;
-    for (let a = 0; a < row.length; a++) {
-      if (row[a] > best) {
-        best = row[a];
-        homeGoals = h;
-        awayGoals = a;
-      }
-    }
-  }
-  if (best < 0) return null;
-  return { home: homeGoals, away: awayGoals };
+  const [top] = topScorelines(grid, 1);
+  if (!top) return null;
+  return { home: top.home, away: top.away };
 }
 
 /** Long-form day label for a "YYYY-MM-DD" key, e.g. "Thursday, 11 June 2026". */

@@ -29,7 +29,13 @@
  * hyphen (never the en dash the live MatchesBrowser bar uses).
  */
 import type { MatchDetail } from "./schemas";
-import { dayKey, byKickoff, isPlayed, modalScoreline } from "./matchListing";
+import {
+  dayKey,
+  byKickoff,
+  isPlayed,
+  modalScoreline,
+  topScorelines,
+} from "./matchListing";
 
 /** First match-day of the tournament. 2026-06-11 is Día 1. */
 export const TOURNAMENT_START = "2026-06-11";
@@ -208,6 +214,32 @@ export function recapNote(m: MatchDetail): string | null {
   if (outcome === "H") return `el modelo le dio ${pct(p.H)} a la victoria de ${home}`;
   if (outcome === "A") return `el modelo le dio ${pct(p.A)} a la victoria de ${away}`;
   return `el modelo le dio ${pct(p.D)} al empate`;
+}
+
+/** One scoreline chip on the preview card: "1-1" with its whole-percent prob. */
+export interface ScorelineChip {
+  /** Score with a plain ASCII hyphen, e.g. "1-1" (never an en dash). */
+  score: string;
+  /** Joint probability rounded to whole percent, e.g. "12%". */
+  pct: string;
+}
+
+/**
+ * The three most probable scorelines for a preview fixture, each as a display
+ * pair { score: "1-1", pct: "12%" }. The ranking is the shared `topScorelines`
+ * (identical to the match detail page's goal-matrix list), and probabilities
+ * are rounded to whole percent via the same `pct` the card already uses for its
+ * 1X2 numbers, so the value matches the detail page (which renders it to two
+ * decimals) up to that rounding. Empty when the grid is absent (an unpriced
+ * knockout), so the card can fall back gracefully.
+ */
+export function previewScorelines(
+  grid: number[][] | undefined | null,
+): ScorelineChip[] {
+  return topScorelines(grid, 3).map((s) => ({
+    score: `${s.home}-${s.away}`,
+    pct: pct(s.p),
+  }));
 }
 
 /**

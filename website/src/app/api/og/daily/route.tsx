@@ -28,13 +28,12 @@ import type { NextRequest } from "next/server";
 
 import { loadAllMatches, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { formatMono } from "@/lib/formatters";
-import { modalScoreline } from "@/lib/data/matchListing";
 import {
   type DailyVariant,
   dayNumber,
   formatSpanishDate,
   matchesForCard,
-  previewNote,
+  previewScorelines,
   recapNote,
   selectPreviewDay,
   selectRecapDay,
@@ -44,6 +43,7 @@ import {
   DailyCard,
   type DailyRow,
 } from "../_lib/dailyCard";
+import type { ScorelineChip } from "@/lib/data/dailyShareCard";
 import {
   fontsToImageResponseOptions,
   loadFlagDataUri,
@@ -121,17 +121,22 @@ export async function GET(req: NextRequest): Promise<Response> {
           loadFlagDataUri(m.away.fifa_code),
         ]);
 
+        // Recap keeps the centre final-score column and the calibration note.
+        // Preview drops both: the top-3 scoreline strip below the 1X2 bar now
+        // carries the modal scoreline (its #1) and the rest, so the centre
+        // value and the "favorito ... marcador modal" note would only repeat it.
         let center = "vs";
         let centerLabel = "1X2";
-        if (variant === "recap" && m.score) {
-          center = `${m.score.home}-${m.score.away}`;
-          centerLabel = "Final";
-        } else {
-          const modal = modalScoreline(m.p_model_goals);
-          if (modal) {
-            center = `${modal.home}-${modal.away}`;
-            centerLabel = "Modal";
+        let scorelines: ScorelineChip[] = [];
+        let note: string | null = null;
+        if (variant === "recap") {
+          if (m.score) {
+            center = `${m.score.home}-${m.score.away}`;
+            centerLabel = "Final";
           }
+          note = recapNote(m);
+        } else {
+          scorelines = previewScorelines(m.p_model_goals);
         }
 
         return {
@@ -142,7 +147,8 @@ export async function GET(req: NextRequest): Promise<Response> {
           p: m.p_model_1x2,
           center,
           centerLabel,
-          note: variant === "recap" ? recapNote(m) : previewNote(m),
+          scorelines,
+          note,
         };
       }),
     );

@@ -6,6 +6,7 @@ import {
   dayKey,
   groupByDay,
   modalScoreline,
+  topScorelines,
   formatDayLabel,
   formatKickoffTime,
   audienceDayKeyFromMs,
@@ -137,6 +138,57 @@ describe("modalScoreline", () => {
     expect(modalScoreline(undefined)).toBeNull();
     expect(modalScoreline(null)).toBeNull();
     expect(modalScoreline([])).toBeNull();
+  });
+});
+
+describe("topScorelines", () => {
+  const grid = [
+    [0.1, 0.05, 0.01],
+    [0.12, 0.08, 0.02],
+    [0.09, 0.3, 0.04],
+  ];
+
+  it("ranks cells by joint probability descending", () => {
+    expect(topScorelines(grid, 3)).toEqual([
+      { home: 2, away: 1, p: 0.3 },
+      { home: 1, away: 0, p: 0.12 },
+      { home: 0, away: 0, p: 0.1 },
+    ]);
+  });
+
+  it("agrees with modalScoreline on the top cell", () => {
+    const [top] = topScorelines(grid, 1);
+    expect(modalScoreline(grid)).toEqual({ home: top.home, away: top.away });
+  });
+
+  it("breaks ties in row-major order via a stable sort", () => {
+    // Three cells tie at 0.2; row-major order is (0,0), (0,1), (1,0).
+    const tied = [
+      [0.2, 0.2],
+      [0.2, 0.0],
+    ];
+    expect(topScorelines(tied, 3)).toEqual([
+      { home: 0, away: 0, p: 0.2 },
+      { home: 0, away: 1, p: 0.2 },
+      { home: 1, away: 0, p: 0.2 },
+    ]);
+  });
+
+  it("clips to the 0..6 goal range, mirroring the detail-page heatmap", () => {
+    // An 8x8 grid whose global max sits at goals 7 is ignored; the top cell
+    // comes from within the clipped 7x7 window.
+    const big: number[][] = Array.from({ length: 8 }, (_, h) =>
+      Array.from({ length: 8 }, (_, a) => (h === 7 && a === 7 ? 0.9 : 0.01)),
+    );
+    big[2][3] = 0.5; // best inside the 0..6 window
+    expect(topScorelines(big, 1)).toEqual([{ home: 2, away: 3, p: 0.5 }]);
+  });
+
+  it("returns an empty array for missing, empty, or non-positive n", () => {
+    expect(topScorelines(undefined, 3)).toEqual([]);
+    expect(topScorelines(null, 3)).toEqual([]);
+    expect(topScorelines([], 3)).toEqual([]);
+    expect(topScorelines(grid, 0)).toEqual([]);
   });
 });
 

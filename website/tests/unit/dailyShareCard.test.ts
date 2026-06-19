@@ -6,6 +6,7 @@ import {
   formatSpanishDate,
   matchesForCard,
   previewNote,
+  previewScorelines,
   pct,
   realizedOutcome,
   recapNote,
@@ -201,6 +202,30 @@ describe("previewNote", () => {
   });
 });
 
+describe("previewScorelines", () => {
+  it("returns the top three scorelines as score/pct display pairs", () => {
+    const chips = previewScorelines([
+      [0.1, 0.05, 0.01],
+      [0.12, 0.08, 0.02],
+      [0.09, 0.3, 0.04],
+    ]);
+    expect(chips).toEqual([
+      { score: "2-1", pct: "30%" },
+      { score: "1-0", pct: "12%" },
+      { score: "0-0", pct: "10%" },
+    ]);
+  });
+  it("rounds to whole percent via pct, matching the card's 1X2 numbers", () => {
+    const [top] = previewScorelines([[0.124]]);
+    expect(top).toEqual({ score: "0-0", pct: pct(0.124) });
+    expect(top.pct).toBe("12%");
+  });
+  it("is empty when the goal grid is absent (unpriced fixture)", () => {
+    expect(previewScorelines([])).toEqual([]);
+    expect(previewScorelines(undefined)).toEqual([]);
+  });
+});
+
 // Guard the dash constraint at the source: the card copy must never emit an
 // em dash or en dash (the live MatchesBrowser bar uses an en dash for scores;
 // the share card must not).
@@ -209,7 +234,15 @@ describe("no em/en dashes in generated copy", () => {
     const m = makeMatch({ score: { home: 2, away: 0 }, outcome_realized: "H", p_model_goals: [[0.1], [0.4]] });
     const enDash = "\u2013";
     const emDash = "\u2014";
-    const strings = [recapNote(m), previewNote(m), ...Object.values(COUNTRY_NAMES_ES)];
+    const scorelineStrings = previewScorelines([[0.1, 0.05], [0.4, 0.1]]).flatMap(
+      (c) => [c.score, c.pct],
+    );
+    const strings = [
+      recapNote(m),
+      previewNote(m),
+      ...scorelineStrings,
+      ...Object.values(COUNTRY_NAMES_ES),
+    ];
     for (const s of strings) {
       expect(s == null || (!s.includes(enDash) && !s.includes(emDash))).toBe(true);
     }

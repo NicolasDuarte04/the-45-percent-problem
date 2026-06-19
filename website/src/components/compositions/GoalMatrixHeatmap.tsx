@@ -7,6 +7,7 @@ import {
   RAMP_COLORS as GM_RAMP_COLORS,
   RAMP_STOPS_PCT as GM_RAMP_STOPS_PCT,
 } from "@/lib/viz/probabilityRamp";
+import { topScorelines } from "@/lib/data/matchListing";
 
 type TriRegion = "home" | "draw" | "away";
 
@@ -16,12 +17,6 @@ interface GoalMatrixHeatmapProps {
   awayCode: string;
   homeName: string;
   awayName: string;
-}
-
-interface Cell {
-  home: number;
-  away: number;
-  p: number;
 }
 
 type Pos = { h: number; a: number };
@@ -75,13 +70,11 @@ export function GoalMatrixHeatmap({
     const maxRows = clipped.length;
     const maxCols = clipped[0]?.length ?? 0;
 
-    const cells: Cell[] = [];
     let total = 0;
     let modalMax = 0;
     for (let h = 0; h < maxRows; h++) {
       for (let a = 0; a < maxCols; a++) {
         const p = clipped[h][a];
-        cells.push({ home: h, away: a, p });
         total += p;
         if (p > modalMax) modalMax = p;
       }
@@ -92,8 +85,9 @@ export function GoalMatrixHeatmap({
       clipped.reduce((acc, r) => acc + r[j], 0),
     );
 
-    const flat = cells.slice().sort((x, y) => y.p - x.p);
-    const top3 = flat.slice(0, 3);
+    // Shared ranking (clip 7x7, row-major, stable desc) so the badges, the
+    // modal-scoreline list, and the daily share card never disagree.
+    const top3 = topScorelines(grid, 3);
     const top3Rank = new Map<string, number>();
     top3.forEach((c, rank) => top3Rank.set(`${c.home}-${c.away}`, rank));
 
