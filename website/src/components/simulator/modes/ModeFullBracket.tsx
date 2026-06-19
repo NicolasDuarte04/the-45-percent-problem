@@ -49,6 +49,12 @@ import { computeRealityScore } from "@/lib/sim/computeRealityScore";
 import { canonicalizeScenario } from "@/lib/sim/canonicalizeScenario";
 import { teamsByGroupSortedByElo } from "@/lib/sim/elo";
 import { getRarityBand } from "@/lib/sim/getRarityBand";
+import {
+  decodeScenarioDraft,
+  readScenarioParam,
+  urlWithoutScenarioParam,
+} from "@/lib/sim/scenarioUrl";
+import { ScenarioShareControls } from "@/components/simulator/ScenarioShareControls";
 import { track, claimFirstPick } from "@/lib/analytics/track";
 import { useReducedMotionAware } from "@/lib/motion/useReducedMotionAware";
 import type {
@@ -151,6 +157,71 @@ function hydrate(): BuildState {
       base.koAdvancers[i] =
         typeof v === "string" && /^[A-Z]{3}$/.test(v) ? (v as TeamCode) : null;
     }
+  }
+  return base;
+}
+
+/**
+ * Reconstruct the build state from a (possibly partial) shared scenario.
+ *
+ * The FullBracketScenario carries group winners / runners-up, the 8 best
+ * 3rd-place teams that advance, and the KO advancers. It does NOT carry the
+ * per-group 3rd-place nomination for the four groups whose 3rd-place team
+ * does not advance, because that label is not part of the forecast (the
+ * groups projection depends on winners / runners-up; the R32 onward depends
+ * on bestThirds). We reconstruct each group's thirdPlace so the group reads
+ * complete: prefer the group's remaining team that is among the advancing
+ * best-thirds, else the alphabetically-first remaining team. The resulting
+ * view yields the identical scenario; only the cosmetic 3rd-vs-4th label
+ * among eliminated teams may differ from the sharer's, and that never
+ * changes what the model projects.
+ */
+function buildStateFromScenario(scenario: Record<string, unknown>): BuildState {
+  const base = emptyState();
+  const byGroup = teamsByGroup();
+  const sc = scenario as Partial<FullBracketScenario>;
+  const bestThirdsArr: TeamCode[] = Array.isArray(sc.bestThirds)
+    ? sc.bestThirds
+    : [];
+  const bestThirdsSet = new Set(
+    bestThirdsArr.filter(
+      (c): c is TeamCode => typeof c === "string" && /^[A-Z]{3}$/.test(c),
+    ),
+  );
+  const winners: TeamCode[] = Array.isArray(sc.groupWinners)
+    ? sc.groupWinners
+    : [];
+  const runnersUp: TeamCode[] = Array.isArray(sc.groupRunnersUp)
+    ? sc.groupRunnersUp
+    : [];
+  GROUPS.forEach((g, i) => {
+    const w = winners[i];
+    const r = runnersUp[i];
+    if (typeof w === "string" && /^[A-Z]{3}$/.test(w)) {
+      base.groupSelections[g].winner = w as TeamCode;
+    }
+    if (typeof r === "string" && /^[A-Z]{3}$/.test(r)) {
+      base.groupSelections[g].runnerUp = r as TeamCode;
+    }
+    const w2 = base.groupSelections[g].winner;
+    const r2 = base.groupSelections[g].runnerUp;
+    if (w2 && r2) {
+      const remaining = (byGroup[g] ?? []).filter((c) => c !== w2 && c !== r2);
+      const advancing = remaining.find((c) => bestThirdsSet.has(c));
+      base.groupSelections[g].thirdPlace =
+        advancing ?? [...remaining].sort()[0] ?? null;
+    }
+  });
+  for (let i = 0; i < 8; i++) {
+    const v = bestThirdsArr[i];
+    base.bestThirds[i] =
+      typeof v === "string" && /^[A-Z]{3}$/.test(v) ? (v as TeamCode) : null;
+  }
+  const ko: TeamCode[] = Array.isArray(sc.koAdvancers) ? sc.koAdvancers : [];
+  for (let i = 0; i < 31; i++) {
+    const v = ko[i];
+    base.koAdvancers[i] =
+      typeof v === "string" && /^[A-Z]{3}$/.test(v) ? (v as TeamCode) : null;
   }
   return base;
 }
@@ -610,13 +681,29 @@ export function ModeFullBracket({
     },
   );
   const hydratedRef = useRef(false);
+  // Snapshot of a scenario hydrated from a shared `?s=` link. While the
+  // visitor has not edited it, we do not persist to their localStorage, so
+  // opening a shared link never clobbers a different draft they had saved.
+  const sharedSnapshotRef = useRef<string | null>(null);
+  // Skip the persist effect's first (stale pre-hydration) run, which shares
+  // the mount commit. See the note in ModeFinalFour.
+  const persistArmedRef = useRef(false);
   const prevCompleteRef = useRef<Set<GroupLetter>>(new Set());
   const dimTimersRef = useRef<Partial<Record<GroupLetter, ReturnType<typeof setTimeout>>>>({});
 
   useEffect(() => {
     if (hydratedRef.current) return;
     track("simulator_opened", { mode: "full_bracket", surface: "page" });
-    const hydrated = hydrate();
+    // A shared `?s=` scenario takes precedence over the localStorage
+    // carve-out so a shared link reopens the exact scenario it encodes.
+    const sharedDraft = decodeScenarioDraft(readScenarioParam());
+    const fromShare = sharedDraft?.mode === "full_bracket";
+    const hydrated = fromShare
+      ? buildStateFromScenario(sharedDraft!.scenario)
+      : hydrate();
+    if (fromShare) {
+      sharedSnapshotRef.current = JSON.stringify(hydrated);
+    }
     setState(hydrated);
     // Phase E §6 (B.3): groups already complete on hydrate render dim
     // immediately, no transition. Seed prevCompleteRef so the watcher
@@ -642,8 +729,18 @@ export function ModeFullBracket({
 
   useEffect(() => {
     if (!hydratedRef.current) return;
+    if (!persistArmedRef.current) {
+      persistArmedRef.current = true;
+      return;
+    }
+    if (sharedSnapshotRef.current !== null) {
+      if (JSON.stringify(state) === sharedSnapshotRef.current) return;
+      // First edit of a shared view: take ownership, strip `?s=`, persist.
+      sharedSnapshotRef.current = null;
+      router.replace(urlWithoutScenarioParam(), { scroll: false });
+    }
     writeInflight("full_bracket", state);
-  }, [state]);
+  }, [state, router]);
 
   // Phase E §6 (B.3): watch group completions. A fresh transition from
   // incomplete → complete schedules a per-group 700ms timer before
@@ -1336,6 +1433,17 @@ export function ModeFullBracket({
             variant="compact"
           />
         </div>
+
+        {/* Share the current scenario as a `?s=` link (exploratory, no
+            submit). Shown at every clean stage boundary (groups through
+            full bracket), i.e. whenever there is a complete, projectable
+            scenario to encode and render a card for. */}
+        {readiness.kind === "ready" ? (
+          <ScenarioShareControls
+            mode="full_bracket"
+            scenario={buildScenarioForStage(state, readiness.stage)}
+          />
+        ) : null}
 
         {/* CP-03: the in-flow stage-labelled submit button is removed; the
             sticky meter below now carries the ARM ALERT CTA. The helper

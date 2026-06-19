@@ -31,7 +31,9 @@ interface EventMap {
     rarity_band: RarityBand;
     stage?: FullBracketStage;
   };
-  share_action: { type: "copy" | "png" | "native" | "copy_post" };
+  share_action: {
+    type: "copy" | "png" | "native" | "copy_post" | "copy_link" | "linkedin" | "x";
+  };
   alert_armed: undefined;
   // Fires once per session per slug when the Final Four page hydrates with
   // a valid `initialScenario` derived from a promo card slug (`?card=`).
