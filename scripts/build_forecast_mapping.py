@@ -56,13 +56,13 @@ from evaluation.reconstruct_forecasts import (  # noqa: E402
     reconstruct_distributions,
 )
 from evaluation.aggregate_metrics import compute_champion_metrics  # noqa: E402
+from frozen_batch import frozen_provenance  # noqa: E402
 
 SETTLED_TABLE = PROJECT_ROOT / "data" / "processed" / "cp14_settled_table.md"
 
 MATCH_OUTCOMES_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.parquet"
 COMMITTED_AUDIT = PROJECT_ROOT / "docs" / "cp-14" / "forecast_mapping.md"
 RUNTIME_AUDIT = PROJECT_ROOT / "data" / "processed" / "forecast_mapping_audit.json"
-ACTIVE_BATCH = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 
 
 def _emit(text: str) -> None:
@@ -170,11 +170,15 @@ def _write_settled_table(
 
 
 def _batch_provenance() -> dict[str, str]:
-    active = json.loads(ACTIVE_BATCH.read_text())
+    # cp-16 step (a): the bijection audit describes the FROZEN pre-tournament
+    # champion batch, so its provenance is pinned via frozen_batch.py rather than
+    # read from active_batch.json (which the nightly rebatch repoints). Keys are
+    # preserved for the audit-doc formatting below.
+    prov = frozen_provenance()
     return {
-        "active_batch_id": active.get("active_batch_id", ""),
-        "active_batch_path": active.get("active_batch_path", ""),
-        "activated_at_utc": active.get("activated_at_utc", ""),
+        "active_batch_id": prov["source_batch_id"],
+        "active_batch_path": prov["active_batch_path"],
+        "activated_at_utc": prov["source_batch_activated_utc"],
     }
 
 

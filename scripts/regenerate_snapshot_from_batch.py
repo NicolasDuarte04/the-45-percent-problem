@@ -53,10 +53,13 @@ Run
 ---
   python scripts/regenerate_snapshot_from_batch.py
 
-The script reads ``data/calibration/active_batch.json`` to find the
-batch and refuses to run if the active_batch_id has changed since the
-script's last execution (the snapshot dir is derived from the
-active_batch_id so a mismatch indicates a stale run).
+cp-16 step (a): the per-team progression marginals (tournament.json) and
+their provenance stamps are pinned to the FROZEN pre-registered batch via
+``frozen_batch.py`` (``FROZEN_BATCH_ID``), NOT to ``active_batch.json``. The
+nightly rebatch (``_maybe_rebatch_for_settled_delta``) still runs and still
+updates ``active_batch.json`` (consumed by the conditioning loader and kept
+as an audit trail), but its re-simulated output no longer feeds any frozen
+surface. See ``frozen_batch.py`` for the rationale.
 """
 
 from __future__ import annotations
@@ -74,6 +77,13 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+from frozen_batch import (  # noqa: E402
+    FROZEN_BATCH_ID,
+    FROZEN_BATCH_PATH,
+    FROZEN_STRENGTH_MATRIX_SHA256,
+    FROZEN_TEAM_RUNS_M2,
+)
 
 WEBSITE_DATA_ROOT = PROJECT_ROOT / "website" / "public" / "data"
 LATEST_DIR        = WEBSITE_DATA_ROOT / "latest"
@@ -668,12 +678,20 @@ def main() -> None:
     # before and after); during the tournament this is the trigger that
     # propagates a freshly-settled result into the public bracket.
     active = _maybe_rebatch_for_settled_delta(active)
-    active_batch_id = active["active_batch_id"]
-    batch_path = PROJECT_ROOT / active["active_batch_path"]
-    team_runs_path = batch_path / "team_runs_M2.parquet"
+    # cp-16 step (a): the published per-team progression marginals are a FROZEN
+    # pre-tournament forecast. Read them from the frozen batch via
+    # frozen_batch.py, NOT from active_batch.json which the rebatch above
+    # repoints whenever the settled count changes. The rebatch keeps running
+    # (it still updates active_batch.json for the conditioning loader and the
+    # audit trail); its output is simply not read by any frozen surface.
+    # active_batch_id holds the frozen id here so the snapshot_meta /
+    # data_sha provenance stamps describe the frozen source they came from.
+    active_batch_id = FROZEN_BATCH_ID
+    batch_path = FROZEN_BATCH_PATH
+    team_runs_path = FROZEN_TEAM_RUNS_M2
     if not team_runs_path.exists():
-        raise FileNotFoundError(f"Active batch missing M2 outputs: {team_runs_path}")
-    print(f"[1] active_batch_id : {active_batch_id}")
+        raise FileNotFoundError(f"Frozen batch missing M2 outputs: {team_runs_path}")
+    print(f"[1] active_batch_id : {active_batch_id}  (frozen pin)")
     print(f"    batch_path      : {batch_path.relative_to(PROJECT_ROOT)}")
 
     champion = json.loads(CHAMPION_MODEL_JSON.read_text())
@@ -726,7 +744,16 @@ def main() -> None:
     new_dir = SNAPSHOTS_DIR / new_snapshot_id
 
     code_sha_str = _code_sha()
-    data_sha_str = _data_sha(active)
+    # cp-16 step (a): anchor the published data_sha to the FROZEN batch, not the
+    # rebatched active dict, so it is independent of active_batch.json. (The lock
+    # sha is carried forward unchanged across rebatches, so the value is stable
+    # today; this makes the independence explicit rather than incidental.)
+    data_sha_str = _data_sha(
+        {
+            "active_batch_id": FROZEN_BATCH_ID,
+            "matrix_sha256_lock": FROZEN_STRENGTH_MATRIX_SHA256,
+        }
+    )
     print(f"[3] new snapshot_id : {new_snapshot_id}")
     print(f"    code_sha        : {code_sha_str}")
     print(f"    data_sha        : {data_sha_str}")
