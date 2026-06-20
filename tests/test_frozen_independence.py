@@ -11,12 +11,20 @@ the nightly rebatch does whenever the settled count changes).
 This test runs the real pipeline end to end twice: once with the committed
 active_batch.json (which points at the frozen batch) and once with
 active_batch.json repointed at a fabricated alternate batch. The alternate batch
-copies the frozen ``match_runs_M2`` verbatim (so the team-pairing reader, which
-intentionally still reads the active batch, keeps producing the same valid
-bijection) but carries deliberately different ``team_runs_M2`` marginals (all
-champion / qualification flags zeroed). If any frozen surface were still bound
-to active_batch.json, the published marginals would collapse toward the
-perturbed alternate and this test would fail.
+keeps the frozen ``match_runs_M2`` IDENTITY columns (match_id, phase,
+team_home, team_away) byte-for-byte, so the team-pairing reader (which
+intentionally still reads the active batch) keeps producing the same valid
+bijection (no MappingError). It perturbs everything that drives a probability:
+the ``match_runs_M2`` outcome columns (reg_home_goals / reg_away_goals / seed,
+which the ledger grades from) and the ``team_runs_M2`` progression marginals
+(champion / qualification flags zeroed, which tournament.json and
+snapshotProbs.ts aggregate). If any frozen surface were still bound to
+active_batch.json, its numbers would follow the perturbed alternate and this
+test would fail.
+
+The ledger proof is differential: it shows the perturbed match_runs WOULD grade
+to different p_model_on_realized / brier_contribution, then asserts the actual
+ledger output is byte-for-byte the frozen values regardless.
 
 Surfaces proven independent (each asserted below):
   - the scored ledger (latest/ledger.jsonl) and its provenance tags
@@ -104,9 +112,16 @@ def repointable_active(tmp_path: Path):
 
     fake_dir = tmp_path / FAKE_BATCH_ID
     fake_dir.mkdir(parents=True)
-    # Copy frozen match_runs verbatim: identical pairings keep build_model_map's
-    # bijection valid, so a failure here can only come from the probability pin.
+    # Perturb ONLY the outcome columns of match_runs (reg_home_goals,
+    # reg_away_goals, seed) so the implied per-match 1X2 distribution genuinely
+    # differs from frozen; keep the identity columns (match_id, phase,
+    # team_home, team_away) byte-for-byte so build_model_map's pairing bijection
+    # stays valid (no MappingError). This makes the ledger test differential:
+    # the alternate match_runs WOULD grade differently if it were read.
     mr = pd.read_parquet(FROZEN_MATCH_RUNS_M2)
+    mr["reg_home_goals"] = 9  # every group match implies p_home == 1.0
+    mr["reg_away_goals"] = 0
+    mr["seed"] = mr["seed"] + 1
     mr.to_parquet(fake_dir / "match_runs_M2.parquet", engine="pyarrow", index=False)
     # Perturb team_runs marginals: zero champion + qualification flags so the
     # alternate batch's progression probabilities are unmistakably different.
@@ -193,38 +208,73 @@ def test_frozen_surfaces_independent_of_active_batch(repointable_active) -> None
         )
 
 
-def test_ledger_provenance_pinned_under_repointed_active(repointable_active) -> None:
-    """The ledger reconstruction reads the frozen batch even with active repointed."""
-    repoint, _ = repointable_active
+def test_ledger_values_pinned_under_repointed_active(repointable_active) -> None:
+    """The ledger's graded VALUES (not just its provenance tag) are pinned.
 
-    code = (
-        "import json, sys; sys.path.insert(0, '.');"
-        "from evaluation.reconstruct_forecasts import batch_provenance, reconstruct_distributions;"
-        "from evaluation.forecast_mapping import build_model_map;"
-        "prov = batch_provenance();"
-        "d = reconstruct_distributions(build_model_map());"
-        "out = {'id': prov['source_batch_id'], 'sha': prov['source_strength_matrix_sha'],"
-        " 'rows': int(len(d)), 'sig': float(d['p_home'].sum())};"
-        "print(json.dumps(out))"
+    The ledger derives its probabilities from match_runs (reg_home_goals /
+    reg_away_goals). The alternate batch keeps frozen pairings but carries
+    perturbed match_runs outcomes, so reading it would produce a materially
+    different 1X2 distribution and therefore different p_model_on_realized /
+    brier_contribution. This proves, differentially, that the ledger ignores
+    active_batch.json: a real difference is available and is not picked up.
+    """
+    repoint, fake_dir = repointable_active
+    fake_match_runs = fake_dir / "match_runs_M2.parquet"
+
+    from evaluation.forecast_mapping import build_model_map
+    from evaluation.reconstruct_forecasts import (
+        build_ledger_rows,
+        reconstruct_distributions,
     )
 
-    def probe() -> dict:
-        r = subprocess.run(
-            [sys.executable, "-c", code], cwd=REPO_ROOT, capture_output=True, text=True, timeout=300
-        )
-        assert r.returncode == 0, r.stderr[-3000:]
-        return json.loads(r.stdout.strip().splitlines()[-1])
+    # ── Baseline: committed active_batch.json (points at the frozen batch) ──
+    model_map = build_model_map()
+    frozen_dists = reconstruct_distributions(model_map)  # default source -> frozen
 
-    base = probe()
+    # Synthetic settled frame over the first two mapped matches.
+    a, b = model_map.iloc[0], model_map.iloc[1]
+    scored = pd.DataFrame(
+        [
+            {"match_id": a["match_id"], "home_goals": 3, "away_goals": 0,
+             "settled_at": "2026-06-11T21:00:00Z"},
+            {"match_id": b["match_id"], "home_goals": 0, "away_goals": 1,
+             "settled_at": "2026-06-12T21:00:00Z"},
+        ]
+    )
+    base_rows = build_ledger_rows(scored, frozen_dists, "codesha")
+
+    # What the perturbed alternate WOULD grade to, if the ledger read it.
+    perturbed_dists = reconstruct_distributions(model_map, batch_parquet=fake_match_runs)
+    perturbed_rows = build_ledger_rows(scored, perturbed_dists, "codesha")
+
+    # Sanity: the perturbation is real. The graded values genuinely differ, so
+    # the equality assertions below prove a difference is being ignored, not a
+    # no-op. (Perturbed match_runs force p_home == 1.0 for every match.)
+    assert [r["p_model_on_realized"] for r in perturbed_rows] != [
+        r["p_model_on_realized"] for r in base_rows
+    ]
+    assert [r["brier_contribution"] for r in perturbed_rows] != [
+        r["brier_contribution"] for r in base_rows
+    ]
+
+    # ── Repoint active_batch.json at the perturbed alternate and rebuild ──
     repoint()
-    alt = probe()
+    model_map_alt = build_model_map()  # pairings still valid (identity cols intact)
+    alt_dists = reconstruct_distributions(model_map_alt)  # default source -> frozen
+    alt_rows = build_ledger_rows(scored, alt_dists, "codesha")
 
-    assert base["id"] == alt["id"] == FROZEN_BATCH_ID
-    assert base["sha"] == alt["sha"] == FROZEN_STRENGTH_MATRIX_SHA256
-    assert base["rows"] == alt["rows"] == 72
-    assert base["sig"] == alt["sig"], (
-        "ledger distributions moved when active_batch.json was repointed"
+    # Core proof: the ACTUAL ledger output is byte-for-byte the frozen values,
+    # not the perturbed ones, and tagged the frozen batch id / sha.
+    assert alt_rows == base_rows, (
+        "ledger graded values changed when active_batch.json was repointed; "
+        "the ledger is still reading the active batch's match_runs."
     )
+    assert [r["p_model_on_realized"] for r in alt_rows] != [
+        r["p_model_on_realized"] for r in perturbed_rows
+    ], "ledger followed the repointed active batch's perturbed match_runs"
+    for r in alt_rows:
+        assert r["source_batch_id"] == FROZEN_BATCH_ID
+        assert r["data_sha"] == FROZEN_STRENGTH_MATRIX_SHA256
 
 
 def test_press_provenance_pinned_under_repointed_active(repointable_active) -> None:
