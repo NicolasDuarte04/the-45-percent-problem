@@ -57,6 +57,34 @@ describe("deriveKillCriteriaPillState", () => {
     expect(state.ariaLabel).toContain("tripped");
   });
 
+  it("pre_tournament_locked WITH matches settled renders the in-tournament CLEARED pill, not awaiting kickoff", () => {
+    const state = deriveKillCriteriaPillState({
+      status: "pre_tournament_locked",
+      matchesSettled: 37,
+      marginalGapSe: 6.22,
+      pairedGapSe: 1.75,
+      thresholdSe: 2.0,
+    });
+    expect(state.variant).toBe("mint");
+    expect(state.glyph).toBe("●");
+    expect(state.label).toBe("KILL CRITERION: CLEARED");
+    expect(state.label).not.toBe("AWAITING TOURNAMENT KICKOFF");
+    // Dual-SE: both readings surfaced, champion not demoted.
+    expect(state.ariaLabel).toContain("6.22 SE");
+    expect(state.ariaLabel).toContain("1.75 SE");
+    expect(state.ariaLabel).toContain("not demoted");
+    expect(state.ariaLabel).toContain("/vault/kill-criteria");
+  });
+
+  it("pre_tournament_locked with zero settled still shows AWAITING TOURNAMENT KICKOFF (no regression)", () => {
+    const state = deriveKillCriteriaPillState({
+      status: "pre_tournament_locked",
+      matchesSettled: 0,
+    });
+    expect(state.variant).toBe("neutral");
+    expect(state.label).toBe("AWAITING TOURNAMENT KICKOFF");
+  });
+
   it("missing or unknown status mid-tournament falls back to the neutral pill (no false red)", () => {
     const state = deriveKillCriteriaPillState({
       status: undefined,
