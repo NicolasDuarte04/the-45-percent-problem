@@ -40,6 +40,10 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# reconstruct_distributions reads FROZEN_MATCH_RUNS_M2, so build_model_map must
+# label batch_slot with the same frozen batch's group ids (see Side B below).
+from frozen_batch import FROZEN_MATCH_RUNS_M2  # noqa: E402
+
 # The batch parquet stores team display names ("Mexico", "South Korea").
 # DISPLAY_NAME_TO_FIFA is the canonical display-name -> FIFA-code table the
 # outcome ingester already uses, so both ends of the join share one source of
@@ -110,8 +114,16 @@ def build_model_map(
         )
 
     # Side B: batch group slots (one fixed team pairing each in group stage).
+    # cp-16a: default to the FROZEN batch, not the nightly re-sim
+    # (active_batch.json). reconstruct_distributions reads the frozen parquet, so
+    # batch_slot must carry the frozen G-A-1.. scheme. The active re-sim relabels
+    # its group slots M01.. (from data/raw/wc2026_fixtures.parquet), which made
+    # the batch_slot==match_id join match nothing and silently emptied the
+    # ledger (cp-16a / #120 was half-applied: it pinned reconstruct to frozen but
+    # left this slot source on active). Pairings are identical across batches, so
+    # this changes only the slot LABEL, never the bijection or map_settled.
     if batch_parquet is None:
-        batch_parquet = _active_batch_match_runs()
+        batch_parquet = FROZEN_MATCH_RUNS_M2
     batch = pd.read_parquet(
         batch_parquet, columns=["match_id", "phase", "team_home", "team_away"]
     )
@@ -174,14 +186,6 @@ def build_model_map(
             f"unique M={out['match_id'].nunique()} unique slots={out['batch_slot'].nunique()}"
         )
     return out
-
-
-def _active_batch_match_runs() -> Path:
-    """Resolve the active batch's M2 match-runs parquet from active_batch.json."""
-    active = json.loads(
-        (PROJECT_ROOT / "data" / "calibration" / "active_batch.json").read_text()
-    )
-    return PROJECT_ROOT / active["active_batch_path"] / "match_runs_M2.parquet"
 
 
 def normalise_outcomes(rows: Any) -> pd.DataFrame:

@@ -277,6 +277,142 @@ def test_ledger_values_pinned_under_repointed_active(repointable_active) -> None
         assert r["data_sha"] == FROZEN_STRENGTH_MATRIX_SHA256
 
 
+@pytest.fixture()
+def resim_shaped_active(tmp_path: Path):
+    """Repoint active_batch.json at a PRODUCTION-shaped re-sim batch.
+
+    The nightly cron writes match_runs with the canonical M01.. group slot ids
+    (from data/raw/wc2026_fixtures.parquet), NOT the frozen G-A-1.. scheme.
+    repointable_active above keeps the frozen G-A-1.. ids byte-for-byte, so it
+    never exercised the scheme mismatch that emptied the ledger (cp-16a / #120's
+    half-applied pin). This fixture relabels the frozen group slots to the
+    canonical M01.. scheme by team pair AND perturbs the outcome columns, so a
+    build_model_map that reads the active batch yields M01.. batch_slots that no
+    longer join the frozen parquet (0 rows), while a fix that reads frozen still
+    populates and still grades the frozen values.
+    """
+    backup = ACTIVE_BATCH.read_text()
+    fixtures = pd.read_parquet(REPO_ROOT / "data" / "raw" / "wc2026_fixtures.parquet")
+    grp_fix = fixtures[fixtures["stage"].str.lower().str.contains("group")]
+    pair_to_canon = {
+        (r.team_home, r.team_away): r.match_id for r in grp_fix.itertuples(index=False)
+    }
+
+    fake_dir = tmp_path / "batch_resim_M01_FAKE"
+    fake_dir.mkdir(parents=True)
+    mr = pd.read_parquet(FROZEN_MATCH_RUNS_M2)
+    is_group = mr["phase"] == "group"
+    relabelled = pd.Series(
+        [
+            pair_to_canon.get((th, ta), old)
+            for th, ta, old in zip(mr["team_home"], mr["team_away"], mr["match_id"])
+        ],
+        index=mr.index,
+    )
+    mr.loc[is_group, "match_id"] = relabelled[is_group]
+    assert mr.loc[is_group, "match_id"].str.startswith("M").all(), (
+        "re-sim fake batch must carry canonical M01.. group slot ids"
+    )
+    # Perturb the graded outcome columns so reading this batch WOULD grade to
+    # p_home == 1.0 for every match; this makes the value assertion differential.
+    mr["reg_home_goals"] = 9
+    mr["reg_away_goals"] = 0
+    mr["seed"] = mr["seed"] + 1
+    mr.to_parquet(fake_dir / "match_runs_M2.parquet", engine="pyarrow", index=False)
+
+    def repoint() -> None:
+        doc = json.loads(backup)
+        doc["schema_version"] = "1.1"
+        doc["active_batch_id"] = "batch_resim_M01_FAKE"
+        doc["active_batch_path"] = str(fake_dir)
+        doc["settled_count_at_batch_time"] = 0
+        doc["settled_source"] = "test_resim_shaped_fabricated"
+        ACTIVE_BATCH.write_text(json.dumps(doc, indent=2) + "\n")
+
+    try:
+        yield repoint, fake_dir / "match_runs_M2.parquet"
+    finally:
+        ACTIVE_BATCH.write_text(backup)
+
+
+def test_ledger_populates_under_resim_shaped_active(resim_shaped_active) -> None:
+    """Regression for the half-applied cp-16a pin (#120): the ledger must
+    populate AND grade the frozen values even when active_batch.json points at a
+    production-shaped re-sim batch (canonical M01.. group slots, perturbed
+    outcomes).
+
+    Before the fix, build_model_map() read the active batch, so batch_slot was
+    M01.. and reconstruct_distributions (which reads the frozen G-A-1.. parquet)
+    joined nothing -> 0 ledger rows. This is the exact gap
+    test_frozen_surfaces_independent_of_active_batch missed: its fabricated batch
+    kept the frozen G-A-1.. ids, so the join never broke.
+    """
+    from evaluation.forecast_mapping import build_model_map
+    from evaluation.reconstruct_forecasts import (
+        build_ledger_rows,
+        reconstruct_distributions,
+    )
+
+    repoint, fake_match_runs = resim_shaped_active
+
+    # Sanity: the fabricated batch is genuinely M01..-labelled (a real re-sim
+    # shape), not the frozen G-A-1.. scheme.
+    fake = pd.read_parquet(fake_match_runs, columns=["match_id", "phase"])
+    fake_group_ids = fake[fake["phase"] == "group"]["match_id"].unique()
+    assert all(str(x).startswith("M") for x in fake_group_ids), (
+        "fixture precondition: re-sim batch must use canonical M01.. group slots"
+    )
+
+    # Frozen baseline (active still points at the frozen batch in-repo).
+    model_map = build_model_map()
+    frozen_dists = reconstruct_distributions(model_map)
+    a, b, c = model_map.iloc[0], model_map.iloc[1], model_map.iloc[2]
+    scored = pd.DataFrame(
+        [
+            {"match_id": a["match_id"], "home_goals": 3, "away_goals": 0,
+             "settled_at": "2026-06-11T21:00:00Z"},
+            {"match_id": b["match_id"], "home_goals": 0, "away_goals": 1,
+             "settled_at": "2026-06-12T21:00:00Z"},
+            {"match_id": c["match_id"], "home_goals": 1, "away_goals": 1,
+             "settled_at": "2026-06-13T21:00:00Z"},
+        ]
+    )
+    base_rows = build_ledger_rows(scored, frozen_dists, "codesha")
+    assert len(base_rows) == 3, "frozen baseline should grade all three matches"
+
+    # What reading the perturbed re-sim batch WOULD grade to (p_home == 1.0).
+    would_dists = reconstruct_distributions(model_map, batch_parquet=fake_match_runs)
+    would_rows = build_ledger_rows(scored, would_dists, "codesha")
+    assert [r["p_model_on_realized"] for r in would_rows] != [
+        r["p_model_on_realized"] for r in base_rows
+    ], "perturbation is not real; the differential proof would be vacuous"
+
+    # ── Repoint active at the M01.. re-sim batch and rebuild via the default path ──
+    repoint()
+    model_map_resim = build_model_map()  # default: must read frozen, ignore active
+    resim_dists = reconstruct_distributions(model_map_resim)
+    resim_rows = build_ledger_rows(scored, resim_dists, "codesha")
+
+    # (a) The ledger POPULATES. On the pre-fix code build_model_map() read the
+    #     active M01.. batch, so batch_slot was M01.., the frozen join was empty,
+    #     and this length would be 0.
+    assert len(resim_rows) == 3, (
+        "ledger did not populate under a re-sim-shaped active batch; "
+        "build_model_map is still reading active_batch.json for slot labels"
+    )
+
+    # (b) The graded VALUES are the frozen ones, not the perturbed re-sim ones.
+    assert resim_rows == base_rows, (
+        "ledger values changed under a re-sim-shaped active batch"
+    )
+    assert [r["p_model_on_realized"] for r in resim_rows] != [
+        r["p_model_on_realized"] for r in would_rows
+    ], "ledger followed the repointed re-sim batch's perturbed outcomes"
+    for r in resim_rows:
+        assert r["source_batch_id"] == FROZEN_BATCH_ID
+        assert r["data_sha"] == FROZEN_STRENGTH_MATRIX_SHA256
+
+
 def test_press_provenance_pinned_under_repointed_active(repointable_active) -> None:
     """scripts/extract_athletic_press_cuts pins its batch id to the frozen batch."""
     repoint, _ = repointable_active
