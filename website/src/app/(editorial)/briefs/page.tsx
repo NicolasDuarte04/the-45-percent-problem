@@ -13,23 +13,14 @@ export const metadata: Metadata = {
     "Every published 45analytics daily brief, reverse-chronological. The model and the market, every day at 12:00 UTC.",
 };
 
-function divergencesAboveThreshold(brief: BriefSample): number {
-  return brief.top_divergences.filter((d) => Math.abs(d.edge_bps) >= 300)
-    .length;
-}
-
 function rowSummary(brief: BriefSample): string {
-  const above = divergencesAboveThreshold(brief);
-  if (above === 0) {
-    return "No divergences exceeded threshold.";
-  }
-  const lead = brief.top_divergences[0];
-  if (!lead) {
-    return `${above} divergence${above === 1 ? "" : "s"} > 300 bps`;
-  }
-  const sign = lead.edge_direction === "positive" ? "+" : "-";
-  const matchLabel = `${lead.home} vs ${lead.away}`;
-  return `${above} divergence${above === 1 ? "" : "s"} > 300 bps  |  ${matchLabel} leads at ${sign}${Math.abs(lead.edge_bps)} bps`;
+  // Neutral, non-ranked row summary: the calibration-channel movers line
+  // (tournament probability movers). The archive index deliberately does not
+  // rank or headline any single market divergence (no "biggest edge of the
+  // day"); it points to the issue. We use movers_line, not summary_line,
+  // because summary_line is a free-text headline that may lead with the
+  // largest market divergence; movers_line is the calibration summary.
+  return brief.headline.movers_line || "Daily model brief.";
 }
 
 const FIRST_ISSUE_PLANNED = "2026-06-11";
