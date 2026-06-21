@@ -12,6 +12,7 @@ function TopNav() {
     <nav className="topnav" aria-label="Secciones">
       <a href="/voto21junio/mapa">El Mapa</a>
       <a href="/voto21junio/tarjeta">La Tarjeta</a>
+      <a href="/voto21junio/resultado">Resultado</a>
       <a href="/voto21junio/metodologia">Metodología</a>
       <a href="/voto21junio/quienes-somos">Quiénes somos</a>
     </nav>

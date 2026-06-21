@@ -75,6 +75,12 @@ export interface ModelData {
   readonly recencyHalflifeDays: number;
   /** Plain reasons the snapshot was flagged thin (data_sufficiency_reasons). */
   readonly suffReasons: readonly string[];
+  /**
+   * publication_notice.status stamped by the publish wrapper, or null. One of
+   * "electoral_silence" | "event_closed". "event_closed" means the vote has
+   * closed and this snapshot is the archived final pre-electoral forecast.
+   */
+  readonly noticeStatus: string | null;
   /** True when this is the demo fallback, not a real snapshot read. */
   readonly isFallback: boolean;
 }
@@ -100,6 +106,9 @@ export function normalizeModel(raw: Record<string, unknown>): ModelData {
   const reasons = Array.isArray(raw.data_sufficiency_reasons)
     ? (raw.data_sufficiency_reasons as unknown[]).map(String)
     : [];
+  const notice = (raw.publication_notice ?? null) as Record<string, unknown> | null;
+  const noticeStatus =
+    notice && typeof notice.status === "string" ? (notice.status as string) : null;
   return {
     pCepeda: pct1(pC),
     pEspriella: pct1(pE),
@@ -117,6 +126,7 @@ export function normalizeModel(raw: Record<string, unknown>): ModelData {
     nPollsExcluded: Math.max(0, considered - used),
     recencyHalflifeDays: Number(raw.recency_halflife_days ?? 0),
     suffReasons: reasons,
+    noticeStatus,
     isFallback: false,
   };
 }
@@ -139,6 +149,7 @@ export function demoModel(): ModelData {
     nPollsExcluded: 0,
     recencyHalflifeDays: 0,
     suffReasons: [],
+    noticeStatus: null,
     isFallback: true,
   };
 }
@@ -253,6 +264,160 @@ export function demoMapa(): MapaData {
   };
 }
 
+// ── Model vs market (21j/model_vs_market.json) ───────────────────────────────
+// Session 18. A SOURCED prediction-market figure for the runoff, recorded with
+// provenance. Never fabricated: if the file or its numbers are missing, the
+// market is reported as unavailable rather than guessed. The market is a
+// speculative market, not the model and not a recommendation; it never feeds
+// the model.
+
+export interface MarketQuote {
+  /** Implied prob for De la Espriella, percent (approximate; need not sum 100). */
+  readonly espriellaPct: number;
+  readonly cepedaPct: number;
+  readonly date: string;
+  readonly source: string;
+  readonly sourceUrl: string;
+}
+
+export interface MarketData {
+  readonly venue: string;
+  readonly marketLabel: string;
+  readonly sourceUrl: string;
+  readonly espriellaPct: number;
+  readonly cepedaPct: number;
+  /** True when the figures are reported as approximate. */
+  readonly approx: boolean;
+  /** When the headline figure was captured, e.g. "2026-06". */
+  readonly asOf: string;
+  readonly trajectory: readonly MarketQuote[];
+  /** False when no sourced market figure exists (never guess one). */
+  readonly available: boolean;
+}
+
+function numOrNull(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+/** Map a parsed model_vs_market.json into MarketData, or unavailable if absent. */
+export function normalizeMarket(raw: Record<string, unknown>): MarketData {
+  const m = (raw.market ?? {}) as Record<string, unknown>;
+  const esp = numOrNull(m.espriella_pct);
+  const cep = numOrNull(m.cepeda_pct);
+  const rawTraj = Array.isArray(m.trajectory) ? (m.trajectory as Record<string, unknown>[]) : [];
+  const trajectory: MarketQuote[] = rawTraj
+    .map((q) => ({
+      espriellaPct: numOrNull(q.espriella_pct) ?? 0,
+      cepedaPct: numOrNull(q.cepeda_pct) ?? 0,
+      date: String(q.date ?? ""),
+      source: String(q.source ?? ""),
+      sourceUrl: String(q.source_url ?? ""),
+    }))
+    .filter((q) => q.date !== "");
+  return {
+    venue: String(m.venue ?? ""),
+    marketLabel: String(m.market_label ?? ""),
+    sourceUrl: String(m.source_url ?? ""),
+    espriellaPct: esp ?? 0,
+    cepedaPct: cep ?? 0,
+    approx: m.value_is_approximate === true,
+    asOf: String(m.captured_as_of ?? ""),
+    trajectory,
+    // Only "available" when a real headline figure was sourced.
+    available: esp !== null && cep !== null,
+  };
+}
+
+export function unavailableMarket(): MarketData {
+  return {
+    venue: "",
+    marketLabel: "",
+    sourceUrl: "",
+    espriellaPct: 0,
+    cepedaPct: 0,
+    approx: false,
+    asOf: "",
+    trajectory: [],
+    available: false,
+  };
+}
+
+// ── Snapshot timeline (all 21j/snapshot_*.json) ──────────────────────────────
+// Session 18. The campaign trajectory, built from the real archived daily
+// snapshots: how P(Cepeda) moved (or did not) across the campaign, including
+// that it sat frozen during electoral silence. Pure: the reader globs the files
+// and hands the parsed docs here.
+
+export interface TimelinePoint {
+  readonly date: string;
+  /** P(Cepeda) percent at this snapshot. */
+  readonly pCepeda: number;
+  readonly pEspriella: number;
+  readonly sufficiency: Sufficiency;
+  /** publication_notice.status on this snapshot, or null. */
+  readonly noticeStatus: string | null;
+}
+
+/** Map parsed snapshot docs into an ascending, date-deduped timeline. */
+export function normalizeTimeline(rawList: Record<string, unknown>[]): TimelinePoint[] {
+  const byDate = new Map<string, TimelinePoint>();
+  for (const raw of rawList) {
+    const pC = raw.p_cepeda;
+    const pE = raw.p_espriella;
+    const date = raw.snapshot_date;
+    if (typeof pC !== "number" || typeof pE !== "number" || typeof date !== "string") continue;
+    const notice = (raw.publication_notice ?? null) as Record<string, unknown> | null;
+    byDate.set(date, {
+      date,
+      pCepeda: pct1(pC),
+      pEspriella: pct1(pE),
+      sufficiency: asSufficiency(raw.data_sufficiency),
+      noticeStatus: notice && typeof notice.status === "string" ? (notice.status as string) : null,
+    });
+  }
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// ── Official result (21j/result_official.json — Stage B / PR-B only) ──────────
+// Session 18. ABSENT in PR-A: there is no certified result yet, so the reader
+// supplies null and the surface shows the result as pending. PR-B writes this
+// file ONLY from real, certified Registraduría data, with source + timestamp.
+// A result is "available" only when real vote-share numbers are present; a
+// provisional boletín is labelled provisional and is not the final post-mortem.
+
+export interface ResultData {
+  readonly certified: boolean;
+  readonly provisional: boolean;
+  readonly cepedaPct: number | null;
+  readonly espriellaPct: number | null;
+  /** The candidate reported with more votes, by name, neutral. Null until known. */
+  readonly leaderName: string | null;
+  readonly source: string;
+  readonly sourceUrl: string;
+  /** ISO timestamp of the source figure. */
+  readonly asOf: string;
+  /** True only when real result numbers are present. */
+  readonly available: boolean;
+}
+
+/** Map a parsed result_official.json into ResultData. Unavailable if no numbers. */
+export function normalizeResult(raw: Record<string, unknown>): ResultData {
+  const cep = numOrNull(raw.cepeda_pct);
+  const esp = numOrNull(raw.espriella_pct);
+  const available = cep !== null && esp !== null;
+  return {
+    certified: raw.certified === true,
+    provisional: raw.provisional === true,
+    cepedaPct: cep,
+    espriellaPct: esp,
+    leaderName: typeof raw.leader_name === "string" ? raw.leader_name : null,
+    source: String(raw.source ?? ""),
+    sourceUrl: String(raw.source_url ?? ""),
+    asOf: String(raw.as_of ?? ""),
+    available,
+  };
+}
+
 // ── The full bundle handed to the surface ────────────────────────────────────
 
 export interface VotoData {
@@ -265,6 +430,27 @@ export interface VotoData {
   readonly stamp: string;
   /** True when ANY of the three sources fell back to demo. */
   readonly anyFallback: boolean;
+  // ── Session 18 (post-election transition) ──────────────────────────────────
+  /** Sourced prediction-market figure, or unavailable. Never the model. */
+  readonly market: MarketData;
+  /** Campaign trajectory from the archived daily snapshots. */
+  readonly timeline: readonly TimelinePoint[];
+  /** Certified official result, or null until PR-B supplies real certified data. */
+  readonly result: ResultData | null;
+  /**
+   * True when the vote has closed and the page is a settled research artifact:
+   * the build-time VOTO_EVENT_CLOSED env flag (preview) OR the model snapshot's
+   * publication_notice.status === "event_closed" (production, stamped by cron).
+   */
+  readonly eventClosed: boolean;
+}
+
+/** Optional Session-18 extras layered onto the base bundle by the reader. */
+export interface VotoExtras {
+  readonly market?: MarketData;
+  readonly timeline?: readonly TimelinePoint[];
+  readonly result?: ResultData | null;
+  readonly eventClosed?: boolean;
 }
 
 /** Static demo identity values that never come from a snapshot. */
@@ -278,9 +464,17 @@ export const STATIC = {
 } as const;
 
 /** Assemble the bundle + derive the footer stamp from the model state. */
-export function buildVotoData(model: ModelData, pulso: PulsoData, mapa: MapaData): VotoData {
+export function buildVotoData(
+  model: ModelData,
+  pulso: PulsoData,
+  mapa: MapaData,
+  extra: VotoExtras = {},
+): VotoData {
   const anyFallback = model.isFallback || pulso.isFallback || mapa.isFallback;
-  const label = isPreliminary(model.sufficiency) ? "preliminar" : "en vivo";
+  const eventClosed = extra.eventClosed ?? model.noticeStatus === "event_closed";
+  // Once the vote has closed the footer stops calling the figure "preliminar"
+  // (it is the archived final pre-electoral forecast, not a live preliminary).
+  const label = eventClosed ? "cifra final pre-electoral" : isPreliminary(model.sufficiency) ? "preliminar" : "en vivo";
   const stamp = model.isFallback
     ? STATIC.demoStamp
     : `modelo ${model.snapshotDate} · ${model.nPolls} encuestas · ${label}`;
@@ -292,6 +486,10 @@ export function buildVotoData(model: ModelData, pulso: PulsoData, mapa: MapaData
     runoffIso: STATIC.runoffIso,
     stamp,
     anyFallback,
+    market: extra.market ?? unavailableMarket(),
+    timeline: extra.timeline ?? [],
+    result: extra.result ?? null,
+    eventClosed,
   };
 }
 

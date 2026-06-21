@@ -17,8 +17,12 @@ import {
   demoVotoData,
   isPreliminary,
   normalizeMapa,
+  normalizeMarket,
   normalizeModel,
   normalizePulso,
+  normalizeResult,
+  normalizeTimeline,
+  unavailableMarket,
 } from "@/app/voto21junio/_lib/voto-data";
 
 // Fixtures mirror the real snapshots on main (2026-06-04 model, demo pulso).
@@ -177,6 +181,115 @@ describe("demo fallbacks", () => {
     expect(d.pollstersIncluded).toEqual([]);
     expect(d.nPollsExcluded).toBe(0);
     expect(d.recencyHalflifeDays).toBe(0);
+  });
+});
+
+// ── Session 18 (post-election transition) ───────────────────────────────────
+
+const MARKET_FIXTURE = {
+  market: {
+    venue: "Polymarket",
+    market_label: "Colombia Presidential Election",
+    source_url: "https://polymarket.com/event/colombia-presidential-election",
+    espriella_pct: 85,
+    cepeda_pct: 14,
+    value_is_approximate: true,
+    captured_as_of: "2026-06",
+    trajectory: [
+      { date: "2026-05-31", espriella_pct: 59, cepeda_pct: 40, source: "Newsweek", source_url: "https://x" },
+      { date: "2026-06", espriella_pct: 85, cepeda_pct: 14, source: "Polymarket", source_url: "https://y" },
+    ],
+  },
+};
+
+describe("normalizeMarket", () => {
+  it("carries the sourced market figure and marks it available", () => {
+    const m = normalizeMarket(MARKET_FIXTURE);
+    expect(m.available).toBe(true);
+    expect(m.espriellaPct).toBe(85);
+    expect(m.cepedaPct).toBe(14);
+    expect(m.approx).toBe(true);
+    expect(m.venue).toBe("Polymarket");
+    expect(m.trajectory).toHaveLength(2);
+    expect(m.trajectory[0].date).toBe("2026-05-31");
+  });
+  it("reports unavailable (never guesses) when the numbers are missing", () => {
+    expect(normalizeMarket({}).available).toBe(false);
+    expect(normalizeMarket({ market: { venue: "Polymarket" } }).available).toBe(false);
+    expect(unavailableMarket().available).toBe(false);
+  });
+});
+
+describe("normalizeTimeline", () => {
+  const A = { snapshot_date: "2026-06-04", p_cepeda: 0.4637, p_espriella: 0.5363, data_sufficiency: "thin" };
+  const B = {
+    snapshot_date: "2026-06-08",
+    p_cepeda: 0.4637,
+    p_espriella: 0.5363,
+    data_sufficiency: "thin",
+    publication_notice: { status: "electoral_silence" },
+  };
+  it("maps, sorts ascending by date, and carries the notice status", () => {
+    const t = normalizeTimeline([B, A]);
+    expect(t.map((p) => p.date)).toEqual(["2026-06-04", "2026-06-08"]);
+    expect(t[0].pCepeda).toBe(46.4);
+    expect(t[1].noticeStatus).toBe("electoral_silence");
+    expect(t[0].noticeStatus).toBeNull();
+  });
+  it("dedupes by date (keeps the last seen) and skips malformed docs", () => {
+    const t = normalizeTimeline([A, { ...A, p_cepeda: 0.5 }, { junk: true }]);
+    expect(t).toHaveLength(1);
+    expect(t[0].pCepeda).toBe(50);
+  });
+});
+
+describe("normalizeResult", () => {
+  it("is available only when real vote-share numbers are present", () => {
+    const r = normalizeResult({
+      certified: true,
+      cepeda_pct: 50.1,
+      espriella_pct: 49.9,
+      leader_name: "Iván Cepeda",
+      source: "Registraduría",
+      source_url: "https://x",
+      as_of: "2026-06-22T00:00:00Z",
+    });
+    expect(r.available).toBe(true);
+    expect(r.certified).toBe(true);
+    expect(r.cepedaPct).toBe(50.1);
+    expect(r.leaderName).toBe("Iván Cepeda");
+  });
+  it("is unavailable when no numbers are present (PR-A pending state)", () => {
+    expect(normalizeResult({}).available).toBe(false);
+    expect(normalizeResult({ provisional: true }).available).toBe(false);
+  });
+});
+
+describe("normalizeModel notice + closed mode", () => {
+  it("extracts publication_notice.status", () => {
+    expect(normalizeModel(MODEL_FIXTURE).noticeStatus).toBeNull();
+    const closed = normalizeModel({ ...MODEL_FIXTURE, publication_notice: { status: "event_closed" } });
+    expect(closed.noticeStatus).toBe("event_closed");
+  });
+  it("buildVotoData derives eventClosed from the notice or the explicit extra", () => {
+    const base = normalizeModel(MODEL_FIXTURE);
+    const open = buildVotoData(base, normalizePulso(PULSO_FIXTURE), normalizeMapa(MAPA_FIXTURE));
+    expect(open.eventClosed).toBe(false);
+    expect(open.market.available).toBe(false);
+    expect(open.timeline).toEqual([]);
+    expect(open.result).toBeNull();
+
+    const closedModel = normalizeModel({ ...MODEL_FIXTURE, publication_notice: { status: "event_closed" } });
+    const closed = buildVotoData(closedModel, normalizePulso(PULSO_FIXTURE), normalizeMapa(MAPA_FIXTURE));
+    expect(closed.eventClosed).toBe(true);
+    expect(closed.stamp).toContain("cifra final pre-electoral");
+
+    const forced = buildVotoData(base, normalizePulso(PULSO_FIXTURE), normalizeMapa(MAPA_FIXTURE), {
+      eventClosed: true,
+      market: normalizeMarket(MARKET_FIXTURE),
+    });
+    expect(forced.eventClosed).toBe(true);
+    expect(forced.market.available).toBe(true);
   });
 });
 
