@@ -18,14 +18,20 @@ import { test, expect } from "@playwright/test";
 test.describe("Ledger §7.2: HIT/MISS visual parity", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/ledger");
-    // Wait for the table to hydrate
-    await page.waitForSelector('[data-ledger-row]');
+    // Wait for the ledger shell to render. The page is server-rendered, so once
+    // the table-section heading is present every row (or the empty-state
+    // placeholder) is already in the DOM. We deliberately do NOT wait on
+    // [data-ledger-row] here: when the snapshot's ledger.jsonl is empty (e.g. an
+    // auto-committed on-demand snapshot), zero rows ever render and a bare
+    // waitForSelector('[data-ledger-row]') hard-times-out at 30s, failing CI
+    // before the HIT/MISS guard below can skip the test.
+    await page.waitForSelector("#ledger-table-heading");
 
     // §7.2 parity is only meaningful once the ledger carries BOTH a HIT and a
     // MISS row. Until forecasts settle into labeled outcomes, the ledger
     // renders rows with no hit_miss_label (the same "pending" data state the
-    // divergence contract now tolerates), so there is nothing to compare.
-    // Skip gracefully rather than fail on element-not-found; the full
+    // divergence contract now tolerates), or no rows at all, so there is
+    // nothing to compare. Skip gracefully rather than fail; the full
     // comparison below runs unchanged as soon as labeled rows exist.
     const hitCount = await page
       .locator('[data-ledger-row][data-ledger-label="HIT"]')
