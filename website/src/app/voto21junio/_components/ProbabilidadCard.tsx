@@ -28,7 +28,7 @@ const co = (n: number, d = 1) => n.toFixed(d).replace(".", ",");
 const coSigned = (n: number, d = 1) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${co(Math.abs(n), d)}`;
 
 export function ProbabilidadCard() {
-  const { model } = useVotoData();
+  const { model, eventClosed } = useVotoData();
   const { pCepeda: override } = useVotoTweaks();
   const pC = override ?? model.pCepeda;
   const pE = override != null ? Math.round((100 - override) * 10) / 10 : model.pEspriella;
@@ -41,8 +41,16 @@ export function ProbabilidadCard() {
   return (
     <div className="card card-pad prob-card">
       <div className="prob-head">
-        <span className="ttl">Probabilidad del día · ganar la 2ª vuelta</span>
-        {prelim ? <span className="prelim-chip">Preliminar</span> : <span className="stamp mono">07:00 COT</span>}
+        <span className="ttl">
+          {eventClosed ? "Cifra final pre-electoral · 2ª vuelta" : "Probabilidad del día · ganar la 2ª vuelta"}
+        </span>
+        {eventClosed ? (
+          <span className="prelim-chip">Cifra final</span>
+        ) : prelim ? (
+          <span className="prelim-chip">Preliminar</span>
+        ) : (
+          <span className="stamp mono">07:00 COT</span>
+        )}
       </div>
       <div className="psplit-names">
         <span>
@@ -69,7 +77,24 @@ export function ProbabilidadCard() {
         </span>
       </div>
 
-      {prelim ? (
+      {eventClosed ? (
+        <div className="prob-prelim">
+          <p className="prob-frame">
+            Esta fue la última cifra del modelo antes de la votación del 21 de junio. El modelo la dejó
+            muy pareja, sin una cifra firme, y se congeló por la ley de silencio electoral. El resultado
+            oficial y el análisis posterior se procesan aparte, con datos certificados.
+          </p>
+          <p className="prob-range mono">
+            Margen nacional (intervalo 80%): {coSigned(model.marginLoPp)} a {coSigned(model.marginHiPp)} pp
+            {crossesTie ? " · cruza el empate" : ""}
+          </p>
+          <p style={{ marginTop: 12 }}>
+            <a className="lnk" href="/voto21junio/resultado">
+              Ver la cifra final, el modelo frente al mercado y el resultado <span className="arr">→</span>
+            </a>
+          </p>
+        </div>
+      ) : prelim ? (
         <div className="prob-prelim">
           <p className="prob-frame">
             Está muy parejo. Por ahora el modelo no da una cifra firme: el resultado puede inclinarse a

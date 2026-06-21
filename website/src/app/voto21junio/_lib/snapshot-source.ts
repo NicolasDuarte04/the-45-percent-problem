@@ -37,10 +37,17 @@ import {
   demoPulso,
   normalizeMapa,
   normalizeModel,
+  normalizeMarket,
   normalizePulso,
+  normalizeResult,
+  normalizeTimeline,
+  unavailableMarket,
   type MapaData,
+  type MarketData,
   type ModelData,
   type PulsoData,
+  type ResultData,
+  type TimelinePoint,
   type VotoData,
 } from "./voto-data";
 
@@ -49,7 +56,14 @@ const REL = {
   model: "the-21j-problem/data/snapshots/21j/latest.json",
   pulso: "the-21j-problem/data/snapshots/pulso/latest.json",
   mapa: "the-21j-problem/data/processed/mapa_municipios.json",
+  // Session 18 (post-election transition).
+  market: "the-21j-problem/data/snapshots/21j/model_vs_market.json",
+  // Stage B / PR-B only: absent in PR-A, so the result reads as pending.
+  result: "the-21j-problem/data/snapshots/21j/result_official.json",
 } as const;
+
+/** Directory of archived daily model snapshots (for the campaign timeline). */
+const SNAPSHOT_21J_DIR = "the-21j-problem/data/snapshots/21j";
 
 /**
  * Candidate repo roots, most-specific first. `process.cwd()` is `website/` under
@@ -102,8 +116,72 @@ export const getVotoData = cache((): VotoData => {
   const pulso = readOne<PulsoData>(root, REL.pulso, normalizePulso, demoPulso, "pulso");
   const mapa = readOne<MapaData>(root, REL.mapa, normalizeMapa, demoMapa, "mapa");
 
-  return buildVotoData(model, pulso, mapa);
+  // ── Session 18 extras ───────────────────────────────────────────────────────
+  // Sourced market figure: unavailable (never guessed) if the file is missing.
+  const market = readOne<MarketData>(
+    root,
+    REL.market,
+    normalizeMarket,
+    unavailableMarket,
+    "market",
+  );
+  // Campaign trajectory from every archived daily snapshot.
+  const timeline = readTimeline(root);
+  // Certified result: null until PR-B writes a real, certified result file.
+  const result = readResult(root);
+
+  // Closed mode: the preview env flag OR the cron-stamped event_closed notice.
+  const envClosed = process.env.VOTO_EVENT_CLOSED === "true";
+  const eventClosed = envClosed || model.noticeStatus === "event_closed";
+
+  return buildVotoData(model, pulso, mapa, { market, timeline, result, eventClosed });
 });
+
+/**
+ * Read every archived daily model snapshot (snapshot_YYYYMMDD.json) and build
+ * the campaign timeline. latest.json is excluded (it duplicates the newest
+ * dated file). A missing directory yields an empty timeline, never a throw.
+ */
+function readTimeline(root: string | null): TimelinePoint[] {
+  if (!root) return [];
+  try {
+    const dir = path.join(/* turbopackIgnore: true */ root, SNAPSHOT_21J_DIR);
+    const files = fs
+      .readdirSync(/* turbopackIgnore: true */ dir)
+      .filter((f) => /^snapshot_\d{8}\.json$/.test(f));
+    const docs = files
+      .map((f) => {
+        try {
+          return readJson(path.join(dir, f));
+        } catch {
+          return null;
+        }
+      })
+      .filter((d): d is Record<string, unknown> => d !== null);
+    return normalizeTimeline(docs);
+  } catch (err) {
+    warn(`timeline: snapshots unreadable (${String(err)}); empty timeline`);
+    return [];
+  }
+}
+
+/**
+ * Read the certified official result if present (Stage B / PR-B). Returns null
+ * when the file is absent (PR-A) or carries no real numbers, so the surface
+ * shows the result as pending rather than inventing one.
+ */
+function readResult(root: string | null): ResultData | null {
+  if (!root) return null;
+  const abs = path.join(/* turbopackIgnore: true */ root, REL.result);
+  try {
+    if (!fs.existsSync(abs)) return null;
+    const result = normalizeResult(readJson(abs));
+    return result.available ? result : null;
+  } catch (err) {
+    warn(`result: file unreadable (${String(err)}); treating as pending`);
+    return null;
+  }
+}
 
 function readOne<T>(
   root: string | null,

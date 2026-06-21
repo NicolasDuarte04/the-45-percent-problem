@@ -87,6 +87,12 @@ SILENCE_BOUNDARY = date.fromisoformat(str(_PUB["silence_boundary"]))
 SILENCE_FREEZES_PULSO = bool(_PUB["silence_freezes_pulso"])
 # Collapse the YAML folded scalar to a single clean line.
 SILENCE_NOTICE = " ".join(str(_PUB["silence_notice"]).split())
+# Session 18: the instant the runoff vote closes. A tz-aware datetime, compared
+# against the real UTC run time (not as_of_date). Past it the page is a settled
+# research artifact; the wrapper stamps event_closed instead of electoral_silence
+# and never emits a fresh poll-driven number.
+POLL_CLOSE = datetime.fromisoformat(str(_PUB["poll_close"]))
+EVENT_CLOSED_NOTICE = " ".join(str(_PUB["event_closed_notice"]).split())
 COMMIT_AUTHOR_NAME = str(_PUB["commit_author_name"])
 COMMIT_AUTHOR_EMAIL = str(_PUB["commit_author_email"])
 WRITABLE_SUBTREE_CFG = str(_PUB["writable_subtree"]).rstrip("/")
@@ -258,7 +264,7 @@ def _read_data_hash(path: Path) -> str | None:
 
 
 def _silence_notice_for(doc: dict) -> dict:
-    """The deterministic publication_notice for a given frozen snapshot doc.
+    """The deterministic electoral-silence publication_notice for a frozen doc.
 
     Deterministic (no timestamps) so re-stamping the same frozen snapshot is a
     no-op: the freeze commits once, then subsequent silent days skip.
@@ -267,6 +273,23 @@ def _silence_notice_for(doc: dict) -> dict:
         "status": "electoral_silence",
         "message": SILENCE_NOTICE,
         "silence_boundary": SILENCE_BOUNDARY.isoformat(),
+        "frozen_snapshot_date": doc.get("snapshot_date"),
+    }
+
+
+def _event_closed_notice_for(doc: dict) -> dict:
+    """The deterministic event-closed publication_notice for a frozen doc.
+
+    Stamped on or after ``poll_close``: the vote is settled, so the frozen
+    pre-close snapshot is now the archived FINAL pre-electoral forecast. Carries
+    both boundaries for the record and is deterministic so re-stamping is a
+    no-op (the close commits once, then subsequent days skip).
+    """
+    return {
+        "status": "event_closed",
+        "message": EVENT_CLOSED_NOTICE,
+        "silence_boundary": SILENCE_BOUNDARY.isoformat(),
+        "poll_close": POLL_CLOSE.isoformat(),
         "frozen_snapshot_date": doc.get("snapshot_date"),
     }
 
@@ -288,34 +311,56 @@ def _freeze_targets() -> list[Path]:
     return targets
 
 
-def apply_silence_freeze() -> bool:
-    """Stamp the electoral-silence notice onto the frozen model snapshot(s).
+def _apply_freeze(notice_for, *, kind: str, warn_msg: str) -> bool:
+    """Stamp a deterministic publication_notice onto the frozen model snapshot(s).
 
-    Reads only the EXISTING committed snapshot and adds a ``publication_notice``
-    field — it never recomputes a number. Idempotent: returns True iff a file
-    actually changed.
+    Reads only the EXISTING committed snapshot and adds/replaces the
+    ``publication_notice`` field — it never recomputes a number. ``notice_for``
+    maps a snapshot doc to its deterministic notice. Idempotent: returns True
+    iff a file actually changed.
     """
     targets = _freeze_targets()
     if not targets:
-        log.warning(
-            "Electoral silence active but no model snapshot to freeze — nothing published"
-        )
+        log.warning(warn_msg)
         return False
 
     changed = False
     for t in targets:
         doc = json.loads(t.read_text(encoding="utf-8"))
-        notice = _silence_notice_for(doc)
+        notice = notice_for(doc)
         if doc.get("publication_notice") != notice:
             doc["publication_notice"] = notice
             t.write_text(
                 json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8"
             )
             changed = True
-            log.info("Silence notice stamped", path=str(t))
+            log.info("%s notice stamped" % kind, path=str(t))
         else:
-            log.info("Silence notice already present (idempotent skip)", path=str(t))
+            log.info("%s notice already present (idempotent skip)" % kind, path=str(t))
     return changed
+
+
+def apply_silence_freeze() -> bool:
+    """Stamp the electoral-silence notice onto the frozen model snapshot(s)."""
+    return _apply_freeze(
+        _silence_notice_for,
+        kind="Silence",
+        warn_msg="Electoral silence active but no model snapshot to freeze — nothing published",
+    )
+
+
+def apply_event_closed_freeze() -> bool:
+    """Stamp the event-closed notice onto the frozen model snapshot(s).
+
+    The vote has closed: the frozen pre-close snapshot becomes the archived final
+    pre-electoral forecast. Same idempotent, recompute-free mechanism as the
+    silence freeze, only the notice differs.
+    """
+    return _apply_freeze(
+        _event_closed_notice_for,
+        kind="Event-closed",
+        warn_msg="Vote closed but no model snapshot to freeze — nothing to mark",
+    )
 
 
 # =============================================================================
@@ -325,12 +370,15 @@ def apply_silence_freeze() -> bool:
 
 @dataclass
 class PublishResult:
-    action: str                      # "commit" | "skip" | "silence-freeze-commit" | "silence-skip" | "dry-run"
+    # "commit" | "skip" | "silence-freeze-commit" | "silence-skip"
+    # | "event-closed-commit" | "event-closed-skip" | "dry-run"
+    action: str
     committed: bool
     silence: bool
     model_changed: bool
     pulso_changed: bool
     reason: str
+    event_closed: bool = False
     staged_paths: list[str] = field(default_factory=list)
     head_before: str = ""
     head_after: str = ""
@@ -339,6 +387,7 @@ class PublishResult:
 def publish(
     *,
     today: date | None = None,
+    now: datetime | None = None,
     force: bool = True,
     do_commit: bool = True,
     repo: GitRepo | None = None,
@@ -347,20 +396,43 @@ def publish(
 ) -> PublishResult:
     """Refresh the 21J snapshot and commit it, or skip if nothing changed.
 
-    ``today`` (defaults to the real UTC date), ``repo``, and the pipeline
-    callables are injectable so the wrapper can be exercised deterministically and
-    without a live network in tests. In production all default to the real thing.
+    ``now`` (defaults to the real UTC datetime) drives the event-closed boundary;
+    ``today`` (its date) drives the silence boundary. Both, plus ``repo`` and the
+    pipeline callables, are injectable so the wrapper can be exercised
+    deterministically and without a live network in tests. In production all
+    default to the real thing.
     """
-    today = today or datetime.now(timezone.utc).date()
+    if now is None:
+        now = (
+            datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+            if today is not None
+            else datetime.now(timezone.utc)
+        )
+    today = today or now.date()
     repo = repo or GitRepo(_git_root())
     run_pipeline = run_pipeline or _default_pipeline
     run_pulso_only = run_pulso_only or _run_pulso_only
 
     subtree = _data_subtree_rel(repo.toplevel())
     head_before = repo.head()
-    silence = today >= SILENCE_BOUNDARY
+    # event_closed (vote settled) is the stricter boundary and takes precedence
+    # over electoral_silence: poll_close is later than silence_boundary, so once
+    # the vote has closed the frozen snapshot is relabelled as the archived final
+    # pre-electoral forecast rather than a silence freeze.
+    event_closed = now >= POLL_CLOSE
+    silence = (not event_closed) and (today >= SILENCE_BOUNDARY)
 
-    if silence:
+    if event_closed:
+        log.warning(
+            "VOTE CLOSED — marking the frozen snapshot as the archived final pre-electoral forecast",
+            run_time=now.isoformat(),
+            poll_close=POLL_CLOSE.isoformat(),
+        )
+        # No ingestion, no aggregator, no fresh poll-driven number; both the
+        # model snapshot and Pulso stay frozen.
+        model_changed = apply_event_closed_freeze()
+        pulso_changed = False
+    elif silence:
         log.warning(
             "ELECTORAL SILENCE ACTIVE — freezing the last publishable snapshot",
             run_date=today.isoformat(),
@@ -386,6 +458,7 @@ def publish(
     meaningful = model_changed or pulso_changed
     log.info(
         "Change decision",
+        event_closed=event_closed,
         silence=silence,
         model_changed=model_changed,
         pulso_changed=pulso_changed,
@@ -395,17 +468,21 @@ def publish(
     # ── Skip: revert the volatile churn, make no commit ───────────────────────
     if not meaningful:
         repo.restore(subtree)
-        action = "silence-skip" if silence else "skip"
-        reason = (
-            "silence active and notice already present — nothing to publish"
-            if silence
-            else "identical model data_hash and no Pulso change — near-no-op"
-        )
+        if event_closed:
+            action = "event-closed-skip"
+            reason = "vote closed and event-closed notice already present — nothing to publish"
+        elif silence:
+            action = "silence-skip"
+            reason = "silence active and notice already present — nothing to publish"
+        else:
+            action = "skip"
+            reason = "identical model data_hash and no Pulso change — near-no-op"
         log.success("No-op run — no commit", action=action, reason=reason)
         return PublishResult(
             action=action,
             committed=False,
             silence=silence,
+            event_closed=event_closed,
             model_changed=model_changed,
             pulso_changed=pulso_changed,
             reason=reason,
@@ -434,10 +511,14 @@ def publish(
         # files moved). Treat as a skip rather than an empty commit.
         repo.restore(subtree)
         log.success("Nothing staged after all — no commit")
+        skip_action = (
+            "event-closed-skip" if event_closed else "silence-skip" if silence else "skip"
+        )
         return PublishResult(
-            action="silence-skip" if silence else "skip",
+            action=skip_action,
             committed=False,
             silence=silence,
+            event_closed=event_closed,
             model_changed=model_changed,
             pulso_changed=pulso_changed,
             reason="meaningful by hash but no git diff to commit",
@@ -453,6 +534,7 @@ def publish(
             action="dry-run",
             committed=False,
             silence=silence,
+            event_closed=event_closed,
             model_changed=model_changed,
             pulso_changed=pulso_changed,
             reason="dry-run: staged + scope-checked, then reverted",
@@ -461,7 +543,13 @@ def publish(
             head_after=head_before,
         )
 
-    if silence:
+    if event_closed:
+        msg = (
+            f"chore(voto): mark 21J snapshot event-closed (final pre-electoral) "
+            f"{today.isoformat()}"
+        )
+        action = "event-closed-commit"
+    elif silence:
         msg = (
             f"chore(voto): freeze 21J snapshot for electoral silence "
             f"{today.isoformat()}"
@@ -486,6 +574,7 @@ def publish(
         action=action,
         committed=True,
         silence=silence,
+        event_closed=event_closed,
         model_changed=model_changed,
         pulso_changed=pulso_changed,
         reason=msg,
@@ -502,6 +591,7 @@ def _print_report(result: PublishResult) -> None:
     print(line)
     print(f"  action          : {result.action}")
     print(f"  committed       : {result.committed}")
+    print(f"  event closed    : {result.event_closed}  (poll_close {POLL_CLOSE.isoformat()})")
     print(f"  silence active  : {result.silence}  (boundary {SILENCE_BOUNDARY.isoformat()})")
     print(f"  model changed   : {result.model_changed}")
     print(f"  pulso changed   : {result.pulso_changed}")
@@ -537,10 +627,18 @@ def main() -> int:
         default=None,
         help="Override the run date (YYYY-MM-DD) to exercise the silence path locally.",
     )
+    parser.add_argument(
+        "--now",
+        type=str,
+        default=None,
+        help="Override the run instant (ISO-8601, e.g. 2026-06-21T22:00:00+00:00) to "
+        "exercise the event-closed path locally. Takes precedence over --today.",
+    )
     args = parser.parse_args()
 
+    now = datetime.fromisoformat(args.now) if args.now else None
     today = date.fromisoformat(args.today) if args.today else None
-    result = publish(today=today, force=not args.no_force, do_commit=not args.dry_run)
+    result = publish(today=today, now=now, force=not args.no_force, do_commit=not args.dry_run)
     _print_report(result)
     return 0
 

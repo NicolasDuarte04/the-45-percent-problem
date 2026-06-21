@@ -1,0 +1,55 @@
+{
+  "_README": [
+    "Session 18 (post-election transition). Editorial reference dataset, NOT a",
+    "pipeline output. It records the public prediction-market price for the",
+    "2026-06-21 Colombia runoff so the website can show the model number next to",
+    "the market number as a divergence. Every figure carries its source and the",
+    "date it was captured; nothing here is fabricated or guessed.",
+    "",
+    "Why this is a hand-recorded file and not a Pulso market reading: the Pulso",
+    "market input (pulso/input_market.py) queries the Polymarket Gamma API with a",
+    "narrow term set and recorded the market as unavailable ('no Colombia 2026",
+    "runoff market on Polymarket'). A live, public Polymarket market on this race",
+    "does in fact exist ('Colombia Presidential Election'); the automated search",
+    "simply did not match it. Rather than loosen the automated matcher days after",
+    "the freeze, the market price is recorded here by hand WITH its source, and",
+    "the model never consumes it. See data_sufficiency and the note below.",
+    "",
+    "Implied probabilities on a prediction market do not sum to 100 (a residual",
+    "sits in other/void outcomes); the values are reported as-is, approximate."
+  ],
+  "market": {
+    "venue": "Polymarket",
+    "market_label": "Colombia Presidential Election",
+    "source_url": "https://polymarket.com/event/colombia-presidential-election",
+    "instrument": "speculative_market",
+    "is_model_output": false,
+    "feeds_the_model": false,
+    "espriella_pct": 85,
+    "cepeda_pct": 14,
+    "value_is_approximate": true,
+    "captured_as_of": "2026-06",
+    "captured_note": "Precio consolidado de la recta final de campana; recogido a mano de la fuente publica, no ingerido por el modelo. En junio el precio de De la Espriella se movio en una banda aproximada de 79 a 85 por ciento.",
+    "trajectory": [
+      {
+        "date": "2026-05-31",
+        "espriella_pct": 59,
+        "cepeda_pct": 40,
+        "value_is_approximate": true,
+        "source": "Newsweek (citando Polymarket y Kalshi)",
+        "source_url": "https://www.newsweek.com/cepeda-de-la-espriella-colombia-election-polls-odds-12011553",
+        "note": "Noche de la primera vuelta."
+      },
+      {
+        "date": "2026-06",
+        "espriella_pct": 85,
+        "cepeda_pct": 14,
+        "value_is_approximate": true,
+        "source": "Polymarket (mercado 'Colombia Presidential Election')",
+        "source_url": "https://polymarket.com/event/colombia-presidential-election",
+        "note": "Recta final, antes de la votacion."
+      }
+    ],
+    "note": "Polymarket es un mercado especulativo: el precio refleja el dinero que se mueve sobre el resultado, no una encuesta ni el numero del modelo, y no alimenta el modelo. Es una probabilidad implicita aproximada, no una cifra del modelo ni una recomendacion."
+  }
+}

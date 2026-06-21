@@ -26,7 +26,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -41,6 +41,10 @@ import scripts.publish_voto_snapshot as P  # noqa: E402
 # whatever boundary is set rather than hardcoding a second copy of it.
 PRE_SILENCE_DAY = P.SILENCE_BOUNDARY.replace(day=max(1, P.SILENCE_BOUNDARY.day - 3))
 SILENCE_DAY = P.SILENCE_BOUNDARY
+
+# An instant safely AFTER poll close (event settled), derived from config so the
+# tests track whatever poll_close is set rather than hardcoding it.
+AFTER_CLOSE = P.POLL_CLOSE + timedelta(hours=6)
 
 
 # =============================================================================
@@ -263,6 +267,72 @@ def test_silence_freezes_pulso_by_default(repo_env, monkeypatch):
               repo=env["repo"], run_pipeline=_make_pipeline(env, model_changes=False, pulso_changes=False),
               run_pulso_only=pulso_only)
     assert pulso_calls["n"] == 0
+
+
+# =============================================================================
+# 2b · event-closed (poll close) — Session 18
+# =============================================================================
+
+
+def test_event_close_marks_final_pre_electoral_without_publishing(repo_env):
+    """On/after poll_close the wrapper stamps event_closed, runs no pipeline, and
+    preserves the existing (frozen) number as the archived final forecast."""
+    env = repo_env
+    pipeline = _make_pipeline(env, model_changes=True, pulso_changes=True)
+
+    result = P.publish(
+        now=AFTER_CLOSE, force=True, do_commit=True,
+        repo=env["repo"], run_pipeline=pipeline,
+    )
+
+    # No ingestion/aggregation once the vote has closed.
+    assert pipeline.calls["n"] == 0, "no ingestion/aggregation after the vote closes"
+    assert result.event_closed is True
+    assert result.committed is True and result.action == "event-closed-commit"
+
+    doc = json.loads(env["model_latest"].read_text())
+    notice = doc["publication_notice"]
+    assert notice["status"] == "event_closed"
+    assert notice["poll_close"] == P.POLL_CLOSE.isoformat()
+    assert notice["frozen_snapshot_date"] == "2026-06-08"
+    # The EXISTING number is preserved, never recomputed.
+    assert doc["p_cepeda"] == 0.4637
+    assert doc["data_hash"] == "MODEL_HASH_A"
+
+    files = _committed_files(env["root"])
+    assert all(f.startswith("the-21j-problem/data/") for f in files)
+    assert _status_clean(env["root"])
+
+
+def test_event_close_is_idempotent_second_run_skips(repo_env):
+    env = repo_env
+    pipeline = _make_pipeline(env, model_changes=False, pulso_changes=False)
+
+    first = P.publish(now=AFTER_CLOSE, force=True, do_commit=True,
+                      repo=env["repo"], run_pipeline=pipeline)
+    assert first.committed is True and first.action == "event-closed-commit"
+
+    head_after_first = env["repo"].head()
+    second = P.publish(now=AFTER_CLOSE, force=True, do_commit=True,
+                       repo=env["repo"], run_pipeline=pipeline)
+
+    assert second.committed is False
+    assert second.action == "event-closed-skip"
+    assert env["repo"].head() == head_after_first, "notice already present -> no second commit"
+    assert _status_clean(env["root"])
+
+
+def test_event_closed_takes_precedence_over_silence(repo_env):
+    """After poll close the notice is event_closed, not electoral_silence, even
+    though the silence boundary is also in the past."""
+    env = repo_env
+    result = P.publish(now=AFTER_CLOSE, force=True, do_commit=True,
+                       repo=env["repo"],
+                       run_pipeline=_make_pipeline(env, model_changes=False, pulso_changes=False))
+
+    assert result.event_closed is True and result.silence is False
+    doc = json.loads(env["model_latest"].read_text())
+    assert doc["publication_notice"]["status"] == "event_closed"
 
 
 # =============================================================================

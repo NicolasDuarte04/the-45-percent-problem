@@ -353,6 +353,29 @@ publish:
     la última cifra del modelo legalmente publicable, congelada hasta después de la
     jornada electoral.
 
+  # ── Event close (poll close) ──────────────────────────────────────────────
+  # Session 18: the moment the runoff vote closes. Voting in Colombia ends at
+  # 16:00 hora local (COT, UTC-5) on 2026-06-21. The silence_boundary above
+  # already froze the model a week earlier, so the cron is not publishing fresh
+  # numbers by now; poll_close is the STRICTER, event-settled boundary.
+  #
+  # On or after this instant (compared against the real UTC run time, NOT
+  # as_of_date) the wrapper switches the frozen snapshot's publication_notice
+  # from electoral_silence to event_closed: the vote is over, and the last
+  # pre-close snapshot is locked as the archived final pre-electoral forecast.
+  # It still publishes NO new poll-driven number. The certified result and the
+  # post-mortem are filled in only from real, certified data, in a separate
+  # step (Session 18 Stage B / PR-B) — never by this wrapper.
+  poll_close: "2026-06-21T16:00:00-05:00"   # 16:00 COT on the runoff day
+
+  # Neutral, non-directional notice stamped onto the frozen snapshot once the
+  # vote has closed. No banned prediction/betting tokens; names no candidate.
+  event_closed_notice: >-
+    La jornada electoral del 21 de junio terminó. Se muestra la última cifra del
+    modelo antes de la votación, archivada como cifra final pre-electoral. El
+    resultado oficial y el análisis posterior se publican aparte, a partir de
+    datos certificados por la Registraduría.
+
   # ── Commit identity ───────────────────────────────────────────────────────
   # Session 15: github-actions[bot], the SAME identity the World-Cup nightly
   # uses. The original distinct "voto-publish-bot" identity made Vercel's Git
