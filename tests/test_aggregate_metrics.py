@@ -12,6 +12,7 @@ import numpy as np
 from evaluation.accuracy_metrics import brier, log_loss, rps
 from evaluation.aggregate_metrics import (
     compute_champion_metrics,
+    compute_reliability_diagram,
     update_evaluation_metrics,
 )
 
@@ -75,3 +76,51 @@ def test_update_empty_keeps_champion_null() -> None:
     out = update_evaluation_metrics(prior, [])
     assert out["brier"]["M_STAR"] is None
     assert out["champion_metric_n"] == 0
+    # Empty ledger -> empty diagram, matching the carry-forward placeholder.
+    assert out["reliability_diagram"] == []
+
+
+def test_reliability_diagram_empty_ledger() -> None:
+    assert compute_reliability_diagram([]) == []
+
+
+def test_reliability_diagram_bins_by_confidence_and_sums_to_n() -> None:
+    rows = [
+        _row(0.70, 0.20, 0.10, "1"),  # confidence 0.70 (bin [0.7,0.8)), hit
+        _row(0.72, 0.18, 0.10, "X"),  # confidence 0.72 (bin [0.7,0.8)), miss
+        _row(0.20, 0.30, 0.50, "2"),  # confidence 0.50 (bin [0.5,0.6)), hit
+    ]
+    diagram = compute_reliability_diagram(rows)
+
+    # One point per match -> bin counts sum to the number of rows.
+    assert sum(b["n"] for b in diagram) == len(rows)
+    # Only non-empty bins are emitted; here two distinct deciles are populated.
+    assert len(diagram) == 2
+
+    by_lower = {b["bin_lower"]: b for b in diagram}
+    # [0.5, 0.6): single hit -> realised frequency 1.0, mean confidence 0.5.
+    assert by_lower[0.5]["n"] == 1
+    assert by_lower[0.5]["frequency_realized"] == 1.0
+    assert by_lower[0.5]["p_model_mean"] == 0.5
+    # [0.7, 0.8): one hit + one miss -> realised frequency 0.5, mean conf 0.71.
+    assert by_lower[0.7]["n"] == 2
+    assert by_lower[0.7]["frequency_realized"] == 0.5
+    assert by_lower[0.7]["p_model_mean"] == 0.71
+
+    # Every bin validates against the schema's [0,1] domain.
+    for b in diagram:
+        assert 0.0 <= b["bin_lower"] <= 1.0
+        assert 0.0 <= b["bin_upper"] <= 1.0
+        assert 0.0 <= b["p_model_mean"] <= 1.0
+        assert 0.0 <= b["frequency_realized"] <= 1.0
+        assert isinstance(b["n"], int)
+
+
+def test_reliability_diagram_confidence_one_lands_in_last_bin() -> None:
+    # A degenerate certain forecast (confidence 1.0) must fall in [0.9, 1.0],
+    # the only right-closed decile, not be dropped.
+    diagram = compute_reliability_diagram([_row(1.0, 0.0, 0.0, "1")])
+    assert len(diagram) == 1
+    assert diagram[0]["bin_lower"] == 0.9
+    assert diagram[0]["bin_upper"] == 1.0
+    assert diagram[0]["n"] == 1

@@ -37,6 +37,15 @@ const THRESHOLD_SE_DEFAULT = 2.0;
  *   2. Otherwise, the `status` field drives the pill. Absent or unknown
  *      status falls back to the neutral pill so a partial snapshot never
  *      renders a false red badge.
+ *   3. `pre_tournament_locked` WITH matches settled is the live state once the
+ *      ledger is scoring against the frozen champion batch: the snapshot still
+ *      carries the locked status (the champion lock does not change in
+ *      tournament), but matches are settled. Per the project's dual-SE
+ *      resolution, the marginal SE is the pre-registered LOCKED criterion and
+ *      it clears, so the badge reads CLEARED; the paired-difference SE is a
+ *      transparency artifact, NOT a status flag, so it must not demote the
+ *      badge to WARNING. Both readings are surfaced in the aria-label, mirroring
+ *      the dual-SE block at /vault/kill-criteria.
  */
 export function deriveKillCriteriaPillState({
   status,
@@ -54,6 +63,16 @@ export function deriveKillCriteriaPillState({
   const preTournamentAria =
     `Pre-tournament. Locked champion: M2_fifa at ${marginalGapSe.toFixed(2)} marginal SE. ` +
     `Sanity gate logged at ${pairedGapSe.toFixed(2)} paired SE; see /vault/kill-criteria.`;
+
+  // Live state once the ledger is scoring but the snapshot still carries the
+  // locked status. Surfaces BOTH dual-SE readings: the marginal SE is the
+  // pre-registered locked criterion (it clears, so CLEARED), the paired SE is a
+  // logged transparency caveat that does not demote the champion.
+  const lockedInTournamentAria =
+    `Locked champion M2_fifa, not tripped. Marginal ${marginalGapSe.toFixed(2)} SE clears ` +
+    `the ${thresholdSe.toFixed(1)} SE locked criterion. Paired-difference ${pairedGapSe.toFixed(2)} SE ` +
+    `is below the ${thresholdSe.toFixed(1)} SE sanity gate, logged as a transparency caveat; ` +
+    `champion not demoted. See /vault/kill-criteria.`;
 
   if (matchesSettled === 0) {
     return {
@@ -87,6 +106,16 @@ export function deriveKillCriteriaPillState({
         ariaLabel: "Kill criterion tripped in tournament. See /vault/kill-criteria.",
       };
     case "pre_tournament_locked":
+      // matchesSettled === 0 already returned above, so reaching here means
+      // matches are settling: the champion lock holds and the marginal
+      // criterion clears, so render the in-tournament CLEARED state with the
+      // dual-SE aria rather than the pre-tournament waiting pill.
+      return {
+        variant: "mint",
+        glyph: "●",
+        label: "KILL CRITERION: CLEARED",
+        ariaLabel: lockedInTournamentAria,
+      };
     default:
       return {
         variant: "neutral",
