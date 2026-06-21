@@ -11,12 +11,15 @@
  *   1. Masthead (45ANALYTICS / RESEARCH BRIEF, issue + date)
  *   2. Reproducibility block (model_variant, code_sha, data_sha, mc_runs)
  *   3. Headline (serif summary line + graphite movers line)
- *   4. Top divergences (data table, stacked cards on mobile)
- *   5. Tournament probability movers
- *   6. Volatility gate panel (renders only if suppressions are non-empty)
- *   7. Methodology footer (three columns)
- *   8. Disclaimer (verbatim, italic serif)
- *   9. Unsubscribe footer
+ *   4. Tournament probability movers
+ *   5. Volatility gate panel (renders only if suppressions are non-empty)
+ *   6. Methodology footer (three columns)
+ *   7. Disclaimer (verbatim, italic serif)
+ *   8. Unsubscribe footer
+ *
+ * This is a calibration-led research brief, not a tips feed: it carries no
+ * ranked "edge of the day" market divergence. The per-market divergence
+ * data exists in the brief contract but is deliberately not broadcast here.
  *
  * Aesthetic constraints honored from the original brief:
  * - three font families only (JetBrains Mono, Source Serif 4, Inter)
@@ -40,33 +43,11 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import type { BriefSample, BriefDivergence, BriefMover } from "@/lib/brief";
-import { COUNTRY_NAMES } from "@/lib/flags/countries";
+import type { BriefSample, BriefMover } from "@/lib/brief";
 import { LEGAL_DISCLAIMER } from "./_disclaimer";
-
-const NAME_TO_CODE: Record<string, string> = Object.fromEntries(
-  (Object.entries(COUNTRY_NAMES) as [string, string][]).map(([code, name]) => [
-    name,
-    code,
-  ]),
-);
-
-function teamCode(name: string): string {
-  return NAME_TO_CODE[name] ?? name.toUpperCase().slice(0, 3);
-}
 
 function pct(p: number): string {
   return `${(p * 100).toFixed(1)}%`;
-}
-
-function formatEdge(bps: number, direction: "positive" | "negative"): string {
-  const sign = direction === "positive" ? "+" : "-";
-  return `${sign}${Math.abs(bps)} bps`;
-}
-
-function formatKickoffUtc(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 }
 
 function formatDelta(bps: number): string {
@@ -195,34 +176,6 @@ const styles = {
     margin: "0 0 8px",
   } as const,
 
-  tableHead: {
-    fontFamily: FONTS.mono,
-    fontSize: "10px",
-    letterSpacing: "0.06em",
-    textTransform: "uppercase" as const,
-    color: PALETTE.graphite,
-    padding: "6px 4px",
-    borderBottom: `1px solid ${PALETTE.hairline}`,
-    fontVariantNumeric: "tabular-nums" as const,
-  } as const,
-  tableCell: {
-    fontFamily: FONTS.mono,
-    fontSize: "12px",
-    color: PALETTE.ink,
-    padding: "6px 4px",
-    borderBottom: `1px solid ${PALETTE.hairline}`,
-    fontVariantNumeric: "tabular-nums" as const,
-  } as const,
-  tableCellRight: {
-    fontFamily: FONTS.mono,
-    fontSize: "12px",
-    color: PALETTE.ink,
-    padding: "6px 4px",
-    borderBottom: `1px solid ${PALETTE.hairline}`,
-    textAlign: "right" as const,
-    fontVariantNumeric: "tabular-nums" as const,
-  } as const,
-
   moverRow: {
     fontFamily: FONTS.mono,
     fontSize: "12px",
@@ -305,46 +258,12 @@ const styles = {
     textDecoration: "underline",
     textUnderlineOffset: "2px",
   } as const,
-
-  belowTableCount: {
-    fontFamily: FONTS.sans,
-    fontSize: "11px",
-    color: PALETTE.graphite,
-    margin: "8px 0 24px",
-    lineHeight: 1.5,
-  } as const,
 } as const;
 
-// ─── Mobile @media overrides: collapse table to stacked cards under 500px ──
+// ─── Mobile @media overrides: stack multi-column rows under 500px ──────────
 
 const MOBILE_CSS = `
 @media only screen and (max-width: 500px) {
-  .brief-table-row,
-  .brief-table-cell {
-    display: block !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  .brief-table-row {
-    border-bottom: 1px solid ${PALETTE.hairline} !important;
-    padding: 12px 0 !important;
-  }
-  .brief-table-cell {
-    border-bottom: none !important;
-    padding: 2px 0 !important;
-    text-align: left !important;
-  }
-  .brief-table-cell::before {
-    content: attr(data-label) " ";
-    color: ${PALETTE.graphite};
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding-right: 6px;
-  }
-  .brief-table-head {
-    display: none !important;
-  }
   .brief-repro-cell {
     display: inline-block !important;
     margin-right: 8px !important;
@@ -386,12 +305,6 @@ export function DailyBriefEmail({
   const issueLabel = String(brief.issue_number).padStart(3, "0");
   const previewText = `${brief.headline.summary_line} | ${brief.headline.movers_line}`;
 
-  const aboveThreshold = brief.top_divergences.filter(
-    (d) => Math.abs(d.edge_bps) >= 300,
-  );
-  const suppressedCount = brief.top_divergences.filter(
-    (d) => d.volatility_gate.triggered,
-  ).length;
   const hasSuppressions = brief.suppressed_today.length > 0;
 
   const buildLink = (href: string): string => {
@@ -463,30 +376,7 @@ export function DailyBriefEmail({
           </Section>
           <Hr style={styles.rule} />
 
-          {/* ── Section 4: Top divergences ─────────────────────────────── */}
-          <Section>
-            <Text style={styles.sectionHead}>TOP DIVERGENCES</Text>
-            {brief.top_divergences.length === 0 ? (
-              <EmptyDivergencesPanel />
-            ) : (
-              <DivergenceTable divergences={brief.top_divergences} />
-            )}
-            <Text style={styles.belowTableCount}>
-              {aboveThreshold.length} divergence
-              {aboveThreshold.length === 1 ? "" : "s"} exceeded threshold
-              today. {suppressedCount} market
-              {suppressedCount === 1 ? "" : "s"} suppressed.{" "}
-              <Link
-                href={buildLink(brief.methodology_links.this_brief_archive)}
-                style={styles.methodologyLink}
-              >
-                [VIEW ALL ON SITE →]
-              </Link>
-            </Text>
-          </Section>
-          <Hr style={styles.rule} />
-
-          {/* ── Section 5: Tournament probability movers ───────────────── */}
+          {/* ── Section 4: Tournament probability movers ───────────────── */}
           <Section>
             <Text style={styles.sectionHead}>TOURNAMENT MOVERS</Text>
             {brief.tournament_movers.length === 0 ? (
@@ -501,7 +391,7 @@ export function DailyBriefEmail({
           </Section>
           <Hr style={styles.rule} />
 
-          {/* ── Section 6: Volatility gate panel (conditional) ─────────── */}
+          {/* ── Section 5: Volatility gate panel (conditional) ─────────── */}
           {hasSuppressions && (
             <Section style={styles.gatePanel}>
               <Text style={styles.gateHeader}>
@@ -520,7 +410,7 @@ export function DailyBriefEmail({
             </Section>
           )}
 
-          {/* ── Section 7: Methodology footer ──────────────────────────── */}
+          {/* ── Section 6: Methodology footer ──────────────────────────── */}
           <Section>
             <Row>
               <Column className="brief-methodology-col" style={{ width: "33%" }}>
@@ -553,12 +443,12 @@ export function DailyBriefEmail({
             </Row>
           </Section>
 
-          {/* ── Section 8: Disclaimer (verbatim) ───────────────────────── */}
+          {/* ── Section 7: Disclaimer (verbatim) ───────────────────────── */}
           <Section style={styles.disclaimerWrap}>
             <Text style={styles.disclaimerText}>{LEGAL_DISCLAIMER}</Text>
           </Section>
 
-          {/* ── Section 9: Unsubscribe footer ──────────────────────────── */}
+          {/* ── Section 8: Unsubscribe footer ──────────────────────────── */}
           <Section>
             <Text style={styles.footer}>
               {subscriber ? (
@@ -641,158 +531,5 @@ function MoverBlock({ mover }: { mover: BriefMover }) {
       </Text>
       <Text style={styles.moverDriver}>{mover.driver}</Text>
     </>
-  );
-}
-
-function DivergenceTable({ divergences }: { divergences: BriefDivergence[] }) {
-  return (
-    <table
-      cellPadding={0}
-      cellSpacing={0}
-      width="100%"
-      style={{
-        borderCollapse: "collapse",
-        marginBottom: "8px",
-        fontVariantNumeric: "tabular-nums" as const,
-      }}
-    >
-      <thead className="brief-table-head">
-        <tr>
-          <th style={{ ...styles.tableHead, textAlign: "left" as const }}>
-            KICKOFF
-          </th>
-          <th style={{ ...styles.tableHead, textAlign: "left" as const }}>
-            MATCH
-          </th>
-          <th style={{ ...styles.tableHead, textAlign: "left" as const }}>
-            SIDE
-          </th>
-          <th style={{ ...styles.tableHead, textAlign: "right" as const }}>
-            MODEL
-          </th>
-          <th style={{ ...styles.tableHead, textAlign: "right" as const }}>
-            MARKET
-          </th>
-          <th style={{ ...styles.tableHead, textAlign: "right" as const }}>
-            EDGE
-          </th>
-          <th style={{ ...styles.tableHead, textAlign: "center" as const }}>
-            GATE
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {divergences.map((d) => (
-          <DivergenceRow key={d.match_id + d.side} d={d} />
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function DivergenceRow({ d }: { d: BriefDivergence }) {
-  const triggered = d.volatility_gate.triggered;
-  const rowOpacity = triggered ? 0.7 : 1;
-  const edgeColor =
-    d.edge_direction === "positive"
-      ? PALETTE.edgePositive
-      : PALETTE.edgeNegative;
-  const edgeText = formatEdge(d.edge_bps, d.edge_direction);
-  const sideLabel = d.side.toUpperCase();
-  const matchLabel = `${teamCode(d.home)} vs ${teamCode(d.away)}`;
-
-  return (
-    <tr className="brief-table-row" style={{ opacity: rowOpacity }}>
-      <td
-        className="brief-table-cell"
-        data-label="KICKOFF"
-        style={{ ...styles.tableCell, textAlign: "left" }}
-      >
-        {formatKickoffUtc(d.kickoff_utc)}
-      </td>
-      <td
-        className="brief-table-cell"
-        data-label="MATCH"
-        style={{ ...styles.tableCell, textAlign: "left" }}
-      >
-        {matchLabel}
-      </td>
-      <td
-        className="brief-table-cell"
-        data-label="SIDE"
-        style={{ ...styles.tableCell, color: PALETTE.graphite, textAlign: "left" }}
-      >
-        {sideLabel}
-      </td>
-      <td
-        className="brief-table-cell"
-        data-label="MODEL"
-        style={styles.tableCellRight}
-      >
-        {pct(d.model_prob)}
-      </td>
-      <td
-        className="brief-table-cell"
-        data-label="MARKET"
-        style={styles.tableCellRight}
-      >
-        {pct(d.market_prob_devigged)}
-      </td>
-      <td
-        className="brief-table-cell"
-        data-label="EDGE"
-        style={{ ...styles.tableCellRight, color: edgeColor }}
-      >
-        {edgeText}
-      </td>
-      <td
-        className="brief-table-cell"
-        data-label="GATE"
-        style={{
-          ...styles.tableCell,
-          textAlign: "center",
-          color: triggered ? PALETTE.suppression : PALETTE.graphite,
-        }}
-      >
-        {triggered ? "⚠" : "✓"}
-      </td>
-    </tr>
-  );
-}
-
-function EmptyDivergencesPanel() {
-  return (
-    <Section
-      style={{
-        border: `1px solid ${PALETTE.hairline}`,
-        padding: "16px",
-        margin: "0 0 12px",
-        backgroundColor: PALETTE.bgElev,
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: FONTS.mono,
-          fontSize: "12px",
-          letterSpacing: "0.04em",
-          color: PALETTE.graphite,
-          margin: "0 0 6px",
-        }}
-      >
-        NO DIVERGENCES EXCEEDED THRESHOLD TODAY.
-      </Text>
-      <Text
-        style={{
-          fontFamily: FONTS.serif,
-          fontSize: "13px",
-          lineHeight: 1.5,
-          color: PALETTE.ink,
-          margin: 0,
-        }}
-      >
-        All 1X2 markets are within ±300 bps of model probability. The next
-        nightly run dispatches at 12:00 UTC.
-      </Text>
-    </Section>
   );
 }
