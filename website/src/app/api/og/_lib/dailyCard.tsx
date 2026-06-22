@@ -1,46 +1,62 @@
 /**
- * Daily Instagram share card (1080x1350, feed 4:5).
+ * Daily Instagram share card (1080x1350, feed 4:5), World-Cup-branded look.
  *
- * Rendered by /api/og/daily via `next/og` ImageResponse (Satori). This
- * module owns the JSX and the design tokens so the route stays a thin
- * data-loading shell. It reuses the dark token set, the font loader, and
- * the flag loader from scenarioOG.tsx, so the daily card cannot drift from
- * the rest of the site's social artifacts.
+ * Rendered by /api/og/daily via `next/og` ImageResponse (Satori). This module
+ * owns the JSX and the design tokens so the route stays a thin data-loading
+ * shell. It reuses the font loader and the flag loader from scenarioOG.tsx, so
+ * the daily card cannot drift from the rest of the site's social artifacts.
  *
  * Two variants share one layout:
- *   - "recap"   : real final scores plus the probability the model gave the
- *                 result, with a champion calibration strip in the footer.
- *   - "preview" : the model's modal scoreline and top 1X2 outcome.
+ *   - "recap"   : real final scores in gold plus the probability the model gave
+ *                 the result, with a public-record calibration line (RPS first).
+ *   - "preview" : the model's top-3 modal scorelines and a gold favorite chip.
  *
- * Framing is strictly calibration-led: the 1X2 bar, the modal scoreline and
- * the calibration notes are model output, never market lines or betting
- * edges. The market column is intentionally pending and absent here.
+ * Visual language (original, no FIFA marks of any kind):
+ *   - Deep navy premium canvas (#0A1730), high contrast.
+ *   - A single smooth horizontal gradient band across the very top
+ *     (gold -> sunset -> night), rendered via Satori's linear-gradient support.
+ *   - Gold (#F2C94C) as the signature accent: the "Día N" title, the favorite's
+ *     win percentage, and the 45analytics.com link.
+ *   - Circular flag badges; the favorite team's badge gets a gold ring, the
+ *     other a light ring.
+ *   - An original square-cluster + quarter-circle motif in the header.
+ *
+ * Framing is strictly calibration-led: the 1X2 bar, the modal scorelines and
+ * the calibration notes are model output, never market lines or betting edges.
+ * The market column is intentionally pending and absent here.
  *
  * Satori supports a flexbox subset of CSS only; colors must be literal hex
- * (no CSS variables, oklch, or color-mix). The hex values mirror the dark
- * canvas tokens in globals.css and the live MatchesBrowser 1X2 bar.
+ * (no CSS variables, oklch, or color-mix). Gradients use `backgroundImage`.
  */
 import type { DailyVariant, ScorelineChip } from "@/lib/data/dailyShareCard";
+import { favorite } from "@/lib/data/dailyShareCard";
 
-// ── Design tokens (mirror the dark canvas in globals.css). ───────────────────
+// ── Design tokens (deep-navy premium canvas). ────────────────────────────────
 
 export const DAILY_C = {
-  bg:     "#0F1216", // --bg-root (dark)
-  panel:  "#151A21", // --bg-panel (dark)
-  border: "#262D37", // --border-subtle (dark)
-  ink:    "#EEE8DD", // --text-primary (dark)
-  soft:   "#A8AFBC", // --text-tertiary (dark)
-  quiet:  "#6D7585", // --text-quiet (dark)
+  bg:      "#0A1730", // deep navy premium canvas
+  panel:   "#0F2347", // row card, a step up from the canvas for contrast
+  panel2:  "#0C1C3C", // scoreline mini-card, a shade under the row panel
+  border:  "#274069", // panel border (navy, visible on the canvas)
+  ink:     "#EEF2F8", // primary text
+  soft:    "#9FB2CE", // secondary text
+  quiet:   "#6E80A0", // tertiary / labels
+  gold:    "#F2C94C", // signature accent
+  ringFav: "#F2C94C", // favorite flag ring
+  ringAlt: "#cfd9e8", // other flag ring
   // 1X2 bar, mirroring the live MatchesBrowser ProbabilityBar:
-  home:   "#F9B88A", // --prism-peach
-  draw:   "#F5D76E", // --prism-sun
-  away:   "#7ED0E8", // --prism-cyan
+  home:    "#F9B88A", // --prism-peach
+  draw:    "#F5D76E", // --prism-sun
+  away:    "#7ED0E8", // --prism-cyan
   // Top-3 scoreline strip (preview only):
-  slPanel:     "#11161D", // mini-card panel, a shade under the row panel
-  slInk:       "#D7DEE5", // neutral scoreline number (#2 and #3)
   green:       "#88E0B6", // #1 scoreline emphasis
-  slBorderTop: "#24332A", // green-tinted border on the #1 mini-card
+  slInk:       "#D7DEE5", // neutral scoreline number (#2 and #3)
+  slBorderTop: "#2E5A47", // green-tinted border on the #1 mini-card
 } as const;
+
+// The top band gradient: one smooth sweep, gold into sunset into night.
+const TOP_GRADIENT =
+  "linear-gradient(90deg, #F2C94C, #FF7A59, #E5468A, #7C5CFF, #2E6BFF)";
 
 const VARIANT_LABEL: Record<DailyVariant, string> = {
   recap:   "Resultados",
@@ -52,6 +68,9 @@ const VARIANT_LABEL: Record<DailyVariant, string> = {
 export interface DailyRow {
   homeName: string;
   awayName: string;
+  /** FIFA 3-letter codes, used for the gold favorite chip. */
+  homeCode: string;
+  awayCode: string;
   /** Flag data URIs (data:image/svg+xml;base64,...), or null on load failure. */
   homeFlag: string | null;
   awayFlag: string | null;
@@ -64,8 +83,9 @@ export interface DailyRow {
   note: string | null;
   /**
    * Top-3 modal scorelines for preview rows. Non-empty switches the row to the
-   * preview layout (no centre value, no note, a scoreline strip under the bar);
-   * empty keeps the recap layout. Always empty on recap rows.
+   * preview layout (gold favorite chip in the centre, a scoreline strip under
+   * the bar); empty keeps the recap layout (large gold final score). Always
+   * empty on recap rows.
    */
   scorelines: ScorelineChip[];
 }
@@ -81,118 +101,197 @@ export interface DailyCardProps {
   emptyNote: string | null;
 }
 
-// ── Row density ────────────────────────────────────────────────────────────────
-// The card holds 1 to 6 fixtures on the 1350px canvas. Up to 4 rows use a
-// comfortable layout; 5 to 6 (the busiest WC days) switch to a compact one so
-// the rows never collide with the footer.
+// ── Row density ──────────────────────────────────────────────────────────────
+// The card holds 1 to 6 fixtures on the fixed 1350px canvas. The per-match
+// block scales with the count so the canvas always fills cleanly: large and
+// spacious at 1 to 2, comfortable at 3 to 4, compact at 5, ultra-compact at 6.
+// Rows also flex to share the available height (see DailyCard), so a light day
+// has no dead space and a heavy day never overflows.
 
 interface RowSizes {
   pad: string;
   gap: number;
-  flag: number;
+  rowGap: number;
+  flag: number; // circular badge diameter
   name: number;
-  score: number;
   bar: number;
   pct: number;
   note: number;
-  rowGap: number;
+  score: number; // recap final score (serif, gold)
+  chipCode: number; // preview favorite chip code
+  chipPct: number; // preview favorite chip percentage
   // Top-3 scoreline strip (preview rows):
-  slLabel: number; // "marcadores más probables" label
-  slLabelMb: number; // label-to-cards gap
-  slScore: number; // scoreline number (serif)
-  slPct: number; // probability under it (mono)
-  slGap: number; // gap between the three mini-cards
-  slPad: string; // mini-card vertical padding
+  slLabel: number;
+  slLabelMb: number;
+  slScore: number;
+  slPct: number;
+  slGap: number;
+  slPad: string;
 }
 
-const COMFORTABLE: RowSizes = {
-  pad: "16px 22px",
-  gap: 10,
-  flag: 46,
-  name: 26,
-  score: 38,
-  bar: 12,
-  pct: 14,
-  note: 15,
-  rowGap: 12,
-  slLabel: 12,
-  slLabelMb: 7,
-  slScore: 26,
-  slPct: 14,
-  slGap: 10,
-  slPad: "8px 0",
+// Five presets, largest to smallest. Indexed by `pickTier`.
+const XL: RowSizes = {
+  pad: "26px 30px", gap: 16, rowGap: 18,
+  flag: 80, name: 32, bar: 16, pct: 20, note: 22,
+  score: 92, chipCode: 30, chipPct: 23,
+  slLabel: 14, slLabelMb: 8, slScore: 36, slPct: 17, slGap: 14, slPad: "13px 0",
+};
+
+const L: RowSizes = {
+  pad: "20px 26px", gap: 13, rowGap: 14,
+  flag: 70, name: 32, bar: 15, pct: 18, note: 20,
+  score: 84, chipCode: 28, chipPct: 21,
+  slLabel: 13, slLabelMb: 7, slScore: 32, slPct: 15, slGap: 12, slPad: "11px 0",
+};
+
+const M: RowSizes = {
+  pad: "15px 24px", gap: 10, rowGap: 12,
+  flag: 54, name: 27, bar: 12, pct: 15, note: 16,
+  score: 54, chipCode: 23, chipPct: 18,
+  slLabel: 12, slLabelMb: 6, slScore: 27, slPct: 14, slGap: 10, slPad: "9px 0",
 };
 
 const COMPACT: RowSizes = {
-  pad: "11px 22px",
-  gap: 6,
-  flag: 38,
-  name: 23,
-  score: 30,
-  bar: 10,
-  pct: 13,
-  note: 14,
-  rowGap: 10,
-  slLabel: 11,
-  slLabelMb: 5,
-  slScore: 22,
-  slPct: 12,
-  slGap: 8,
-  slPad: "5px 0",
+  pad: "11px 24px", gap: 7, rowGap: 9,
+  flag: 44, name: 23, bar: 10, pct: 13, note: 14,
+  score: 42, chipCode: 20, chipPct: 15,
+  slLabel: 11, slLabelMb: 5, slScore: 22, slPct: 12, slGap: 8, slPad: "6px 0",
 };
 
-// The busiest preview days carry 6 fixtures, and each preview row also holds
-// the top-3 scoreline strip. A third, tighter tier keeps those rows clear of
-// the footer. Recap tops out at 4 played fixtures, so it never reaches here.
 const ULTRA: RowSizes = {
-  pad: "8px 22px",
-  gap: 5,
-  flag: 32,
-  name: 21,
-  score: 28,
-  bar: 9,
-  pct: 12,
-  note: 13,
-  rowGap: 8,
-  slLabel: 10,
-  slLabelMb: 4,
-  slScore: 19,
-  slPct: 11,
-  slGap: 7,
-  slPad: "4px 0",
+  pad: "6px 22px", gap: 4, rowGap: 6,
+  flag: 34, name: 20, bar: 8, pct: 11, note: 12,
+  score: 30, chipCode: 17, chipPct: 13,
+  slLabel: 9, slLabelMb: 3, slScore: 17, slPct: 10, slGap: 6, slPad: "3px 0",
 };
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+const PRESETS: readonly RowSizes[] = [XL, L, M, COMPACT, ULTRA];
 
-function FlagTile({ uri, w = 46 }: { uri: string | null; w?: number }) {
-  const h = Math.round((w * 3) / 4);
-  if (!uri) {
-    return (
-      <div
+/**
+ * Density tier for the row count. Both variants scale the same way; preview
+ * never uses the single-fixture XL tier because its taller scoreline strip
+ * reads better one notch down, so a lone preview fixture uses L.
+ */
+function pickTier(variant: DailyVariant, n: number): RowSizes {
+  let idx: number;
+  if (n <= 2) idx = 0;
+  else if (n === 3) idx = 1;
+  else if (n === 4) idx = 2;
+  else if (n === 5) idx = 3;
+  else idx = 4;
+  if (variant === "preview" && idx === 0) idx = 1;
+  return PRESETS[idx];
+}
+
+// ── Sub-components ───────────────────────────────────────────────────────────
+
+// Circular flag badge: the square flag image clipped to a disc, with a 2px
+// ring. The favorite team's ring is gold; the other is light. A flag-load
+// failure renders an empty disc so the visual rhythm survives.
+function FlagBadge({ uri, d, ring }: { uri: string | null; d: number; ring: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        width: d,
+        height: d,
+        flexShrink: 0,
+        borderRadius: d,
+        border: `2px solid ${ring}`,
+        backgroundColor: DAILY_C.panel2,
+        overflow: "hidden",
+      }}
+    >
+      {uri ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={uri}
+          width={d}
+          height={d}
+          alt=""
+          style={{ width: d, height: d, borderRadius: d, objectFit: "cover" }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+// Gold favorite chip (preview centre): the favored side's code over its win
+// percentage, both in gold, inside a gold-outlined pill.
+function FavoriteChip({ code, pct, s }: { code: string; pct: string; s: RowSizes }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        flexShrink: 0,
+        padding: "6px 16px",
+        borderRadius: 10,
+        border: `1px solid ${DAILY_C.gold}`,
+        backgroundColor: "rgba(242,201,76,0.07)",
+      }}
+    >
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono'",
+          fontSize: Math.round(s.chipCode * 0.46),
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: DAILY_C.quiet,
+        }}
+      >
+        favorito
+      </span>
+      <span
         style={{
           display: "flex",
-          width: w,
-          height: h,
-          flexShrink: 0,
-          border: `1px solid ${DAILY_C.border}`,
-          backgroundColor: DAILY_C.bg,
+          flexDirection: "row",
+          alignItems: "baseline",
+          gap: 8,
+          marginTop: 3,
         }}
-      />
-    );
-  }
+      >
+        <span style={{ fontFamily: "'JetBrains Mono'", fontSize: s.chipCode, color: DAILY_C.gold }}>
+          {code}
+        </span>
+        <span style={{ fontFamily: "'Source Serif 4'", fontSize: s.chipPct, color: DAILY_C.gold }}>
+          {pct}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+// Large gold final score (recap centre).
+function FinalScore({ value, label, s }: { value: string; label: string; s: RowSizes }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={uri}
-      width={w}
-      height={h}
-      alt=""
+    <div
       style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
         flexShrink: 0,
-        border: `1px solid ${DAILY_C.border}`,
-        objectFit: "cover",
+        paddingLeft: 12,
+        paddingRight: 12,
       }}
-    />
+    >
+      <span style={{ fontFamily: "'Source Serif 4'", fontSize: s.score, lineHeight: 1, color: DAILY_C.gold }}>
+        {value}
+      </span>
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono'",
+          fontSize: 11,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: DAILY_C.quiet,
+          marginTop: 6,
+        }}
+      >
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -226,7 +325,7 @@ function ScorelineStrip({ chips, s }: { chips: ScorelineChip[]; s: RowSizes }) {
                 flexDirection: "column",
                 alignItems: "center",
                 flex: 1,
-                backgroundColor: DAILY_C.slPanel,
+                backgroundColor: DAILY_C.panel2,
                 border: `1px solid ${top ? DAILY_C.slBorderTop : DAILY_C.border}`,
                 borderRadius: 8,
                 padding: s.slPad,
@@ -261,25 +360,35 @@ function ScorelineStrip({ chips, s }: { chips: ScorelineChip[]; s: RowSizes }) {
   );
 }
 
-function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
+function MatchRow({ row, s, grow }: { row: DailyRow; s: RowSizes; grow: boolean }) {
   const { p } = row;
   const total = p.H + p.D + p.A || 1;
-  // Preview rows carry a top-3 strip and drop the centre value and the note;
-  // recap (and any unpriced preview) keeps the original centre-value layout.
+  // Preview rows carry a top-3 strip and a gold favorite chip; recap keeps the
+  // large gold final score and the calibration note.
   const showStrip = row.scorelines.length > 0;
+  const fav = favorite(p, row.homeCode, row.awayCode);
+  const homeRing = fav.side === "home" ? DAILY_C.ringFav : DAILY_C.ringAlt;
+  const awayRing = fav.side === "away" ? DAILY_C.ringFav : DAILY_C.ringAlt;
   return (
     <div
       style={{
         display: "flex",
+        // Satori's Yoga layout defaults flex items' min-height to 0 (unlike a
+        // browser's min-height:auto), so a grown row will shrink below its
+        // content and collide at high density. Grow rows only when their share
+        // of the canvas comfortably exceeds the content (few-fixture days);
+        // busy days use natural content height, which fits the canvas.
+        flex: grow ? 1 : "0 0 auto",
         flexDirection: "column",
+        justifyContent: "center",
         backgroundColor: DAILY_C.panel,
         border: `1px solid ${DAILY_C.border}`,
-        borderRadius: 8,
+        borderRadius: 12,
         padding: s.pad,
         gap: s.gap,
       }}
     >
-      {/* Teams + centre value */}
+      {/* Teams + centre (favorite chip on preview, final score on recap) */}
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
         {/* Home */}
         <div
@@ -287,44 +396,22 @@ function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            gap: 12,
+            gap: 14,
             flex: 1,
             minWidth: 0,
           }}
         >
-          <FlagTile uri={row.homeFlag} w={s.flag} />
+          <FlagBadge uri={row.homeFlag} d={s.flag} ring={homeRing} />
           <span style={{ fontFamily: "'JetBrains Mono'", fontSize: s.name, color: DAILY_C.ink, overflow: "hidden" }}>
             {row.homeName}
           </span>
         </div>
 
-        {/* Centre (recap only; preview drops it for the scoreline strip) */}
-        {!showStrip && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: 150,
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ fontFamily: "'JetBrains Mono'", fontSize: s.score, lineHeight: 1, color: DAILY_C.ink }}>
-              {row.center}
-            </span>
-            <span
-              style={{
-                fontFamily: "'JetBrains Mono'",
-                fontSize: 11,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: DAILY_C.quiet,
-                marginTop: 5,
-              }}
-            >
-              {row.centerLabel}
-            </span>
-          </div>
+        {/* Centre */}
+        {showStrip ? (
+          <FavoriteChip code={fav.code} pct={fav.pct} s={s} />
+        ) : (
+          <FinalScore value={row.center} label={row.centerLabel} s={s} />
         )}
 
         {/* Away */}
@@ -334,7 +421,7 @@ function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "flex-end",
-            gap: 12,
+            gap: 14,
             flex: 1,
             minWidth: 0,
           }}
@@ -344,7 +431,7 @@ function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
           >
             {row.awayName}
           </span>
-          <FlagTile uri={row.awayFlag} w={s.flag} />
+          <FlagBadge uri={row.awayFlag} d={s.flag} ring={awayRing} />
         </div>
       </div>
 
@@ -381,7 +468,37 @@ function MatchRow({ row, s }: { row: DailyRow; s: RowSizes }) {
   );
 }
 
-// ── Card ───────────────────────────────────────────────────────────────────────
+// Original header motif: a small cluster of squares in the gradient palette
+// plus a quarter-circle. Drawn entirely with divs; no FIFA mark of any kind.
+function HeaderMotif() {
+  return (
+    <div style={{ display: "flex", position: "relative", width: 132, height: 96 }}>
+      <div
+        style={{
+          display: "flex",
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: 66,
+          height: 66,
+          borderTopLeftRadius: 66,
+          backgroundImage: "linear-gradient(135deg, #F2C94C, #FF7A59)",
+        }}
+      />
+      <div
+        style={{ display: "flex", position: "absolute", top: 6, right: 80, width: 28, height: 28, backgroundColor: "#E5468A" }}
+      />
+      <div
+        style={{ display: "flex", position: "absolute", top: 44, right: 74, width: 18, height: 18, backgroundColor: "#7C5CFF" }}
+      />
+      <div
+        style={{ display: "flex", position: "absolute", top: 72, right: 16, width: 14, height: 14, backgroundColor: "#2E6BFF" }}
+      />
+    </div>
+  );
+}
+
+// ── Card ─────────────────────────────────────────────────────────────────────
 
 export function DailyCard({
   variant,
@@ -391,16 +508,17 @@ export function DailyCard({
   metrics,
   emptyNote,
 }: DailyCardProps) {
-  // Up to 4 fixtures use the comfortable layout; 5 switches to compact. A 6-row
-  // PREVIEW day also carries the taller scoreline strips, so it drops to the
-  // ultra-compact tier to stay above the footer. Recap keeps its original
-  // compact tier at 5 to 6 rows so its output never changes.
-  const s =
-    variant === "preview" && rows.length >= 6
-      ? ULTRA
-      : rows.length >= 5
-        ? COMPACT
-        : COMFORTABLE;
+  const s = pickTier(variant, rows.length);
+  // Rows grow to fill the canvas when their share comfortably exceeds the
+  // content. Recap rows are short (a one-line note), so they always fit and
+  // always grow. Preview rows carry the taller top-3 strip, so on busy days
+  // (5 to 6) they keep natural content height to never collide (see MatchRow).
+  // A lone fixture (a late-stage day such as a final) would grow into one tall
+  // card with a content island, so instead it stays a dense hero card and the
+  // rows column centres it.
+  const n = rows.length;
+  const grow = n >= 2 && (variant === "recap" || n <= 4);
+  const rowsJustify = n === 1 ? "center" : "flex-start";
   return (
     <div
       style={{
@@ -412,57 +530,67 @@ export function DailyCard({
         fontFamily: "'JetBrains Mono'",
       }}
     >
-      {/* Three-colour accent bar (home / draw / away). */}
-      <div style={{ display: "flex", flexDirection: "row", height: 16 }}>
-        <div style={{ display: "flex", flex: 1, backgroundColor: DAILY_C.home }} />
-        <div style={{ display: "flex", flex: 1, backgroundColor: DAILY_C.draw }} />
-        <div style={{ display: "flex", flex: 1, backgroundColor: DAILY_C.away }} />
-      </div>
+      {/* Top gradient band: one smooth sweep, gold into sunset into night. */}
+      <div style={{ display: "flex", height: 14, backgroundImage: TOP_GRADIENT }} />
 
       {/* Header */}
-      <div style={{ display: "flex", flexDirection: "column", padding: "48px 64px 0 64px" }}>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono'",
-            fontSize: 23,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: DAILY_C.quiet,
-          }}
-        >
-          45ANALYTICS.COM · MUNDIAL 2026
-        </span>
-        <span
-          style={{
-            fontFamily: "'Source Serif 4'",
-            fontSize: 78,
-            lineHeight: 1,
-            color: DAILY_C.ink,
-            marginTop: 14,
-          }}
-        >
-          {`Día ${dayNumber}`}
-        </span>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono'",
-            fontSize: 22,
-            color: DAILY_C.soft,
-            marginTop: 12,
-          }}
-        >
-          {`${dateLabel} · ${VARIANT_LABEL[variant]}`}
-        </span>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          padding: "44px 64px 0 64px",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono'",
+              fontSize: 23,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: DAILY_C.quiet,
+            }}
+          >
+            45ANALYTICS.COM · MUNDIAL 2026
+          </span>
+          <span
+            style={{
+              fontFamily: "'Source Serif 4'",
+              fontSize: 80,
+              lineHeight: 1,
+              color: DAILY_C.gold,
+              marginTop: 14,
+            }}
+          >
+            {`Día ${dayNumber}`}
+          </span>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono'",
+              fontSize: 22,
+              color: DAILY_C.soft,
+              marginTop: 12,
+            }}
+          >
+            {`${dateLabel} · ${VARIANT_LABEL[variant]}`}
+          </span>
+        </div>
+        <HeaderMotif />
       </div>
 
-      {/* Match rows */}
+      {/* Match rows. Each row flexes to share the available height, so light
+          days fill the canvas and heavy days never overflow. */}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           flex: 1,
+          minHeight: 0,
+          justifyContent: rowsJustify,
           gap: s.rowGap,
-          padding: "32px 64px 0 64px",
+          padding: "30px 64px 0 64px",
         }}
       >
         {emptyNote ? (
@@ -470,7 +598,7 @@ export function DailyCard({
             {emptyNote}
           </span>
         ) : (
-          rows.map((row, i) => <MatchRow key={i} row={row} s={s} />)
+          rows.map((row, i) => <MatchRow key={i} row={row} s={s} grow={grow} />)
         )}
       </div>
 
@@ -480,20 +608,20 @@ export function DailyCard({
           display: "flex",
           flexDirection: "column",
           gap: 10,
-          padding: "24px 64px 44px 64px",
-          marginTop: 24,
+          padding: "22px 64px 44px 64px",
+          marginTop: 22,
           borderTop: `1px solid ${DAILY_C.border}`,
         }}
       >
         {variant === "recap" && metrics ? (
           <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 19, color: DAILY_C.ink }}>
-            {`Calibración del campeón · Brier ${metrics.brier} · RPS ${metrics.rps} · n ${metrics.n}`}
+            {`Récord público del campeón · RPS ${metrics.rps} · Brier ${metrics.brier} · ${metrics.n} partidos`}
           </span>
         ) : null}
         <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 15, color: DAILY_C.quiet }}>
-          Probabilidades del modelo, calibradas contra resultados reales. La columna de mercado está pendiente.
+          Probabilidades del modelo · mercado pendiente
         </span>
-        <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 17, color: DAILY_C.home }}>
+        <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 17, color: DAILY_C.gold }}>
           probabilidad, no predicción · 45analytics.com
         </span>
       </div>

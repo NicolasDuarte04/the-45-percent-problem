@@ -3,6 +3,7 @@ import {
   COUNTRY_NAMES_ES,
   TOURNAMENT_START,
   dayNumber,
+  favorite,
   formatSpanishDate,
   matchesForCard,
   previewNote,
@@ -223,6 +224,29 @@ describe("previewScorelines", () => {
   it("is empty when the goal grid is absent (unpriced fixture)", () => {
     expect(previewScorelines([])).toEqual([]);
     expect(previewScorelines(undefined)).toEqual([]);
+  });
+});
+
+describe("favorite", () => {
+  it("rings the home side when it has the higher win probability", () => {
+    const fav = favorite({ H: 0.6, D: 0.25, A: 0.15 }, "MEX", "RSA");
+    expect(fav).toEqual({ side: "home", code: "MEX", p: 0.6, pct: "60%" });
+  });
+  it("rings the away side when it has the higher win probability", () => {
+    const fav = favorite({ H: 0.2, D: 0.3, A: 0.5 }, "MEX", "BRA");
+    expect(fav).toEqual({ side: "away", code: "BRA", p: 0.5, pct: "50%" });
+  });
+  it("rings the higher win side even when the draw is the single highest outcome", () => {
+    // Draw is the modal 1X2 outcome, but a draw can never wear the gold ring;
+    // home edges away on the win probabilities, so home is the favorite.
+    const fav = favorite({ H: 0.34, D: 0.4, A: 0.26 }, "ENG", "CRO");
+    expect(fav.side).toBe("home");
+    expect(fav.code).toBe("ENG");
+  });
+  it("resolves a win-probability tie to home", () => {
+    const fav = favorite({ H: 0.4, D: 0.2, A: 0.4 }, "ESP", "URU");
+    expect(fav.side).toBe("home");
+    expect(fav.code).toBe("ESP");
   });
 });
 

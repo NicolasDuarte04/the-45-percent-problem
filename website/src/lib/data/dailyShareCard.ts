@@ -262,3 +262,33 @@ export function previewNote(m: MatchDetail): string {
 
   return `${head}${modalPart}`;
 }
+
+/**
+ * The favored side of a fixture for the share card's gold ring and chip.
+ *
+ * The favorite is the side with the higher win probability: home when
+ * `p.H >= p.A`, otherwise away. The draw is deliberately not eligible to be
+ * the favorite even when it is the single most likely 1X2 outcome; per the
+ * card spec we still ring the higher of home or away (a draw cannot wear the
+ * gold ring). Ties on the two win probabilities resolve to home.
+ */
+export interface Favorite {
+  side: "home" | "away";
+  /** FIFA 3-letter code of the favored side, e.g. "MEX". */
+  code: string;
+  /** Win probability of the favored side in [0,1]. */
+  p: number;
+  /** Whole-percent string of that win probability, e.g. "73%". */
+  pct: string;
+}
+
+export function favorite(
+  p: { H: number; D: number; A: number },
+  homeCode: string,
+  awayCode: string,
+): Favorite {
+  if (p.A > p.H) {
+    return { side: "away", code: awayCode, p: p.A, pct: pct(p.A) };
+  }
+  return { side: "home", code: homeCode, p: p.H, pct: pct(p.H) };
+}

@@ -142,6 +142,8 @@ export async function GET(req: NextRequest): Promise<Response> {
         return {
           homeName: spanishName(m.home.fifa_code, m.home.display_name),
           awayName: spanishName(m.away.fifa_code, m.away.display_name),
+          homeCode: m.home.fifa_code.toUpperCase(),
+          awayCode: m.away.fifa_code.toUpperCase(),
           homeFlag,
           awayFlag,
           p: m.p_model_1x2,
