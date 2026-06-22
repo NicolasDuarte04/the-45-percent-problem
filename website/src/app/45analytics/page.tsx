@@ -21,7 +21,9 @@ export default function ParentHome() {
   // Live read, never a hardcoded demo constant: the Pulso here is the real
   // index, framed by how many of its five signals are actually live so the
   // parent page never shows a bare number as if it were the full composite.
-  const { pulso } = getVotoData();
+  // Session 20: the same eventClosed flag flips the El Voto card off its live
+  // launch-countdown framing and onto a closed/result state once voting is over.
+  const { pulso, eventClosed } = getVotoData();
 
   // cp-14: the Academico Brier stat is the computed champion metric over the
   // settled tournament, never a hardcoded literal. The sample size is shown
@@ -107,17 +109,23 @@ export default function ParentHome() {
           <ProductSwitcherCard
             n="2"
             label="Cívico"
-            status="Nuevo · lanza 21 jun"
+            status={eventClosed ? "Votación cerrada · 21 jun" : "Nuevo · lanza 21 jun"}
             titleLead="El Voto del"
             titleBold="21 de Junio"
-            desc="La segunda vuelta presidencial, calculada cada mañana. Cuánto vale tu voto, dónde, y por qué."
+            desc={
+              eventClosed
+                ? "La segunda vuelta presidencial, calculada cada mañana hasta el cierre. Aquí está la cifra final del modelo y, cuando se certifique, el resultado."
+                : "La segunda vuelta presidencial, calculada cada mañana. Cuánto vale tu voto, dónde, y por qué."
+            }
             stats={[
               { k: `Pulso · ${pulso.inputsLive}/${pulso.inputsTotal}`, v: String(pulso.index) },
-              { k: "Faltan", v: `${days} días` },
+              eventClosed
+                ? { k: "Votación", v: "Cerrada" }
+                : { k: "Faltan", v: `${days} días` },
               { k: "Método", v: "Abierto" },
             ]}
-            cta="Entrar"
-            href="/voto21junio"
+            cta={eventClosed ? "Ver el resultado" : "Entrar"}
+            href={eventClosed ? "/voto21junio/resultado" : "/voto21junio"}
             motifSeed={9}
             motifLive={0.26}
           />

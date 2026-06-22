@@ -23,7 +23,7 @@ const FRESH_MS = 15_000;
 const COUNT = 5;
 
 export function PulsoTicker() {
-  const { model, pulso, encuestasCount } = useVotoData();
+  const { model, pulso, encuestasCount, eventClosed } = useVotoData();
   const { pCepeda: pcOver, pulso: plOver } = useVotoTweaks();
   const pC = pcOver ?? model.pCepeda;
   const pE = pcOver != null ? Math.round((100 - pcOver) * 10) / 10 : model.pEspriella;
@@ -43,9 +43,11 @@ export function PulsoTicker() {
     return () => clearInterval(t);
   }, []);
 
-  // "Fresh data" pulse — steady cadence, skipped under reduced motion.
+  // "Fresh data" pulse — steady cadence, skipped under reduced motion. Once
+  // the vote has closed the Pulso is frozen, so there is no fresh data to
+  // signal: the pulse never fires and the stamp never reads "ahora".
   useEffect(() => {
-    if (reduce) return;
+    if (reduce || eventClosed) return;
     const t = setInterval(() => {
       setFresh(true);
       const off = setTimeout(() => setFresh(false), 4000);
@@ -72,10 +74,15 @@ export function PulsoTicker() {
       "Encuestas integradas",
       `${encuestasCount} encuestas públicas ponderadas por casa encuestadora, tamaño y antigüedad.`,
     ],
-    update: [
-      "Última actualización",
-      "El Pulso se recalcula con cada nuevo registro. El destello indica que acaban de llegar datos frescos.",
-    ],
+    update: eventClosed
+      ? [
+          "Estado",
+          "La votación del 21 de junio terminó. El Pulso se congeló antes del cierre y ya no se actualiza: las cifras que ves son las últimas que se registraron.",
+        ]
+      : [
+          "Última actualización",
+          "El Pulso se recalcula con cada nuevo registro. El destello indica que acaban de llegar datos frescos.",
+        ],
   };
 
   const items: ReadonlyArray<{ key: TickerKey; lbl: string; val: string; delta?: string; dCls?: string }> = [
@@ -93,7 +100,11 @@ export function PulsoTicker() {
     { key: "cepeda", lbl: "Cepeda", val: `${pC.toFixed(1)}%` },
     { key: "espriella", lbl: "Espriella", val: `${pE.toFixed(1)}%` },
     { key: "encuestas", lbl: "Encuestas", val: String(encuestasCount) },
-    { key: "update", lbl: "Actualizado", val: fresh ? "ahora" : "hoy" },
+    {
+      key: "update",
+      lbl: eventClosed ? "Estado" : "Actualizado",
+      val: eventClosed ? "cerrado" : fresh ? "ahora" : "hoy",
+    },
   ];
 
   const select = useCallback((key: TickerKey) => {
@@ -115,14 +126,18 @@ export function PulsoTicker() {
     cepeda: `${pC.toFixed(1)}%`,
     espriella: `${pE.toFixed(1)}%`,
     encuestas: String(encuestasCount),
-    update: "hoy",
+    update: eventClosed ? "cerrado" : "hoy",
   };
 
   return (
     <>
       <div
-        className="ticker ticker-live"
-        aria-label="Pulso Patrio · índice de movilización en vivo"
+        className={`ticker${eventClosed ? "" : " ticker-live"}`}
+        aria-label={
+          eventClosed
+            ? "Pulso Patrio · índice de movilización, congelado tras el cierre"
+            : "Pulso Patrio · índice de movilización en vivo"
+        }
       >
         <div className="ticker-brand">
           <span className="ticker-pulse-dot" />

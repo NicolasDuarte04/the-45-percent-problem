@@ -9,6 +9,7 @@
  */
 
 import { daysUntil } from "./_lib/voto-runtime";
+import { getVotoData } from "./_lib/snapshot-source";
 import { TopBar } from "./_components/TopBar";
 import { VotoFooter } from "./_components/VotoFooter";
 import { HeroCountdown } from "./_components/HeroCountdown";
@@ -22,13 +23,16 @@ import { BriefSignup } from "./_components/BriefSignup";
 
 export default function VotoHome() {
   const days = daysUntil();
+  // Session 20: the same eventClosed flag that flips the forecast card also
+  // flips the §1 hero from a live countdown to the post-election closed state.
+  const { eventClosed } = getVotoData();
 
   return (
     <>
       <TopBar variant="home" />
       <main>
         {/* §1 · the hook lands cold */}
-        <HeroCountdown days={days}>
+        <HeroCountdown days={days} eventClosed={eventClosed}>
           <ProbabilidadCard />
         </HeroCountdown>
 
@@ -84,7 +88,11 @@ export default function VotoHome() {
             n="5"
             label="El índice"
             title="Pulso Patrio"
-            sub="Un índice de movilización 0-100 compuesto por cinco señales, recalculado cada minuto."
+            sub={
+              eventClosed
+                ? "Un índice de movilización 0-100 compuesto por cinco señales. Se congeló con el cierre de la votación; estas son las últimas lecturas."
+                : "Un índice de movilización 0-100 compuesto por cinco señales, recalculado cada minuto."
+            }
           />
           <PulsoPanel />
         </section>
