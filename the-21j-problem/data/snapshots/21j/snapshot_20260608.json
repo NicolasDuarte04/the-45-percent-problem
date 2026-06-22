@@ -68,9 +68,10 @@
   "code_sha": "6a1d20ba1951df08bce59ffccf3204da8dd48320",
   "data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad",
   "publication_notice": {
-    "status": "electoral_silence",
-    "message": "En cumplimiento de las normas electorales colombianas, durante los días previos a la segunda vuelta no se publican cifras nuevas basadas en encuestas. Se muestra la última cifra del modelo legalmente publicable, congelada hasta después de la jornada electoral.",
+    "status": "event_closed",
+    "message": "La jornada electoral del 21 de junio terminó. Se muestra la última cifra del modelo antes de la votación, archivada como cifra final pre-electoral. El resultado oficial y el análisis posterior se publican aparte, a partir de datos certificados por la Registraduría.",
     "silence_boundary": "2026-06-14",
+    "poll_close": "2026-06-21T16:00:00-05:00",
     "frozen_snapshot_date": "2026-06-08"
   }
 }
