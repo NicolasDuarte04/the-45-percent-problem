@@ -2,45 +2,92 @@
 simulation/load_settled.py
 ==========================
 cp-10: settled-result conditioning for the Monte Carlo group stage.
+cp-16c: translate raw match_outcomes ids (cron FD{id} and admin M{NN}) to
+canonical M{NN} keys by TEAM IDENTITY, so cron rows actually condition.
 
 Loads the website's `match_outcomes` rows that the MC should treat as
 realized (rather than sampled) for the current batch. Returns a dict
 keyed by canonical match_id (M01..M72 for the group stage) mapping to
 a fully-populated `MatchResult`.
 
-The team-name source-of-truth is the **fixtures parquet**, not the DB.
-`match_outcomes.home_team` / `away_team` store FIFA 3-letter codes
-(e.g. "MEX"), while `MatchResult.home` / `away` and the strength
-provider key off the project-canonical full names ("Mexico"). This
-loader looks up home/away names from the fixtures parquet by match_id
-and uses the DB row only for `home_goals` / `away_goals` / `stage`.
+## cp-16c: the id-translation fix
 
-cp-10 conditions ONLY on group-stage matches (`stage == "group"`).
-Knockout rows are present in the DB once knockout matches settle but
-are filtered out here. A separate post-cp-10 checkpoint extends this
-loader to knockouts.
+Before cp-16c this loader keyed the returned dict on the DB row's raw
+`match_id`. The website stores TWO kinds of settled rows:
+  - cron rows  : `match_id = "FD{source_id}"` (Football-Data.org id)
+  - admin rows : `match_id = "M{NN}"`         (canonical)
+The Monte Carlo group loop looks up `settled_results[match_id]` with the
+canonical M{NN} from the fixtures parquet, so admin rows conditioned but
+cron rows never matched and were silently dropped - the rebatch ran
+unconditioned. cp-16c reuses the cp-14 resolver
+(`evaluation.forecast_mapping.build_model_map` + `map_settled`), which
+translates both id spaces to canonical M{NN} by team identity with
+bijection guards, and rebuilds the dict on the canonical key. The MC is
+unchanged: it still keys by canonical M{NN}.
 
-Source-precedence order (mirrors cp-09's `_count_settled_matches`):
-  1. Parquet export at MATCH_OUTCOMES_PARQUET (override via the
-     `MATCH_OUTCOMES_PARQUET` env var). Preferred because the export
-     is reproducible offline; the nightly regen does not need DB access.
-  2. Live Postgres via DIRECT_URL / DATABASE_URL / POSTGRES_URL.
-     DIRECT_URL is preferred for batch scripts to bypass any pgbouncer
-     pooler. Used only if the parquet export is absent.
-  3. Empty dict. Correct pre-tournament; logged so an operator can
-     see why settled_results stayed empty.
+`build_model_map` defaults its `batch_parquet` to the FROZEN champion
+batch (cp-16a / #123), so this loader gets the frozen group pairings for
+free; pairings are identical across batches, so this affects only the
+slot LABEL, never the bijection.
+
+## Team names
+
+`MatchResult.home` / `.away` must be the project-canonical full names the
+MC's strength provider keys off ("Mexico", not "MEX"). Those names come
+from the loader's own fixtures-parquet name map (keyed by canonical
+M{NN}), NOT from the resolver's published-JSON display names, so the
+conditioned MatchResult is name-consistent with the sampled fixtures.
+
+## Same-score collapse / score-conflict halt (caller-side policy)
+
+For the conditioning caller a same-score admin+cron duplicate on one
+fixture is collapsed (condition once) by a caller-side drop_duplicates on
+(home_team, away_team, home_goals, away_goals) before the resolver runs.
+A genuine score-conflict (same fixture, different scorelines) is NOT
+collapsed; it survives into `map_settled`, whose strict semantics raise
+MappingError. This keeps the shared resolver's strict semantics (the
+graded scoring path depends on them) untouched.
+
+## Degrade-not-break + the settled-vs-conditioned guard
+
+This loader feeds ONLY `batch_runner.run_batch` -> the active re-sim ->
+the live conditional bracket. The frozen graded bundle is produced by a
+separate path (`reconstruct_forecasts` reading the FROZEN batch) and
+never calls this loader. So a conditioning failure here degrades the LIVE
+view only and can never break the frozen publish:
+
+  - On any structural failure (resolver MappingError, or a settled group
+    match that fails to map to a canonical name) the loader logs a loud
+    ERROR, conditions NOTHING, and returns an empty dict with a
+    `;conditioning_error=<reason>` tag appended to the source label. The
+    active re-sim then runs unconditioned and `emit_live_conditional_bracket`
+    stamps `conditioned=false` with the reason; the frozen bundle is
+    untouched.
+  - The runtime settled-vs-conditioned guard asserts that the conditioned
+    count equals the mappable in-scope settled-group count (one row per
+    distinct settled group fixture after the same-score collapse). A
+    mismatch is the silent-drop bug recurring; it fails loud (ERROR log +
+    degrade) here, and a CI tripwire test asserts the same equality so the
+    regression also fails the build.
+
+cp-10 conditions ONLY group-stage matches; the resolver is called with
+`stage_scope="group"` so knockout rows are returned as "deferred" and the
+MC keeps sampling them. A separate post-cp-10 checkpoint extends this to
+knockouts.
+
+Source-precedence order is inherited from `evaluation.settled_source`:
+parquet snapshot at MATCH_OUTCOMES_PARQUET (override via
+`MATCH_OUTCOMES_PARQUET`) -> live Postgres -> none.
 
 Returns `(settled_results, source_label)`. The source label is written
-into batch / snapshot provenance so a reviewer can trace which path
-was active.
+into batch / snapshot provenance so a reviewer can trace which path was
+active and whether conditioning degraded.
 """
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -58,36 +105,24 @@ MATCH_OUTCOMES_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.p
 
 # `match_outcomes.stage` enum value for group matches. The website's
 # Postgres schema (website/src/lib/db/schema.ts) uses the short lowercase
-# form; the fixtures parquet uses the human-readable "Group Stage". This
-# constant is the DB-side spelling.
+# form; the resolver scopes on the same spelling.
 _DB_STAGE_GROUP = "group"
 
-
-def _resolve_pg_url() -> Optional[str]:
-    """Mirror of scripts/regenerate_snapshot_from_batch.py::_resolve_pg_url.
-
-    Preference: DIRECT_URL (non-pooled, batch-safe) → DATABASE_URL
-    (pooled, app traffic) → POSTGRES_URL (legacy alias). Kept in sync
-    by hand; the two helpers are small enough that a shared module
-    would be more friction than benefit.
-    """
-    return (
-        os.environ.get("DIRECT_URL")
-        or os.environ.get("DATABASE_URL")
-        or os.environ.get("POSTGRES_URL")
-    )
+# Caller-side same-score collapse key. Two settled rows that share team
+# pair AND scoreline are the same realized result reported twice (admin +
+# cron); collapse to one. Differing scorelines on one pair are NOT
+# collapsed and reach the resolver's score-conflict halt.
+_COLLAPSE_KEY = ["home_team", "away_team", "home_goals", "away_goals"]
 
 
 def _load_fixture_name_map() -> dict[str, tuple[str, str]]:
-    """Return `dict[match_id → (team_home, team_away)]` for every fixture.
+    """Return `dict[match_id -> (team_home, team_away)]` for every fixture.
 
-    Reads the canonical fixtures parquet and indexes by match_id. Used
-    by the settled-results loader to recover the full team names the MC
-    expects, given a DB row that only carries FIFA codes.
-
-    Covers all 104 fixtures (group + knockout) so the same map can be
-    used by the future knockout-conditioning checkpoint without code
-    change here.
+    Reads the canonical fixtures parquet and indexes by canonical M{NN}.
+    Used to recover the full team names the MC's strength provider expects;
+    the MC's group loop reads the same parquet, so these names match the
+    sampled-fixture names exactly. Covers all 104 fixtures so the same map
+    serves the future knockout-conditioning checkpoint unchanged.
     """
     if not FIXTURES_PARQUET.exists():
         raise FileNotFoundError(
@@ -103,124 +138,156 @@ def _load_fixture_name_map() -> dict[str, tuple[str, str]]:
     }
 
 
-def _build_results_from_rows(
-    rows: pd.DataFrame,
-    name_map: dict[str, tuple[str, str]],
-) -> dict[str, MatchResult]:
-    """Translate a DataFrame of settled-outcome rows into a MatchResult dict.
+def _reason_tag(message: str) -> str:
+    """Classify a resolver MappingError message into a short provenance token.
 
-    `rows` must carry columns `match_id`, `home_goals`, `away_goals`,
-    `stage`. Rows whose match_id is missing from the fixtures parquet
-    are skipped with a warning rather than raising - a stray DB row
-    must not crash the nightly snapshot.
+    The token is appended to the source label and surfaced verbatim in the
+    live object's `conditioned_reason`. Kept short and space-free so it
+    reads cleanly in provenance strings.
     """
-    out: dict[str, MatchResult] = {}
-    for row in rows.itertuples(index=False):
-        match_id = str(row.match_id)
-        names = name_map.get(match_id)
-        if names is None:
-            log.warning(
-                "settled-outcome row references unknown match_id; skipping",
-                match_id=match_id,
-            )
-            continue
-        home_name, away_name = names
-        out[match_id] = MatchResult(
-            home=home_name,
-            away=away_name,
-            home_goals=int(row.home_goals),
-            away_goals=int(row.away_goals),
-        )
-    return out
+    m = message.lower()
+    if "score-conflict" in m:
+        return "score_conflict"
+    if "double-claim" in m:
+        return "double_claim"
+    if "map to no group fixture" in m or "identity or orientation" in m:
+        return "unmapped_identity"
+    if "canonical id that disagrees" in m:
+        return "id_team_mismatch"
+    if "predates its fixture kickoff" in m:
+        return "kickoff_predate"
+    if "bijection" in m or "published group matches" in m or "batch group slots" in m:
+        return "model_map_error"
+    return "mapping_error"
 
 
-def _load_via_parquet(path: Path) -> Optional[pd.DataFrame]:
-    """Read settled-outcome rows from a parquet snapshot of `match_outcomes`.
+def _collapse_same_score_duplicates(outcomes: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Caller-side same-score collapse (decided policy).
 
-    Returns None if the file does not exist (the export hasn't run);
-    returns an empty DataFrame if the file exists but contains no rows
-    (the export ran but nothing has settled yet); raises on a malformed
-    file so a half-written export does not silently masquerade as empty.
+    Drops rows that duplicate an existing (home_team, away_team, home_goals,
+    away_goals) tuple, keeping the first after a stable sort by match_id so
+    the choice is deterministic. The kept row's source id is moot - the
+    scoreline is identical, so which id survives never changes the
+    conditioned result. Genuine score-conflicts (same pair, different score)
+    are left intact and reach the resolver's MappingError.
 
-    Filters in-loader to `stage == "group"` per cp-10's scope cut.
+    Returns `(collapsed_frame, n_collapsed)`.
     """
-    if not path.exists():
-        return None
-    df = pd.read_parquet(
-        path, columns=["match_id", "home_goals", "away_goals", "stage"]
-    )
-    return df[df["stage"] == _DB_STAGE_GROUP].copy()
-
-
-def _load_via_postgres() -> Optional[pd.DataFrame]:
-    """Read settled-outcome rows from the live Postgres `match_outcomes` table.
-
-    Returns None on any failure (driver missing, env var unset, query
-    error) - same best-effort contract as cp-09's
-    `_count_settled_via_postgres`. The freshness-monitor surfaces
-    these failures to operations; this loader silently falls through.
-    """
-    url = _resolve_pg_url()
-    if not url:
-        return None
-    conn = None
-    try:
-        try:
-            import psycopg  # type: ignore[import-untyped]
-            conn = psycopg.connect(url)
-        except ImportError:
-            import psycopg2  # type: ignore[import-untyped]
-            conn = psycopg2.connect(url)
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT match_id, home_goals, away_goals, stage "
-                "FROM match_outcomes WHERE stage = %s",
-                (_DB_STAGE_GROUP,),
-            )
-            rows = cur.fetchall()
-        return pd.DataFrame(
-            rows, columns=["match_id", "home_goals", "away_goals", "stage"]
-        )
-    except Exception as exc:  # broad on purpose; see docstring
-        log.warning("postgres settled-load query failed", error=str(exc))
-        return None
-    finally:
-        if conn is not None:
-            try:
-                conn.close()
-            except Exception:
-                pass
+    if outcomes.empty:
+        return outcomes, 0
+    ordered = outcomes.sort_values("match_id", kind="stable")
+    collapsed = ordered.drop_duplicates(subset=_COLLAPSE_KEY, keep="first")
+    n_collapsed = int(len(ordered) - len(collapsed))
+    return collapsed, n_collapsed
 
 
 def load_settled_results() -> tuple[dict[str, MatchResult], str]:
     """Return `(settled_results, source_label)` for the MC group-stage loop.
 
-    `settled_results` is keyed by canonical match_id (M01..M72) and
-    maps to a `MatchResult(home, away, home_goals, away_goals)` with
-    team names pulled from the fixtures parquet (not the DB row's
-    FIFA codes).
+    `settled_results` is keyed by canonical match_id (M01..M72) and maps to
+    a `MatchResult(home, away, home_goals, away_goals)` with team names
+    pulled from the fixtures parquet. cp-16c translates cron FD{id} and
+    admin M{NN} rows to canonical M{NN} by team identity via the cp-14
+    resolver, so both id spaces condition.
 
-    The source label mirrors cp-09's convention so the active_batch
-    provenance is consistent:
-      - "parquet:<rel-or-abs-path>" when the parquet export was used
-      - "postgres:match_outcomes"   when the live DB was queried
-      - "default:pre_tournament"    when neither source returned rows
+    Source label vocabulary (the success labels mirror cp-09 / settled_source
+    so active_batch provenance stays consistent):
+      - "parquet:<path>"                         parquet export used
+      - "postgres:match_outcomes"                live DB queried
+      - "default:pre_tournament"                 no source / no settled rows
+      - "<source>;conditioning_error=<reason>"   structural failure: nothing
+                                                 conditioned, live view degrades,
+                                                 frozen bundle unaffected
     """
-    override = os.environ.get("MATCH_OUTCOMES_PARQUET")
-    parquet_path = Path(override) if override else MATCH_OUTCOMES_PARQUET
+    # Imported lazily so the no-source fast path and non-conditioning callers
+    # don't pay the resolver's pandas/import cost at module load.
+    from evaluation.forecast_mapping import MappingError, build_model_map, map_settled
+    from evaluation.settled_source import load_settled_outcomes
+
     name_map = _load_fixture_name_map()
 
-    df_parquet = _load_via_parquet(parquet_path)
-    if df_parquet is not None:
-        rel = (
-            parquet_path.relative_to(PROJECT_ROOT)
-            if parquet_path.is_relative_to(PROJECT_ROOT)
-            else parquet_path
+    outcomes, source = load_settled_outcomes()
+    if outcomes is None or outcomes.empty:
+        # No reachable source, or the export ran with nothing settled yet.
+        # Correct pre-tournament; condition nothing.
+        return {}, "default:pre_tournament"
+
+    # In-scope (group) rows only; knockouts are deferred by the resolver and
+    # the MC keeps sampling them.
+    group_rows = outcomes[outcomes["stage"] == _DB_STAGE_GROUP].copy()
+    if group_rows.empty:
+        return {}, source
+
+    collapsed, n_collapsed = _collapse_same_score_duplicates(group_rows)
+    if n_collapsed:
+        log.info(
+            "cp-16c collapsed same-score duplicate settled rows (conditioned once)",
+            n_collapsed=n_collapsed,
+            collapse_key=_COLLAPSE_KEY,
         )
-        return _build_results_from_rows(df_parquet, name_map), f"parquet:{rel}"
 
-    df_pg = _load_via_postgres()
-    if df_pg is not None:
-        return _build_results_from_rows(df_pg, name_map), "postgres:match_outcomes"
+    # Independent count of mappable settled group fixtures: one per distinct
+    # (pair, score) after the same-score collapse. The conditioned count must
+    # equal this; a shortfall is the silent-drop bug recurring.
+    expected_count = int(len(collapsed))
 
-    return {}, "default:pre_tournament"
+    try:
+        model_map = build_model_map()  # batch_parquet defaults to FROZEN_MATCH_RUNS_M2
+        mapped = map_settled(model_map, collapsed, stage_scope=_DB_STAGE_GROUP)
+    except MappingError as exc:
+        reason = _reason_tag(str(exc))
+        log.error(
+            "cp-16c conditioning STRUCTURAL FAILURE; conditioning nothing "
+            "(live view degrades, frozen graded bundle unaffected)",
+            reason=reason,
+            error=str(exc),
+        )
+        return {}, f"{source};conditioning_error={reason}"
+
+    scored = mapped["scored"]
+
+    results: dict[str, MatchResult] = {}
+    missing_names: list[str] = []
+    for row in scored.itertuples(index=False):
+        match_id = str(row.match_id)  # canonical M{NN} from the resolver
+        names = name_map.get(match_id)
+        if names is None:
+            # A mapped canonical id with no fixtures-parquet name is the exact
+            # silent-drop class this checkpoint exists to kill: surface it.
+            missing_names.append(match_id)
+            continue
+        home_name, away_name = names
+        results[match_id] = MatchResult(
+            home=home_name,
+            away=away_name,
+            home_goals=int(row.home_goals),
+            away_goals=int(row.away_goals),
+        )
+
+    # ── Settled-vs-conditioned guard (runtime layer) ──────────────────────────
+    # Fail loud (ERROR + degrade) if the conditioned count does not equal the
+    # mappable settled-group count. The resolver already raises on unmappable
+    # rows, so this catches a regression that re-introduces a silent drop
+    # (e.g. a name-map miss above). Degrade rather than raise so the frozen
+    # bundle still publishes; the CI tripwire test fails the build on the same
+    # mismatch.
+    conditioned_count = len(results)
+    if missing_names or conditioned_count != expected_count:
+        log.error(
+            "cp-16c settled-vs-conditioned GUARD tripped: conditioned count does "
+            "not match mappable settled-group count (silent-drop guard); "
+            "conditioning nothing (frozen bundle unaffected)",
+            conditioned_count=conditioned_count,
+            expected_count=expected_count,
+            missing_names=missing_names,
+        )
+        return {}, f"{source};conditioning_error=settled_vs_conditioned_mismatch"
+
+    log.info(
+        "cp-16c conditioning loaded",
+        conditioned_count=conditioned_count,
+        deferred=len(mapped.get("deferred", [])),
+        collapsed=len(mapped.get("collapsed", [])) + n_collapsed,
+        source=source,
+    )
+    return results, source
