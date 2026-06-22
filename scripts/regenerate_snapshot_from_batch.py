@@ -666,6 +666,101 @@ def populate_bracket_slots(snapshot_id: str) -> dict:
     return build_bracket_doc({"snapshot_id": snapshot_id}, slots_by_round)
 
 
+def emit_live_conditional_bracket(
+    active: dict,
+    teams_roster: dict[str, dict],
+    prior_rank_change: dict[str, int],
+    new_snapshot_id: str,
+    new_generated_at: str,
+    model_variant: str,
+    out_dir: Path,
+) -> None:
+    """cp-16b: emit the live conditional bracket from the ACTIVE re-sim batch.
+
+    Writes two SEPARATE, explicitly UNGRADED files into ``out_dir``:
+    ``tournament_live.json`` (per-team progression marginals aggregated from the
+    active batch) and ``bracket_live.json`` (the structural slots, identical to
+    the frozen bracket), each stamped with a REQUIRED ``live_provenance`` block
+    so they can never be mistaken for the frozen pre-registered surfaces.
+
+    The active handle is ``active`` AFTER ``_maybe_rebatch_for_settled_delta``,
+    captured in ``main`` before the frozen override (``active_batch_id =
+    FROZEN_BATCH_ID``) shadows it. Today, conditioning is not yet wired, so the
+    active batch is an unconditioned re-simulation of the champion and the live
+    object equals the frozen forecast numerically (``conditioned=False``).
+
+    Reuses the batch-agnostic helpers ``aggregate_team_progression`` and
+    ``regenerate_tournament_json`` verbatim. No graded surface reads these files
+    (disjoint filenames + the loadLiveBracket null loader). See
+    osf/amendments/deviation_cp-16b_live_conditional_bracket.md.
+
+    Defensive: any failure (missing active parquet, aggregation error) is logged
+    and the live emission is SKIPPED. The caller has already finished the frozen
+    bundle in ``out_dir``; skipping here leaves the frozen publish untouched, and
+    the null loader renders the public page frozen-only.
+    """
+    try:
+        active_batch_id = active.get("active_batch_id")
+        active_batch_path = active.get("active_batch_path")
+        if not active_batch_id or not active_batch_path:
+            print(
+                "    [cp-16b] active_batch.json missing id/path; "
+                "live conditional bracket skipped"
+            )
+            return
+        live_team_runs = PROJECT_ROOT / active_batch_path / "team_runs_M2.parquet"
+        if not live_team_runs.exists():
+            print(
+                f"    [cp-16b] active team_runs absent ({live_team_runs}); "
+                "live conditional bracket skipped (frozen bundle unaffected)"
+            )
+            return
+
+        live_runs = pd.read_parquet(live_team_runs)
+        live_aggregated = aggregate_team_progression(live_runs)
+        live_n_runs = max(row["n_runs"] for row in live_aggregated.values())
+
+        live_provenance = {
+            # The active batch the live marginals were aggregated from. Distinct
+            # from FROZEN_BATCH_ID once the rebatch repoints; today they coincide.
+            "live_source_batch_id": active_batch_id,
+            # False until result-conditioning is wired (a later checkpoint). The
+            # active batch is an unconditioned re-simulation today.
+            "conditioned": False,
+            "generated_at_utc": new_generated_at,
+        }
+
+        live_tournament = regenerate_tournament_json(
+            teams_roster,
+            live_aggregated,
+            prior_rank_change,
+            new_snapshot_id,
+            new_generated_at,
+            live_n_runs,
+            model_variant,
+        )
+        live_tournament["live_provenance"] = live_provenance
+
+        live_bracket = populate_bracket_slots(new_snapshot_id)
+        live_bracket["live_provenance"] = live_provenance
+
+        (out_dir / "tournament_live.json").write_text(
+            json.dumps(live_tournament, indent=2)
+        )
+        (out_dir / "bracket_live.json").write_text(
+            json.dumps(live_bracket, indent=2)
+        )
+        print(
+            f"    [cp-16b] live conditional bracket emitted from "
+            f"active_batch_id={active_batch_id} conditioned=False"
+        )
+    except Exception as exc:  # broad on purpose: live emission must never break
+        print(
+            f"    [cp-16b] live conditional bracket skipped (error: {exc}); "
+            "frozen bundle unaffected"
+        )
+
+
 def main() -> None:
     print("=" * 60)
     print("regenerate_snapshot_from_batch (lockdown 2026-05-11 Section 7)")
@@ -1064,6 +1159,21 @@ def main() -> None:
         (dst_teams / src_file.name).write_text(json.dumps(new_team, indent=2))
         rewritten += 1
     print(f"    teams/: rewrote progression block for {rewritten} of {len(list(src_teams.glob('*.json')))} files")
+
+    # ── cp-16b: emit the live conditional bracket from the ACTIVE batch ───
+    # Written into new_dir BEFORE the copytree below, so it rides snapshot
+    # retention into latest/ for free (history carries it too). `active` is the
+    # rebatch handle captured above, before the frozen override shadowed it.
+    # Defensive: skips-with-log on any failure, leaving the frozen bundle intact.
+    emit_live_conditional_bracket(
+        active,
+        teams_roster,
+        prior_rank_change,
+        new_snapshot_id,
+        new_generated_at,
+        champion_internal,
+        new_dir,
+    )
 
     # ── Replace LATEST_DIR with the new bundle ───────────────────────────
     print(f"[5] replacing latest/ with new bundle")

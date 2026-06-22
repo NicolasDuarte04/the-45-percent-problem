@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import {
   loadBracket,
+  loadLiveBracket,
   loadSnapshotMeta,
   loadTournament,
 } from "@/lib/data/loadSnapshot";
@@ -37,6 +38,17 @@ export default async function BracketPage() {
   const bracket = loadBracket(undefined);
   const tournament = mergeTournament(loadTournament(undefined), maps);
   const meta = loadSnapshotMeta(undefined);
+
+  // cp-16b: the live conditional bracket is an UNGRADED, off-by-default view.
+  // The PUBLISH GATE is this flag, read at build time (page is force-static):
+  // unset / anything but "1" -> no live surface is exposed (production-safe).
+  // The operator flips NEXT_PUBLIC_LIVE_BRACKET=1 in Vercel and redeploys only
+  // after filing osf/amendments/deviation_cp-16b_live_conditional_bracket.md.
+  // loadLiveBracket is a null loader, so a missing live object renders
+  // frozen-only with no error (fallback).
+  const liveEnabled = process.env.NEXT_PUBLIC_LIVE_BRACKET === "1";
+  const live = liveEnabled ? loadLiveBracket(undefined) : null;
+  const liveTournament = live ? mergeTournament(live.tournament, maps) : null;
 
   return (
     <div
@@ -110,6 +122,57 @@ export default async function BracketPage() {
           </div>
         </SnapshotAwareBracket>
       </Suspense>
+
+      {live && liveTournament ? (
+        <div
+          className="border-t"
+          style={{ borderColor: "var(--border-default)" }}
+        >
+          <div
+            className="shrink-0 px-4 md:px-6 pt-6 pb-4 border-b"
+            style={{ borderColor: "var(--border-default)" }}
+          >
+            <div className="max-w-[1152px] mx-auto px-0 md:px-12">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h2
+                  className="text-[18px] font-medium tracking-tight"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Live conditional view
+                </h2>
+                <span
+                  className="text-[11px] font-medium px-1.5 py-0.5 rounded"
+                  style={{
+                    color: "var(--text-secondary)",
+                    backgroundColor: "var(--bg-subtle, rgba(127,127,127,0.12))",
+                  }}
+                >
+                  NOT graded
+                </span>
+              </div>
+              <p
+                className="text-[12px] mt-1 max-w-[68ch]"
+                style={{ color: "var(--text-tertiary)" }}
+              >
+                Current-state conditional view, NOT graded; conditioning not yet
+                active, currently matches the frozen forecast. Only the frozen
+                pre-tournament forecast above is scored by the public ledger.
+                Sourced from active batch{" "}
+                <span className="mono">{live.provenance.live_source_batch_id}</span>
+                {" "}· conditioned{" "}
+                <span className="mono">
+                  {String(live.provenance.conditioned)}
+                </span>
+                .
+              </p>
+            </div>
+          </div>
+          <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6">
+            <BracketBoard bracket={live.bracket} tournament={liveTournament} />
+          </div>
+        </div>
+      ) : null}
+
       <Suspense fallback={null}>
         <CanvasTour steps={BRACKET_STEPS} />
       </Suspense>

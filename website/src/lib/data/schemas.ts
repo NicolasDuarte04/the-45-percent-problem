@@ -332,6 +332,38 @@ export const BracketSnapshotSchema = z.object({
 });
 export type BracketSnapshot = z.infer<typeof BracketSnapshotSchema>;
 
+// ── cp-16b live conditional bracket ───────────────────────────────────────────
+// A SEPARATE, explicitly ungraded surface fed by the ACTIVE re-sim batch (not
+// the frozen pre-registered batch). The required live-provenance block makes it
+// impossible to mistake a live file for a frozen one: frozen files have no
+// `live_provenance` key (so they fail LiveBracketSnapshotSchema), and the live
+// files carry one (so they would fail any frozen schema that forbids it). No
+// graded surface reads these files (see loadLiveBracket, a null loader) and
+// osf/amendments/deviation_cp-16b_live_conditional_bracket.md.
+
+export const LiveProvenanceSchema = z.object({
+  // Active-batch id the live marginals were aggregated from. Distinct from the
+  // frozen FROZEN_BATCH_ID whenever the nightly rebatch has repointed; today
+  // (conditioning not yet active) they coincide, so the live view matches the
+  // frozen forecast numerically.
+  live_source_batch_id: z.string(),
+  // True only once result-conditioning is wired (a later checkpoint). False
+  // today: the active batch is an unconditioned re-simulation of the champion.
+  conditioned: z.boolean(),
+  generated_at_utc: z.string(),
+});
+export type LiveProvenance = z.infer<typeof LiveProvenanceSchema>;
+
+export const LiveBracketSnapshotSchema = BracketSnapshotSchema.extend({
+  live_provenance: LiveProvenanceSchema,
+});
+export type LiveBracketSnapshot = z.infer<typeof LiveBracketSnapshotSchema>;
+
+export const LiveTournamentSnapshotSchema = TournamentSnapshotSchema.extend({
+  live_provenance: LiveProvenanceSchema,
+});
+export type LiveTournamentSnapshot = z.infer<typeof LiveTournamentSnapshotSchema>;
+
 // ── manifest.json ─────────────────────────────────────────────────────────────
 
 export const ManifestEntrySchema = z.object({

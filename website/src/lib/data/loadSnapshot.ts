@@ -16,6 +16,8 @@ import {
   FreshnessSchema,
   BracketSnapshotSchema,
   ManifestSchema,
+  LiveBracketSnapshotSchema,
+  LiveTournamentSnapshotSchema,
   type SnapshotMeta,
   type TournamentSnapshot,
   type DivergenceSnapshot,
@@ -26,6 +28,9 @@ import {
   type Freshness,
   type BracketSnapshot,
   type Manifest,
+  type LiveBracketSnapshot,
+  type LiveTournamentSnapshot,
+  type LiveProvenance,
 } from "./schemas";
 
 const DATA_ROOT = path.join(process.cwd(), "public", "data");
@@ -160,6 +165,41 @@ export function loadBracket(snapshotId?: string): BracketSnapshot {
   const dir = getSnapshotDir(snapshotId);
   const data = readJson(path.join(dir, "bracket.json"));
   return validate(BracketSnapshotSchema, data, "bracket.json");
+}
+
+/**
+ * cp-16b live conditional bracket (separate, explicitly UNGRADED surface).
+ *
+ * Reads the disjoint live files (`tournament_live.json` + `bracket_live.json`)
+ * emitted by the regen from the ACTIVE re-sim batch. This is a NULL loader: it
+ * returns null when either file is absent, so the bracket page falls back to
+ * frozen-only with no error (and so production stays frozen-only whenever the
+ * live emission was skipped). The live-provenance block must validate and the
+ * two files must agree on it, otherwise the build fails loudly.
+ *
+ * No graded surface calls this. loadLedger / loadEvaluationMetrics /
+ * loadTournament / loadBracket read fixed frozen filenames and never touch
+ * these files; that filename + loader separation is the wall.
+ */
+export function loadLiveBracket(snapshotId?: string):
+  | { bracket: LiveBracketSnapshot; tournament: LiveTournamentSnapshot; provenance: LiveProvenance }
+  | null {
+  const dir = getSnapshotDir(snapshotId);
+  const bracketPath = path.join(dir, "bracket_live.json");
+  const tournamentPath = path.join(dir, "tournament_live.json");
+  if (!fs.existsSync(bracketPath) || !fs.existsSync(tournamentPath)) return null;
+
+  const bracket = validate(
+    LiveBracketSnapshotSchema,
+    readJson(bracketPath),
+    "bracket_live.json",
+  );
+  const tournament = validate(
+    LiveTournamentSnapshotSchema,
+    readJson(tournamentPath),
+    "tournament_live.json",
+  );
+  return { bracket, tournament, provenance: tournament.live_provenance };
 }
 
 export function loadManifest(): Manifest {
