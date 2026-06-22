@@ -720,13 +720,35 @@ def emit_live_conditional_bracket(
         live_aggregated = aggregate_team_progression(live_runs)
         live_n_runs = max(row["n_runs"] for row in live_aggregated.values())
 
+        # cp-16c: derive the honest conditioning flag from the active batch's
+        # stamped provenance. settled_count_at_batch_time is the CONDITIONED
+        # count load_settled produced for this batch (len of the M{NN}-keyed
+        # dict); settled_source carries a ";conditioning_error=<reason>" tag when
+        # the loader degraded on a structural failure. The live object is marked
+        # conditioned only when the batch conditioned at least one match and the
+        # loader did not degrade.
+        settled_count = int(active.get("settled_count_at_batch_time", 0) or 0)
+        settled_source = str(active.get("settled_source", "") or "")
+        conditioning_error = None
+        if "conditioning_error=" in settled_source:
+            conditioning_error = settled_source.split("conditioning_error=", 1)[1]
+        conditioned = settled_count > 0 and conditioning_error is None
+        if conditioned:
+            conditioned_reason = None
+        elif conditioning_error is not None:
+            conditioned_reason = f"structural_failure:{conditioning_error}"
+        else:
+            conditioned_reason = "no_settled_group_matches"
+
         live_provenance = {
             # The active batch the live marginals were aggregated from. Distinct
             # from FROZEN_BATCH_ID once the rebatch repoints; today they coincide.
             "live_source_batch_id": active_batch_id,
-            # False until result-conditioning is wired (a later checkpoint). The
-            # active batch is an unconditioned re-simulation today.
-            "conditioned": False,
+            # cp-16c: True once result-conditioning fired on this batch.
+            "conditioned": conditioned,
+            "conditioned_count": settled_count,
+            "conditioned_reason": conditioned_reason,
+            "settled_source": settled_source,
             "generated_at_utc": new_generated_at,
         }
 
@@ -751,8 +773,10 @@ def emit_live_conditional_bracket(
             json.dumps(live_bracket, indent=2)
         )
         print(
-            f"    [cp-16b] live conditional bracket emitted from "
-            f"active_batch_id={active_batch_id} conditioned=False"
+            f"    [cp-16b/c] live conditional bracket emitted from "
+            f"active_batch_id={active_batch_id} conditioned={conditioned} "
+            f"conditioned_count={settled_count}"
+            + (f" reason={conditioned_reason}" if conditioned_reason else "")
         )
     except Exception as exc:  # broad on purpose: live emission must never break
         print(

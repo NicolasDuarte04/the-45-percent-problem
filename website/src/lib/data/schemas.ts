@@ -347,9 +347,21 @@ export const LiveProvenanceSchema = z.object({
   // (conditioning not yet active) they coincide, so the live view matches the
   // frozen forecast numerically.
   live_source_batch_id: z.string(),
-  // True only once result-conditioning is wired (a later checkpoint). False
-  // today: the active batch is an unconditioned re-simulation of the champion.
+  // cp-16c: True once result-conditioning fired on the active batch. False when
+  // nothing settled yet or the conditioning loader degraded on a structural
+  // failure (see conditioned_reason). The graded frozen surfaces never read
+  // this; the live view stays flag-gated.
   conditioned: z.boolean(),
+  // cp-16c: number of group matches conditioned on for this batch (0 when not
+  // conditioned). Optional for backward compatibility with pre-cp-16c files.
+  conditioned_count: z.number().optional(),
+  // cp-16c: why conditioning did not fire, when conditioned is false. One of
+  // "no_settled_group_matches" or "structural_failure:<reason>"; null/absent
+  // when conditioned is true.
+  conditioned_reason: z.string().nullable().optional(),
+  // cp-16c: the settled-source provenance label load_settled stamped, carried
+  // through for traceability (may include a ";conditioning_error=..." tag).
+  settled_source: z.string().optional(),
   generated_at_utc: z.string(),
 });
 export type LiveProvenance = z.infer<typeof LiveProvenanceSchema>;

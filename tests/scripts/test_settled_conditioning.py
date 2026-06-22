@@ -488,3 +488,299 @@ def test_other_group_a_aggregate_p_r16_rises(
         f"Aggregate p_r16 across {OTHER_GROUP_A} did not rise: "
         f"baseline_sum={total_b:.4f}, conditioned_sum={total_c:.4f}."
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# cp-16c: load_settled_results id-translation, collapse, conflict, guard
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# The tests above feed MatchResult dicts straight into the MC. cp-16c fixes the
+# loader that BUILDS that dict from the website's match_outcomes rows: cron rows
+# carry match_id="FD{source_id}" and admin rows carry match_id="M{NN}", and the
+# pre-cp-16c loader silently dropped the FD rows (they did not match the
+# canonical M{NN} keyed name map). The tests below drive load_settled_results
+# directly against a hermetic match_outcomes parquet and assert:
+#   - an FD{id} cron row conditions the correct canonical slot,
+#   - an admin M{NN} row still conditions,
+#   - a same-score admin+cron duplicate on one fixture collapses to one,
+#   - a genuine score-conflict degrades (loud) and conditions nothing,
+#   - the settled-vs-conditioned guard fires loud on an induced silent drop,
+#   - enabling conditioning does NOT move the graded ledger Brier (it reads the
+#     frozen batch), proven in the same block as conditioning genuinely firing.
+
+import json
+import os
+
+MATCHES_DIR = PROJECT_ROOT / "website" / "public" / "data" / "latest" / "matches"
+# A settle timestamp safely after every group kickoff, so map_settled's
+# settle-not-before-kickoff guard never trips on the synthetic rows.
+_SAFE_SETTLED_AT = "2026-07-15T00:00:00+00:00"
+
+
+def _fixture_codes(canonical_id: str) -> tuple[str, str]:
+    """Read (home_code, away_code) for a canonical M{NN} from the published JSON."""
+    doc = json.loads((MATCHES_DIR / f"{canonical_id}.json").read_text())
+    return doc["home"]["fifa_code"], doc["away"]["fifa_code"]
+
+
+def _outcome_row(
+    canonical_id: str,
+    home_goals: int,
+    away_goals: int,
+    *,
+    match_id: str | None = None,
+) -> dict:
+    """Build one match_outcomes row for the fixture identified by canonical_id.
+
+    `match_id` overrides the stored id so a test can emit a cron FD{id} row or
+    an admin M{NN} row for the same fixture identity. When omitted the row uses
+    a cron-style FD id derived from the canonical number.
+    """
+    hc, ac = _fixture_codes(canonical_id)
+    stored = match_id if match_id is not None else f"FD9{canonical_id[1:]}"
+    return {
+        "match_id": stored,
+        "stage": "group",
+        "home_team": hc,
+        "away_team": ac,
+        "home_goals": home_goals,
+        "away_goals": away_goals,
+        "settled_at": _SAFE_SETTLED_AT,
+    }
+
+
+def _write_outcomes(tmp_path: Path, rows: list[dict]) -> Path:
+    path = tmp_path / "match_outcomes.parquet"
+    pd.DataFrame(rows).to_parquet(path, index=False)
+    return path
+
+
+@pytest.fixture()
+def load_settled(monkeypatch):
+    """Return a callable that writes a parquet and runs load_settled_results.
+
+    Each call points MATCH_OUTCOMES_PARQUET at a fresh temp parquet (so the
+    settled_source loader reads it) and returns (results, source).
+    """
+    from simulation import load_settled as ls
+
+    def _run(tmp_path: Path, rows: list[dict]):
+        path = _write_outcomes(tmp_path, rows)
+        monkeypatch.setenv("MATCH_OUTCOMES_PARQUET", str(path))
+        return ls.load_settled_results()
+
+    return _run
+
+
+def test_cron_fd_row_conditions_canonical_slot(tmp_path, load_settled):
+    """A settled FD{id} cron row conditions the correct canonical M{NN} slot.
+
+    This is the cp-16c headline regression: pre-fix this row was dropped
+    (FD id != canonical key) and the rebatch ran unconditioned.
+    """
+    hc, ac = _fixture_codes("M01")
+    results, source = load_settled(
+        tmp_path, [_outcome_row("M01", 2, 0, match_id="FD557777")]
+    )
+    assert "conditioning_error" not in source, source
+    assert set(results.keys()) == {"M01"}
+    mr = results["M01"]
+    assert (mr.home_goals, mr.away_goals) == (2, 0)
+    # Names come from the fixtures parquet (full names, not FIFA codes).
+    assert mr.home not in (hc, ac) and mr.away not in (hc, ac)
+
+
+def test_admin_mnn_row_still_conditions(tmp_path, load_settled):
+    """An admin row whose stored id is already canonical M{NN} still conditions."""
+    results, source = load_settled(tmp_path, [_outcome_row("M08", 0, 2, match_id="M08")])
+    assert "conditioning_error" not in source, source
+    assert set(results.keys()) == {"M08"}
+    assert (results["M08"].home_goals, results["M08"].away_goals) == (0, 2)
+
+
+def test_same_score_admin_cron_collapse(tmp_path, load_settled):
+    """A same-score admin+cron duplicate on one fixture collapses to one match.
+
+    Both rows report the identical realised scoreline for M01; the caller-side
+    collapse keeps exactly one and conditions once (no double-claim halt).
+    """
+    rows = [
+        _outcome_row("M01", 2, 0, match_id="M01"),       # admin
+        _outcome_row("M01", 2, 0, match_id="FD557777"),  # cron, same score
+    ]
+    results, source = load_settled(tmp_path, rows)
+    assert "conditioning_error" not in source, source
+    assert set(results.keys()) == {"M01"}
+    assert (results["M01"].home_goals, results["M01"].away_goals) == (2, 0)
+
+
+def test_score_conflict_halts_and_degrades(tmp_path, load_settled):
+    """A genuine score-conflict (same fixture, different scores) degrades loud.
+
+    The conflicting rows reach the shared resolver's strict score-conflict
+    MappingError; the caller catches it, conditions NOTHING, and tags the
+    source with conditioning_error=score_conflict. The frozen graded bundle is
+    a separate path and is unaffected.
+    """
+    rows = [
+        _outcome_row("M01", 2, 0, match_id="M01"),       # admin says 2-0
+        _outcome_row("M01", 1, 1, match_id="FD557777"),  # cron says 1-1
+    ]
+    results, source = load_settled(tmp_path, rows)
+    assert results == {}
+    assert "conditioning_error=score_conflict" in source, source
+
+
+def test_multi_row_conditioned_count_equals_mappable(tmp_path, load_settled):
+    """Settled-vs-conditioned guard, happy path: conditioned count == distinct
+    in-scope settled group fixtures (no silent drop)."""
+    rows = [
+        _outcome_row("M01", 2, 0),
+        _outcome_row("M08", 0, 2),
+        _outcome_row("M32", 0, 1),
+    ]
+    results, source = load_settled(tmp_path, rows)
+    assert "conditioning_error" not in source, source
+    assert set(results.keys()) == {"M01", "M08", "M32"}
+
+
+def test_guard_fires_loud_on_induced_silent_drop(tmp_path, monkeypatch):
+    """Settled-vs-conditioned guard fires loud on an induced mapping/name drop.
+
+    We monkeypatch the loader's fixtures name map to omit M08 so the mapped
+    canonical row finds no name and would be silently dropped pre-guard. The
+    guard must instead detect conditioned_count != mappable count, log ERROR,
+    and degrade (empty dict + conditioning_error tag). This is the tripwire
+    that makes the original silent-drop bug fail loud and fail CI.
+    """
+    from simulation import load_settled as ls
+
+    full = ls._load_fixture_name_map()
+    dropped = {k: v for k, v in full.items() if k != "M08"}
+    monkeypatch.setattr(ls, "_load_fixture_name_map", lambda: dropped)
+
+    path = _write_outcomes(
+        tmp_path,
+        [_outcome_row("M01", 2, 0), _outcome_row("M08", 0, 2)],
+    )
+    monkeypatch.setenv("MATCH_OUTCOMES_PARQUET", str(path))
+    results, source = ls.load_settled_results()
+    assert results == {}
+    assert "conditioning_error=settled_vs_conditioned_mismatch" in source, source
+
+
+# ── Contamination headline: enabling conditioning must NOT move graded Brier ──
+
+def _graded_brier(outcomes_parquet: Path) -> tuple[float, int]:
+    """Compute the graded ledger Brier from the FROZEN batch + settled outcomes.
+
+    This is the conditioning-independent scoring path (resolve_scored reads the
+    frozen champion batch via reconstruct_distributions; it never calls
+    load_settled). Returns (brier_M_STAR, n).
+    """
+    from evaluation.match_score_join import resolve_scored
+    from evaluation.reconstruct_forecasts import (
+        build_ledger_rows,
+        reconstruct_distributions,
+    )
+    from evaluation.aggregate_metrics import update_evaluation_metrics
+
+    os.environ["MATCH_OUTCOMES_PARQUET"] = str(outcomes_parquet)
+    score = resolve_scored(matches_dir=MATCHES_DIR)
+    assert score["status"] == "ok", score
+    dists = reconstruct_distributions(score["model_map"])
+    rows = build_ledger_rows(score["scored"], dists, "test-cp16c")
+    em = update_evaluation_metrics({"brier": {}, "log_loss": {}, "rps": {}}, rows)
+    return float(em["brier"]["M_STAR"]), int(em.get("champion_metric_n", 0))
+
+
+def _real_group_outcomes() -> list[dict]:
+    """All played group matches as cron FD{id} rows, from the published JSONs."""
+    rows = []
+    for f in sorted(MATCHES_DIR.glob("M*.json")):
+        doc = json.loads(f.read_text())
+        if doc.get("round") != "GRP":
+            continue
+        sc = doc.get("score")
+        if not sc or sc.get("home") is None:
+            continue
+        rows.append(
+            {
+                "match_id": f"FD9{doc['match_id'][1:]}",
+                "stage": "group",
+                "home_team": doc["home"]["fifa_code"],
+                "away_team": doc["away"]["fifa_code"],
+                "home_goals": int(sc["home"]),
+                "away_goals": int(sc["away"]),
+                "settled_at": doc.get("settled_at_utc") or _SAFE_SETTLED_AT,
+            }
+        )
+    return rows
+
+
+def test_conditioning_fires_but_graded_brier_unchanged(tmp_path, elo, monkeypatch):
+    """Contamination headline (both assertions in one block):
+
+    1. Conditioning GENUINELY FIRES: with the settled set wired in, a settled
+       match shows its realised outcome at probability 1.0 in the conditioned
+       active object, and an eliminated-ish side's R16 reach collapses versus
+       the unconditioned baseline.
+    2. Enabling conditioning does NOT move the GRADED ledger Brier: the graded
+       Brier (frozen batch) stays ~0.58, never near zero. If conditioning leaked
+       into the graded path it would collapse toward 0; this asserts it does not.
+
+    Neither assertion alone is sufficient: (1) without (2) could mask graded
+    contamination; (2) without (1) could pass while conditioning silently never
+    fired (the #123 independence-test gap). Both must hold together.
+    """
+    rows = _real_group_outcomes()
+    assert len(rows) >= 30, f"expected the real played-group set, got {len(rows)}"
+    path = _write_outcomes(tmp_path, rows)
+    monkeypatch.setenv("MATCH_OUTCOMES_PARQUET", str(path))
+
+    # ── conditioning fires ────────────────────────────────────────────────
+    from simulation.load_settled import load_settled_results
+
+    settled, source = load_settled_results()
+    assert "conditioning_error" not in source, source
+    assert len(settled) == len(rows), (len(settled), len(rows))
+
+    n_small = 600
+    base = _aggregate(_build_runner(elo, settled_results=None), n_runs=n_small)
+    cond_runner = _build_runner(elo, settled_results=settled)
+
+    # A settled match's realised outcome appears in 100% of conditioned runs.
+    m08 = settled["M08"]
+    realised = (m08.home_goals, m08.away_goals)
+    seen = 0
+    for i in range(50):
+        _, mdf = cond_runner.run_one(
+            run_idx=i, seed=SEED_BASE + i, model_id="c", data_hash="d",
+            timestamp_utc=pd.Timestamp("2026-06-22", tz="UTC"),
+        )
+        r = mdf[mdf["match_id"] == "M08"].iloc[0]
+        assert bool(r["settled"]) is True
+        if (int(r["reg_home_goals"]), int(r["reg_away_goals"])) == realised:
+            seen += 1
+    assert seen == 50, f"M08 realised outcome not certain under conditioning: {seen}/50"
+
+    cond = _aggregate(cond_runner, n_runs=n_small)
+    # Turkey lost both played games (AUS 2-0 TUR, TUR 0-1 PAR); R16 reach must
+    # collapse hard versus baseline.
+    tur_b = base.get("Turkey", {}).get("p_r16", 0.0)
+    tur_c = cond.get("Turkey", {}).get("p_r16", 1.0)
+    assert tur_b - tur_c >= 0.20, (
+        f"Turkey p_r16 did not collapse under conditioning: {tur_b:.3f} -> {tur_c:.3f}"
+    )
+
+    # ── graded Brier unchanged (reads frozen, ~0.58, not near zero) ───────
+    brier, n = _graded_brier(path)
+    assert n == len(rows), (n, len(rows))
+    assert brier > 0.40, (
+        f"graded Brier {brier:.4f} collapsed toward zero -> conditioning "
+        f"CONTAMINATED the graded ledger. This is the failure mode cp-16c guards."
+    )
+    assert abs(brier - 0.581978) < 1e-4, (
+        f"graded Brier {brier:.6f} != frozen-derived 0.581978; the graded ledger "
+        f"is no longer reading the frozen batch independently of conditioning."
+    )
