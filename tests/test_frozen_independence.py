@@ -277,6 +277,83 @@ def test_ledger_values_pinned_under_repointed_active(repointable_active) -> None
         assert r["data_sha"] == FROZEN_STRENGTH_MATRIX_SHA256
 
 
+def _live_marginals() -> dict:
+    """Per-team progression marginals from the live tournament_live.json."""
+    doc = json.loads((LATEST / "tournament_live.json").read_text())
+    out = {}
+    for t in doc["teams"]:
+        code = t["fifa_code"]
+        out[code] = {k: v for k, v in sorted(t.items()) if k.startswith("p_")}
+    return out
+
+
+def test_live_conditional_bracket_walled_off_and_active_sourced(
+    repointable_active,
+) -> None:
+    """cp-16b: the live conditional bracket is fed by the ACTIVE batch and is
+    walled off from every graded surface.
+
+    This reuses the independence harness to prove both halves at once. With
+    active_batch.json repointed at the fabricated alternate (champion flags
+    zeroed), the LIVE object must FOLLOW the perturbation (its champion
+    marginals collapse to ~0), while the frozen tournament.json marginals,
+    the ledger, and snapshotProbs.ts stay byte-for-byte pinned to the frozen
+    batch. The live object therefore reads the active batch (it is the only
+    consumer of it) and changes nothing graded.
+    """
+    repoint, fake_dir = repointable_active
+
+    # ── Baseline: committed active_batch.json (points at the frozen batch) ──
+    _run_pipeline()
+    base_frozen = _marginals()
+    base_live = _live_marginals()
+    base_probs = SNAPSHOT_PROBS_TS.read_text()
+    base_ledger = (LATEST / "ledger.jsonl").read_text()
+
+    # The live files exist, carry the required provenance, and (today,
+    # conditioning off, active == frozen) match the frozen marginals numerically.
+    live_doc = json.loads((LATEST / "tournament_live.json").read_text())
+    prov = live_doc["live_provenance"]
+    assert prov["conditioned"] is False
+    assert prov["live_source_batch_id"] == FROZEN_BATCH_ID
+    assert (LATEST / "bracket_live.json").exists()
+    assert base_live == base_frozen, (
+        "today (active == frozen batch, conditioning off) the live object should "
+        "equal the frozen forecast numerically"
+    )
+
+    # ── Repoint active_batch.json at the fabricated alternate and re-run ──
+    repoint()
+    _run_pipeline()
+    alt_frozen = _marginals()
+    alt_live = _live_marginals()
+    alt_probs = SNAPSHOT_PROBS_TS.read_text()
+    alt_ledger = (LATEST / "ledger.jsonl").read_text()
+
+    # WALL: every graded surface is byte-for-byte unchanged by the repoint.
+    assert alt_frozen == base_frozen, "frozen tournament.json marginals moved with the active batch"
+    assert alt_probs == base_probs, "snapshotProbs.ts moved with the active batch"
+    assert alt_ledger == base_ledger, "ledger.jsonl moved with the active batch"
+
+    # ACTIVE-SOURCED: the live object FOLLOWED the perturbed active batch. The
+    # fabricated batch zeroes `champion`, so live p_champion collapses to 0 for
+    # every team while the frozen forecast keeps non-zero champions.
+    assert any(m.get("p_champion", 0) > 0 for m in base_frozen.values())
+    assert all(m.get("p_champion", 0) == 0 for m in alt_live.values()), (
+        "live conditional bracket did NOT follow the repointed active batch; it "
+        "is not reading the active batch as designed"
+    )
+    assert alt_live != alt_frozen, (
+        "live and frozen marginals are identical under a perturbed active batch; "
+        "the live object is not active-sourced"
+    )
+
+    # The repointed live object stamps the active (perturbed) batch id, never the
+    # frozen id, so a reviewer can always tell which batch fed the live view.
+    alt_prov = json.loads((LATEST / "tournament_live.json").read_text())["live_provenance"]
+    assert alt_prov["live_source_batch_id"] == FAKE_BATCH_ID
+
+
 @pytest.fixture()
 def resim_shaped_active(tmp_path: Path):
     """Repoint active_batch.json at a PRODUCTION-shaped re-sim batch.
