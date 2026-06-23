@@ -17,6 +17,7 @@ import {
   SnapshotBanner,
 } from "@/components/compositions/SnapshotPicker";
 import { SnapshotAwareBracket } from "@/components/compositions/SnapshotAwareBracket";
+import { BracketViewToggle } from "@/components/compositions/BracketViewToggle";
 import { BRACKET_STEPS, BRACKET_DURATION_SEC } from "./_steps";
 
 export const metadata = {
@@ -50,16 +51,9 @@ export default async function BracketPage() {
   const live = liveEnabled ? loadLiveBracket(undefined) : null;
   const liveTournament = live ? mergeTournament(live.tournament, maps) : null;
 
-  return (
-    <div
-      className="flex flex-col"
-      style={{
-        backgroundColor: "var(--bg-root)",
-        color: "var(--text-primary)",
-      }}
-    >
-      <Suspense fallback={null}>
-        <SnapshotAwareBracket current={picker.current} weekAgo={picker.weekAgo}>
+  const frozenPanel = (
+    <Suspense fallback={null}>
+      <SnapshotAwareBracket current={picker.current} weekAgo={picker.weekAgo}>
           <div
             className="shrink-0 px-4 md:px-6 pt-6 pb-4 border-b"
             style={{ borderColor: "var(--border-default)" }}
@@ -122,56 +116,81 @@ export default async function BracketPage() {
           </div>
         </SnapshotAwareBracket>
       </Suspense>
+  );
 
-      {live && liveTournament ? (
+  // cp-bracket-ux FIX A: derive the conditioned-state sentence from the live
+  // provenance flag instead of the hardcoded step-b "not yet active" copy.
+  // conditioning is wired now (the active batch conditions on settled results),
+  // so the live numbers diverge from the frozen forecast and the copy must say
+  // so. The "scored by the public ledger" line, the NOT-graded badge, and the
+  // source-batch / conditioned provenance are unchanged in both branches.
+  const livePanel =
+    live && liveTournament ? (
+      <div>
         <div
-          className="border-t"
+          className="shrink-0 px-4 md:px-6 pt-6 pb-4 border-b"
           style={{ borderColor: "var(--border-default)" }}
         >
-          <div
-            className="shrink-0 px-4 md:px-6 pt-6 pb-4 border-b"
-            style={{ borderColor: "var(--border-default)" }}
-          >
-            <div className="max-w-[1152px] mx-auto px-0 md:px-12">
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <h2
-                  className="text-[18px] font-medium tracking-tight"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  Live conditional view
-                </h2>
-                <span
-                  className="text-[11px] font-medium px-1.5 py-0.5 rounded"
-                  style={{
-                    color: "var(--text-secondary)",
-                    backgroundColor: "var(--bg-subtle, rgba(127,127,127,0.12))",
-                  }}
-                >
-                  NOT graded
-                </span>
-              </div>
-              <p
-                className="text-[12px] mt-1 max-w-[68ch]"
-                style={{ color: "var(--text-tertiary)" }}
+          <div className="max-w-[1152px] mx-auto px-0 md:px-12">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <h2
+                className="text-[18px] font-medium tracking-tight"
+                style={{ color: "var(--text-primary)" }}
               >
-                Current-state conditional view, NOT graded; conditioning not yet
-                active, currently matches the frozen forecast. Only the frozen
-                pre-tournament forecast above is scored by the public ledger.
-                Sourced from active batch{" "}
-                <span className="mono">{live.provenance.live_source_batch_id}</span>
-                {" "}· conditioned{" "}
-                <span className="mono">
-                  {String(live.provenance.conditioned)}
-                </span>
-                .
-              </p>
+                Live conditional view
+              </h2>
+              <span
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded"
+                style={{
+                  color: "var(--text-secondary)",
+                  backgroundColor: "var(--bg-subtle, rgba(127,127,127,0.12))",
+                }}
+              >
+                NOT graded
+              </span>
             </div>
-          </div>
-          <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6">
-            <BracketBoard bracket={live.bracket} tournament={liveTournament} />
+            <p
+              className="text-[12px] mt-1 max-w-[68ch]"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              {live.provenance.conditioned
+                ? "Current-state conditional view, NOT graded. Conditioning is active: this view reflects settled results so far and now differs from the frozen forecast."
+                : "Current-state conditional view, NOT graded; conditioning not yet active, currently matches the frozen forecast."}{" "}
+              Only the frozen pre-tournament forecast above is scored by the
+              public ledger. Sourced from active batch{" "}
+              <span className="mono">{live.provenance.live_source_batch_id}</span>
+              {" "}· conditioned{" "}
+              <span className="mono">
+                {String(live.provenance.conditioned)}
+              </span>
+              .
+            </p>
           </div>
         </div>
-      ) : null}
+        <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6">
+          <BracketBoard bracket={live.bracket} tournament={liveTournament} />
+        </div>
+      </div>
+    ) : null;
+
+  return (
+    <div
+      className="flex flex-col"
+      style={{
+        backgroundColor: "var(--bg-root)",
+        color: "var(--text-primary)",
+      }}
+    >
+      {/* cp-bracket-ux FIX B: when the live view is available (flag on AND
+          loadLiveBracket non-null) a top-of-page toggle switches Frozen <->
+          Live without scrolling, Frozen default, Live clearly NOT graded. When
+          unavailable the page renders frozen-only with no toggle, preserving
+          the flag gate exactly as before. */}
+      {livePanel ? (
+        <BracketViewToggle frozen={frozenPanel} live={livePanel} />
+      ) : (
+        frozenPanel
+      )}
 
       <Suspense fallback={null}>
         <CanvasTour steps={BRACKET_STEPS} />
