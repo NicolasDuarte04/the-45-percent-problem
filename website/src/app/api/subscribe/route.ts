@@ -6,8 +6,9 @@ import { subscribers } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/ratelimit";
 import {
   CONSENT_TEXT,
+  deliverVerificationEmail,
   generateVerificationToken,
-  sendVerificationEmail,
+  VERIFICATION_RESEND_THROTTLE_MS,
 } from "@/lib/email/verification";
 
 export const runtime = "nodejs";
@@ -73,7 +74,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const now = new Date();
 
   const existing = await db
-    .select({ id: subscribers.id, status: subscribers.status })
+    .select({
+      id: subscribers.id,
+      status: subscribers.status,
+      verificationSentAt: subscribers.verificationSentAt,
+    })
     .from(subscribers)
     .where(eq(subscribers.email, email))
     .limit(1);
@@ -83,45 +88,71 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (row?.status === "active") {
     return jsonError("active", 409);
   }
-  if (row?.status === "pending") {
-    return jsonError("pending", 409);
+  if (row?.status === "complained") {
+    // Hard stop. Do not let a complained address re-enroll silently.
+    return jsonError("active", 409);
   }
 
-  if (row && (row.status === "unsubscribed" || row.status === "bounced")) {
+  // The new verification_sent_at is written by deliverVerificationEmail only
+  // after Resend accepts the send. Rows here are left with a null stamp so a
+  // failed send stays immediately re-sendable and pending != "email went out".
+  let subscriberId: string;
+
+  if (row?.status === "pending") {
+    // Re-send path: the visitor never confirmed, most often because the first
+    // email landed in spam. Rather than strand them behind a 409, issue a
+    // fresh token (the old ones expire after 24h) and send again. Throttled so
+    // rapid repeat submits do not fan out into a burst of emails.
+    const lastSentMs = row.verificationSentAt?.getTime() ?? 0;
+    if (now.getTime() - lastSentMs < VERIFICATION_RESEND_THROTTLE_MS) {
+      // Sent moments ago: skip the re-send but report success so the UI shows
+      // the "check your inbox and spam" panel instead of a dead end.
+      return NextResponse.json({ ok: true, resent: false }, { status: 202 });
+    }
+    await db
+      .update(subscribers)
+      .set({ verificationToken: token, verificationSentAt: null })
+      .where(eq(subscribers.id, row.id));
+    subscriberId = row.id;
+  } else if (row && (row.status === "unsubscribed" || row.status === "bounced")) {
     // Reactivate: new pending token, clear unsubscribed timestamp.
     await db
       .update(subscribers)
       .set({
         status: "pending",
         verificationToken: token,
-        verificationSentAt: now,
+        verificationSentAt: null,
         unsubscribedAt: null,
         consentText: CONSENT_TEXT,
         consentAt: now,
         source: source ?? null,
       })
       .where(eq(subscribers.id, row.id));
-  } else if (row?.status === "complained") {
-    // Hard stop. Do not let a complained address re-enroll silently.
-    return jsonError("active", 409);
+    subscriberId = row.id;
   } else {
-    await db.insert(subscribers).values({
-      email,
-      status: "pending",
-      verificationToken: token,
-      verificationSentAt: now,
-      source: source ?? null,
-      consentText: CONSENT_TEXT,
-      consentAt: now,
-    });
+    const inserted = await db
+      .insert(subscribers)
+      .values({
+        email,
+        status: "pending",
+        verificationToken: token,
+        source: source ?? null,
+        consentText: CONSENT_TEXT,
+        consentAt: now,
+      })
+      .returning({ id: subscribers.id });
+    subscriberId = inserted[0].id;
   }
 
   try {
-    await sendVerificationEmail({ to: email, token });
+    await deliverVerificationEmail({ subscriberId, to: email, token });
   } catch (err) {
     console.error("[subscribe] verification email send failed", err);
     return jsonError("server", 502);
   }
 
-  return NextResponse.json({ ok: true }, { status: 202 });
+  return NextResponse.json(
+    { ok: true, resent: row?.status === "pending" },
+    { status: 202 },
+  );
 }
