@@ -351,7 +351,7 @@ Same monospace style. This is also a feature, not a failure.
   "mc_runs": 10000,
 
   "headline": {
-    "summary_line": "Largest divergence today: USA vs MEX home side, model 42.3%, market 36.0%, edge +630 bps.",
+    "summary_line": "Today's frozen probabilities are logged against the fixtures, adding to the running calibration record.",
     "movers_line": "Three teams shifted >2% in title probability overnight."
   },
 

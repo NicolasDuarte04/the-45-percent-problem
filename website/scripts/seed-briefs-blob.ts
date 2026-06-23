@@ -106,7 +106,7 @@ function yesterdayBrief(): BriefSample {
     },
     headline: {
       summary_line:
-        "Largest divergence today: ARG vs PER home side, model 56.1%, market 51.2%, edge +490 bps.",
+        "The frozen forecast is logged against the day's fixtures, extending the running calibration record.",
       movers_line: "Two teams shifted >1.5% in title probability overnight.",
     },
     teaser: {
@@ -195,8 +195,9 @@ function dayBeforeBrief(): BriefSample {
       fallback_used: true,
     },
     headline: {
-      summary_line: "No divergences exceeded threshold today.",
-      movers_line: "All title-probability deltas were within 100 bps.",
+      summary_line:
+        "A quiet day: the frozen forecast moved little, and the calibration record carries forward unchanged.",
+      movers_line: "All title-probability deltas were within one point overnight.",
     },
     teaser: { has_divergence: false },
     featured_teams: SAMPLE.featured_teams,
