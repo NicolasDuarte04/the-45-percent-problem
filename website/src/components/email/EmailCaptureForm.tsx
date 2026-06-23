@@ -250,10 +250,29 @@ function PendingPanel({ email, layout }: { email: string; layout: "desktop" | "m
           fontSize: 17,
           lineHeight: 1.45,
           color: t.ink,
-          margin: "0 0 12px",
+          margin: "0 0 14px",
         }}
       >
         We sent a confirmation link to <span style={{ fontFamily: t.fontMono, fontSize: 14 }}>{email}</span>.
+        Click it to start receiving the brief.
+      </p>
+      <p
+        style={{
+          fontFamily: t.fontSans,
+          fontSize: 14,
+          fontWeight: 600,
+          lineHeight: 1.6,
+          color: t.ink,
+          background: t.bg,
+          border: `1px solid ${t.hairline}`,
+          borderLeft: `3px solid ${t.ink}`,
+          borderRadius: 2,
+          padding: "12px 14px",
+          margin: "0 0 12px",
+        }}
+      >
+        Not in your inbox within a minute? Check your spam or promotions folder,
+        and mark it &ldquo;not spam&rdquo; so the daily brief reaches you.
       </p>
       <p
         style={{
@@ -264,8 +283,8 @@ function PendingPanel({ email, layout }: { email: string; layout: "desktop" | "m
           margin: 0,
         }}
       >
-        Click the link in that email to start receiving the brief. The link expires in 24 hours.
-        If it does not arrive within a minute, check spam.
+        The link expires in 24 hours. Still nothing? Enter your email again and
+        we will send a fresh link.
       </p>
     </div>
   );
