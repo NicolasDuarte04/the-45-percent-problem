@@ -99,9 +99,9 @@ function yesterdayBrief(): BriefSample {
     latest_archive_url: `/briefs/${date}`,
     lead_in: {
       tournament_sentence:
-        "Argentina's title chances climbed 150 bps overnight after a clean group win.",
+        "Argentina's title probability rose 1.5 points overnight after a clean group win.",
       match_sentence:
-        "France vs Denmark is the closest match of the day, with the model and the market within 80 bps.",
+        "For France vs Denmark, the model's frozen probability for France is 48.8 percent; the de-vigged market implies 47.6 percent. Both figures are logged for calibration.",
       fallback_used: false,
     },
     headline: {
