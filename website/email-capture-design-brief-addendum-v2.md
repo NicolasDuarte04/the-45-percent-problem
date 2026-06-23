@@ -42,11 +42,13 @@ Reference shape (light theme):
 TODAY  |  2026-06-12 UTC  |  ISSUE 014
 ─────────────────────────────────────────────
 
-Brazil is still the title favorite at 14.2%,
-down 240 bps overnight after Argentina's win.
-Today's largest match-day gap is USA vs Mexico,
-where the model gives the US a 6.3-point edge
-over bookmaker odds.
+Brazil holds the highest title probability at
+14.2 percent, down 2.4 points overnight after
+Argentina's win. For today's USA vs Mexico, the
+model's frozen probability for the United States
+is 42.3 percent; the de-vigged market implies
+36.0 percent. Both figures are logged for
+calibration.
 
 ────
 
@@ -75,8 +77,8 @@ The lead-in is server-rendered from the same JSON the rest of the block uses. It
   "next_dispatch_utc": "2026-06-13T12:00:00Z",
   "latest_archive_url": "https://45analytics.com/briefs/2026-06-12",
   "lead_in": {
-    "tournament_sentence": "Brazil is still the title favorite at 14.2%, down 240 bps overnight after Argentina's win.",
-    "match_sentence": "Today's largest match-day gap is USA vs Mexico, where the model gives the US a 6.3-point edge over bookmaker odds.",
+    "tournament_sentence": "Brazil holds the highest title probability at 14.2 percent, down 2.4 points overnight after Argentina's win.",
+    "match_sentence": "For today's USA vs Mexico, the model's frozen probability for the United States is 42.3 percent; the de-vigged market implies 36.0 percent. Both figures are logged for calibration.",
     "fallback_used": false
   },
   "teaser": {
