@@ -107,3 +107,98 @@ def test_build_divergence_skips_incomplete_triples(
         "snap1", "2026-06-16T00:00:00Z", odds, dists, model_map, "abc123"
     )
     assert div["rows"] == []
+
+
+# --------------------------------------------------------------------------- #
+# Volatility Gate annotation (cp-volatility-gate): computed by
+# market/volatility_gate.py, never hardcoded; coverage is honest about which of
+# the five rules ran vs which are unavailable.
+# --------------------------------------------------------------------------- #
+
+def _odds_for_ts(
+    match_id: str, h: float, d: float, a: float, ts: str, last_refreshed: str
+) -> list[dict]:
+    rows = _odds_for(match_id, h, d, a)
+    for r in rows:
+        r["timestamp"] = ts
+        r["last_refreshed"] = last_refreshed
+    return rows
+
+
+_GATE_UNAVAILABLE_KEYS = {
+    "NAMED_EVENT_6H",
+    "PRICE_DISCOVERY_INTRA_BOOK",
+    "PRICE_DISCOVERY_CROSS_BOOK",
+    "LIQUIDITY_POLYMARKET_LOW",
+}
+
+
+def test_gate_open_when_pinnacle_fresh(
+    model_map: pd.DataFrame, dists: pd.DataFrame
+) -> None:
+    """Fresh quote (last_refreshed == ts): Rule 5 passes -> computed OPEN."""
+    a = model_map.iloc[0]
+    odds = pd.DataFrame(
+        _odds_for_ts(
+            a["match_id"], 1.30, 5.0, 9.0,
+            ts="2026-06-16T10:00:00Z", last_refreshed="2026-06-16T10:00:00Z",
+        )
+    )
+    div = build_divergence(
+        "snap1", "2026-06-16T10:30:00Z", odds, dists, model_map, "abc123"
+    )
+    assert len(div["rows"]) == 3
+    for r in div["rows"]:
+        assert r["gate_status"] == "OPEN"          # PASS -> OPEN
+        assert r["gate_rules_tripped"] == []
+        # snapshot_age honestly computed (30 min), not a fabricated 0
+        assert r["snapshot_age_minutes"] == 30
+        assert r["history"] == []
+        # coverage proves OPEN means "staleness rule passed", not full coverage
+        cov = r["gate_coverage"]
+        assert cov["evaluated"] == ["LIQUIDITY_PINNACLE_STALE"]
+        assert set(cov["unavailable"]) == _GATE_UNAVAILABLE_KEYS
+        assert "LIQUIDITY_PINNACLE_STALE" not in cov["unavailable"]
+
+
+def test_gate_fires_when_pinnacle_stale(
+    model_map: pd.DataFrame, dists: pd.DataFrame
+) -> None:
+    """Quote >4h stale: Rule 5 fires -> FIRED, computed by volatility_gate.py."""
+    a = model_map.iloc[0]
+    odds = pd.DataFrame(
+        _odds_for_ts(
+            a["match_id"], 1.30, 5.0, 9.0,
+            ts="2026-06-16T10:00:00Z", last_refreshed="2026-06-16T05:00:00Z",
+        )
+    )
+    div = build_divergence(
+        "snap1", "2026-06-16T10:00:00Z", odds, dists, model_map, "abc123"
+    )
+    assert len(div["rows"]) == 3
+    for r in div["rows"]:
+        assert r["gate_status"] == "FIRED"         # SUPPRESSED -> FIRED
+        assert r["gate_rules_tripped"] == ["LIQUIDITY_PINNACLE_STALE"]
+        assert r["gate_coverage"]["evaluated"] == ["LIQUIDITY_PINNACLE_STALE"]
+
+
+def test_gate_coverage_honest_when_no_timestamp(
+    model_map: pd.DataFrame, dists: pd.DataFrame
+) -> None:
+    """No last_refreshed: Rule 5 cannot run -> it is marked UNAVAILABLE, never
+    silently treated as a clean pass. OPEN here means 'no rule was evaluable'."""
+    a = model_map.iloc[0]
+    odds = pd.DataFrame(_odds_for(a["match_id"], 1.30, 5.0, 9.0))  # no ts columns
+    div = build_divergence(
+        "snap1", "2026-06-16T10:00:00Z", odds, dists, model_map, "abc123"
+    )
+    assert len(div["rows"]) == 3
+    for r in div["rows"]:
+        cov = r["gate_coverage"]
+        assert cov["evaluated"] == []
+        # all five rules, including staleness, are honestly unavailable
+        assert "LIQUIDITY_PINNACLE_STALE" in cov["unavailable"]
+        assert set(cov["unavailable"]) == _GATE_UNAVAILABLE_KEYS | {
+            "LIQUIDITY_PINNACLE_STALE"
+        }
+        assert r["snapshot_age_minutes"] is None   # honest null, not 0
