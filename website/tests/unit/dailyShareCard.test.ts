@@ -80,15 +80,66 @@ describe("selectRecapDay / selectPreviewDay", () => {
     makeMatch({ match_id: "C", kickoff_utc: "2026-06-13T19:00:00+00:00" }),
     makeMatch({ match_id: "D", kickoff_utc: "2026-06-14T19:00:00+00:00" }),
   ];
-  it("recap picks the most recent played day", () => {
-    expect(selectRecapDay(matches)).toBe("2026-06-12");
+  it("recap picks the most recent completed day before today", () => {
+    expect(selectRecapDay(matches, "2026-06-13")).toBe("2026-06-12");
   });
-  it("preview picks the earliest unplayed day", () => {
-    expect(selectPreviewDay(matches)).toBe("2026-06-13");
+  it("preview picks today when today has fixtures", () => {
+    expect(selectPreviewDay(matches, "2026-06-13")).toBe("2026-06-13");
   });
   it("returns null when no match qualifies", () => {
-    expect(selectRecapDay([makeMatch()])).toBeNull();
-    expect(selectPreviewDay([makeMatch({ score: { home: 0, away: 0 } })])).toBeNull();
+    expect(selectRecapDay([makeMatch()], "2026-06-12")).toBeNull();
+    expect(
+      selectPreviewDay([makeMatch({ score: { home: 0, away: 0 } })], "2026-06-12"),
+    ).toBeNull();
+  });
+});
+
+// The defect this PR fixes: when results ingestion lags, the published snapshot
+// still carries yesterday's fixtures as unplayed. The selectors must stay
+// anchored to the calendar so the preview shows TODAY (not the stale unplayed
+// day) and the recap shows the last fully-settled day with an honest label.
+describe("calendar anchoring under ingestion lag", () => {
+  // Mirrors the live June 24 (Día 14) state: June 22 fully settled, June 23
+  // fixtures present but still unplayed (un-ingested), June 24 fixtures unplayed.
+  const lagged = [
+    makeMatch({ match_id: "J22a", kickoff_utc: "2026-06-22T17:00:00+00:00", score: { home: 2, away: 0 } }),
+    makeMatch({ match_id: "J22b", kickoff_utc: "2026-06-22T21:00:00+00:00", score: { home: 3, away: 0 } }),
+    makeMatch({ match_id: "J23a", kickoff_utc: "2026-06-23T17:00:00+00:00" }),
+    makeMatch({ match_id: "J23b", kickoff_utc: "2026-06-23T20:00:00+00:00" }),
+    makeMatch({ match_id: "J24a", kickoff_utc: "2026-06-24T19:00:00+00:00" }),
+    makeMatch({ match_id: "J24b", kickoff_utc: "2026-06-24T22:00:00+00:00" }),
+  ];
+  const today = "2026-06-24";
+
+  it("preview anchors to today, not the stale unplayed June 23 day", () => {
+    expect(selectPreviewDay(lagged, today)).toBe("2026-06-24");
+    expect(dayNumber("2026-06-24")).toBe(14);
+  });
+  it("recap falls back to the last fully-settled day (June 22), skipping un-ingested June 23", () => {
+    expect(selectRecapDay(lagged, today)).toBe("2026-06-22");
+    // Honest label: the returned day drives Día N, so a two-day-old recap reads
+    // as Día 12, never as yesterday.
+    expect(dayNumber("2026-06-22")).toBe(12);
+  });
+  it("once June 23 ingests, both variants advance to the true days", () => {
+    const settled = lagged.map((m) =>
+      m.match_id.startsWith("J23") ? makeMatch({ ...m, score: { home: 1, away: 1 } }) : m,
+    );
+    expect(selectRecapDay(settled, today)).toBe("2026-06-23"); // Día 13, yesterday
+    expect(selectPreviewDay(settled, today)).toBe("2026-06-24"); // Día 14, today
+  });
+  it("a partially-settled day is not eligible as the recap", () => {
+    // June 23 half-ingested (one score joined, one still missing) must be skipped.
+    const partial = lagged.map((m) =>
+      m.match_id === "J23a" ? makeMatch({ ...m, score: { home: 1, away: 1 } }) : m,
+    );
+    expect(selectRecapDay(partial, today)).toBe("2026-06-22");
+  });
+  it("on a rest day with no fixtures today, preview rolls forward to the next day", () => {
+    expect(selectPreviewDay(lagged, "2026-06-23")).toBe("2026-06-23");
+    // Nothing on June 24's gap day -> next unplayed day, never a past day.
+    const restDay = lagged.filter((m) => !m.match_id.startsWith("J24"));
+    expect(selectPreviewDay(restDay, "2026-06-24")).toBeNull();
   });
 });
 
@@ -128,7 +179,7 @@ describe("audience-local day basis (M25 boundary)", () => {
   const fixtures = [m27, m25, m31];
 
   it("preview selects June 18 as the earliest unplayed local day", () => {
-    expect(selectPreviewDay(fixtures)).toBe("2026-06-18");
+    expect(selectPreviewDay(fixtures, "2026-06-18")).toBe("2026-06-18");
   });
 
   it("puts Mexico vs Korea and Canada vs Qatar on the June 18 card", () => {

@@ -11,9 +11,20 @@
  * `dayKey` from matchListing, the same basis the /matches page groups by, so
  * the card and the page can never disagree about which day a fixture is on.
  *
- * Subject-day auto-selection (zero manual work, regenerates daily):
- *   - recap   -> the most recent audience-local day with at least one played match.
- *   - preview -> the earliest audience-local day that still has an unplayed fixture.
+ * Subject-day auto-selection (zero manual work, regenerates daily). Both
+ * selectors are anchored to the audience-local "today" (`todayKey`, injected by
+ * the route from the wall clock) so the card tracks the CALENDAR, not the data's
+ * played-state. This keeps the card honest when results ingestion lags: a day of
+ * unsettled fixtures can no longer drag the card into the past.
+ *   - preview -> today's fixtures (the earliest unplayed day that is not before
+ *                today). A day of stale, not-yet-settled past fixtures is never
+ *                selected; on a rest day with nothing today, preview rolls
+ *                forward to the next day with fixtures.
+ *   - recap   -> the most recent COMPLETED day strictly before today (every
+ *                fixture on it settled). If yesterday is not yet fully settled
+ *                it falls back to the last fully-settled day, and the "Día N" and
+ *                date labels follow that real day so a two-day-old recap is never
+ *                dressed up as yesterday's.
  * The route also accepts an explicit ?day=YYYY-MM-DD override.
  *
  * "Día N" is derived from the tournament start (2026-06-11 = Día 1), counted on
@@ -36,6 +47,8 @@ import {
   modalScoreline,
   topScorelines,
 } from "./matchListing";
+
+export { audienceDayKeyFromMs } from "./matchListing";
 
 /** First match-day of the tournament. 2026-06-11 is Día 1. */
 export const TOURNAMENT_START = "2026-06-11";
@@ -145,23 +158,65 @@ export function formatSpanishDate(day: string): string {
   }).format(d);
 }
 
-/** Most recent audience-local day that has at least one played match, or null. */
-export function selectRecapDay(matches: MatchDetail[]): string | null {
-  let best: string | null = null;
+/**
+ * Recap subject day: the most recent COMPLETED audience-local day strictly
+ * before `todayKey`, or null when none exists yet.
+ *
+ * "Completed" means every fixture on that day is settled (a score has been
+ * joined). A day with even one unsettled fixture is skipped, so the recap never
+ * shows a half-finished slate. When yesterday is not yet fully settled (e.g.
+ * results ingestion is lagging) this walks back to the last fully-settled day;
+ * the caller derives "Día N" and the date label from the returned day, so the
+ * card honestly presents whatever day it actually shows rather than implying it
+ * is yesterday's.
+ *
+ * `todayKey` is the audience-local "YYYY-MM-DD" for the current wall clock,
+ * injected by the route (via audienceDayKeyFromMs) so this stays pure.
+ */
+export function selectRecapDay(
+  matches: MatchDetail[],
+  todayKey: string,
+): string | null {
+  const perDay = new Map<string, { total: number; played: number }>();
   for (const m of matches) {
-    if (!isPlayed(m)) continue;
     const day = dayKey(m.kickoff_utc);
-    if (best === null || day > best) best = day;
+    if (day >= todayKey) continue; // recap is strictly before today
+    const entry = perDay.get(day) ?? { total: 0, played: 0 };
+    entry.total += 1;
+    if (isPlayed(m)) entry.played += 1;
+    perDay.set(day, entry);
+  }
+  let best: string | null = null;
+  for (const [day, { total, played }] of perDay) {
+    if (total > 0 && played === total && (best === null || day > best)) {
+      best = day;
+    }
   }
   return best;
 }
 
-/** Earliest audience-local day that still has an unplayed fixture, or null. */
-export function selectPreviewDay(matches: MatchDetail[]): string | null {
+/**
+ * Preview subject day: today's fixtures. Formally, the earliest audience-local
+ * day with an unplayed fixture that is NOT before `todayKey`, or null when no
+ * upcoming fixture remains.
+ *
+ * Anchoring at today (rather than "earliest unplayed day") is what keeps the
+ * preview current under ingestion lag: a past day whose results have not yet
+ * been joined is excluded by the `>= todayKey` floor, so it can never pull the
+ * preview backwards. When today itself has fixtures they win; on a rest day with
+ * nothing today, this rolls forward to the next day that does.
+ *
+ * `todayKey` is injected by the route (see selectRecapDay).
+ */
+export function selectPreviewDay(
+  matches: MatchDetail[],
+  todayKey: string,
+): string | null {
   let best: string | null = null;
   for (const m of matches) {
     if (isPlayed(m)) continue;
     const day = dayKey(m.kickoff_utc);
+    if (day < todayKey) continue; // never anchor to a stale past day
     if (best === null || day < best) best = day;
   }
   return best;

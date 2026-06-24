@@ -4,13 +4,17 @@
  * Renders a branded PNG from the live published snapshot so the operator can
  * post a polished daily card instead of a raw terminal screenshot. Two
  * variants, selected by `?variant=recap|preview`:
- *   - recap   : the matches PLAYED on the most recent audience-local day with
- *               results, each with its real final score and the probability the
- *               model gave the result, plus a champion calibration strip.
- *   - preview : the fixtures on the earliest audience-local day still to be
- *               played, with the model's modal scoreline and top 1X2 outcome.
- * An explicit `?day=YYYY-MM-DD` override pins the subject day for either
- * variant. Auto-selection means the card regenerates daily with no manual work.
+ *   - recap   : the matches PLAYED on the most recent COMPLETED audience-local
+ *               day before today, each with its real final score and the
+ *               probability the model gave the result, plus a champion
+ *               calibration strip.
+ *   - preview : today's fixtures (the audience-local day of the wall clock),
+ *               with the model's modal scoreline and top 1X2 outcome.
+ * Both are anchored to the audience-local "today" so the card tracks the
+ * calendar rather than the data's played-state; ingestion lag can no longer drag
+ * a variant into the past. An explicit `?day=YYYY-MM-DD` override pins the
+ * subject day for either variant. Auto-selection regenerates daily with no
+ * manual work.
  *
  * Framing is strictly calibration-led. No market lines or betting edges appear
  * (the market column is intentionally pending). Copy is Colombian Spanish.
@@ -30,6 +34,7 @@ import { loadAllMatches, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
 import { formatMono } from "@/lib/formatters";
 import {
   type DailyVariant,
+  audienceDayKeyFromMs,
   dayNumber,
   formatSpanishDate,
   matchesForCard,
@@ -80,9 +85,15 @@ export async function GET(req: NextRequest): Promise<Response> {
 
     const matches = loadAllMatches();
 
+    // Anchor auto-selection to the audience-local "today" so the card tracks the
+    // calendar, not the data's played-state (a lagging snapshot can no longer
+    // push the preview into the past or present a stale recap as yesterday's).
+    const todayKey = audienceDayKeyFromMs(Date.now());
     const subjectDay =
       dayOverride ??
-      (variant === "recap" ? selectRecapDay(matches) : selectPreviewDay(matches));
+      (variant === "recap"
+        ? selectRecapDay(matches, todayKey)
+        : selectPreviewDay(matches, todayKey));
 
     let fonts: { mono: ArrayBuffer; serif: ArrayBuffer } | null;
     try {
