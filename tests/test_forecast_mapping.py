@@ -52,6 +52,11 @@ def test_model_map_is_exact_bijection(model_map: pd.DataFrame) -> None:
     # ordered (home, away) key is unique: orientation is part of identity
     keys = model_map["home_code"] + ">" + model_map["away_code"]
     assert keys.nunique() == 72
+    # is_neutral is joined from the locked fixtures for every fixture (gates the
+    # neutral-venue orientation canonicalization in map_settled)
+    assert "is_neutral" in model_map.columns
+    assert model_map["is_neutral"].notna().all()
+    assert model_map["is_neutral"].dtype == bool
 
 
 def test_batch_activation_predates_earliest_kickoff(model_map: pd.DataFrame) -> None:
@@ -121,8 +126,15 @@ def test_unknown_team_pair_halts(model_map: pd.DataFrame) -> None:
         map_settled(model_map, [bogus])
 
 
-def test_swapped_orientation_halts(model_map: pd.DataFrame) -> None:
-    a = model_map.iloc[0]
+def test_non_neutral_reversed_orientation_halts(model_map: pd.DataFrame) -> None:
+    """A reversed-orientation settled row against a NON-neutral fixture must NOT
+    be canonicalized: a real home advantage makes the swap lossy. It falls
+    through to the unmapped HALT. All real group fixtures are neutral, so this
+    invariant is exercised with a synthetic non-neutral model map (it documents
+    the rule for knockouts / future data, per the OSF note)."""
+    mm = model_map.copy()
+    mm["is_neutral"] = False  # force every fixture non-neutral
+    a = mm.iloc[0]
     swapped = {
         "matchId": "FD3001",
         "stage": "group",
@@ -133,7 +145,71 @@ def test_swapped_orientation_halts(model_map: pd.DataFrame) -> None:
         "settledAt": "2026-06-11T21:00:00Z",
     }
     with pytest.raises(MappingError, match="no group fixture"):
-        map_settled(model_map, [swapped])
+        map_settled(mm, [swapped])
+
+
+def test_neutral_orientation_canonicalized_m46(model_map: pd.DataFrame) -> None:
+    """The M46 case (the FD537406 production halt). Football-Data reports
+    Colombia vs DR Congo; the locked neutral fixture M46 is DR Congo (home) vs
+    Colombia (away). The reversed row is canonicalized to the locked orientation
+    (home/away codes AND goals swapped together) and Colombia's result is scored
+    against M46's frozen distribution."""
+    from evaluation.reconstruct_forecasts import (
+        build_ledger_rows,
+        reconstruct_distributions,
+    )
+
+    m46 = model_map[model_map["match_id"] == "M46"].iloc[0]
+    # Locked orientation: DR Congo home, Colombia away, at a neutral venue.
+    assert m46["home_code"] == "COD"
+    assert m46["away_code"] == "COL"
+    assert bool(m46["is_neutral"]) is True
+
+    # Settle ~2h after the fixture's own kickoff (derived, so the test does not
+    # break when kickoff times are refreshed).
+    settled_at = (
+        pd.to_datetime(m46["kickoff_utc"], utc=True) + pd.Timedelta(hours=2)
+    ).isoformat()
+    # Football-Data orientation: Colombia (home) beat DR Congo (away) 2-1.
+    swapped = {
+        "matchId": "FD537406",
+        "stage": "group",
+        "homeTeam": m46["away_code"],  # COL, reversed vs locked
+        "awayTeam": m46["home_code"],  # COD
+        "homeGoals": 2,  # Colombia
+        "awayGoals": 1,  # DR Congo
+        "settledAt": settled_at,
+    }
+    result = map_settled(model_map, [swapped])
+    scored = result["scored"]
+    assert len(scored) == 1
+    row = scored.iloc[0]
+    # Resolved to M46 in the LOCKED orientation with the score swapped to match.
+    assert row["match_id"] == "M46"
+    assert row["home_code"] == "COD"
+    assert row["away_code"] == "COL"
+    assert int(row["home_goals"]) == 1  # DR Congo (was away)
+    assert int(row["away_goals"]) == 2  # Colombia (was home)
+    assert row["fd_match_id"] == "FD537406"
+
+    # The canonicalization is recorded (FD id -> resolved M{NN}), not silent.
+    assert len(result["canonicalized"]) == 1
+    canon = result["canonicalized"][0]
+    assert canon["fd_match_id"] == "FD537406"
+    assert canon["resolved_match_id"] == "M46"
+    assert canon["rule"] == "neutral_orientation_canonicalized"
+
+    # Scored against M46's frozen distribution: Colombia (the away side in the
+    # locked orientation) won, so the realized outcome is an away win ("2") and
+    # the scored probability is M46's frozen p_away.
+    dists = reconstruct_distributions(model_map)
+    ledger = build_ledger_rows(scored, dists, "test-sha")
+    assert len(ledger) == 1
+    lr = ledger[0]
+    assert lr["match_id"] == "M46"
+    assert lr["outcome_realized"] == "2"
+    m46_dist = dists[dists["match_id"] == "M46"].iloc[0]
+    assert lr["p_model_on_realized"] == round(float(m46_dist["p_away"]), 6)
 
 
 def test_score_conflict_halts(model_map: pd.DataFrame) -> None:
