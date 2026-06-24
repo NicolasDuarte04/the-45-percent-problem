@@ -58,6 +58,11 @@ DEFAULT_MATCHES_DIR = (
     PROJECT_ROOT / "website" / "public" / "data" / "latest" / "matches"
 )
 
+# Locked, pre-registered fixtures parquet. READ ONLY here: it is the source of
+# truth for venue neutrality (is_neutral), which map_settled needs to gate the
+# neutral-venue orientation canonicalization. This module never writes it.
+LOCKED_FIXTURES = PROJECT_ROOT / "data" / "raw" / "wc2026_fixtures.parquet"
+
 
 class MappingError(RuntimeError):
     """The id mapping is not an exact bijection.
@@ -185,6 +190,21 @@ def build_model_map(
             "model-side mapping collapsed (duplicate keys). "
             f"unique M={out['match_id'].nunique()} unique slots={out['batch_slot'].nunique()}"
         )
+
+    # Attach is_neutral from the locked, pre-registered fixtures parquet (read
+    # only). Keyed by published match_id (M01..M72), which is 1:1 with the
+    # fixtures file. map_settled reads this to gate neutral-venue orientation
+    # canonicalization. Strict: every one of the 72 group matches must resolve a
+    # non-null is_neutral, or the model side is not trustworthy and we hard-stop.
+    fixtures = pd.read_parquet(LOCKED_FIXTURES, columns=["match_id", "is_neutral"])
+    out = out.merge(fixtures, on="match_id", how="left")
+    missing_neutral = sorted(out.loc[out["is_neutral"].isna(), "match_id"].tolist())
+    if missing_neutral:
+        raise MappingError(
+            "locked fixtures parquet is missing is_neutral for published group "
+            f"matches: {missing_neutral}"
+        )
+    out["is_neutral"] = out["is_neutral"].astype(bool)
     return out
 
 
@@ -257,13 +277,67 @@ def map_settled(
     deferred = sorted(out.loc[out["stage"] != stage_scope, "match_id"].tolist())
     scoped = out[out["stage"] == stage_scope].copy()
     if scoped.empty:
-        return {"scored": _empty_scored(), "deferred": deferred, "collapsed": []}
+        return {
+            "scored": _empty_scored(),
+            "deferred": deferred,
+            "collapsed": [],
+            "canonicalized": [],
+        }
 
     scoped["_key"] = scoped["home_code"] + ">" + scoped["away_code"]
     lookup = model_map.assign(_key=model_map["home_code"] + ">" + model_map["away_code"])
+    known = set(lookup["_key"])
+
+    # 0. Orientation canonicalization (NEUTRAL venues only). A settled result
+    #    whose own home>away key is absent but whose REVERSED away>home key
+    #    matches exactly one locked fixture is the same match recorded with the
+    #    opposite home/away designation (a source such as Football-Data lists a
+    #    neutral fixture in the other order). At a NEUTRAL venue there is no
+    #    home-field term in the frozen forecast, so rewriting the row to the
+    #    locked orientation by swapping home/away codes AND goals together is
+    #    loss-less: it scores the frozen forecast against the result it genuinely
+    #    belongs to, never inventing or moving an outcome. A reversed match to a
+    #    NON-neutral fixture is deliberately NOT swapped (a real home advantage
+    #    makes the swap lossy); it falls through to the unmapped HALT below for
+    #    human review. Uniqueness is guaranteed because build_model_map validated
+    #    the model side as an exact bijection, so a reversed key resolves to at
+    #    most one fixture.
+    if "is_neutral" not in lookup.columns:
+        raise MappingError(
+            "model_map is missing is_neutral; rebuild via build_model_map "
+            "before mapping settled outcomes."
+        )
+    neutral_keys = set(lookup.loc[lookup["is_neutral"], "_key"])
+    mid_by_key = dict(zip(lookup["_key"], lookup["match_id"]))
+    canonicalized: list[dict[str, Any]] = []
+    for idx in scoped.index[~scoped["_key"].isin(known)]:
+        rev_key = f"{scoped.at[idx, 'away_code']}>{scoped.at[idx, 'home_code']}"
+        if rev_key not in neutral_keys:
+            continue
+        h_code, a_code = scoped.at[idx, "home_code"], scoped.at[idx, "away_code"]
+        h_goals, a_goals = scoped.at[idx, "home_goals"], scoped.at[idx, "away_goals"]
+        scoped.at[idx, "home_code"], scoped.at[idx, "away_code"] = a_code, h_code
+        scoped.at[idx, "home_goals"], scoped.at[idx, "away_goals"] = a_goals, h_goals
+        scoped.at[idx, "_key"] = rev_key
+        resolved_mid = mid_by_key[rev_key]
+        canonicalized.append(
+            {
+                "fd_match_id": str(scoped.at[idx, "match_id"]),
+                "resolved_match_id": str(resolved_mid),
+                "fixture_key": rev_key,
+                "rule": "neutral_orientation_canonicalized",
+            }
+        )
+        print(
+            f"    [cp-14] orientation canonicalized (neutral venue): "
+            f"{scoped.at[idx, 'match_id']} -> {resolved_mid} "
+            "(home/away codes and score swapped to the locked orientation)"
+        )
 
     # 1. Every in-scope settled outcome must resolve to a known fixture pair.
-    known = set(lookup["_key"])
+    #    Reversed-orientation neutral rows were canonicalized above; anything
+    #    still unmapped is a genuinely unknown pair or a non-neutral orientation
+    #    disagreement, both of which HALT.
     unmapped = scoped.loc[~scoped["_key"].isin(known)]
     if not unmapped.empty:
         detail = unmapped[["match_id", "home_code", "away_code"]].to_dict("records")
@@ -365,7 +439,12 @@ def map_settled(
         .sort_values("match_id")
         .reset_index(drop=True)
     )
-    return {"scored": scored, "deferred": deferred, "collapsed": collapsed}
+    return {
+        "scored": scored,
+        "deferred": deferred,
+        "collapsed": collapsed,
+        "canonicalized": canonicalized,
+    }
 
 
 def _empty_scored() -> pd.DataFrame:

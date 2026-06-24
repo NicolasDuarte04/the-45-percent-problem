@@ -89,6 +89,7 @@ def resolve_scored(
         "model_map": model_map,
         "deferred": result["deferred"],
         "collapsed": result.get("collapsed", []),
+        "canonicalized": result.get("canonicalized", []),
     }
 
 
