@@ -802,5 +802,11 @@
     "generated_at_utc": "2026-06-25T14:25:41Z",
     "bundle_url": "/data/snapshots/2026-06-25T14:25Z/",
     "meta_url": "/data/snapshots/2026-06-25T14:25Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-25T17:12Z",
+    "generated_at_utc": "2026-06-25T17:12:37Z",
+    "bundle_url": "/data/snapshots/2026-06-25T17:12Z/",
+    "meta_url": "/data/snapshots/2026-06-25T17:12Z/snapshot_meta.json"
   }
 ]
