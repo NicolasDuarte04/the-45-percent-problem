@@ -230,8 +230,8 @@ def build_divergence(
 
     odds_df must carry the canonical producer schema (snapshot_id, match_id,
     bookmaker, market_type, outcome, decimal_odds, is_closing). For each fixture
-    with a complete closing 1X2 triple, de-vig via the power method and emit
-    three rows (HOME / DRAW / AWAY) stamped source_book PINNACLE.
+    with a complete latest available market line 1X2 triple, de-vig via the power
+    method and emit three rows (HOME / DRAW / AWAY) stamped source_book PINNACLE.
 
     Each row carries a REAL Volatility Gate annotation computed by
     market/volatility_gate.py from the single Pinnacle snapshot (gate_status,
@@ -242,13 +242,23 @@ def build_divergence(
     dist_by_id = {r["match_id"]: r for _, r in distributions.iterrows()}
     fixture_by_id = {r["match_id"]: r for _, r in model_map.iterrows()}
 
-    closing = odds_df[
-        (odds_df["market_type"] == "match_winner") & (odds_df.get("is_closing", True))
-    ].copy()
+    match_winner = odds_df[odds_df["market_type"] == "match_winner"].copy()
+    # Select the LATEST available market line per match. The real Odds API feed is
+    # a single point-in-time snapshot (one timestamp per match); the synthetic feed
+    # carries an opening triple (kickoff-7d) and a closing triple (kickoff-5m),
+    # whose later timestamp selects the closing triple. is_opening / is_closing
+    # columns are left intact (reserved for deferred CLV work), but they no longer
+    # gate selection: a snapshot feed carries neither tag yet is the current line.
+    latest = match_winner
+    if "timestamp" in match_winner.columns:
+        ts_parsed = pd.to_datetime(match_winner["timestamp"], utc=True, errors="coerce")
+        if ts_parsed.notna().any():
+            latest_per_match = ts_parsed.groupby(match_winner["match_id"]).transform("max")
+            latest = match_winner[ts_parsed == latest_per_match].copy()
 
     rows: list[dict] = []
     row_idx = 0
-    for match_id, group in closing.groupby("match_id"):
+    for match_id, group in latest.groupby("match_id"):
         match_id = str(match_id)
         dist = dist_by_id.get(match_id)
         fixture = fixture_by_id.get(match_id)
@@ -331,7 +341,7 @@ def build_divergence(
         "rows": rows,
         "notes": (
             "Real de-vigged Pinnacle divergence. q_market is the power-method "
-            "de-vigged closing line; p_model is the frozen champion (M2_fifa) "
-            "per-match distribution."
+            "de-vigged latest available market line; p_model is the frozen "
+            "champion (M2_fifa) per-match distribution."
         ),
     }
