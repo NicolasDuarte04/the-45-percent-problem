@@ -718,13 +718,21 @@ def _real_group_outcomes() -> list[dict]:
     return rows
 
 
-def test_conditioning_fires_but_graded_brier_unchanged(tmp_path, elo, monkeypatch):
+def test_conditioning_fires_but_graded_brier_unchanged(
+    tmp_path, elo, monkeypatch, baseline, mexico_full_elimination
+):
     """Contamination headline (both assertions in one block):
 
-    1. Conditioning GENUINELY FIRES: with the settled set wired in, a settled
-       match shows its realised outcome at probability 1.0 in the conditioned
-       active object, and an eliminated-ish side's R16 reach collapses versus
-       the unconditioned baseline.
+    1. Conditioning GENUINELY FIRES: with the real settled set wired in, a
+       settled match shows its realised outcome at probability 1.0 in the
+       conditioned active object; and on a controlled synthetic elimination
+       (Mexico losing all three group games) the conditioned R16 reach of the
+       forced-out team collapses to exactly 0 versus its positive unconditioned
+       baseline. The synthetic side is used instead of a live team's fate so the
+       check holds regardless of which real teams are currently eliminated or
+       already through (a team that is mathematically through correctly
+       conditions to p_r16 = 1.0, so a hard-coded "this team collapses" check
+       drifts as the group stage settles).
     2. Enabling conditioning does NOT move the GRADED ledger Brier: the graded
        Brier (frozen batch) stays ~0.58, never near zero. If conditioning leaked
        into the graded path it would collapse toward 0; this asserts it does not.
@@ -745,8 +753,6 @@ def test_conditioning_fires_but_graded_brier_unchanged(tmp_path, elo, monkeypatc
     assert "conditioning_error" not in source, source
     assert len(settled) == len(rows), (len(settled), len(rows))
 
-    n_small = 600
-    base = _aggregate(_build_runner(elo, settled_results=None), n_runs=n_small)
     cond_runner = _build_runner(elo, settled_results=settled)
 
     # A settled match's realised outcome appears in 100% of conditioned runs.
@@ -764,16 +770,28 @@ def test_conditioning_fires_but_graded_brier_unchanged(tmp_path, elo, monkeypatc
             seen += 1
     assert seen == 50, f"M08 realised outcome not certain under conditioning: {seen}/50"
 
-    cond = _aggregate(cond_runner, n_runs=n_small)
-    # Turkey lost both committed played games (AUS 2-0 TUR, TUR 0-1 PAR); those
-    # results never leave the data, so conditioning must drop Turkey's R16 reach
-    # below the unconditioned baseline. A strict decrease plus a modest floor is
-    # asserted rather than a fixed magnitude so the test survives later snapshot
-    # commits adding more group results (measured today: 0.438 -> 0.053).
-    tur_b = base.get("Turkey", {}).get("p_r16", 0.0)
-    tur_c = cond.get("Turkey", {}).get("p_r16", 1.0)
-    assert tur_c < tur_b and tur_b - tur_c >= 0.10, (
-        f"Turkey p_r16 did not collapse under conditioning: {tur_b:.3f} -> {tur_c:.3f}"
+    # Conditioning collapses a deep-round probability in the elimination
+    # direction. Asserted on a CONTROLLED synthetic elimination (the
+    # mexico_full_elimination fixture: Mexico loses all three Group A games),
+    # not on any live team's fate, so it cannot drift as real group results
+    # settle. Mexico with 0 of 3 group points is a deterministic math
+    # elimination, so its conditioned R16 reach is exactly 0 while its
+    # unconditioned baseline is positive. The lookup default is 0.0, not 1.0:
+    # an eliminated team is absent from the aggregate, and absent means zero
+    # reach (this same default-1.0 footgun is what made the old hard-coded
+    # check read a full collapse as a non-collapse).
+    mex_base_r16 = baseline.get("Mexico", {}).get("p_r16", 0.0)
+    mex_elim_r16 = mexico_full_elimination.get("Mexico", {}).get("p_r16", 0.0)
+    assert mex_base_r16 > 0.0, (
+        f"Unconditioned Mexico p_r16={mex_base_r16:.3f} must be positive for "
+        f"the collapse to be meaningful; the baseline gives Mexico real R16 "
+        f"reach from the strength matrix."
+    )
+    assert mex_elim_r16 == 0.0, (
+        f"Mexico p_r16={mex_elim_r16:.3f} after all three group losses must be "
+        f"exactly 0: conditioning must collapse a forced-eliminated team's "
+        f"deep-round probability. A non-zero value means settled_results is not "
+        f"flowing into the MC's group loop."
     )
 
     # ── enabling conditioning must NOT move the graded Brier ───────────────
