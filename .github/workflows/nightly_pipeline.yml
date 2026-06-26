@@ -53,6 +53,24 @@ jobs:
       - name: Install project dependencies
         run: pip install -e ".[dev]"
 
+      - name: Fetch real Pinnacle odds (Tier 2; The Odds API)
+        # cp-odds-schedule: pull live Pinnacle 1X2 lines ONCE per day, before the
+        # regen step below reads data/raw/odds_pinnacle.parquet. With real odds
+        # present the regen emits a LIVE divergence (non-synthetic); without them
+        # it stays "pending". This is the only place the producer runs - the
+        # on-demand twin (on_demand_regen.yml) deliberately does NOT pull, it
+        # re-reads the committed parquet, so we stay at one pull per day.
+        #
+        # Cost: one GET (sport=soccer_fifa_world_cup, markets=h2h,
+        # bookmakers=pinnacle, regions=us,uk,eu) ~= 3 credits, ~90/month, well
+        # inside the 500/month free tier. Safe failure mode: if the key's tier
+        # does not surface Pinnacle (or WC lines are not open yet), the producer
+        # falls back to synthetic and divergence stays pending - nothing breaks.
+        # The key is referenced only via the secret; it is never printed.
+        env:
+          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+        run: python ingestion/fetch_odds_pinnacle.py --source oddsapi --force
+
       - name: Regenerate snapshot bundle from locked M2 batch
         # cp-10: settled-result conditioning reads match_outcomes from
         # Postgres when no data/processed/match_outcomes.parquet is staged.
@@ -76,6 +94,21 @@ jobs:
       - name: Stage updated website data files
         id: stage
         run: |
+          # cp-odds-schedule: persist the odds parquet ONLY when this pull
+          # returned real (non-synthetic) lines, so the on-demand regen can
+          # re-read the last nightly's odds and keep divergence live (and
+          # re-run the staleness gate against the new generation time). On a
+          # synthetic-fallback day nothing is staged here: divergence stays
+          # pending and no useless binary churn lands in git. odds_are_synthetic
+          # is the single source of truth for the synthetic/real decision.
+          ODDS_PARQUET="data/raw/odds_pinnacle.parquet"
+          if [ -f "$ODDS_PARQUET" ] && \
+             ! python -c "import pandas as pd; from market.divergence_generator import odds_are_synthetic; raise SystemExit(0 if odds_are_synthetic(pd.read_parquet('$ODDS_PARQUET')) else 1)"; then
+            git add "$ODDS_PARQUET"
+            echo "Odds parquet carries real lines; staged for commit."
+          else
+            echo "Odds parquet absent or synthetic; not committing (divergence stays pending)."
+          fi
           # snapshotProbs.ts lives under website/src/, NOT website/public/data/,
           # so it must be staged explicitly in addition to the data bundle.
           git add website/public/data/ website/src/lib/sim/snapshotProbs.ts

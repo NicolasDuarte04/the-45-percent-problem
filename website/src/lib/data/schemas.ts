@@ -116,6 +116,16 @@ export const DivergenceRowSchema = z.object({
   edge_threshold: z.number().min(0),
   gate_status: z.enum(["OPEN", "FIRED"]),
   gate_rules_tripped: z.array(z.string()),
+  // cp-volatility-gate: which of the five gate rules ran vs abstained this
+  // snapshot. The producer evaluates only Rule 5 (Pinnacle staleness) from a
+  // single odds pull; the rest are pending data. Optional so pre-cp-volatility
+  // snapshots (rows without this block) still parse.
+  gate_coverage: z
+    .object({
+      evaluated: z.array(z.string()),
+      unavailable: z.record(z.string(), z.string()),
+    })
+    .optional(),
   snapshot_age_minutes: z.number().min(0),
   confidence_band: z.tuple([z.number(), z.number()]),
   source_book: z.enum(["PINNACLE", "BETFAIR", "POLYMARKET"]),

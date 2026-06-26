@@ -193,7 +193,11 @@ export default async function TerminalPage({
             Rows where the Volatility Gate tripped are annotated with a{" "}
             <span style={{ color: "var(--gate-fired)" }}>◆</span> dot and remain
             visible: the gate annotates, it does not filter. Gate rules are shown
-            in the Gate column hover-card.{" "}
+            in the Gate column hover-card. Today the gate evaluates only the
+            Pinnacle staleness rule from a single odds snapshot; the news,
+            intra-book, cross-book and Polymarket rules report as pending data in
+            that hover-card and the row detail, so an{" "}
+            <span className="mono">Open</span> status is never a full five-rule pass.{" "}
             <span className="mono">ε</span> is the pre-registered edge threshold (3% mainline /
             5% longshot).
           </p>

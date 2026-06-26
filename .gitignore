@@ -38,6 +38,13 @@ data/raw/*.parquet
 !data/raw/recent_form.parquet
 !data/raw/fifa_rankings.parquet
 !data/raw/macro_data.parquet
+# cp-odds-schedule: the nightly producer pulls real Pinnacle odds once a day; the
+# on-demand regen re-reads them on a clean checkout (same "reads on a clean
+# checkout" rationale as the cp-10.1 inputs above). Explicit filename only - this
+# is NOT the broadened `!data/raw/*.parquet` the note above warns against. The
+# nightly stages this file ONLY when it carries real (non-synthetic) lines, so
+# synthetic-fallback days never churn it.
+!data/raw/odds_pinnacle.parquet
 data/raw/*.csv
 data/raw/*.json
 # cp-19: the FD-sourced kickoff override map is a committed input (consumed by
