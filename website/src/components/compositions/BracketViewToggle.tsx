@@ -80,7 +80,7 @@ function ToggleButton({
  * with no toggle, leaving the flag gate intact.
  */
 export function BracketViewToggle({ frozen, live }: BracketViewToggleProps) {
-  const [view, setView] = useState<View>("frozen");
+  const [view, setView] = useState<View>("live");
 
   const select = (next: View) => {
     if (next === view) return;
