@@ -6,15 +6,26 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { summarizeGateCoverage, type GateCoverage } from "@/lib/gateCoverage";
 
 interface GateStatusPillProps {
   status: "OPEN" | "FIRED";
   rulesTripped?: string[];
+  // Per-snapshot gate coverage (which rules ran vs are pending data). When
+  // provided, even an OPEN pill carries a hover-card so it is never read as a
+  // full five-rule pass. Omitted by callers with no coverage (e.g. the ledger).
+  coverage?: GateCoverage | null;
   className?: string;
 }
 
-export function GateStatusPill({ status, rulesTripped = [], className }: GateStatusPillProps) {
+export function GateStatusPill({
+  status,
+  rulesTripped = [],
+  coverage = null,
+  className,
+}: GateStatusPillProps) {
   const isFired = status === "FIRED";
+  const cov = summarizeGateCoverage(coverage);
 
   const pill = (
     <span
@@ -30,7 +41,7 @@ export function GateStatusPill({ status, rulesTripped = [], className }: GateSta
           : "transparent",
         borderRadius: "var(--radius-sm)",
       }}
-      aria-label={`gate status ${status}${isFired && rulesTripped.length ? `, rules: ${rulesTripped.join(", ")}` : ""}`}
+      aria-label={`gate status ${status}${isFired && rulesTripped.length ? `, rules: ${rulesTripped.join(", ")}` : ""}${cov.pending.length ? `, ${cov.pending.length} rules pending data` : ""}`}
     >
       {isFired && (
         <span
@@ -43,32 +54,55 @@ export function GateStatusPill({ status, rulesTripped = [], className }: GateSta
     </span>
   );
 
-  if (isFired && rulesTripped.length > 0) {
-    return (
-      <Tooltip>
-        <TooltipTrigger className="cursor-default">{pill}</TooltipTrigger>
-        <TooltipContent
-          className="mono text-[11px] max-w-[280px]"
-          style={{
-            backgroundColor: "var(--bg-panel-elev)",
-            border: "1px solid var(--border-default)",
-            color: "var(--text-primary)",
-          }}
-        >
-          <p className="font-medium mb-1" style={{ color: "var(--prism-sun)" }}>
-            Rules tripped:
-          </p>
-          <ul className="list-none space-y-0.5">
-            {rulesTripped.map((rule) => (
-              <li key={rule} style={{ color: "var(--text-secondary)" }}>
-                ◆ {rule}
-              </li>
-            ))}
-          </ul>
-        </TooltipContent>
-      </Tooltip>
-    );
+  const hasRules = isFired && rulesTripped.length > 0;
+  const hasCoverage = cov.line !== null;
+  if (!hasRules && !hasCoverage) {
+    return pill;
   }
 
-  return pill;
+  return (
+    <Tooltip>
+      <TooltipTrigger className="cursor-default">{pill}</TooltipTrigger>
+      <TooltipContent
+        className="mono text-[11px] max-w-[280px]"
+        style={{
+          backgroundColor: "var(--bg-panel-elev)",
+          border: "1px solid var(--border-default)",
+          color: "var(--text-primary)",
+        }}
+      >
+        {hasRules && (
+          <div className={hasCoverage ? "mb-2" : ""}>
+            <p className="font-medium mb-1" style={{ color: "var(--prism-sun)" }}>
+              Rules tripped:
+            </p>
+            <ul className="list-none space-y-0.5">
+              {rulesTripped.map((rule) => (
+                <li key={rule} style={{ color: "var(--text-secondary)" }}>
+                  ◆ {rule}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {hasCoverage && (
+          <div className="space-y-0.5">
+            <p className="font-medium" style={{ color: "var(--text-tertiary)" }}>
+              Gate coverage
+            </p>
+            {cov.evaluated.length > 0 && (
+              <p style={{ color: "var(--text-secondary)" }}>
+                Evaluated: {cov.evaluated.join(", ")}
+              </p>
+            )}
+            {cov.pending.length > 0 && (
+              <p style={{ color: "var(--text-quiet)" }}>
+                Pending data: {cov.pending.join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
 }

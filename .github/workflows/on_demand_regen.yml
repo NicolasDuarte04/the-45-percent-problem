@@ -9,10 +9,16 @@
 #
 # It is a deliberate copy of nightly_pipeline.yml's job, NOT a refactor of it:
 # the two stay independently reviewable and the nightly is never put at risk by
-# a change here. The ONLY differences from the nightly are:
+# a change here. The differences from the nightly are:
 #   - the trigger (repository_dispatch + manual workflow_dispatch vs. schedule)
 #   - this header.
-# The steps, env, permissions, and push/deploy logic are identical.
+#   - NO odds producer step. cp-odds-schedule pulls real Pinnacle odds ONCE per
+#     day, in the nightly only, to stay within the free-tier credit budget. This
+#     on-demand run instead re-reads the last nightly's committed
+#     data/raw/odds_pinnacle.parquet, so a settled-outcome regen keeps the
+#     divergence live (and re-runs the staleness gate) without spending a pull.
+#     If no real odds parquet is committed yet, divergence stays pending here too.
+# The steps, env, permissions, and push/deploy logic are otherwise identical.
 #
 # Concurrency: SAME group as the nightly (`nightly-pipeline`) with
 # cancel-in-progress: false, so an on-demand run and the nightly can never run

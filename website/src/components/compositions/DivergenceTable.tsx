@@ -26,6 +26,7 @@ import {
   formatUtcShort,
 } from "@/lib/formatters";
 import { MARKET_LABELS } from "@/lib/markets";
+import { gateRuleLabel } from "@/lib/gateCoverage";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -311,6 +312,29 @@ function RowDisclosure({ row }: { row: DivergenceRow }) {
             <span className="mono" style={{ color: "var(--text-secondary)" }}>
               {row.gate_rules_tripped.join(", ")}
             </span>
+          </div>
+        )}
+
+        {row.gate_coverage && (
+          <div
+            className="text-[11px] mt-1 pt-1 border-t"
+            style={{ borderColor: "var(--border-subtle)" }}
+          >
+            <span style={{ color: "var(--text-tertiary)" }}>Gate coverage:</span>{" "}
+            <span className="mono" style={{ color: "var(--text-secondary)" }}>
+              {row.gate_coverage.evaluated.length > 0
+                ? `${row.gate_coverage.evaluated.map(gateRuleLabel).join(", ")} evaluated`
+                : "no rule evaluable this snapshot"}
+            </span>
+            {Object.keys(row.gate_coverage.unavailable).length > 0 && (
+              <ul className="list-none mt-1 space-y-0.5">
+                {Object.entries(row.gate_coverage.unavailable).map(([k, reason]) => (
+                  <li key={k} style={{ color: "var(--text-quiet)" }}>
+                    ◦ <span className="mono">{gateRuleLabel(k)}</span>: {reason}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
       </div>
@@ -704,6 +728,7 @@ function DivergenceGrid({
                     <GateStatusPill
                       status={row.gate_status}
                       rulesTripped={row.gate_rules_tripped}
+                      coverage={row.gate_coverage}
                     />
                   </div>
                 </div>
