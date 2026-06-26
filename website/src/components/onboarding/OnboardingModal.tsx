@@ -202,7 +202,7 @@ export function OnboardingModal({
             >
               bookmaker odds
             </strong>{" "}
-            is in development.
+            is live for group-stage fixtures.
           </ClaimRow>
         </div>
 

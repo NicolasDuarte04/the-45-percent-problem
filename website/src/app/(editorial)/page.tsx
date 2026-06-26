@@ -81,8 +81,11 @@ export default async function Home() {
             bivariate Poisson model with Dixon-Coles correction, calibrated on
             international match data. Model-implied probabilities come from
             10,000 Monte Carlo simulations per nightly snapshot; a
-            market-comparison layer against bookmaker-implied probabilities is
-            in development. The &#8220;45% problem&#8221; refers to a systematic
+            market-comparison layer de-vigs bookmaker odds and reports signed
+            model-vs-market divergence for group-stage fixtures in the
+            divergence terminal. Knockout fixtures are not yet covered, since
+            those pairings are not known in advance. The &#8220;45%
+            problem&#8221; refers to a systematic
             divergence documented in Phase 1: market-implied championship
             probabilities for mid-tier contenders cluster near 45% of their
             model-implied values, suggesting a persistent structural

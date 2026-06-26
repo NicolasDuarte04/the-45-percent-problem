@@ -305,12 +305,20 @@ export function EditorialMasthead({
         <nav
           // Full-width scrolling row on mobile (its own row in the
           // flex-col stack); flex-1 on md+ where it sits between the
-          // wordmark and the brief link. min-w-0 + overflow-x-auto +
-          // .no-scrollbar lets the nav scroll horizontally without
-          // forcing the parent row past the viewport edge. The order-2
-          // class keeps the source-order layout correct on md+ where
-          // the brief link is order-3 and the CTA is order-4.
-          className="flex min-w-0 flex-1 items-baseline gap-4 md:gap-6 overflow-x-auto no-scrollbar whitespace-nowrap md:order-2"
+          // wordmark and the brief link. On mobile, min-w-0 +
+          // overflow-x-auto + .no-scrollbar lets the nav scroll
+          // horizontally without forcing the parent row past the
+          // viewport edge. On md+ the scroll affordance is deliberately
+          // switched off: md:min-w-fit restores the content floor that
+          // min-w-0 removed, so the flex-1 nav can never shrink below
+          // its tabs and collapse into a blank, scrollable underline
+          // strip; md:overflow-visible drops the scroll container so all
+          // six tabs render in full at desktop. flex-1 (grow) is kept so
+          // the nav still expands to push the brief link and CTA to the
+          // right. The order-2 class keeps the source-order layout
+          // correct on md+ where the brief link is order-3 and the CTA
+          // is order-4.
+          className="flex min-w-0 md:min-w-fit flex-1 items-baseline gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar whitespace-nowrap md:order-2"
           aria-label="Primary"
         >
           {tabs.map((tab) => {
@@ -319,7 +327,11 @@ export function EditorialMasthead({
               <Link
                 key={tab.id}
                 href={tab.href}
-                className="no-underline"
+                // shrink-0 keeps each tab at its full intrinsic width.
+                // Without it, under horizontal pressure the flex items
+                // squeeze and the inherited whitespace-nowrap label gets
+                // clipped (e.g. "Scenario Simulator" → "Scena").
+                className="no-underline shrink-0"
                 aria-current={active ? "page" : undefined}
                 style={{
                   fontFamily: "var(--font-sans)",
