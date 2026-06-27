@@ -321,6 +321,33 @@ export function EditorialMasthead({
           className="flex min-w-0 md:min-w-fit flex-1 items-baseline gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar whitespace-nowrap md:order-2"
           aria-label="Primary"
         >
+          {/* Mobile-only "Open terminal" entry. The desktop CTA lives in
+              row 1 (hidden md:inline-flex) but is too wide to share the
+              narrow mobile row 1 with the wordmark + brief link without
+              overflowing the viewport. The Matches tab no longer routes
+              to /terminal, so without this the terminal is unreachable on
+              mobile. Placing it first in the horizontally-scrolling nav
+              keeps it visible at rest and can never overflow the page.
+              md:hidden so desktop uses the row-1 pill only. Gated on
+              !onTerminal to match the desktop CTA's redundancy hiding. */}
+          {!onTerminal && (
+            <Link
+              href="/terminal"
+              className="no-underline shrink-0 self-center inline-flex items-center gap-1.5 md:hidden"
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: 12,
+                fontWeight: 500,
+                background: "var(--text-primary)",
+                color: "var(--bg-root)",
+                padding: "0 12px",
+                height: 28,
+                borderRadius: 6,
+              }}
+            >
+              Open terminal <span style={{ opacity: 0.6 }}>→</span>
+            </Link>
+          )}
           {tabs.map((tab) => {
             const active = tab.match(pathname);
             return (
@@ -331,7 +358,19 @@ export function EditorialMasthead({
                 // Without it, under horizontal pressure the flex items
                 // squeeze and the inherited whitespace-nowrap label gets
                 // clipped (e.g. "Scenario Simulator" → "Scena").
-                className="no-underline shrink-0"
+                //
+                // The active-tab underline uses a large pad-down +
+                // negative margin so the border sits exactly on the
+                // header's bottom rule on md+. On mobile the nav is a
+                // horizontal scroller (overflow-x-auto), which the CSS
+                // spec forces to also clip/scroll the cross axis, so
+                // that 22px overhang became a stray vertical scroll
+                // region. Below md we shrink the overhang (pb-1.5 / mb-0)
+                // so the underline sits inside the nav's own box and
+                // there is nothing to scroll vertically; the full
+                // 22 / -23 values are restored at md+ where the nav is
+                // overflow-visible and aligns to the header rule.
+                className="no-underline shrink-0 pb-1.5 md:pb-[22px] mb-0 md:-mb-[23px]"
                 aria-current={active ? "page" : undefined}
                 style={{
                   fontFamily: "var(--font-sans)",
@@ -342,8 +381,6 @@ export function EditorialMasthead({
                   borderBottom: active
                     ? "1.5px solid var(--text-primary)"
                     : "1.5px solid transparent",
-                  paddingBottom: 22,
-                  marginBottom: -23,
                 }}
               >
                 {tab.label}
