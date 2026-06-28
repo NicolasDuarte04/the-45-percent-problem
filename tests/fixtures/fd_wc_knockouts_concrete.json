@@ -1,0 +1,61 @@
+{
+  "_comment": "cp-17 Stage 2b synthetic FD payload. Models the post-draw state where knockout fixtures carry CONCRETE homeTeam/awayTeam. Includes one group match (must be excluded), one TBD knockout with null teams (must be excluded as not-yet-concrete), three concrete R32 pairings (two upcoming, one FINISHED with a fullTime score for the settle path), and one concrete R16 pairing. Teams are real WC2026 entrants present in elo_ratings.parquet and the teams roster.",
+  "competition": {"id": 2000, "code": "WC", "name": "FIFA World Cup"},
+  "matches": [
+    {
+      "id": 5001,
+      "stage": "GROUP_STAGE",
+      "status": "FINISHED",
+      "utcDate": "2026-06-20T19:00:00Z",
+      "homeTeam": {"id": 1, "name": "Mexico", "tla": "MEX"},
+      "awayTeam": {"id": 2, "name": "South Africa", "tla": "RSA"},
+      "score": {"fullTime": {"home": 2, "away": 0}}
+    },
+    {
+      "id": 5099,
+      "stage": "LAST_32",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-30T03:00:00Z",
+      "homeTeam": null,
+      "awayTeam": null,
+      "score": {"fullTime": {"home": null, "away": null}}
+    },
+    {
+      "id": 5201,
+      "stage": "LAST_32",
+      "status": "SCHEDULED",
+      "utcDate": "2026-06-28T19:00:00Z",
+      "homeTeam": {"id": 10, "name": "Portugal", "tla": "POR"},
+      "awayTeam": {"id": 11, "name": "Norway", "tla": "NOR"},
+      "score": {"fullTime": {"home": null, "away": null}}
+    },
+    {
+      "id": 5202,
+      "stage": "LAST_32",
+      "status": "TIMED",
+      "utcDate": "2026-06-28T22:00:00Z",
+      "homeTeam": {"id": 12, "name": "Brazil", "tla": "BRA"},
+      "awayTeam": {"id": 13, "name": "Japan", "tla": "JPN"},
+      "score": {"fullTime": {"home": null, "away": null}}
+    },
+    {
+      "id": 5203,
+      "stage": "LAST_32",
+      "status": "FINISHED",
+      "utcDate": "2026-06-29T19:00:00Z",
+      "lastUpdated": "2026-06-29T21:05:00Z",
+      "homeTeam": {"id": 14, "name": "France", "tla": "FRA"},
+      "awayTeam": {"id": 15, "name": "Croatia", "tla": "CRO"},
+      "score": {"fullTime": {"home": 2, "away": 1}}
+    },
+    {
+      "id": 5301,
+      "stage": "LAST_16",
+      "status": "SCHEDULED",
+      "utcDate": "2026-07-04T19:00:00Z",
+      "homeTeam": {"id": 16, "name": "Argentina", "tla": "ARG"},
+      "awayTeam": {"id": 17, "name": "Australia", "tla": "AUS"},
+      "score": {"fullTime": {"home": null, "away": null}}
+    }
+  ]
+}

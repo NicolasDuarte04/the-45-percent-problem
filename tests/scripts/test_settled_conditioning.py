@@ -685,13 +685,24 @@ def _graded_brier(outcomes_parquet: Path) -> tuple[float, int]:
     )
     from evaluation.aggregate_metrics import update_evaluation_metrics
 
+    # Restore the prior MATCH_OUTCOMES_PARQUET on exit. pytest keeps tmp_path
+    # dirs for the session, so leaking this env var would point later tests at a
+    # stray settled-outcomes parquet and corrupt their state (an isolation bug
+    # the cp-17 Stage 2b knockout-contamination test surfaced).
+    _prev = os.environ.get("MATCH_OUTCOMES_PARQUET")
     os.environ["MATCH_OUTCOMES_PARQUET"] = str(outcomes_parquet)
-    score = resolve_scored(matches_dir=MATCHES_DIR)
-    assert score["status"] == "ok", score
-    dists = reconstruct_distributions(score["model_map"])
-    rows = build_ledger_rows(score["scored"], dists, "test-cp16c")
-    em = update_evaluation_metrics({"brier": {}, "log_loss": {}, "rps": {}}, rows)
-    return float(em["brier"]["M_STAR"]), int(em.get("champion_metric_n", 0))
+    try:
+        score = resolve_scored(matches_dir=MATCHES_DIR)
+        assert score["status"] == "ok", score
+        dists = reconstruct_distributions(score["model_map"])
+        rows = build_ledger_rows(score["scored"], dists, "test-cp16c")
+        em = update_evaluation_metrics({"brier": {}, "log_loss": {}, "rps": {}}, rows)
+        return float(em["brier"]["M_STAR"]), int(em.get("champion_metric_n", 0))
+    finally:
+        if _prev is None:
+            os.environ.pop("MATCH_OUTCOMES_PARQUET", None)
+        else:
+            os.environ["MATCH_OUTCOMES_PARQUET"] = _prev
 
 
 def _real_group_outcomes() -> list[dict]:
@@ -814,4 +825,54 @@ def test_conditioning_fires_but_graded_brier_unchanged(
         f"graded Brier {brier_on:.4f} outside the sane non-zero band; a value "
         f"near zero means conditioning CONTAMINATED the graded ledger (the failure "
         f"mode cp-16c guards against)."
+    )
+
+
+# ── cp-17 Stage 2b: a settled KNOCKOUT outcome must not move the graded Brier ──
+
+
+def test_knockout_outcome_does_not_move_graded_brier(tmp_path):
+    """A settled knockout outcome (stage != "group") in the settled stream leaves
+    the graded ledger Brier byte-for-byte unchanged.
+
+    cp-17 Stage 2b adds a live knockout surface that settles a played knockout on
+    its own ungraded card. This guards the other direction: a knockout row landing
+    in the shared match_outcomes stream must never reach the frozen graded score.
+    resolve_scored maps group fixtures only (knockouts are deferred), so the graded
+    Brier is computed from the same group set with or without the knockout row. We
+    compute it twice on identical group sets that differ only by an appended
+    knockout outcome and assert byte-equality plus the sane non-zero band.
+    """
+    base_rows = _real_group_outcomes()
+    assert len(base_rows) >= 30, f"expected the real played-group set, got {len(base_rows)}"
+
+    base_dir = tmp_path / "base"
+    base_dir.mkdir()
+    base_path = _write_outcomes(base_dir, base_rows)
+    brier_base, n_base = _graded_brier(base_path)
+
+    # Append one settled knockout outcome (a real R32 pairing, 2-1). stage="r32"
+    # so map_settled defers it; it must not enter the graded scoring at all.
+    ko_row = {
+        "match_id": "FD5203",
+        "stage": "r32",
+        "home_team": "FRA",
+        "away_team": "CRO",
+        "home_goals": 2,
+        "away_goals": 1,
+        "settled_at": _SAFE_SETTLED_AT,
+    }
+    with_ko_dir = tmp_path / "with_ko"
+    with_ko_dir.mkdir()
+    with_ko_path = _write_outcomes(with_ko_dir, base_rows + [ko_row])
+    brier_with_ko, n_with_ko = _graded_brier(with_ko_path)
+
+    assert brier_with_ko == brier_base, (
+        f"graded Brier moved when a settled knockout outcome was present: "
+        f"{brier_base!r} -> {brier_with_ko!r}; a knockout result must never enter "
+        f"the frozen graded ledger."
+    )
+    assert n_with_ko == n_base == len(base_rows), (n_with_ko, n_base, len(base_rows))
+    assert 0.40 < brier_with_ko < 0.95, (
+        f"graded Brier {brier_with_ko:.4f} outside the sane non-zero band."
     )

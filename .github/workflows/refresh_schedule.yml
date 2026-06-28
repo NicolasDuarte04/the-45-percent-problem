@@ -79,6 +79,17 @@ jobs:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
         run: python scripts/build_wc2026_schedule.py
 
+      - name: Re-source concrete knockout pairings from Football-Data (cp-17 Stage 2b)
+        if: inputs.mode == 'publish'
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        # Read-only learner of who-plays-whom in the knockouts. Writes only
+        # data/live/knockout_pairings.json (a new namespace); it never touches
+        # match_outcomes or the FINISHED-only settled stream. Until the real
+        # draw resolves, both teams are TBD and the file lists zero pairings, so
+        # the per-match live knockout surface stays empty.
+        run: python ingestion/fetch_knockout_pairings.py
+
       - name: Heal published snapshot kickoffs
         if: inputs.mode == 'publish'
         run: |
@@ -93,6 +104,7 @@ jobs:
         run: |
           git add data/raw/wc2026_kickoffs.json \
                   website/src/lib/data/wc2026-kickoffs.ts \
+                  data/live/knockout_pairings.json \
                   website/public/data/latest/matches/
           if git diff --staged --quiet; then
             echo "No schedule changes detected."

@@ -105,6 +105,18 @@ AMENDMENT_POINTER = "osf/amendments/amendment_v1.1_data_completeness.md"
 # stages the export elsewhere can wire it without touching this constant.
 MATCH_OUTCOMES_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.parquet"
 
+# cp-17 Stage 2b: the concrete knockout pairings learned from the schedule feed
+# (ingestion/fetch_knockout_pairings.py) and the per-match live knockout surface
+# the producer emits from them. Both live in their own namespaces, disjoint from
+# the graded `matches/` files and the frozen bracket surfaces.
+LIVE_KNOCKOUT_PAIRINGS = PROJECT_ROOT / "data" / "live" / "knockout_pairings.json"
+MATCHES_LIVE_DIRNAME = "matches_live"
+# Seeded, fixed-size per-pairing Monte Carlo for the advance / tie-level probs.
+# Deterministic given the locked strengths, so each regen recomputes a stable
+# number; no per-card freeze-pin is required (Stage 2b methodology).
+LIVE_KNOCKOUT_MC_SIMS = 20000
+LIVE_KNOCKOUT_SEED_BASE = 20260512
+
 
 # cp-19: kickoff healing ------------------------------------------------------
 def load_kickoff_overrides(path: Path = KICKOFFS_JSON) -> dict[str, str]:
@@ -785,6 +797,298 @@ def emit_live_conditional_bracket(
         )
 
 
+def _knockout_strengths(teams_roster: dict[str, dict]) -> tuple[dict[str, float], dict[str, str]]:
+    """Build (elo_by_display, code_to_display) from the clean teams/ roster.
+
+    teams/<code>.json carries the SAME locked ``elo_rating`` the group producer's
+    strength provider uses (it was written from load_elo_ratings; it reproduces
+    the published group-card lambdas exactly). Sourcing the per-pairing strengths
+    from here keeps the knockout cards on the same locked strengths the group
+    producer uses, with zero dependency on the gitignored canonical-draw file or
+    on the corrupt knockout slot descriptors. M2_fifa stays locked: no unlock,
+    refit, or re-estimation happens here.
+    """
+    elo_by_display: dict[str, float] = {}
+    code_to_display: dict[str, str] = {}
+    for code, tj in teams_roster.items():
+        display = tj.get("display_name") or code
+        code_to_display[code] = display
+        elo = tj.get("elo_rating")
+        if elo is not None:
+            elo_by_display[display] = float(elo)
+    return elo_by_display, code_to_display
+
+
+def _build_knockout_card(
+    *,
+    home_code: str,
+    away_code: str,
+    home_display: str,
+    away_display: str,
+    round_code: str,
+    sp,
+    mm,
+    n_sims: int,
+    seed: int,
+) -> dict:
+    """Compute one ungraded knockout card under the locked engine.
+
+    1X2 and the goal matrix are analytic from ``MatchModel.joint_pmf`` on the
+    locked lambdas, exactly as the group cards are built. Advance and tie-level
+    probabilities come from a seeded per-pairing Monte Carlo that calls
+    ``ShootoutModel.resolve_knockout`` verbatim (regulation, damped extra time,
+    penalties) so there is zero tie-resolution drift. The winner is a true
+    sample, so the advance probability is legitimate; the penalty SCORES are
+    never rendered (they are expected-value estimates, not a sampled sequence).
+    """
+    import numpy as np
+
+    from simulation.match_model import MatchModel
+    from simulation.shootout_model import ShootoutModel
+
+    lam_h, lam_a = sp.get_lambdas(home_display, away_display, context=round_code)
+    pmf = mm.joint_pmf(lam_h, lam_a)
+    p_home = float(np.tril(pmf, k=-1).sum())
+    p_draw = float(np.trace(pmf))
+    p_away = float(np.triu(pmf, k=1).sum())
+    goals_matrix = pmf[:11, :11].tolist()
+
+    # Seeded per-pairing Monte Carlo. A fresh MatchModel + ShootoutModel share one
+    # seeded rng (the same wiring the MonteCarloRunner uses per run), so the
+    # advance numbers are deterministic and reproducible across regens.
+    rng = np.random.default_rng(seed)
+    mc_mm = MatchModel(rho=mm.rho, lambda3=mm.lambda3, max_goals=mm.max_goals, rng=rng)
+    mc_sm = ShootoutModel(match_model=mc_mm, rng=rng)
+    elo_a = sp.get_elo(home_display)
+    elo_b = sp.get_elo(away_display)
+
+    home_adv = 0
+    to_et = 0
+    to_pens = 0
+    home_pen_wins = 0
+    for _ in range(n_sims):
+        reg_h, reg_a = mc_mm.sample_scoreline(lam_h, lam_a)
+        if reg_h > reg_a:
+            home_adv += 1
+        elif reg_a > reg_h:
+            pass  # away advances
+        else:
+            ko = mc_sm.resolve_knockout(lam_h, lam_a, elo_a, elo_b, reg_score=(reg_h, reg_a))
+            to_et += 1
+            if ko["went_to_pens"]:
+                to_pens += 1
+            if ko["winner"] == "home":
+                home_adv += 1
+                if ko["went_to_pens"]:
+                    home_pen_wins += 1
+
+    p_advance_home = home_adv / n_sims
+    p_advance_away = (n_sims - home_adv) / n_sims
+    p_to_extra_time = to_et / n_sims
+    p_to_shootout = to_pens / n_sims
+    # Conditional home shootout-win probability, only when it falls out cleanly
+    # (at least one sampled shootout). Never the penalty scores; just P(home wins
+    # | the tie reaches penalties), whose winner is a true sample.
+    p_shootout_home_if_ko = (home_pen_wins / to_pens) if to_pens > 0 else None
+
+    return {
+        "match_id": None,  # filled by the caller
+        "round": round_code,
+        "kickoff_utc": None,  # filled by the caller
+        "home": {"fifa_code": home_code, "display_name": home_display},
+        "away": {"fifa_code": away_code, "display_name": away_display},
+        "p_model_1x2": {"H": p_home, "D": p_draw, "A": p_away},
+        "p_model_goals": goals_matrix,
+        "lambda": {"home": float(lam_h), "away": float(lam_a), "rho": float(mm.rho)},
+        "shootout_applicable": True,
+        "p_shootout_home_if_ko": p_shootout_home_if_ko,
+        "market_divergence": [],
+        "strength_inputs": {
+            "elo_home": float(elo_a),
+            "elo_away": float(elo_b),
+            "form_home": 0.0,
+            "form_away": 0.0,
+            "fifa_rank_home": 0,
+            "fifa_rank_away": 0,
+        },
+        "forecast_ids": [],
+        # Additive knockout fields. p_advance_home + p_advance_away == 1 by
+        # construction (every simulated tie resolves to a winner).
+        "p_advance_home": p_advance_home,
+        "p_advance_away": p_advance_away,
+        "p_to_extra_time": p_to_extra_time,
+        "p_to_shootout": p_to_shootout,
+    }
+
+
+def _knockout_settle_lookup(stage_scope_excluded: set[str]) -> dict[str, dict]:
+    """Build a settle lookup of FINISHED knockout outcomes, keyed for matching.
+
+    Reads the settled stream via the shared settled-source reader (the same one
+    cp-14 uses) but keeps ONLY knockout-stage rows (stage not in the excluded
+    group scope). This is display-only settling of the live card; it never writes
+    match_outcomes and never feeds the graded ledger. Returns a dict keyed by
+    both the FD source id (``FD<id>``) and the unordered FIFA-code pair, so a
+    pairing settles whether its id or its team identity matches.
+    """
+    from evaluation.settled_source import load_settled_outcomes
+
+    rows, _source = load_settled_outcomes()
+    lookup: dict[str, dict] = {}
+    if rows is None:
+        return lookup
+    for _, row in rows.iterrows():
+        stage = str(row.get("stage") or "").lower()
+        if stage in stage_scope_excluded:
+            continue
+        hg, ag = row.get("home_goals"), row.get("away_goals")
+        if hg is None or ag is None or pd.isna(hg) or pd.isna(ag):
+            continue
+        rec = {
+            "home_team": row.get("home_team"),
+            "away_team": row.get("away_team"),
+            "home_goals": int(hg),
+            "away_goals": int(ag),
+            "settled_at": row.get("settled_at"),
+        }
+        mid = str(row.get("match_id") or "")
+        if mid:
+            lookup[mid] = rec
+        hc, ac = rec["home_team"], rec["away_team"]
+        if hc and ac:
+            lookup[f"pair:{frozenset((hc, ac))}"] = rec
+    return lookup
+
+
+def emit_live_knockout_matches(
+    teams_roster: dict[str, dict],
+    source_batch_id: str,
+    new_generated_at: str,
+    out_dir: Path,
+) -> None:
+    """cp-17 Stage 2b: emit per-match live knockout cards from the real draw.
+
+    Reads the concrete pairings learned by ingestion/fetch_knockout_pairings.py
+    (``data/live/knockout_pairings.json``) and, for each, writes an explicitly
+    UNGRADED card to ``out_dir/matches_live/{match_id}.json``. Each card is built
+    under the locked engine (analytic 1X2 + goal matrix, plus a seeded
+    resolve_knockout Monte Carlo for the advance / tie-level probabilities) and
+    stamped with a ``live_provenance`` block carrying ``graded: false``.
+
+    Integrity (Stage 2b constraints):
+      - These files are read by NO graded surface. They live in their own
+        ``matches_live/`` namespace with their own loader; the frozen ledger,
+        snapshotProbs.ts, tournament.json marginals, and the frozen override are
+        untouched.
+      - The schedule feed is used only to learn who plays whom; it is never a
+        results source. A FINISHED knockout settles the live card (display-only
+        realised score next to the locked pre-match forecast) and never touches
+        the frozen graded ledger or the frozen Brier.
+      - M2_fifa stays locked; the strengths come from the same roster the group
+        producer uses (see ``_knockout_strengths``).
+
+    Defensive: any failure (missing pairings file, roster gap, aggregation error)
+    is logged and the emission is SKIPPED, leaving the frozen bundle in
+    ``out_dir`` untouched. A missing or empty pairings file is the normal
+    pre-draw state and emits nothing.
+    """
+    try:
+        if not LIVE_KNOCKOUT_PAIRINGS.exists():
+            print(
+                "    [cp-17] no knockout pairings file "
+                f"({LIVE_KNOCKOUT_PAIRINGS}); live knockout surface skipped"
+            )
+            return
+        doc = json.loads(LIVE_KNOCKOUT_PAIRINGS.read_text())
+        pairings = doc.get("pairings", [])
+        if not pairings:
+            print("    [cp-17] knockout pairings file has 0 concrete pairings; nothing to emit")
+            return
+
+        from simulation.match_model import MatchModel
+        from simulation.monte_carlo_runner import SimpleEloProvider
+
+        elo_by_display, code_to_display = _knockout_strengths(teams_roster)
+        sp = SimpleEloProvider(elo_by_display)
+        mm = MatchModel()
+
+        schedule_feed = doc.get("schedule_feed", {})
+        settle_lookup = _knockout_settle_lookup(stage_scope_excluded={"group"})
+
+        live_dir = out_dir / MATCHES_LIVE_DIRNAME
+        live_dir.mkdir(parents=True, exist_ok=True)
+
+        emitted = 0
+        settled = 0
+        for p in pairings:
+            match_id = p.get("match_id")
+            home_code = (p.get("home") or {}).get("fifa_code")
+            away_code = (p.get("away") or {}).get("fifa_code")
+            home_display = code_to_display.get(home_code)
+            away_display = code_to_display.get(away_code)
+            if not match_id or home_display is None or away_display is None:
+                print(
+                    f"    [cp-17] pairing {match_id} unmapped "
+                    f"({home_code} / {away_code}); skipped"
+                )
+                continue
+
+            # Deterministic per-pairing seed derived from the stable match id.
+            seed = LIVE_KNOCKOUT_SEED_BASE + (
+                int(hashlib.sha256(str(match_id).encode()).hexdigest(), 16) % 1_000_000
+            )
+            card = _build_knockout_card(
+                home_code=home_code,
+                away_code=away_code,
+                home_display=home_display,
+                away_display=away_display,
+                round_code=p.get("round", "R32"),
+                sp=sp,
+                mm=mm,
+                n_sims=LIVE_KNOCKOUT_MC_SIMS,
+                seed=seed,
+            )
+            card["match_id"] = match_id
+            card["kickoff_utc"] = p.get("kickoff_utc")
+
+            # Settle the live card (display-only) when the match has FINISHED.
+            source_id = p.get("source_id")
+            rec = settle_lookup.get(f"FD{source_id}") or settle_lookup.get(
+                f"pair:{frozenset((home_code, away_code))}"
+            )
+            if rec is not None:
+                hg, ag = rec["home_goals"], rec["away_goals"]
+                card["score"] = {"home": hg, "away": ag}
+                card["outcome_realized"] = "H" if hg > ag else ("A" if ag > hg else "D")
+                sa = rec.get("settled_at")
+                card["settled_at_utc"] = None if sa is None or pd.isna(sa) else str(sa)
+                settled += 1
+
+            card["live_provenance"] = {
+                "source_batch_id": source_batch_id,
+                "schedule_feed": {
+                    "source": schedule_feed.get("source"),
+                    "fetched_at_utc": schedule_feed.get("fetched_at_utc"),
+                },
+                "graded": False,
+                "n_sims": LIVE_KNOCKOUT_MC_SIMS,
+                "generated_at_utc": new_generated_at,
+            }
+
+            (live_dir / f"{match_id}.json").write_text(json.dumps(card, indent=2) + "\n")
+            emitted += 1
+
+        print(
+            f"    [cp-17] live knockout cards emitted: {emitted} "
+            f"({settled} settled) into {MATCHES_LIVE_DIRNAME}/"
+        )
+    except Exception as exc:  # broad on purpose: live emission must never break
+        print(
+            f"    [cp-17] live knockout surface skipped (error: {exc}); "
+            "frozen bundle unaffected"
+        )
+
+
 def main() -> None:
     print("=" * 60)
     print("regenerate_snapshot_from_batch (lockdown 2026-05-11 Section 7)")
@@ -1196,6 +1500,20 @@ def main() -> None:
         new_snapshot_id,
         new_generated_at,
         champion_internal,
+        new_dir,
+    )
+
+    # ── cp-17 Stage 2b: emit the per-match live knockout cards ────────────
+    # Read by no graded surface (own matches_live/ namespace + dedicated null
+    # loader). Pinned to the FROZEN batch id for provenance; the strengths come
+    # from the same roster the group producer uses. Defensive: skips-with-log on
+    # any failure, and emits nothing when the pairings file is missing/empty
+    # (the normal pre-draw state). Written into new_dir before the copytree so it
+    # rides snapshot retention into latest/ for free.
+    emit_live_knockout_matches(
+        teams_roster,
+        FROZEN_BATCH_ID,
+        new_generated_at,
         new_dir,
     )
 

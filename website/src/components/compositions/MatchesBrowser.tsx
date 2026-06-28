@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { Flag } from "@/components/primitives/Flag";
 import { formatProbability } from "@/lib/formatters";
-import type { MatchDetail } from "@/lib/data/schemas";
+import type { MatchDetail, LiveKnockoutMatch } from "@/lib/data/schemas";
 import {
   splitPlayedUpcoming,
   groupByDay,
@@ -17,6 +17,22 @@ import {
   formatKickoffTime,
   type MatchDayGroup,
 } from "@/lib/data/matchListing";
+
+/**
+ * A row is either a graded group card (matches/) or a live, ungraded knockout
+ * card (matches_live/). They share the per-match shape; the knockout card adds
+ * advance / tie-level fields and a `live_provenance` block carrying
+ * `graded: false`, which is also how we tell them apart at runtime.
+ */
+type MatchListItem = MatchDetail | LiveKnockoutMatch;
+
+function isLiveKnockout(m: MatchListItem): m is LiveKnockoutMatch {
+  return (
+    "live_provenance" in m &&
+    (m as LiveKnockoutMatch).live_provenance != null &&
+    (m as LiveKnockoutMatch).live_provenance.graded === false
+  );
+}
 
 const ROUND_LABELS: Record<string, string> = {
   GRP: "Group stage",
@@ -108,22 +124,37 @@ function ProbabilityNumbers({ p }: { p: { H: number; D: number; A: number } }) {
   );
 }
 
-function MatchRow({ match }: { match: MatchDetail }) {
+/**
+ * The model's pre-match knockout advance probability (the headline knockout
+ * number): home and away chance of progressing past this tie, including extra
+ * time and penalties. Rendered only for live knockout cards (round != "GRP").
+ */
+function AdvanceRow({ match }: { match: LiveKnockoutMatch }) {
+  const { home, away } = match;
+  return (
+    <div
+      className="mono flex justify-between items-baseline mt-1.5 text-[11px]"
+      style={{ color: "var(--text-secondary)" }}
+    >
+      <span style={{ color: "var(--text-tertiary)" }}>advance</span>
+      <span>
+        {home.fifa_code} {formatProbability(match.p_advance_home)}
+        <span style={{ color: "var(--text-tertiary)" }}> · </span>
+        {away.fifa_code} {formatProbability(match.p_advance_away)}
+      </span>
+    </div>
+  );
+}
+
+function MatchRowBody({ match }: { match: MatchListItem }) {
   const { home, away, p_model_1x2: p } = match;
   const played = match.score != null;
   const modal = modalScoreline(match.p_model_goals);
   const roundLabel = ROUND_LABELS[match.round] ?? match.round;
+  const live = isLiveKnockout(match);
 
   return (
-    <Link
-      href={`/match/${match.match_id}`}
-      className="no-underline block rounded transition-colors"
-      style={{
-        border: "1px solid var(--border-subtle)",
-        background: "var(--bg-panel)",
-        padding: "12px 16px",
-      }}
-    >
+    <>
       {/* meta line */}
       <div
         className="mono flex items-center justify-between text-[10px] uppercase tracking-[.06em] mb-2.5"
@@ -185,13 +216,57 @@ function MatchRow({ match }: { match: MatchDetail }) {
       {/* model probabilities: full row beneath, muted for played fixtures */}
       <div style={{ opacity: played ? 0.6 : 1 }}>
         <ProbabilityNumbers p={p} />
+        {/* ONE conditional row: the advance probability for live knockout cards. */}
+        {live && match.round !== "GRP" && (
+          <AdvanceRow match={match as LiveKnockoutMatch} />
+        )}
       </div>
+
+      {/* Explicit, visible ungraded label on knockout cards. */}
+      {live && (
+        <div
+          className="mono text-[9px] uppercase tracking-[.07em] mt-2 pt-2 border-t"
+          style={{ color: "var(--text-quiet)", borderColor: "var(--border-subtle)" }}
+        >
+          Live · not graded — only the frozen pre-tournament group forecast is
+          scored
+        </div>
+      )}
+    </>
+  );
+}
+
+function MatchRow({ match }: { match: MatchListItem }) {
+  const cardStyle = {
+    border: "1px solid var(--border-subtle)",
+    background: "var(--bg-panel)",
+    padding: "12px 16px",
+  } as const;
+
+  // Group cards link to their full per-match breakdown. Live knockout cards
+  // (KO-FD ids) have no priced detail page, so they render as a non-interactive
+  // panel rather than a link that would 404.
+  if (isLiveKnockout(match)) {
+    return (
+      <div className="block rounded" style={cardStyle}>
+        <MatchRowBody match={match} />
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/match/${match.match_id}`}
+      className="no-underline block rounded transition-colors"
+      style={cardStyle}
+    >
+      <MatchRowBody match={match} />
     </Link>
   );
 }
 
 /** A day-divider plus its fixtures. Shared by every section. */
-function DayGroups({ groups }: { groups: MatchDayGroup[] }) {
+function DayGroups({ groups }: { groups: MatchDayGroup<MatchListItem>[] }) {
   return (
     <>
       {groups.map((g) => (
@@ -277,7 +352,13 @@ function ShareCard() {
   );
 }
 
-export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
+export function MatchesBrowser({
+  matches,
+  knockouts = [],
+}: {
+  matches: MatchDetail[];
+  knockouts?: LiveKnockoutMatch[];
+}) {
   const [query, setQuery] = useState("");
   // The route is force-static, so "now" must come from the client to avoid a
   // hydration mismatch. It stays null through SSR and the first paint (no
@@ -292,7 +373,16 @@ export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
   const teamListId = useId();
   const playedPanelId = useId();
 
-  const filtered = useMemo(() => filterByTeam(matches, query), [matches, query]);
+  // Graded group cards and ungraded live knockout cards are merged for display
+  // only; they arrived through disjoint loaders. As knockout pairings resolve
+  // round by round they appear in Upcoming, and settle into Played once their
+  // result lands.
+  const allItems = useMemo<MatchListItem[]>(
+    () => [...matches, ...knockouts],
+    [matches, knockouts],
+  );
+
+  const filtered = useMemo(() => filterByTeam(allItems, query), [allItems, query]);
   const { played, upcoming } = useMemo(
     () => splitPlayedUpcoming(filtered),
     [filtered],
@@ -300,7 +390,7 @@ export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
 
   const todayKey = now != null ? audienceDayKeyFromMs(now) : null;
   const { today, rest } = useMemo(() => {
-    if (todayKey == null) return { today: [] as MatchDetail[], rest: upcoming };
+    if (todayKey == null) return { today: [] as MatchListItem[], rest: upcoming };
     return partitionToday(upcoming, todayKey);
   }, [upcoming, todayKey]);
 
@@ -311,12 +401,12 @@ export function MatchesBrowser({ matches }: { matches: MatchDetail[] }) {
   // Autocomplete suggestions: every distinct team name in the schedule.
   const teamNames = useMemo(() => {
     const names = new Set<string>();
-    for (const m of matches) {
+    for (const m of allItems) {
       names.add(m.home.display_name);
       names.add(m.away.display_name);
     }
     return Array.from(names).sort();
-  }, [matches]);
+  }, [allItems]);
 
   const hasResults = filtered.length > 0;
 

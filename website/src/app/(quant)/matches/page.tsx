@@ -1,4 +1,8 @@
-import { loadAllMatches, loadSnapshotMeta } from "@/lib/data/loadSnapshot";
+import {
+  loadAllMatches,
+  loadLiveKnockouts,
+  loadSnapshotMeta,
+} from "@/lib/data/loadSnapshot";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 import { MatchesBrowser } from "@/components/compositions/MatchesBrowser";
 
@@ -11,7 +15,12 @@ export const metadata = {
 };
 
 export default async function MatchesPage() {
+  // Graded group cards (matches/) and the separate, explicitly ungraded live
+  // knockout cards (matches_live/) are loaded through DISJOINT loaders and only
+  // merged for display here. loadLiveKnockouts returns [] until the real draw
+  // resolves, so the page shows no knockout rows yet.
   const matches = loadAllMatches();
+  const knockouts = loadLiveKnockouts();
   const meta = loadSnapshotMeta();
 
   return (
@@ -41,7 +50,7 @@ export default async function MatchesPage() {
       </div>
 
       <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6 flex flex-col gap-10">
-        <MatchesBrowser matches={matches} />
+        <MatchesBrowser matches={matches} knockouts={knockouts} />
 
         <ProvenanceBlock meta={meta} />
       </div>

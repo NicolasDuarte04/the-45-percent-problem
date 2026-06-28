@@ -18,6 +18,7 @@ import {
   ManifestSchema,
   LiveBracketSnapshotSchema,
   LiveTournamentSnapshotSchema,
+  LiveKnockoutMatchSchema,
   type SnapshotMeta,
   type TournamentSnapshot,
   type DivergenceSnapshot,
@@ -31,6 +32,7 @@ import {
   type LiveBracketSnapshot,
   type LiveTournamentSnapshot,
   type LiveProvenance,
+  type LiveKnockoutMatch,
 } from "./schemas";
 
 const DATA_ROOT = path.join(process.cwd(), "public", "data");
@@ -200,6 +202,41 @@ export function loadLiveBracket(snapshotId?: string):
     "tournament_live.json",
   );
   return { bracket, tournament, provenance: tournament.live_provenance };
+}
+
+/**
+ * cp-17 Stage 2b live knockout per-match cards (separate, explicitly UNGRADED).
+ *
+ * Reads the disjoint `matches_live/*.json` files the regen emits from the real
+ * knockout draw. A dedicated loader, parallel to loadLiveBracket: knockout files
+ * are deliberately NOT routed through loadAllMatches / the `matches/` directory,
+ * so the graded wall stays auditable (no graded reader can pick a knockout card
+ * up by accident). Returns [] when the directory is absent (the normal pre-draw
+ * state), so the Matches page simply shows no knockout rows yet. Each file must
+ * validate against LiveKnockoutMatchSchema, whose `live_provenance.graded` is a
+ * hard `false`, so a frozen file can never satisfy it. Sorted by kickoff for a
+ * stable order.
+ */
+export function loadLiveKnockouts(snapshotId?: string): LiveKnockoutMatch[] {
+  const dir = getSnapshotDir(snapshotId);
+  const knockoutsDir = path.join(dir, "matches_live");
+  if (!fs.existsSync(knockoutsDir)) return [];
+  return fs
+    .readdirSync(knockoutsDir)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) =>
+      validate(
+        LiveKnockoutMatchSchema,
+        readJson(path.join(knockoutsDir, f)),
+        `matches_live/${f}`,
+      ),
+    )
+    .sort((a, b) => {
+      const ta = Date.parse(a.kickoff_utc);
+      const tb = Date.parse(b.kickoff_utc);
+      if (ta !== tb) return ta - tb;
+      return a.match_id.localeCompare(b.match_id);
+    });
 }
 
 export function loadManifest(): Manifest {
