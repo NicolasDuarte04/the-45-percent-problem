@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { loadLedger, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
+import {
+  loadLedger,
+  loadEvaluationMetrics,
+  loadSnapshotMeta,
+} from "@/lib/data/loadSnapshot";
 import { LedgerSummaryPanel } from "@/components/compositions/LedgerSummaryPanel";
 import { LedgerTable } from "@/components/compositions/LedgerTable";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
@@ -183,6 +187,22 @@ export default function LedgerPage() {
   const brierMStar = metrics.brier.M_STAR;
   const championN = metrics.champion_metric_n ?? records.length;
 
+  // Phase-aware honesty note. The graded ledger covers only the 72
+  // pre-registered group matches and stays at that count through the knockouts
+  // by design; once the group stage is complete, a transparency ledger that
+  // never moves past 72 would read as stalled without a word of context. Group
+  // stage is the first 72 of 104 matches, so it is complete once all 72 have
+  // settled (matches_settled >= 72); we also accept any phase past the group
+  // stage, since tournament_phase can lag at "group_stage" until the first
+  // knockout settles. Both fields come straight from snapshot_meta.json (no
+  // invented signal). The note never changes what is graded or the 72-row count.
+  const meta = loadSnapshotMeta();
+  const GROUP_MATCH_COUNT = 72;
+  const groupStageComplete =
+    meta.matches_settled >= GROUP_MATCH_COUNT ||
+    (meta.tournament_phase !== "pre_tournament" &&
+      meta.tournament_phase !== "group_stage");
+
   return (
     <div
       className="min-h-screen"
@@ -245,6 +265,28 @@ export default function LedgerPage() {
               </span>{" "}
               over <span className="mono">n={championN}</span> settled group
               matches. A small sample is suggestive, not a track record.
+            </p>
+          ) : null}
+          {groupStageComplete ? (
+            <p
+              className="text-[11px] mt-1.5 max-w-[640px]"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              The group stage is complete. This graded ledger covers only the 72
+              pre-registered group matches and stays at that count by design:
+              knockout pairings were unknown when the model was locked, so
+              per-match knockout forecasts are published as an explicitly
+              ungraded live surface on the{" "}
+              <Link
+                href="/bracket"
+                className="underline"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                bracket
+              </Link>
+              . The pre-registered progression checkpoint (which teams the
+              frozen model favored to advance) will be reported here when it
+              settles.
             </p>
           ) : null}
           </div>

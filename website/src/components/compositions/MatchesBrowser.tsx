@@ -50,6 +50,35 @@ const OUTCOME_LABELS: Record<"H" | "D" | "A", string> = {
   A: "Away win",
 };
 
+/**
+ * The realized-outcome label shown under a played score. A knockout tie cannot
+ * end in a draw: a live knockout card whose regulation result is level was
+ * decided on penalties, so it never reads "Draw". Group cards keep the plain
+ * H/D/A label, and a card with no recorded outcome falls back to "Final". This
+ * is display-only (it reads outcome_realized and feeds no scored surface); the
+ * fuller fix that names the shootout winner is deferred to its own checkpoint.
+ */
+export function outcomeLabel(
+  outcomeRealized: "H" | "D" | "A" | null | undefined,
+  isLiveKnockout: boolean,
+): string {
+  if (!outcomeRealized) return "Final";
+  if (isLiveKnockout && outcomeRealized === "D") return "Decided on penalties";
+  return OUTCOME_LABELS[outcomeRealized];
+}
+
+/**
+ * The message shown when the Upcoming section is empty. When a team filter is
+ * active the emptiness is attributable to the filter; when no filter is active
+ * (the inter-round gap before the next knockout pairings resolve) it is not, so
+ * we must not imply a phantom filter is hiding fixtures.
+ */
+export function upcomingEmptyMessage(query: string): string {
+  return query.trim().length > 0
+    ? "No upcoming fixtures match this filter."
+    : "No upcoming fixtures yet; knockout pairings appear here once the draw resolves.";
+}
+
 /** A team's name + flag, aligned toward or away from the centre column. */
 function TeamLabel({
   code,
@@ -186,9 +215,7 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
                 className="mono text-[9px] uppercase tracking-[.08em] mt-1"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                {match.outcome_realized
-                  ? OUTCOME_LABELS[match.outcome_realized]
-                  : "Final"}
+                {outcomeLabel(match.outcome_realized, live)}
               </span>
             </>
           ) : (
@@ -466,7 +493,7 @@ export function MatchesBrowser({
             <SectionHeader title="Upcoming" count={rest.length} />
             {upcomingGroups.length === 0 ? (
               <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-                No upcoming fixtures match this filter.
+                {upcomingEmptyMessage(query)}
               </p>
             ) : (
               <DayGroups groups={upcomingGroups} />

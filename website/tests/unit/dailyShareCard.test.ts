@@ -323,3 +323,48 @@ describe("no em/en dashes in generated copy", () => {
     }
   });
 });
+
+// cp-19 item 2: the daily OG route now merges loadLiveKnockouts() into the
+// candidate set, so the share card tracks the real fixture list through the
+// knockout phase instead of going blind once all 72 group fixtures are played.
+// LiveKnockoutMatch extends MatchDetail, so a round-"R32" MatchDetail here is a
+// faithful stand-in for a merged knockout card as far as these pure selectors
+// (which read only MatchDetail fields) are concerned.
+describe("knockout-phase selectors (cp-19 item 2)", () => {
+  // Every group fixture is played and in the past (the deployed state on day 18).
+  const groupAllPlayed = [
+    makeMatch({ match_id: "G1", kickoff_utc: "2026-06-25T19:00:00+00:00", score: { home: 1, away: 0 } }),
+    makeMatch({ match_id: "G2", kickoff_utc: "2026-06-26T19:00:00+00:00", score: { home: 2, away: 2 } }),
+  ];
+  // A real R32 fixture today (unplayed) and a settled R32 fixture yesterday.
+  const knockoutToday = makeMatch({
+    match_id: "KO-FD1",
+    round: "R32",
+    kickoff_utc: "2026-06-28T19:00:00+00:00",
+  });
+  const knockoutYesterday = makeMatch({
+    match_id: "KO-FD2",
+    round: "R32",
+    kickoff_utc: "2026-06-27T19:00:00+00:00",
+    score: { home: 1, away: 0 },
+  });
+  const merged = [...groupAllPlayed, knockoutYesterday, knockoutToday];
+
+  it("preview surfaces today's knockout fixture once group play is over", () => {
+    // Group-only would return null (the Dia 0 / 'no hay partidos' bug); the
+    // merged set picks the knockout day.
+    expect(selectPreviewDay(groupAllPlayed, "2026-06-28")).toBeNull();
+    expect(selectPreviewDay(merged, "2026-06-28")).toBe("2026-06-28");
+    const rows = matchesForCard(merged, "2026-06-28", "preview");
+    expect(rows.map((m) => m.match_id)).toEqual(["KO-FD1"]);
+  });
+
+  it("recap advances onto settled knockout results instead of freezing on the last group day", () => {
+    // Group-only recap freezes on 2026-06-26; the merged set advances to the
+    // settled knockout day.
+    expect(selectRecapDay(groupAllPlayed, "2026-06-28")).toBe("2026-06-26");
+    expect(selectRecapDay(merged, "2026-06-28")).toBe("2026-06-27");
+    const rows = matchesForCard(merged, "2026-06-27", "recap");
+    expect(rows.map((m) => m.match_id)).toEqual(["KO-FD2"]);
+  });
+});
