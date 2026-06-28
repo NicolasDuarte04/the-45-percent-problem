@@ -50,6 +50,23 @@ const OUTCOME_LABELS: Record<"H" | "D" | "A", string> = {
   A: "Away win",
 };
 
+/**
+ * The realized-outcome label shown under a played score. A knockout tie cannot
+ * end in a draw: a live knockout card whose regulation result is level was
+ * decided on penalties, so it never reads "Draw". Group cards keep the plain
+ * H/D/A label, and a card with no recorded outcome falls back to "Final". This
+ * is display-only (it reads outcome_realized and feeds no scored surface); the
+ * fuller fix that names the shootout winner is deferred to its own checkpoint.
+ */
+export function outcomeLabel(
+  outcomeRealized: "H" | "D" | "A" | null | undefined,
+  isLiveKnockout: boolean,
+): string {
+  if (!outcomeRealized) return "Final";
+  if (isLiveKnockout && outcomeRealized === "D") return "Decided on penalties";
+  return OUTCOME_LABELS[outcomeRealized];
+}
+
 /** A team's name + flag, aligned toward or away from the centre column. */
 function TeamLabel({
   code,
@@ -186,9 +203,7 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
                 className="mono text-[9px] uppercase tracking-[.08em] mt-1"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                {match.outcome_realized
-                  ? OUTCOME_LABELS[match.outcome_realized]
-                  : "Final"}
+                {outcomeLabel(match.outcome_realized, live)}
               </span>
             </>
           ) : (
