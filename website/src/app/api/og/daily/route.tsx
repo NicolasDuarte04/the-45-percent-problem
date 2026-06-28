@@ -104,13 +104,17 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
 
     // No subject day means the snapshot has no matches for this variant
-    // (e.g. pre-tournament recap). Render a graceful empty card, not a 500.
+    // (e.g. pre-tournament recap, or a knockout-phase gap where the group
+    // fixtures are all played and the live knockout feed has no fixture for
+    // this day yet). Render a graceful empty card, not a 500. The header still
+    // reads the correct calendar day: derive "Dia N" and the date from today,
+    // not a hardcoded 0, so a fixture-less card shows "Dia 18", never "Dia 0".
     if (!subjectDay) {
       return renderCard(
         {
           variant,
-          dayNumber: 0,
-          dateLabel: "",
+          dayNumber: dayNumber(todayKey),
+          dateLabel: formatSpanishDate(todayKey),
           rows: [],
           metrics: null,
           emptyNote:
