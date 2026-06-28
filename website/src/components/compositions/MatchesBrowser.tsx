@@ -67,6 +67,18 @@ export function outcomeLabel(
   return OUTCOME_LABELS[outcomeRealized];
 }
 
+/**
+ * The message shown when the Upcoming section is empty. When a team filter is
+ * active the emptiness is attributable to the filter; when no filter is active
+ * (the inter-round gap before the next knockout pairings resolve) it is not, so
+ * we must not imply a phantom filter is hiding fixtures.
+ */
+export function upcomingEmptyMessage(query: string): string {
+  return query.trim().length > 0
+    ? "No upcoming fixtures match this filter."
+    : "No upcoming fixtures yet; knockout pairings appear here once the draw resolves.";
+}
+
 /** A team's name + flag, aligned toward or away from the centre column. */
 function TeamLabel({
   code,
@@ -481,7 +493,7 @@ export function MatchesBrowser({
             <SectionHeader title="Upcoming" count={rest.length} />
             {upcomingGroups.length === 0 ? (
               <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-                No upcoming fixtures match this filter.
+                {upcomingEmptyMessage(query)}
               </p>
             ) : (
               <DayGroups groups={upcomingGroups} />
