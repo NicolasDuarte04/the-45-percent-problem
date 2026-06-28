@@ -30,7 +30,11 @@
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
-import { loadAllMatches, loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
+import {
+  loadAllMatches,
+  loadEvaluationMetrics,
+  loadLiveKnockouts,
+} from "@/lib/data/loadSnapshot";
 import { formatMono } from "@/lib/formatters";
 import {
   type DailyVariant,
@@ -83,7 +87,15 @@ export async function GET(req: NextRequest): Promise<Response> {
     const dayParam = url.searchParams.get("day");
     const dayOverride = dayParam && DAY_RE.test(dayParam) ? dayParam : null;
 
-    const matches = loadAllMatches();
+    // Graded group cards (matches/) plus the explicitly UNGRADED cp-17 live
+    // knockout cards (matches_live/), merged for DISPLAY only, exactly as the
+    // /matches page does. loadLiveKnockouts returns [] until the real draw
+    // resolves, so this is a no-op pre-feed; once populated, the share card
+    // tracks the real fixture list (R32 through the Final) instead of going
+    // blind once the group stage is over. Neither card feeds any scored
+    // surface: this route renders an image and writes nothing back, so the
+    // graded ledger and calibration metrics are untouched.
+    const matches = [...loadAllMatches(), ...loadLiveKnockouts()];
 
     // Anchor auto-selection to the audience-local "today" so the card tracks the
     // calendar, not the data's played-state (a lagging snapshot can no longer
