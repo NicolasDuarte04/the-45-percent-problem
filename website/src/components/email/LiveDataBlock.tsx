@@ -37,6 +37,15 @@ export async function LiveDataBlock({
   const renderFallbackMarker =
     showFallbackMarker && brief.lead_in.fallback_used;
 
+  // Interim honesty guard (cp-19 item 7): the brief producer is not running in
+  // this repo, so the served brief can be days old. Only label the masthead
+  // "TODAY" when the brief's date is actually the current UTC date; otherwise
+  // call it the latest issue. The real date is always shown alongside, so a
+  // stale brief is never dressed up as today's. (A full fix that restores the
+  // producer is its own checkpoint.)
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const isToday = brief.brief_date === todayUtc;
+
   return (
     <section
       aria-label="Today's brief at a glance"
@@ -64,7 +73,7 @@ export async function LiveDataBlock({
           borderBottom: `1px solid ${t.hairline}`,
         }}
       >
-        <span>TODAY</span>
+        <span>{isToday ? "TODAY" : "LATEST ISSUE"}</span>
         <span style={{ color: t.graphiteQuiet }}>|</span>
         <span style={{ color: t.ink }}>{brief.brief_date} UTC</span>
         <span style={{ color: t.graphiteQuiet }}>|</span>
