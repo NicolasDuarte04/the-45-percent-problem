@@ -386,6 +386,51 @@ export const LiveTournamentSnapshotSchema = TournamentSnapshotSchema.extend({
 });
 export type LiveTournamentSnapshot = z.infer<typeof LiveTournamentSnapshotSchema>;
 
+// ── cp-17 Stage 2b live knockout per-match cards ──────────────────────────────
+// A SEPARATE, explicitly UNGRADED per-match surface emitted from the REAL draw
+// (ingestion/fetch_knockout_pairings.py learns who plays whom from the schedule
+// feed; the producer applies the locked engine to each concrete matchup). These
+// files live in their own `matches_live/` namespace with their own loader
+// (loadLiveKnockouts) and are read by no graded surface. The required
+// `live_provenance.graded` literal `false` makes it impossible to mistake one of
+// these for a graded `matches/` card. Only the frozen pre-tournament group
+// forecast is scored.
+
+export const LiveKnockoutProvenanceSchema = z.object({
+  // The frozen pre-registered batch id, stamped for provenance. The knockout
+  // cards never read graded marginals; this records which locked forecast they
+  // sit alongside.
+  source_batch_id: z.string(),
+  // Where the concrete pairing came from. The schedule feed is used only to
+  // learn who plays whom; it is never a results source.
+  schedule_feed: z.object({
+    source: z.string().nullable(),
+    fetched_at_utc: z.string().nullable(),
+  }),
+  // Hard literal: these cards are ALWAYS ungraded. A frozen/graded file lacks
+  // this block (and could not carry `graded: false`), so the two can never be
+  // confused.
+  graded: z.literal(false),
+  // Size of the seeded per-pairing Monte Carlo behind the advance / tie-level
+  // probabilities.
+  n_sims: z.number().int(),
+  generated_at_utc: z.string(),
+});
+export type LiveKnockoutProvenance = z.infer<typeof LiveKnockoutProvenanceSchema>;
+
+// Extends the per-match shape with the knockout-only advance / tie-level fields.
+// p_advance_home + p_advance_away sum to 1 (every simulated tie resolves to a
+// winner); p_advance_home is the headline knockout number. p_to_extra_time and
+// p_to_shootout are additive optional context.
+export const LiveKnockoutMatchSchema = MatchDetailSchema.extend({
+  p_advance_home: probability(),
+  p_advance_away: probability(),
+  p_to_extra_time: probability().optional(),
+  p_to_shootout: probability().optional(),
+  live_provenance: LiveKnockoutProvenanceSchema,
+});
+export type LiveKnockoutMatch = z.infer<typeof LiveKnockoutMatchSchema>;
+
 // ── manifest.json ─────────────────────────────────────────────────────────────
 
 export const ManifestEntrySchema = z.object({

@@ -41,12 +41,14 @@ export function byKickoff(a: MatchDetail, b: MatchDetail): number {
  * fixtures come first so the page reads strictly forward in tournament time:
  * the divider between the two sections is the "now" line.
  */
-export function splitPlayedUpcoming(matches: MatchDetail[]): {
-  played: MatchDetail[];
-  upcoming: MatchDetail[];
+export function splitPlayedUpcoming<T extends MatchDetail>(
+  matches: T[],
+): {
+  played: T[];
+  upcoming: T[];
 } {
-  const played: MatchDetail[] = [];
-  const upcoming: MatchDetail[] = [];
+  const played: T[] = [];
+  const upcoming: T[] = [];
   for (const m of matches) {
     (isPlayed(m) ? played : upcoming).push(m);
   }
@@ -75,14 +77,14 @@ export function dayKey(kickoffUtc: string): string {
   return AUDIENCE_DAY_FMT.format(d);
 }
 
-export interface MatchDayGroup {
+export interface MatchDayGroup<T extends MatchDetail = MatchDetail> {
   day: string;
-  matches: MatchDetail[];
+  matches: T[];
 }
 
 /** Group an already-sorted list into consecutive same-day buckets. */
-export function groupByDay(matches: MatchDetail[]): MatchDayGroup[] {
-  const groups: MatchDayGroup[] = [];
+export function groupByDay<T extends MatchDetail>(matches: T[]): MatchDayGroup<T>[] {
+  const groups: MatchDayGroup<T>[] = [];
   for (const m of matches) {
     const day = dayKey(m.kickoff_utc);
     const last = groups[groups.length - 1];
@@ -199,12 +201,12 @@ export function audienceDayKeyFromMs(ms: number): string {
  * remainder (future days, plus any earlier-dated fixture not yet settled).
  * Pass the already-sorted upcoming list so both partitions stay chronological.
  */
-export function partitionToday(
-  upcoming: MatchDetail[],
+export function partitionToday<T extends MatchDetail>(
+  upcoming: T[],
   todayKey: string,
-): { today: MatchDetail[]; rest: MatchDetail[] } {
-  const today: MatchDetail[] = [];
-  const rest: MatchDetail[] = [];
+): { today: T[]; rest: T[] } {
+  const today: T[] = [];
+  const rest: T[] = [];
   for (const m of upcoming) {
     (dayKey(m.kickoff_utc) === todayKey ? today : rest).push(m);
   }
@@ -216,10 +218,10 @@ export function partitionToday(
  * is a substring of either side's display name or FIFA code. A blank query
  * returns the list unchanged (referential identity preserved).
  */
-export function filterByTeam(
-  matches: MatchDetail[],
+export function filterByTeam<T extends MatchDetail>(
+  matches: T[],
   query: string,
-): MatchDetail[] {
+): T[] {
   const q = query.trim().toLowerCase();
   if (!q) return matches;
   return matches.filter(
