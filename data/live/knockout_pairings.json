@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-06-30T17:04:15Z"
+    "fetched_at_utc": "2026-06-30T19:50:10Z"
   },
   "competition": "WC2026",
   "count": 17,
@@ -70,7 +70,7 @@
       "match_id": "KO-FD537424",
       "source_id": 537424,
       "round": "R32",
-      "status": "TIMED",
+      "status": "FINISHED",
       "kickoff_utc": "2026-06-30T17:00:00Z",
       "home": {
         "fifa_code": "CIV",
