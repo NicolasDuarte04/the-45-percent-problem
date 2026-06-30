@@ -247,12 +247,20 @@ def run(
     from_file: Optional[Path] = None,
     out_path: Optional[Path] = None,
     dry_run: bool = False,
+    allow_empty_overwrite: bool = False,
 ) -> int:
     """Fetch the schedule feed, extract concrete knockout pairings, write JSON.
 
     Returns a process exit code (0 on success). Live fetch needs
     FOOTBALL_DATA_API_KEY; --from-file reads a captured payload for offline /
     test use and needs no key.
+
+    cp-20 durability: once the draw is set, the concrete-pairing count only ever
+    grows and then plateaus; it never legitimately falls back to zero. So when a
+    fetch yields zero concrete pairings but a populated file already exists on
+    disk, the existing file is kept rather than overwritten, so a transient feed
+    can never blank the knockout cards the regen rebuilds from it. Pass
+    allow_empty_overwrite=True to force the write (an intentional reset).
     """
     log.stage("=== fetch_knockout_pairings (cp-17 Stage 2b) ===")
 
@@ -284,6 +292,24 @@ def run(
         return 0
 
     out = Path(out_path) if out_path is not None else DEFAULT_OUTPUT
+
+    # cp-20 durability guard: never let a fetch that found zero concrete pairings
+    # wipe a file that already holds some. The knockout surface is rebuilt from
+    # this file on every regen, so a transient empty feed must not blank the
+    # cards. A genuine reset can still be forced with --allow-empty-overwrite.
+    if not allow_empty_overwrite and len(pairings) == 0 and out.exists():
+        try:
+            existing_count = int(json.loads(out.read_text()).get("count", 0))
+        except Exception:
+            existing_count = 0
+        if existing_count > 0:
+            log.warning(
+                "Fetch found 0 concrete pairings; keeping existing populated file",
+                path=str(out),
+                existing_count=existing_count,
+            )
+            return 0
+
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(doc, indent=2) + "\n")
     log.success(
@@ -320,5 +346,19 @@ if __name__ == "__main__":
         action="store_true",
         help="Print the document to stdout but do not write a file.",
     )
+    parser.add_argument(
+        "--allow-empty-overwrite",
+        action="store_true",
+        help="Write even a zero-pairing result over an existing populated file "
+        "(an intentional reset). Off by default so a transient empty feed cannot "
+        "blank the knockout cards.",
+    )
     args = parser.parse_args()
-    sys.exit(run(from_file=args.from_file, out_path=args.out, dry_run=args.dry_run))
+    sys.exit(
+        run(
+            from_file=args.from_file,
+            out_path=args.out,
+            dry_run=args.dry_run,
+            allow_empty_overwrite=args.allow_empty_overwrite,
+        )
+    )
