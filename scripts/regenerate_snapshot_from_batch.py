@@ -944,12 +944,22 @@ def _knockout_settle_lookup(stage_scope_excluded: set[str]) -> dict[str, dict]:
         hg, ag = row.get("home_goals"), row.get("away_goals")
         if hg is None or ag is None or pd.isna(hg) or pd.isna(ag):
             continue
+        # cp-22: penalty-shootout fields ride alongside the regulation score.
+        # home_goals/away_goals are the REGULATION (incl. extra time) result;
+        # the shootout tally is carried separately for display.
+        sw = row.get("shootout_winner")
+        sw = sw if isinstance(sw, str) and sw else None
+        sh = row.get("shootout_home")
+        sa_pens = row.get("shootout_away")
         rec = {
             "home_team": row.get("home_team"),
             "away_team": row.get("away_team"),
             "home_goals": int(hg),
             "away_goals": int(ag),
             "settled_at": row.get("settled_at"),
+            "shootout_winner": sw,
+            "shootout_home": None if sh is None or pd.isna(sh) else int(sh),
+            "shootout_away": None if sa_pens is None or pd.isna(sa_pens) else int(sa_pens),
         }
         mid = str(row.get("match_id") or "")
         if mid:
@@ -1062,6 +1072,22 @@ def emit_live_knockout_matches(
                 card["outcome_realized"] = "H" if hg > ag else ("A" if ag > hg else "D")
                 sa = rec.get("settled_at")
                 card["settled_at_utc"] = None if sa is None or pd.isna(sa) else str(sa)
+                # cp-22: a penalty-decided knockout is a regulation draw
+                # (outcome_realized == "D"); the score above is the regulation
+                # (incl. extra time) result, NEVER the penalty-inflated
+                # aggregate. Attach the shootout result so the card can render
+                # "Decided on penalties (X won N-M)". Display-only and ungraded.
+                sw = rec.get("shootout_winner")
+                sh, sa_pens = rec.get("shootout_home"), rec.get("shootout_away")
+                if sw or (sh is not None and sa_pens is not None):
+                    winner_side = (
+                        "H" if sw == home_code else ("A" if sw == away_code else None)
+                    )
+                    card["shootout"] = {
+                        "winner": winner_side,
+                        "home": sh,
+                        "away": sa_pens,
+                    }
                 settled += 1
 
             card["live_provenance"] = {

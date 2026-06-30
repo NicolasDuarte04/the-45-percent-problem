@@ -21,6 +21,7 @@ absent source is a normal pre-tournament / offline-CI state.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -33,7 +34,24 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 DEFAULT_PARQUET = PROJECT_ROOT / "data" / "processed" / "match_outcomes.parquet"
 
-_COLUMNS = ["match_id", "stage", "home_team", "away_team", "home_goals", "away_goals", "settled_at"]
+# cp-22 adds the penalty-shootout columns. shootout_winner is a real DB column;
+# shootout_home / shootout_away are derived from the match_outcomes.meta jsonb
+# (meta.shootout = {home, away}) so no schema migration is needed. These are
+# additive and read-only for the knockout card path; the graded scorer selects
+# its own column subset (see evaluation/forecast_mapping.normalise_outcomes), so
+# the extra columns are inert to the ledger.
+_COLUMNS = [
+    "match_id",
+    "stage",
+    "home_team",
+    "away_team",
+    "home_goals",
+    "away_goals",
+    "settled_at",
+    "shootout_winner",
+    "shootout_home",
+    "shootout_away",
+]
 
 
 def _resolve_pg_url() -> Optional[str]:
@@ -54,7 +72,7 @@ def load_settled_outcomes(parquet_path: Optional[Path] = None) -> tuple[Optional
     path = parquet_path or (Path(override) if override else DEFAULT_PARQUET)
     if path and Path(path).exists():
         df = pd.read_parquet(path)
-        return _coerce(df), f"parquet:{path}"
+        return _coerce(_extract_shootout(df)), f"parquet:{path}"
 
     url = _resolve_pg_url()
     if url:
@@ -68,10 +86,11 @@ def load_settled_outcomes(parquet_path: Optional[Path] = None) -> tuple[Optional
                 conn = psycopg2.connect(url)
             df = pd.read_sql(
                 "SELECT match_id, stage, home_team, away_team, "
-                "home_goals, away_goals, settled_at FROM match_outcomes",
+                "home_goals, away_goals, settled_at, shootout_winner, meta "
+                "FROM match_outcomes",
                 conn,
             )
-            return _coerce(df), "postgres:match_outcomes"
+            return _coerce(_extract_shootout(df)), "postgres:match_outcomes"
         except Exception as exc:  # best-effort; absence is not fatal
             print(f"    [warn] settled-outcomes postgres read failed: {exc}")
             return None, "postgres:error"
@@ -101,3 +120,54 @@ def _coerce(df: pd.DataFrame) -> pd.DataFrame:
         if col not in df.columns:
             df[col] = None
     return df[_COLUMNS].copy()
+
+
+def _shootout_from_meta(meta: object) -> Optional[tuple[int, int]]:
+    """Pull (shootout_home, shootout_away) out of a match_outcomes.meta value.
+
+    cp-22 stores the penalty tally under meta.shootout = {home, away}. The DB
+    returns jsonb as a dict (psycopg / psycopg2 both decode it by default); a
+    parquet snapshot may carry it as a JSON string or not at all. Returns None
+    for any row without a well-formed shootout block (every group match, and any
+    knockout that did not go to penalties)."""
+    if meta is None:
+        return None
+    if isinstance(meta, str):
+        try:
+            meta = json.loads(meta)
+        except (ValueError, TypeError):
+            return None
+    if not isinstance(meta, dict):
+        return None
+    so = meta.get("shootout")
+    if not isinstance(so, dict):
+        return None
+    h, a = so.get("home"), so.get("away")
+    if h is None or a is None:
+        return None
+    try:
+        return int(h), int(a)
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_shootout(df: pd.DataFrame) -> pd.DataFrame:
+    """Derive shootout_home / shootout_away columns from the meta jsonb (cp-22).
+
+    Additive and defensive: when shootout columns already exist (a future
+    parquet) they are kept; otherwise they are computed from meta.shootout, with
+    None for rows that have no shootout. The meta column itself is dropped by
+    ``_coerce`` (it is not in _COLUMNS), so nothing downstream sees raw meta."""
+    df = df.copy()
+    if "shootout_home" in df.columns and "shootout_away" in df.columns:
+        return df
+    meta_series = df["meta"] if "meta" in df.columns else None
+    homes: list = []
+    aways: list = []
+    for i in range(len(df)):
+        pair = _shootout_from_meta(meta_series.iloc[i]) if meta_series is not None else None
+        homes.append(pair[0] if pair else None)
+        aways.append(pair[1] if pair else None)
+    df["shootout_home"] = homes
+    df["shootout_away"] = aways
+    return df

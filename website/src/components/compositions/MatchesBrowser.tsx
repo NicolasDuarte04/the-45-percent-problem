@@ -68,6 +68,25 @@ export function outcomeLabel(
 }
 
 /**
+ * cp-22: the shootout detail shown beneath a penalty-decided knockout's
+ * REGULATION score, e.g. "PAR won the shootout 4-3". The scoreline above always
+ * stays the regulation (incl. extra time) result; this line names the shootout
+ * winner and tally so the summed/inflated score is never rendered. Returns null
+ * for every group card and any knockout decided in regulation, so the caller
+ * renders nothing. The winner's tally is shown first to read as "won N-M".
+ * Pure and display-only; reads no scored surface.
+ */
+export function shootoutLine(match: MatchListItem): string | null {
+  if (!isLiveKnockout(match)) return null;
+  const so = match.shootout;
+  if (!so || so.winner == null || so.home == null || so.away == null) return null;
+  const winnerCode =
+    so.winner === "H" ? match.home.fifa_code : match.away.fifa_code;
+  const [w, l] = so.winner === "H" ? [so.home, so.away] : [so.away, so.home];
+  return `${winnerCode} won the shootout ${w}-${l}`;
+}
+
+/**
  * The message shown when the Upcoming section is empty. When a team filter is
  * active the emptiness is attributable to the filter; when no filter is active
  * (the inter-round gap before the next knockout pairings resolve) it is not, so
@@ -181,6 +200,7 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
   const modal = modalScoreline(match.p_model_goals);
   const roundLabel = ROUND_LABELS[match.round] ?? match.round;
   const live = isLiveKnockout(match);
+  const penLine = shootoutLine(match);
 
   return (
     <>
@@ -217,6 +237,14 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
               >
                 {outcomeLabel(match.outcome_realized, live)}
               </span>
+              {penLine && (
+                <span
+                  className="mono text-[9px] tracking-[.04em] mt-0.5 text-center"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  {penLine}
+                </span>
+              )}
             </>
           ) : (
             <>
