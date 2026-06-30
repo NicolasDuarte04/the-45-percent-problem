@@ -71,6 +71,31 @@ jobs:
           THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
         run: python ingestion/fetch_odds_pinnacle.py --source oddsapi --force
 
+      - name: Fetch concrete knockout pairings from Football-Data (cp-20)
+        # cp-20: refresh data/live/knockout_pairings.json BEFORE the regen step
+        # below, so emit_live_knockout_matches sees the current draw and the
+        # Matches page self-populates knockout cards on every nightly run. This
+        # replaces the old manual two-step (dispatch "Refresh WC 2026 kickoff
+        # schedule", then dispatch a regen); no operator orchestration needed.
+        #
+        # Scope and isolation: a read-only learner of who-plays-whom. Writes ONLY
+        # data/live/knockout_pairings.json (a separate namespace). It never writes
+        # match_outcomes and never touches the FINISHED-only graded settled stream,
+        # so no knockout outcome can reach the frozen ledger or the conditioning
+        # path. A played knockout's realized score comes from the separate
+        # match_outcomes path (ingest_match_outcomes.yml), not from this feed.
+        #
+        # Non-fatal by design: a transient FD outage or rate-limit must not break
+        # the nightly snapshot/odds/bracket publish. On failure the script writes
+        # nothing, the checkout's last committed pairings stay in place, the regen
+        # reuses them, and the run continues. Until the draw resolves the file
+        # lists zero pairings and the knockout surface stays empty.
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        run: |
+          python ingestion/fetch_knockout_pairings.py \
+            || echo "::warning title=knockout-pairings::FD fetch failed; regen will reuse the last committed data/live/knockout_pairings.json"
+
       - name: Regenerate snapshot bundle from locked M2 batch
         # cp-10: settled-result conditioning reads match_outcomes from
         # Postgres when no data/processed/match_outcomes.parquet is staged.
@@ -112,6 +137,13 @@ jobs:
           # snapshotProbs.ts lives under website/src/, NOT website/public/data/,
           # so it must be staged explicitly in addition to the data bundle.
           git add website/public/data/ website/src/lib/sim/snapshotProbs.ts
+          # cp-20: persist the refreshed knockout pairings in the daily commit so
+          # the source-of-truth file rides forward as the next run's last-good
+          # base. Guarded because the file is absent only if the very first FD
+          # fetch failed before any pairings were ever committed.
+          if [ -f data/live/knockout_pairings.json ]; then
+            git add data/live/knockout_pairings.json
+          fi
           if git diff --staged --quiet; then
             echo "No data changes detected. Skipping commit and push."
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
