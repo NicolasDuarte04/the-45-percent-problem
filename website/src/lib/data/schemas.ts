@@ -427,6 +427,20 @@ export const LiveKnockoutMatchSchema = MatchDetailSchema.extend({
   p_advance_away: probability(),
   p_to_extra_time: probability().optional(),
   p_to_shootout: probability().optional(),
+  // cp-22: a knockout decided on penalties is a regulation DRAW. `score` carries
+  // the regulation (incl. extra time) result (e.g. 1-1) and `outcome_realized`
+  // is "D"; this block carries the shootout result so the card can label the tie
+  // honestly ("Decided on penalties, X won N-M") without ever inflating the
+  // scoreline. `winner` is the side that won the shootout ("H"/"A"); `home` and
+  // `away` are the shootout tally. Absent on non-penalty knockouts.
+  shootout: z
+    .object({
+      winner: z.enum(["H", "A"]).nullable(),
+      home: z.number().int().nonnegative().nullable(),
+      away: z.number().int().nonnegative().nullable(),
+    })
+    .nullable()
+    .optional(),
   live_provenance: LiveKnockoutProvenanceSchema,
 });
 export type LiveKnockoutMatch = z.infer<typeof LiveKnockoutMatchSchema>;

@@ -249,6 +249,37 @@ def fetch_raw(api_key: str) -> dict[str, Any]:
 # =============================================================================
 
 
+def _regulation_score(
+    full_home: int,
+    full_away: int,
+    pen_home: int,
+    pen_away: int,
+) -> tuple[int | None, int | None]:
+    """Recover the regulation (incl. extra time) score of a penalty knockout.
+
+    Football-Data v4's ``score.fullTime`` for a penalty-decided match is the
+    post-shootout aggregate (the end-of-extra-time score with the shootout tally
+    added in); ``score.penalties`` is the shootout tally alone. The pre-shootout
+    result is always a draw (a shootout only happens when the sides are level),
+    so:
+
+      * if fullTime is already level, it IS the regulation score; or
+      * if removing the shootout tally yields a non-negative draw, fullTime was
+        penalty-inflated and the remainder is the regulation score.
+
+    Anything else does not reconcile (an inconsistent feed); return
+    ``(None, None)`` so the caller keeps fullTime untouched rather than inventing
+    a score. See cp-22.
+    """
+    if full_home == full_away:
+        return full_home, full_away
+    reg_home = full_home - pen_home
+    reg_away = full_away - pen_away
+    if reg_home >= 0 and reg_away >= 0 and reg_home == reg_away:
+        return reg_home, reg_away
+    return None, None
+
+
 def clean_and_enrich(raw: dict[str, Any]) -> list[dict[str, Any]]:
     """Normalise raw match rows into the website ingest schema.
 
@@ -290,19 +321,52 @@ def clean_and_enrich(raw: dict[str, Any]) -> list[dict[str, Any]]:
 
         score = m.get("score") or {}
         full = score.get("fullTime") or {}
-        home_goals = full.get("home")
-        away_goals = full.get("away")
-        if home_goals is None or away_goals is None:
+        full_home = full.get("home")
+        full_away = full.get("away")
+        if full_home is None or full_away is None:
             log.warning("Missing fulltime score", source_id=source_id)
             skipped += 1
             continue
+        full_home = int(full_home)
+        full_away = int(full_away)
 
+        # cp-22: penalty-shootout knockouts. Football-Data v4 reports
+        # score.fullTime for a penalty-decided knockout as the POST-shootout
+        # aggregate (the end-of-extra-time score with the shootout tally added
+        # in) while exposing the shootout tally separately in score.penalties.
+        # Read verbatim, fullTime turns a 1-1 that went to penalties into a
+        # phantom 4-5 away "win". We store the REGULATION (incl. extra time)
+        # score as the scoreline and keep the shootout apart, so the 90-minute
+        # forecast is scored against the real 90-minute result and the card can
+        # label the tie honestly. Group matches never carry penalties, so this
+        # branch never alters a graded group row.
+        home_goals, away_goals = full_home, full_away
         shootout_winner = None
+        shootout: dict[str, int] | None = None
         penalties = score.get("penalties") or {}
         p_home = penalties.get("home")
         p_away = penalties.get("away")
-        if p_home is not None and p_away is not None and p_home != p_away:
-            shootout_winner = home_code if p_home > p_away else away_code
+        if p_home is not None and p_away is not None:
+            p_home = int(p_home)
+            p_away = int(p_away)
+            reg_home, reg_away = _regulation_score(full_home, full_away, p_home, p_away)
+            if reg_home is None or reg_away is None:
+                # Could not reconcile fullTime + penalties to a level result.
+                # Keep fullTime as-is and attach NO shootout (a non-draw paired
+                # with a shootout would fail the endpoint's
+                # shootout-only-when-drawn guard); surface it for review rather
+                # than inventing a score.
+                log.warning(
+                    "Penalty score did not reconcile to a draw; keeping fullTime",
+                    source_id=source_id,
+                    full_time=[full_home, full_away],
+                    penalties=[p_home, p_away],
+                )
+            else:
+                home_goals, away_goals = reg_home, reg_away
+                shootout = {"home": p_home, "away": p_away}
+                if p_home != p_away:
+                    shootout_winner = home_code if p_home > p_away else away_code
 
         settled_at = m.get("lastUpdated") or m.get("utcDate")
         if not settled_at:
@@ -322,12 +386,17 @@ def clean_and_enrich(raw: dict[str, Any]) -> list[dict[str, Any]]:
             "stage": stage,
             "homeTeam": home_code,
             "awayTeam": away_code,
-            "homeGoals": int(home_goals),
-            "awayGoals": int(away_goals),
+            "homeGoals": home_goals,
+            "awayGoals": away_goals,
             "settledAt": settled_at_iso,
         }
         if shootout_winner is not None:
             outcome["shootoutWinner"] = shootout_winner
+        if shootout is not None:
+            # The shootout tally rides in meta, which the ingest endpoint and the
+            # match_outcomes.meta jsonb column already carry end to end, so the
+            # card can show "won the shootout N-M" with no schema migration.
+            outcome["meta"] = {"shootout": shootout}
         outcomes.append(outcome)
 
     log.info("Cleaned", kept=len(outcomes), skipped=skipped)

@@ -247,6 +247,70 @@ def test_emitter_on_does_not_touch_frozen_surfaces(roster, tmp_path, monkeypatch
     assert after == before, (before, after)
 
 
+def test_penalty_knockout_card_shows_regulation_and_shootout(
+    roster, tmp_path, monkeypatch
+):
+    """cp-22: a knockout decided on penalties settles the live card to the
+    REGULATION draw (outcome_realized "D") and carries the shootout result, never
+    the penalty-inflated aggregate scoreline.
+
+    KO-FD5201 in the concrete fixture is Portugal (POR) vs Norway (NOR). We
+    inject a settled penalty result (regulation 1-1; Norway won the shootout 4-3)
+    through the shared settled reader and assert the emitted card."""
+    import evaluation.settled_source as SS
+
+    def _fake_load_settled_outcomes(*_a, **_k):
+        df = pd.DataFrame(
+            [
+                {
+                    "match_id": "FD5201",
+                    "stage": "r32",
+                    "home_team": "POR",
+                    "away_team": "NOR",
+                    "home_goals": 1,
+                    "away_goals": 1,
+                    "settled_at": "2026-06-28T21:05:00Z",
+                    "shootout_winner": "NOR",
+                    "shootout_home": 3,
+                    "shootout_away": 4,
+                }
+            ]
+        )
+        return df, "test:penalty"
+
+    # _knockout_settle_lookup imports load_settled_outcomes from this module at
+    # call time, so patching the attribute here is sufficient.
+    monkeypatch.setattr(SS, "load_settled_outcomes", _fake_load_settled_outcomes)
+
+    pairings_path = tmp_path / "knockout_pairings.json"
+    pairings_path.write_text(
+        json.dumps(
+            ING.build_document(
+                ING.build_pairings(json.loads(CONCRETE_FIXTURE.read_text())),
+                source_label="file:test",
+                fetched_at_utc="2026-06-28T17:00:00Z",
+            ),
+            indent=2,
+        )
+    )
+    monkeypatch.setattr(R, "LIVE_KNOCKOUT_PAIRINGS", pairings_path)
+
+    out_dir = tmp_path / "bundle"
+    out_dir.mkdir()
+    R.emit_live_knockout_matches(
+        roster, FROZEN_BATCH_ID, "2026-06-28T17:00:00Z", out_dir
+    )
+
+    card = json.loads(
+        (out_dir / R.MATCHES_LIVE_DIRNAME / "KO-FD5201.json").read_text()
+    )
+    # Regulation draw, NOT the penalty-inflated 4-5.
+    assert card["score"] == {"home": 1, "away": 1}
+    assert card["outcome_realized"] == "D"
+    # Shootout captured separately: Norway (the away side) won 4-3.
+    assert card["shootout"] == {"winner": "A", "home": 3, "away": 4}
+
+
 def test_emitter_off_creates_nothing(roster, tmp_path, monkeypatch):
     out_dir = tmp_path / "bundle"
     out_dir.mkdir()
