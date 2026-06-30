@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-06-30T19:50:10Z"
+    "fetched_at_utc": "2026-06-30T21:25:54Z"
   },
   "competition": "WC2026",
   "count": 17,
@@ -85,7 +85,7 @@
       "match_id": "KO-FD537416",
       "source_id": 537416,
       "round": "R32",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "kickoff_utc": "2026-06-30T21:00:00Z",
       "home": {
         "fifa_code": "FRA",
