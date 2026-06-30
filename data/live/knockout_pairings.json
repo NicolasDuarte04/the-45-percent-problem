@@ -1,0 +1,250 @@
+{
+  "schedule_feed": {
+    "source": "football-data.org/v4/competitions/WC/matches",
+    "fetched_at_utc": "2026-06-30T04:19:10Z"
+  },
+  "competition": "WC2026",
+  "count": 16,
+  "pairings": [
+    {
+      "match_id": "KO-FD537417",
+      "source_id": 537417,
+      "round": "R32",
+      "status": "FINISHED",
+      "kickoff_utc": "2026-06-28T19:00:00Z",
+      "home": {
+        "fifa_code": "RSA",
+        "source_name": "South Africa"
+      },
+      "away": {
+        "fifa_code": "CAN",
+        "source_name": "Canada"
+      }
+    },
+    {
+      "match_id": "KO-FD537423",
+      "source_id": 537423,
+      "round": "R32",
+      "status": "FINISHED",
+      "kickoff_utc": "2026-06-29T17:00:00Z",
+      "home": {
+        "fifa_code": "BRA",
+        "source_name": "Brazil"
+      },
+      "away": {
+        "fifa_code": "JPN",
+        "source_name": "Japan"
+      }
+    },
+    {
+      "match_id": "KO-FD537415",
+      "source_id": 537415,
+      "round": "R32",
+      "status": "FINISHED",
+      "kickoff_utc": "2026-06-29T20:30:00Z",
+      "home": {
+        "fifa_code": "GER",
+        "source_name": "Germany"
+      },
+      "away": {
+        "fifa_code": "PAR",
+        "source_name": "Paraguay"
+      }
+    },
+    {
+      "match_id": "KO-FD537418",
+      "source_id": 537418,
+      "round": "R32",
+      "status": "FINISHED",
+      "kickoff_utc": "2026-06-30T01:00:00Z",
+      "home": {
+        "fifa_code": "NED",
+        "source_name": "Netherlands"
+      },
+      "away": {
+        "fifa_code": "MAR",
+        "source_name": "Morocco"
+      }
+    },
+    {
+      "match_id": "KO-FD537424",
+      "source_id": 537424,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-06-30T17:00:00Z",
+      "home": {
+        "fifa_code": "CIV",
+        "source_name": "Ivory Coast"
+      },
+      "away": {
+        "fifa_code": "NOR",
+        "source_name": "Norway"
+      }
+    },
+    {
+      "match_id": "KO-FD537416",
+      "source_id": 537416,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-06-30T21:00:00Z",
+      "home": {
+        "fifa_code": "FRA",
+        "source_name": "France"
+      },
+      "away": {
+        "fifa_code": "SWE",
+        "source_name": "Sweden"
+      }
+    },
+    {
+      "match_id": "KO-FD537425",
+      "source_id": 537425,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-01T01:00:00Z",
+      "home": {
+        "fifa_code": "MEX",
+        "source_name": "Mexico"
+      },
+      "away": {
+        "fifa_code": "ECU",
+        "source_name": "Ecuador"
+      }
+    },
+    {
+      "match_id": "KO-FD537426",
+      "source_id": 537426,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-01T16:00:00Z",
+      "home": {
+        "fifa_code": "ENG",
+        "source_name": "England"
+      },
+      "away": {
+        "fifa_code": "COD",
+        "source_name": "Congo DR"
+      }
+    },
+    {
+      "match_id": "KO-FD537422",
+      "source_id": 537422,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-01T20:00:00Z",
+      "home": {
+        "fifa_code": "BEL",
+        "source_name": "Belgium"
+      },
+      "away": {
+        "fifa_code": "SEN",
+        "source_name": "Senegal"
+      }
+    },
+    {
+      "match_id": "KO-FD537421",
+      "source_id": 537421,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-02T00:00:00Z",
+      "home": {
+        "fifa_code": "USA",
+        "source_name": "United States"
+      },
+      "away": {
+        "fifa_code": "BIH",
+        "source_name": "Bosnia-Herzegovina"
+      }
+    },
+    {
+      "match_id": "KO-FD537420",
+      "source_id": 537420,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-02T19:00:00Z",
+      "home": {
+        "fifa_code": "ESP",
+        "source_name": "Spain"
+      },
+      "away": {
+        "fifa_code": "AUT",
+        "source_name": "Austria"
+      }
+    },
+    {
+      "match_id": "KO-FD537419",
+      "source_id": 537419,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-02T23:00:00Z",
+      "home": {
+        "fifa_code": "POR",
+        "source_name": "Portugal"
+      },
+      "away": {
+        "fifa_code": "CRO",
+        "source_name": "Croatia"
+      }
+    },
+    {
+      "match_id": "KO-FD537429",
+      "source_id": 537429,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-03T03:00:00Z",
+      "home": {
+        "fifa_code": "SUI",
+        "source_name": "Switzerland"
+      },
+      "away": {
+        "fifa_code": "ALG",
+        "source_name": "Algeria"
+      }
+    },
+    {
+      "match_id": "KO-FD537428",
+      "source_id": 537428,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-03T18:00:00Z",
+      "home": {
+        "fifa_code": "AUS",
+        "source_name": "Australia"
+      },
+      "away": {
+        "fifa_code": "EGY",
+        "source_name": "Egypt"
+      }
+    },
+    {
+      "match_id": "KO-FD537427",
+      "source_id": 537427,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-03T22:00:00Z",
+      "home": {
+        "fifa_code": "ARG",
+        "source_name": "Argentina"
+      },
+      "away": {
+        "fifa_code": "CPV",
+        "source_name": "Cape Verde Islands"
+      }
+    },
+    {
+      "match_id": "KO-FD537430",
+      "source_id": 537430,
+      "round": "R32",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-04T01:30:00Z",
+      "home": {
+        "fifa_code": "COL",
+        "source_name": "Colombia"
+      },
+      "away": {
+        "fifa_code": "GHA",
+        "source_name": "Ghana"
+      }
+    }
+  ]
+}
