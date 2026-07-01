@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-01T19:48:43Z"
+    "fetched_at_utc": "2026-07-01T21:25:19Z"
   },
   "competition": "WC2026",
   "count": 19,
@@ -130,7 +130,7 @@
       "match_id": "KO-FD537422",
       "source_id": 537422,
       "round": "R32",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "kickoff_utc": "2026-07-01T20:00:00Z",
       "home": {
         "fifa_code": "BEL",
