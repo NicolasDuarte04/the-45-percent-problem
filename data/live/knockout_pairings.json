@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-02T21:02:04Z"
+    "fetched_at_utc": "2026-07-02T23:01:34Z"
   },
   "competition": "WC2026",
   "count": 21,
@@ -160,7 +160,7 @@
       "match_id": "KO-FD537420",
       "source_id": 537420,
       "round": "R32",
-      "status": "IN_PLAY",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-02T19:00:00Z",
       "home": {
         "fifa_code": "ESP",
