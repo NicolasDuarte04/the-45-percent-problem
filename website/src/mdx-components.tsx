@@ -9,6 +9,7 @@ import {
   CiteChip,
   SectionRule,
   KillCriteriaStatusBlock,
+  R16CheckpointStatusBlock,
   InlineMath,
   BlockMath,
 } from "@/components/editorial";
@@ -39,6 +40,7 @@ const components: MDXComponents = {
   CiteChip,
   SectionRule,
   KillCriteriaStatusBlock,
+  R16CheckpointStatusBlock,
   InlineMath,
   BlockMath,
   // §8.4 Living figures

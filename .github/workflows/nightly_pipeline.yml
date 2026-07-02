@@ -12,6 +12,16 @@ on:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      force_r16_checkpoint:
+        description: >-
+          cp-25b manual override: publish the R16 kill-criterion checkpoint now,
+          bypassing the settled-R16-count gate. Ignored once the checkpoint has
+          already been published (it is carried forward byte-identical). Leave
+          false for normal nightly runs.
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -106,6 +116,9 @@ jobs:
         env:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # cp-25b: manual override for the R16 kill-criterion checkpoint. Empty
+          # on scheduled runs (the checkpoint fires on the settled-R16 count).
+          R16_CHECKPOINT_FORCE: ${{ github.event.inputs.force_r16_checkpoint }}
         run: python scripts/regenerate_snapshot_from_batch.py
 
       - name: Regenerate snapshotProbs.ts from M2 batch
@@ -119,6 +132,10 @@ jobs:
       - name: Stage updated website data files
         id: stage
         run: |
+          # cp-25b: persist the R16 checkpoint artifact when it is first
+          # published (it lives under website/public/data/, already covered by
+          # the `git add website/public/data/` below; called out here for the
+          # reviewer's benefit).
           # cp-odds-schedule: persist the odds parquet ONLY when this pull
           # returned real (non-synthetic) lines, so the on-demand regen can
           # re-read the last nightly's odds and keep divergence live (and
