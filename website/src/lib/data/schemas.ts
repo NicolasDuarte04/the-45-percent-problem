@@ -315,6 +315,36 @@ export const EvaluationMetricsSchema = z.object({
     timestamp: z.string(),
     action_taken: z.string(),
   }),
+  // cp-25b: the R16 live checkpoint result, a sibling field beside
+  // kill_criteria_check (never nested inside it). Absent until the settled
+  // R16 row count reaches the trigger gate in evaluation/r16_checkpoint.py;
+  // its presence is what the vault kill-criteria page checks to decide
+  // between the interim "will be evaluated when R16 settles" sentence and
+  // the live result render. This is a distinct event from the pre-tournament
+  // kill_criteria_check block above and must never be numerically compared
+  // to it in the UI.
+  r16_checkpoint: z
+    .object({
+      forecast_set: z.string(),
+      n: z.number().int().min(0),
+      mean_log_loss_m_star: z.number(),
+      mean_log_loss_m0: z.number(),
+      mean_diff: z.number(),
+      se: z.number(),
+      gap_in_se: z.number().nullable(),
+      threshold_se: z.number(),
+      tripped: z.boolean(),
+      kill_criterion_detail: z.string(),
+      source_batch_id: z.string(),
+      evaluated_at_utc: z.string(),
+      code_sha: z.string(),
+      settled_source: z.string().nullable().optional(),
+      r16_settled_count: z.number().int().min(0),
+      r16_settled_source: z.string(),
+      r16_trigger_count: z.number().int().min(0),
+      construction_note: z.string(),
+    })
+    .optional(),
 });
 export type EvaluationMetrics = z.infer<typeof EvaluationMetricsSchema>;
 

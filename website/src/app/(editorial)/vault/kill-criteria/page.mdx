@@ -245,7 +245,7 @@ make from its outputs have changed.
 1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, divergences, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
 2. The de-vigging machinery, divergence calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged divergences and gate decisions against M★'s (M2_fifa) probabilities.
 3. CLV continues to be tracked on the M★ row, measuring whether M2's probabilities lead the market over time. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
-4. The R16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison.
+4. The R16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison. Its current status is shown below, immediately after the Phase 8 status block.
 
 <MarginNote>
   An OSF amendment is the only path to changing M★'s identity during
@@ -279,10 +279,17 @@ alongside a `CLEARED: 6.22 SE / 2.0 SE (marginal)` reference and the
 Phase 8 timestamp. The badge state will be re-evaluated when the R16
 live checkpoint resolves on live tournament data.
 
-The [Transparency Ledger](/ledger) shows the full kill-criteria check
-panel alongside the rolling calibration metrics (Brier, log-loss, RPS)
-and the per-team probability cards. The ledger and this page read from
-the same snapshot, so they cannot disagree about the criterion's state.
+### The R16 live checkpoint status
+
+The block below is a separate, later event from the Phase 8 status
+block above. It reads the R16 live checkpoint result computed by
+`evaluation/r16_checkpoint.py` once the settled Round of 16 row count
+reaches the pre-registered trigger gate. Until that gate is reached the
+block shows the interim, pending state; it never displays a number
+before one has actually been computed, and it never compares its result
+numerically to the Phase 8 readings above.
+
+<R16CheckpointStatusBlock />
 
 <SectionRule />
 

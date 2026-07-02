@@ -32,6 +32,17 @@ on:
   repository_dispatch:
     types: [regen-snapshot]
   workflow_dispatch:
+    inputs:
+      force_r16_republish:
+        description: >
+          cp-25b: force the R16 kill-criterion checkpoint (evaluation/
+          r16_checkpoint.py) to (re)publish regardless of the settled-count
+          gate or an existing artifact. Leave false for a normal manual
+          regen; this input exists only for a deliberate, explicit
+          re-publish of the R16 checkpoint.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -123,6 +134,27 @@ jobs:
         # Runs after the snapshot regen (so the active batch + teams/ roster are
         # current) and before staging (so the file lands in the nightly commit).
         run: python scripts/generate_snapshot_probs_ts.py
+
+      - name: R16 pre-registered kill-criterion checkpoint (cp-25b)
+        # Same gated, idempotent, once-only step as nightly_pipeline.yml. Safe
+        # to run on every on-demand regen: it no-ops unless the settled R16 row
+        # count reaches 8 and no checkpoint artifact exists yet in
+        # website/public/data/latest/. The manual override
+        # (workflow_dispatch.inputs.force_r16_republish) is the only path that
+        # bypasses both the settled-count gate and the already-published
+        # no-op guard; it is false by default and absent entirely on the
+        # repository_dispatch (settled-outcome) trigger, so an automatic
+        # settled-result regen can never force a republish. See
+        # evaluation/r16_checkpoint.py.
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ "${{ github.event.inputs.force_r16_republish }}" = "true" ]; then
+            python evaluation/r16_checkpoint.py --force-republish
+          else
+            python evaluation/r16_checkpoint.py
+          fi
 
       - name: Stage updated website data files
         id: stage

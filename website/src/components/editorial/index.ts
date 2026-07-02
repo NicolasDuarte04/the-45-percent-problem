@@ -8,6 +8,7 @@ export { CiteChip } from "./CiteChip";
 export { SectionRule } from "./SectionRule";
 export { PdfEmbed } from "./PdfEmbed";
 export { KillCriteriaStatusBlock } from "./KillCriteriaStatusBlock";
+export { R16CheckpointStatusBlock } from "./R16CheckpointStatusBlock";
 export { InlineMath, BlockMath } from "./KatexMath";
 export { VaultToc } from "./VaultToc";
 export { FnRef, Footnote, Footnotes } from "./Footnote";

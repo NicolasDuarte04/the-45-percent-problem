@@ -116,6 +116,21 @@ jobs:
         # current) and before staging (so the file lands in the nightly commit).
         run: python scripts/generate_snapshot_probs_ts.py
 
+      - name: R16 pre-registered kill-criterion checkpoint (cp-25b)
+        # Gated, idempotent, once-only: publishes r16_checkpoint.json only when
+        # the settled R16 row count reaches 8 AND no checkpoint artifact exists
+        # yet in website/public/data/latest/. Otherwise a clean no-op (exit 0,
+        # nothing written). Runs after the snapshot regen so latest/
+        # evaluation_metrics.json exists for the sibling field write, and
+        # before staging so a real publish lands in the same nightly commit.
+        # Never touches the graded ledger, the kill_criteria_check block, or
+        # any frozen/sealed data; see evaluation/r16_checkpoint.py for the
+        # full integrity contract.
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python evaluation/r16_checkpoint.py
+
       - name: Stage updated website data files
         id: stage
         run: |
