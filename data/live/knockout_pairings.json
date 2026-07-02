@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-01T23:10:39Z"
+    "fetched_at_utc": "2026-07-02T02:03:24Z"
   },
   "competition": "WC2026",
   "count": 19,
@@ -145,7 +145,7 @@
       "match_id": "KO-FD537421",
       "source_id": 537421,
       "round": "R32",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "kickoff_utc": "2026-07-02T00:00:00Z",
       "home": {
         "fifa_code": "USA",
