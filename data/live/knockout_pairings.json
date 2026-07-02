@@ -1,10 +1,10 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-02T02:50:57Z"
+    "fetched_at_utc": "2026-07-02T06:38:32Z"
   },
   "competition": "WC2026",
-  "count": 19,
+  "count": 21,
   "pairings": [
     {
       "match_id": "KO-FD537417",
@@ -101,7 +101,7 @@
       "source_id": 537425,
       "round": "R32",
       "status": "FINISHED",
-      "kickoff_utc": "2026-07-01T01:00:00Z",
+      "kickoff_utc": "2026-07-01T02:00:00Z",
       "home": {
         "fifa_code": "MEX",
         "source_name": "Mexico"
@@ -289,6 +289,36 @@
       "away": {
         "fifa_code": "NOR",
         "source_name": "Norway"
+      }
+    },
+    {
+      "match_id": "KO-FD537378",
+      "source_id": 537378,
+      "round": "R16",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-06T00:00:00Z",
+      "home": {
+        "fifa_code": "MEX",
+        "source_name": "Mexico"
+      },
+      "away": {
+        "fifa_code": "ENG",
+        "source_name": "England"
+      }
+    },
+    {
+      "match_id": "KO-FD537380",
+      "source_id": 537380,
+      "round": "R16",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-07T00:00:00Z",
+      "home": {
+        "fifa_code": "USA",
+        "source_name": "United States"
+      },
+      "away": {
+        "fifa_code": "BEL",
+        "source_name": "Belgium"
       }
     }
   ]
