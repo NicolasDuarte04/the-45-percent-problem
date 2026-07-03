@@ -315,6 +315,30 @@ export const EvaluationMetricsSchema = z.object({
     timestamp: z.string(),
     action_taken: z.string(),
   }),
+  // cp-25b: the Round of 16 live kill-criterion checkpoint. A separate event
+  // from kill_criteria_check (the Phase 8 pre-tournament gate). Absent until
+  // the R16 checkpoint publishes (once, when the Round of 16 settles); once
+  // present it is carried forward byte-identical. gap_in_se is signed: positive
+  // means M_STAR is worse than M0 (the failing direction).
+  r16_checkpoint: z
+    .object({
+      forecast_set: z.string(),
+      n: z.number().int().min(0),
+      mean_log_loss_mstar: z.number(),
+      mean_log_loss_m0: z.number(),
+      mean_diff: z.number(),
+      se: z.number(),
+      gap_in_se: z.number(),
+      threshold_se: z.number(),
+      tripped: z.boolean(),
+      check_detail: z.string(),
+      source_batch_id: z.string(),
+      evaluated_at_utc: z.string().nullable(),
+      code_sha: z.string(),
+      settled_source: z.string().nullable(),
+      construction: z.string(),
+    })
+    .optional(),
 });
 export type EvaluationMetrics = z.infer<typeof EvaluationMetricsSchema>;
 

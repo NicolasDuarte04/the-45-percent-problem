@@ -1397,6 +1397,39 @@ def main() -> None:
         f"brier_M_STAR={em['brier']['M_STAR']} log_loss_M_STAR={em['log_loss']['M_STAR']}"
     )
 
+    # cp-25b: the Round of 16 pre-registered kill-criterion checkpoint. Runs
+    # AFTER evaluation_metrics.json is written into new_dir and BEFORE the
+    # copytree into latest/, so a written artifact rides into latest/ for free
+    # (the same pattern the live bracket / knockout emitters use). Idempotent and
+    # once-only: it publishes r16_checkpoint.json exactly once (when the settled
+    # R16 count reaches 8), then carries the frozen result forward byte-identical
+    # on every later run. It never recomputes after publication, never touches the
+    # graded ledger or the kill_criteria_check block, and only ADDS the
+    # r16_checkpoint sibling field onto evaluation_metrics.json. R16_CHECKPOINT_FORCE
+    # is the manual workflow_dispatch override (bypasses the settled-count gate).
+    from evaluation.r16_checkpoint import publish_if_triggered as publish_r16_checkpoint
+
+    r16_force = os.environ.get("R16_CHECKPOINT_FORCE", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    try:
+        publish_r16_checkpoint(
+            new_dir=new_dir,
+            latest_dir=LATEST_DIR,
+            code_sha=code_sha_str,
+            evaluated_at_utc=new_generated_at,
+            force=r16_force,
+            matches_dir=matches_src,
+        )
+    except SystemExit:
+        # A bijection HALT inside the checkpoint is a hard stop, same contract as
+        # the ledger scorer above; let it propagate so nothing is published.
+        raise
+    except Exception as exc:  # noqa: BLE001 - defensive; never break the nightly
+        print(f"    [cp-25b] checkpoint skipped (non-fatal): {exc}")
+
     # cp-14 commit 5: gated divergence (Decision B). If real odds are present
     # (the producer ran a real tier), de-vig them against the champion
     # distribution and stamp PINNACLE honestly. Otherwise emit the pending state:
