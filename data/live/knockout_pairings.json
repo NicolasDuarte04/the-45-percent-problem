@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-03T19:14:07Z"
+    "fetched_at_utc": "2026-07-03T21:00:48Z"
   },
   "competition": "WC2026",
   "count": 21,
@@ -205,7 +205,7 @@
       "match_id": "KO-FD537428",
       "source_id": 537428,
       "round": "R32",
-      "status": "IN_PLAY",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-03T18:00:00Z",
       "home": {
         "fifa_code": "AUS",
