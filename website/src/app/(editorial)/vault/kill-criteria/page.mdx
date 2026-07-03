@@ -212,18 +212,25 @@ matches are settled; it is not re-run weekly thereafter.
 The R16 live check is the kill criterion's first contact with live
 tournament data. M★ is M2_fifa, sealed in `champion_model.json`. The
 comparison is a real M2-versus-M0 head-to-head on live forecasts, not
-a degenerate self-comparison. The check will fire if M2 fails to
-beat M0 by at least 2 SE on cumulative match-level log-losses through
-the end of R16.
+a degenerate self-comparison. The evaluation happens when the Round of
+16 settles, as pre-registered: the statistic is the cumulative
+match-level log-loss of M★ (M2) against the M0 baseline over the 72
+pre-registered group-stage forecasts, scored against their realized
+outcomes, with a paired per-match standard error. The kill criterion
+fires if M★ is worse than M0 by at least 2 standard errors on that
+statistic.
 
-The formal null-result publication track is reserved for the R16
-checkpoint. If M★ (M2_fifa) is less than 2 SE better than M0 on
-cumulative live log-losses at R16, the project publishes a
-null-result report within 72 hours of the firing, following the
-template committed in the pre-registration. The Phase 8 sanity gate
-firing caused the framing pivot only; the formal null-result track
-did not trigger at Phase 8 and remains the live tournament's
-contingency.
+If the criterion fires, the pre-registered consequence is the same
+`pivot_paper_framing` action described for Phase 8: the paper pivots
+to the pre-committed contingency framing. The model is not silently
+swapped; only an OSF amendment can change M★'s identity mid-tournament
+(see the margin note below). Whether or not the criterion fires, the
+project publishes the evaluation report within 72 hours of the Round
+of 16 settling, following the template committed in the
+pre-registration. This live checkpoint is a separate evaluation from
+the Phase 8 sanity gate above (the 1.75 SE and 6.22 SE readings on
+cross-validation hold-out data); it applies the same 2-SE rule to
+live tournament forecasts instead.
 
 The block below is this checkpoint's own live event, a separate
 construction from the Phase 8 cross-validation readings above. It is a
@@ -255,7 +262,7 @@ make from its outputs have changed.
 1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, divergences, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
 2. The de-vigging machinery, divergence calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged divergences and gate decisions against M★'s (M2_fifa) probabilities.
 3. CLV continues to be tracked on the M★ row, measuring whether M2's probabilities lead the market over time. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
-4. The R16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison.
+4. The R16 live checkpoint will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison.
 
 <MarginNote>
   An OSF amendment is the only path to changing M★'s identity during
