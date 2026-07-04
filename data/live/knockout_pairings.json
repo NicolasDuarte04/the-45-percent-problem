@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-04T15:59:16Z"
+    "fetched_at_utc": "2026-07-04T17:10:23Z"
   },
   "competition": "WC2026",
   "count": 24,
@@ -250,7 +250,7 @@
       "match_id": "KO-FD537376",
       "source_id": 537376,
       "round": "R16",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "kickoff_utc": "2026-07-04T17:00:00Z",
       "home": {
         "fifa_code": "CAN",
