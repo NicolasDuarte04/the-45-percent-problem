@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-04T20:52:32Z"
+    "fetched_at_utc": "2026-07-04T21:55:44Z"
   },
   "competition": "WC2026",
   "count": 24,
@@ -265,7 +265,7 @@
       "match_id": "KO-FD537375",
       "source_id": 537375,
       "round": "R16",
-      "status": "TIMED",
+      "status": "LIVE",
       "kickoff_utc": "2026-07-04T21:00:00Z",
       "home": {
         "fifa_code": "PAR",
