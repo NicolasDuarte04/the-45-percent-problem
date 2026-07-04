@@ -818,5 +818,32 @@ const styles = `
     border-top: 1px solid var(--border-subtle);
     padding-top: 20px;
   }
+  /* cp-28: on a phone the 8-column grid squeezes each cell below a legible
+     width, and because the page (html/body) is overflow-x:clip a too-wide grid
+     would be silently clipped with no way to reach the right-hand columns. Give
+     the cells a fixed minimum size and let the grid scroll horizontally inside
+     its own container instead: the y-axis title stays pinned while the cells
+     pan. The row/column-sum readout in the rail still lists every value, so no
+     information depends on the scroll. Desktop (>720px) is untouched.
+
+     The min-width:0 chain is load-bearing: a grid/flex item defaults to
+     min-width:auto (its min-content), so without it the max-content grid would
+     refuse to shrink and push the whole card past the viewport (clipped, not
+     scrolled). Zeroing it on the heatmap column and on gm-wrap lets gm-wrap
+     shrink to the available width, at which point overflow-x:auto pans the grid
+     rather than the page. */
+  .gm-layout > div {
+    min-width: 0;
+  }
+  .gm-wrap {
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gm-grid {
+    grid-template-columns: 24px repeat(7, minmax(40px, 1fr));
+    grid-auto-rows: 40px;
+    min-width: max-content;
+  }
 }
 `;
