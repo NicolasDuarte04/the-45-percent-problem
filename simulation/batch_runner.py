@@ -93,6 +93,15 @@ class BatchManifest:
     # filters unknown keys so a future field add doesn't break resume.
     settled_count: int = 0
     settled_source: str = "default:pre_tournament"
+    # cp-27: LIVE knockout conditioning provenance. knockout_conditioned is True
+    # when the real R32 draw was consumed and settled knockout results fixed the
+    # decided matches; knockout_settled_count is the number of decided knockout
+    # matches conditioned; knockout_source carries the plan's degrade reason when
+    # False. Zero / False / "" pre-draw and for every non-live batch (the frozen
+    # batch is never re-run through here).
+    knockout_conditioned: bool = False
+    knockout_settled_count: int = 0
+    knockout_source: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -185,6 +194,7 @@ def _build_runner(
     variant: str,
     code_sha: str,
     settled_results: Optional[dict] = None,
+    live_knockout_plan=None,
 ) -> tuple["MonteCarloRunner", str]:
     """Build a MonteCarloRunner for the given model variant.
 
@@ -270,6 +280,7 @@ def _build_runner(
         code_sha=code_sha,
         tournament_variant="wc2026",
         settled_results=settled_results,
+        live_knockout_plan=live_knockout_plan,
     )
     return runner, matrix_sha256_run
 
@@ -343,6 +354,27 @@ def run_batch(
         settled_count=settled_count, settled_source=settled_source,
     )
 
+    # ── cp-27: build the LIVE knockout plan once per batch invocation ─────────
+    # Overrides the internal zone-pair bracket with the REAL R32 draw and fixes
+    # decided knockout matches. Returns None (no override) until the real R32 is
+    # drawn and the groups are fully conditioned, so every pre-draw batch, every
+    # non-live batch, and the no-settled-source CI path keep the pre-cp-27
+    # behaviour. Shared across every variant's runner within the batch.
+    from simulation.live_knockout import build_live_knockout_plan
+    live_knockout_plan, live_knockout_source = build_live_knockout_plan(
+        settled_group_results=settled_results,
+    )
+    knockout_conditioned = live_knockout_plan is not None
+    knockout_settled_count = (
+        live_knockout_plan.settled_ko_count if live_knockout_plan is not None else 0
+    )
+    log.info(
+        "Live knockout plan resolved for batch",
+        knockout_conditioned=knockout_conditioned,
+        knockout_settled_count=knockout_settled_count,
+        knockout_source=live_knockout_source,
+    )
+
     # ── Resume vs new batch ───────────────────────────────────────────────────
     if resume_from:
         batch_dir = output_root / resume_from
@@ -377,6 +409,9 @@ def run_batch(
             seed_master=seed_master,
             settled_count=settled_count,
             settled_source=settled_source,
+            knockout_conditioned=knockout_conditioned,
+            knockout_settled_count=knockout_settled_count,
+            knockout_source=live_knockout_source,
         )
         manifest_path = batch_dir / "manifest.json"
         manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))
@@ -396,6 +431,7 @@ def run_batch(
 
         runner, matrix_sha256_run = _build_runner(
             variant, code_sha, settled_results=settled_results,
+            live_knockout_plan=live_knockout_plan,
         )
         manifest.matrix_sha256_runs[variant] = matrix_sha256_run
         manifest_path.write_text(json.dumps(manifest.to_dict(), indent=2))

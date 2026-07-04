@@ -78,9 +78,15 @@ function ToggleButton({
  * live view is available (page passes it solely when `loadLiveBracket` is
  * non-null with the flag on); otherwise the page renders the frozen panel alone
  * with no toggle, leaving the flag gate intact.
+ *
+ * cp-27: the initial view is FROZEN, matching the "(default)" above. The live
+ * conditional view now conditions on the real knockout draw, so it is a genuine
+ * departure from the pre-registered forecast; it stays opt-in behind the toggle
+ * (and the NEXT_PUBLIC_LIVE_BRACKET flag). Making Live the default again is a
+ * separate operator decision after live verification.
  */
 export function BracketViewToggle({ frozen, live }: BracketViewToggleProps) {
-  const [view, setView] = useState<View>("live");
+  const [view, setView] = useState<View>("frozen");
 
   const select = (next: View) => {
     if (next === view) return;

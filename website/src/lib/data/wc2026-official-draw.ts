@@ -394,16 +394,24 @@ export const GROUP_MATCHES: GroupMatch[] = buildGroupMatches();
 //
 // Bracket pathway follows the published 2026 FIFA bracket diagram. Groups
 // are paired so two teams from the same group cannot meet before the QFs.
+//
+// cp-27 descriptor repair: two R32 home slots were transcribed wrong and broke
+// the winner/runner-up bijection. M76 read "2C" (duplicating group C's runner-up
+// slot, which M78 already carries) and M79 read "1A" (duplicating group A's
+// winner slot, which M73 already carries); as a result groups G and K had no
+// runner-up slot anywhere. Corrected to "2G" (M76) and "2K" (M79) so each of the
+// 12 group-winner and 12 runner-up slots appears exactly once across the 16 R32
+// matches. See tests/scripts/test_knockout_descriptor_validity.py.
 
 const KNOCKOUT_MATCHES_RAW: KnockoutMatch[] = [
   // ── Round of 32 · 16 matches, 28 Jun · 3 Jul ────────────────────────────────
   { match_id: "M73", round: "R32", kickoff_utc: "2026-06-28T19:00:00Z", venue_key: "ATT",        home_slot: "1A", away_slot: "BEST3-CDEFI" },
   { match_id: "M74", round: "R32", kickoff_utc: "2026-06-28T22:00:00Z", venue_key: "MercedesBenz", home_slot: "1L", away_slot: "BEST3-EHIJK" },
   { match_id: "M75", round: "R32", kickoff_utc: "2026-06-29T00:00:00Z", venue_key: "MetLife",    home_slot: "1G", away_slot: "BEST3-ABCDF" },
-  { match_id: "M76", round: "R32", kickoff_utc: "2026-06-29T03:00:00Z", venue_key: "Akron",      home_slot: "2C", away_slot: "2F" },
+  { match_id: "M76", round: "R32", kickoff_utc: "2026-06-29T03:00:00Z", venue_key: "Akron",      home_slot: "2G", away_slot: "2F" },
   { match_id: "M77", round: "R32", kickoff_utc: "2026-06-29T19:00:00Z", venue_key: "Lincoln",    home_slot: "1E", away_slot: "BEST3-ABCFG" },
   { match_id: "M78", round: "R32", kickoff_utc: "2026-06-29T22:00:00Z", venue_key: "BC_Place",   home_slot: "1F", away_slot: "2C" },
-  { match_id: "M79", round: "R32", kickoff_utc: "2026-06-30T00:00:00Z", venue_key: "Azteca",     home_slot: "1A", away_slot: "BEST3-CEFHI" },
+  { match_id: "M79", round: "R32", kickoff_utc: "2026-06-30T00:00:00Z", venue_key: "Azteca",     home_slot: "2K", away_slot: "BEST3-CEFHI" },
   { match_id: "M80", round: "R32", kickoff_utc: "2026-06-30T03:00:00Z", venue_key: "Levi",       home_slot: "2A", away_slot: "2B" },
   { match_id: "M81", round: "R32", kickoff_utc: "2026-06-30T19:00:00Z", venue_key: "BMO",        home_slot: "1H", away_slot: "BEST3-ABDEF" },
   { match_id: "M82", round: "R32", kickoff_utc: "2026-07-01T00:00:00Z", venue_key: "BBVA",       home_slot: "1C", away_slot: "2L" },

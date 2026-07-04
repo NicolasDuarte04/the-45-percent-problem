@@ -25,7 +25,10 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
+
+if TYPE_CHECKING:
+    from simulation.live_knockout import LiveKnockoutPlan
 
 import numpy as np
 import pandas as pd
@@ -213,15 +216,25 @@ class MonteCarloRunner:
         code_sha: str,
         tournament_variant: str = "wc2026",  # "wc2026" or "qatar2022"
         settled_results: Optional[dict[str, MatchResult]] = None,
+        live_knockout_plan: Optional["LiveKnockoutPlan"] = None,
     ) -> None:
         """cp-10: `settled_results` keyed by canonical match_id (M01..M72)
         replaces the sampled scoreline for any group-stage fixture present
         in the dict. Pass an empty dict (or None) for pre-tournament
         behavior - every group match is sampled, identical to pre-cp-10.
 
-        Knockout matches are NEVER conditioned in cp-10 (see scope cut in
-        docs/onboarding/cp-10-inspection-notes.md §7); the dict is checked
-        only inside the group-stage loop.
+        cp-27: `live_knockout_plan` (LIVE re-sim only) overrides the internal
+        zone-pair bracket with the REAL Round-of-32 draw and conditions the
+        knockout rounds on settled knockout results. When present:
+          - the R32 matchups are the plan's real pairings (canonical bracket
+            order) rather than the seeded zone-pair bracket;
+          - qualified_r32 is exactly the plan's 32-team set (a team not in it
+            never qualified and carries zero knockout mass);
+          - any knockout match whose realised winner is in the plan is fixed
+            (winner advances, loser eliminated) instead of sampled.
+        Pass None for the pre-cp-27 behaviour (zone-pair sampling, no knockout
+        conditioning), which the frozen batch and every non-live batch use. The
+        plan never touches the group loop or the grading path.
         """
         self._mm = match_model
         self._sm = shootout_model
@@ -230,6 +243,7 @@ class MonteCarloRunner:
         self._code_sha = code_sha
         self._variant = tournament_variant
         self._settled_results: dict[str, MatchResult] = dict(settled_results or {})
+        self._live_knockout_plan = live_knockout_plan
 
         # Load fixtures
         if tournament_variant == "qatar2022":
@@ -238,6 +252,20 @@ class MonteCarloRunner:
         else:
             self._group_fixtures = _load_wc2026_fixtures()
             self._groups = list("ABCDEFGHIJKL")
+
+    def _forced_ko_winner(self, team_a: TeamId, team_b: TeamId) -> Optional[TeamId]:
+        """Return the realised winner of a decided knockout match, or None.
+
+        cp-27: in the LIVE re-sim the plan carries the settled knockout results
+        keyed by the unordered team pair. A hit means the match is decided and
+        must be fixed (winner advances, loser eliminated) rather than sampled.
+        Returns None outside the live re-sim (no plan) or for an undecided match,
+        in which case the caller samples as before.
+        """
+        plan = self._live_knockout_plan
+        if plan is None:
+            return None
+        return plan.settled_winners.get(frozenset((team_a, team_b)))
 
     def run_one(
         self,
@@ -335,6 +363,15 @@ class MonteCarloRunner:
             r_matchups = self._be.seed_bracket(group_rankings, best_thirds)
             ko_round_names = _KO_ROUND_NAMES_2026
 
+            # cp-27 (LIVE re-sim only): replace the internal zone-pair bracket
+            # with the REAL Round-of-32 draw. The plan's pairings are in canonical
+            # bracket order (M73..M88) so the structural progression below (winner
+            # of match 2k-1 vs winner of 2k) reproduces the real R16/QF/SF wiring.
+            if self._live_knockout_plan is not None:
+                r_matchups = [
+                    (a, b) for a, b in self._live_knockout_plan.r32_pairs
+                ]
+
         # ── 3. Build team_runs rows (pre-knockout stats) ───────────────────────
         group_team_stats: dict[str, dict] = {}   # team → stats dict
         for group in self._groups:
@@ -373,6 +410,16 @@ class MonteCarloRunner:
             if team in group_team_stats:
                 group_team_stats[team]["qualified_r32"] = True
 
+        # cp-27 (LIVE re-sim only): the real draw is authoritative for who is in
+        # the Round of 32. Set qualified_r32 to exactly the plan's 32-team set so
+        # a team the simulation's best-thirds selection disagrees with reality on
+        # (e.g. a real qualifier the internal selection dropped, or vice versa)
+        # gets its true qualification state, not the simulated one.
+        if self._live_knockout_plan is not None:
+            qualified = self._live_knockout_plan.qualified_teams
+            for team, stats in group_team_stats.items():
+                stats["qualified_r32"] = team in qualified
+
         # ── 4. Knockout rounds ─────────────────────────────────────────────────
         current_round = r_matchups
         round_losers: dict[str, list[TeamId]] = {}
@@ -382,35 +429,56 @@ class MonteCarloRunner:
             next_round: list[tuple[TeamId, TeamId]] = []
             round_losers[round_name] = []
             for match_num, (team_a, team_b) in enumerate(current_round, start=1):
-                lam_h, lam_a = self._sp.get_lambdas(team_a, team_b, context=round_name)
-                reg_h, reg_a = self._mm.sample_scoreline(lam_h, lam_a)
+                # cp-27 (LIVE re-sim only): fix a decided knockout match instead
+                # of sampling it. The realised winner advances with probability 1
+                # and the loser is eliminated; the scoreline columns carry a
+                # winner-consistent placeholder (the realised score lives in the
+                # matches_live/ cards, never here), and settled=True marks it.
+                forced_winner = self._forced_ko_winner(team_a, team_b)
 
-                went_ET = False
-                et_h: Optional[int] = None
-                et_a: Optional[int] = None
-                went_pens = False
-                pen_h: Optional[int] = None
-                pen_a: Optional[int] = None
-                winner: str
-
-                if reg_h > reg_a:
-                    winner = team_a
-                elif reg_a > reg_h:
-                    winner = team_b
+                if forced_winner is not None:
+                    winner = forced_winner
+                    reg_h, reg_a = (1, 0) if winner == team_a else (0, 1)
+                    lam_h_out: Optional[float] = None
+                    lam_a_out: Optional[float] = None
+                    went_ET = False
+                    et_h: Optional[int] = None
+                    et_a: Optional[int] = None
+                    went_pens = False
+                    pen_h: Optional[int] = None
+                    pen_a: Optional[int] = None
+                    is_settled = True
                 else:
-                    # Draw → ET + possible penalties
-                    elo_a = self._sp.get_elo(team_a)
-                    elo_b = self._sp.get_elo(team_b)
-                    ko_result = self._sm.resolve_knockout(
-                        lam_h, lam_a, elo_a, elo_b, reg_score=(reg_h, reg_a)
-                    )
-                    went_ET = ko_result["went_to_ET"]
-                    et_h = ko_result["et_home"]
-                    et_a = ko_result["et_away"]
-                    went_pens = ko_result["went_to_pens"]
-                    pen_h = ko_result["pen_home_score"]
-                    pen_a = ko_result["pen_away_score"]
-                    winner = team_a if ko_result["winner"] == "home" else team_b
+                    lam_h, lam_a = self._sp.get_lambdas(team_a, team_b, context=round_name)
+                    reg_h, reg_a = self._mm.sample_scoreline(lam_h, lam_a)
+                    lam_h_out = round(lam_h, 6)
+                    lam_a_out = round(lam_a, 6)
+                    went_ET = False
+                    et_h = None
+                    et_a = None
+                    went_pens = False
+                    pen_h = None
+                    pen_a = None
+                    is_settled = False
+
+                    if reg_h > reg_a:
+                        winner = team_a
+                    elif reg_a > reg_h:
+                        winner = team_b
+                    else:
+                        # Draw → ET + possible penalties
+                        elo_a = self._sp.get_elo(team_a)
+                        elo_b = self._sp.get_elo(team_b)
+                        ko_result = self._sm.resolve_knockout(
+                            lam_h, lam_a, elo_a, elo_b, reg_score=(reg_h, reg_a)
+                        )
+                        went_ET = ko_result["went_to_ET"]
+                        et_h = ko_result["et_home"]
+                        et_a = ko_result["et_away"]
+                        went_pens = ko_result["went_to_pens"]
+                        pen_h = ko_result["pen_home_score"]
+                        pen_a = ko_result["pen_away_score"]
+                        winner = team_a if ko_result["winner"] == "home" else team_b
 
                 loser = team_b if winner == team_a else team_a
                 next_round.append(winner)
@@ -426,8 +494,8 @@ class MonteCarloRunner:
                     "phase": round_name,
                     "team_home": team_a,
                     "team_away": team_b,
-                    "lambda_home": round(lam_h, 6),
-                    "lambda_away": round(lam_a, 6),
+                    "lambda_home": lam_h_out,
+                    "lambda_away": lam_a_out,
                     "reg_home_goals": reg_h,
                     "reg_away_goals": reg_a,
                     "went_to_ET": went_ET,
@@ -437,9 +505,9 @@ class MonteCarloRunner:
                     "pen_home_score": pen_h,
                     "pen_away_score": pen_a,
                     "winner": winner,
-                    # cp-10: knockout conditioning is out of scope; KO rows
-                    # are always sampled, so settled is always False.
-                    "settled": False,
+                    # cp-27: settled=True only for a fixed (decided) knockout in
+                    # the LIVE re-sim; every sampled KO row stays False.
+                    "settled": is_settled,
                 })
 
             if round_name == "SF":
@@ -482,6 +550,12 @@ class MonteCarloRunner:
                 pen_a3 = ko_result["pen_away_score"]
                 third = t3 if ko_result["winner"] == "home" else t4
                 fourth = t4 if ko_result["winner"] == "home" else t3
+
+            # cp-27: fix a decided third-place playoff (LIVE re-sim only).
+            forced_3rd = self._forced_ko_winner(t3, t4)
+            if forced_3rd is not None:
+                third = forced_3rd
+                fourth = t4 if third == t3 else t3
 
             if third in group_team_stats:
                 group_team_stats[third]["exit_round"] = "3rd"
@@ -539,6 +613,12 @@ class MonteCarloRunner:
                 pen_a_fin = ko_result["pen_away_score"]
                 champion = f1 if ko_result["winner"] == "home" else f2
                 runner_up = f2 if ko_result["winner"] == "home" else f1
+
+            # cp-27: fix a decided final (LIVE re-sim only).
+            forced_fin = self._forced_ko_winner(f1, f2)
+            if forced_fin is not None:
+                champion = forced_fin
+                runner_up = f2 if champion == f1 else f1
 
             if runner_up in group_team_stats:
                 group_team_stats[runner_up]["exit_round"] = "Runner-up"

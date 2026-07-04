@@ -6,11 +6,13 @@ Football-Data.org schedule feed.
 
 Why this exists (Option 1, established in the Stage 2 inspection)
 ----------------------------------------------------------------
-The repo's knockout slot descriptors are internally corrupt (``1A`` appears in
-two R32 matches, ``2C`` twice, ``2G`` / ``2K`` nowhere) and there is no best-3rd
-allocation table for the 12-group 2026 format. Resolving the bracket ourselves
-would display provably wrong, duplicated pairings. We do not. Reality already
-resolves the pairings: once the bracket draws, Football-Data.org's
+The repo's R32 slot descriptors were internally corrupt at the time this was
+written (``1A`` appeared in two R32 matches, ``2C`` twice, ``2G`` / ``2K``
+nowhere); cp-27 later repaired that winner/runner-up bijection (M76 2C->2G,
+M79 1A->2K). But there is still no best-3rd allocation table for the 12-group
+2026 format, so resolving the full bracket ourselves remains unreliable. We do
+not. Reality already resolves the pairings: once the bracket draws,
+Football-Data.org's
 ``/competitions/WC/matches`` feed carries a concrete ``homeTeam`` / ``awayTeam``
 for each knockout fixture. This script reads that feed and records only the
 matches whose BOTH sides are concrete, into a NEW namespace. It never touches

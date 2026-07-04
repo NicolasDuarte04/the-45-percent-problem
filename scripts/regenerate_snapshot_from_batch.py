@@ -752,6 +752,22 @@ def emit_live_conditional_bracket(
         else:
             conditioned_reason = "no_settled_group_matches"
 
+        # cp-27: read the LIVE knockout-conditioning provenance the batch runner
+        # stamped on the active batch's manifest. knockout_conditioned is True
+        # when the active batch consumed the REAL R32 draw and fixed the decided
+        # knockout matches; the count is how many knockout matches were fixed.
+        # Absent (older manifest) -> False, so the copy degrades honestly.
+        knockout_conditioned = False
+        knockout_conditioned_count = 0
+        try:
+            manifest_path = PROJECT_ROOT / active_batch_path / "manifest.json"
+            if manifest_path.exists():
+                mf = json.loads(manifest_path.read_text())
+                knockout_conditioned = bool(mf.get("knockout_conditioned", False))
+                knockout_conditioned_count = int(mf.get("knockout_settled_count", 0) or 0)
+        except Exception as exc:  # provenance is best-effort; never break the live emit
+            print(f"    [cp-27] knockout provenance read skipped ({exc})")
+
         live_provenance = {
             # The active batch the live marginals were aggregated from. Distinct
             # from FROZEN_BATCH_ID once the rebatch repoints; today they coincide.
@@ -761,6 +777,9 @@ def emit_live_conditional_bracket(
             "conditioned_count": settled_count,
             "conditioned_reason": conditioned_reason,
             "settled_source": settled_source,
+            # cp-27: knockout-stage conditioning on the real R32 draw.
+            "knockout_conditioned": knockout_conditioned,
+            "knockout_conditioned_count": knockout_conditioned_count,
             "generated_at_utc": new_generated_at,
         }
 
