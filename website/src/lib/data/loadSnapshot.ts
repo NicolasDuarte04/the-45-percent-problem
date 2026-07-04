@@ -239,6 +239,31 @@ export function loadLiveKnockouts(snapshotId?: string): LiveKnockoutMatch[] {
     });
 }
 
+/**
+ * cp-28: single live knockout card by id, or null when absent.
+ *
+ * The read-path twin of loadMatchIfPresent for the ungraded matches_live/
+ * namespace: the /match/live/[id] detail route resolves one KO-FD card and
+ * 404s (via notFound()) when the file is not present. Like loadLiveKnockouts it
+ * validates against LiveKnockoutMatchSchema, whose live_provenance.graded is a
+ * hard false, so a frozen/graded file can never be picked up here. No graded
+ * reader calls this; the matches_live/ filename + loader separation is the same
+ * wall loadLiveKnockouts documents.
+ */
+export function loadLiveKnockoutIfPresent(
+  matchId: string,
+  snapshotId?: string,
+): LiveKnockoutMatch | null {
+  const dir = getSnapshotDir(snapshotId);
+  const p = path.join(dir, "matches_live", `${matchId}.json`);
+  if (!fs.existsSync(p)) return null;
+  return validate(
+    LiveKnockoutMatchSchema,
+    readJson(p),
+    `matches_live/${matchId}.json`,
+  );
+}
+
 export function loadManifest(): Manifest {
   const p = path.join(DATA_ROOT, "manifest.json");
   const data = readJson(p);

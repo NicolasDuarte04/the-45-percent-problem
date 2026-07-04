@@ -14,7 +14,7 @@
  * shared by the matches page AND the daily share card (which imports it), so the
  * two surfaces can never disagree about which day a fixture belongs to.
  */
-import type { MatchDetail } from "./schemas";
+import type { MatchDetail, LiveKnockoutMatch } from "./schemas";
 
 /**
  * The audience timezone for all civil-day grouping and clock display.
@@ -22,6 +22,73 @@ import type { MatchDetail } from "./schemas";
  * is stable year round. Anchored here as the one source of truth.
  */
 export const AUDIENCE_TZ = "America/Bogota";
+
+/** Full round labels, shared by the matches browser and the detail pages. */
+export const ROUND_LABELS: Record<string, string> = {
+  GRP: "Group stage",
+  R32: "Round of 32",
+  R16: "Round of 16",
+  QF: "Quarter-final",
+  SF: "Semi-final",
+  "3P": "Third-place playoff",
+  FIN: "Final",
+};
+
+const OUTCOME_LABELS: Record<"H" | "D" | "A", string> = {
+  H: "Home win",
+  D: "Draw",
+  A: "Away win",
+};
+
+/**
+ * A live, ungraded knockout card (matches_live/) vs a graded group card
+ * (matches/). They share the per-match shape; the knockout card adds a
+ * `live_provenance` block carrying a hard `graded: false`, which is how the two
+ * are told apart at runtime. This is the single runtime discriminator; the
+ * matches browser and the live detail route both rely on it.
+ */
+export function isLiveKnockout(m: MatchDetail): m is LiveKnockoutMatch {
+  return (
+    "live_provenance" in m &&
+    (m as LiveKnockoutMatch).live_provenance != null &&
+    (m as LiveKnockoutMatch).live_provenance.graded === false
+  );
+}
+
+/**
+ * The realized-outcome label shown under a played score. A knockout tie cannot
+ * end in a draw: a live knockout card whose regulation result is level was
+ * decided on penalties, so it never reads "Draw". Group cards keep the plain
+ * H/D/A label, and a card with no recorded outcome falls back to "Final". This
+ * is display-only (it reads outcome_realized and feeds no scored surface).
+ */
+export function outcomeLabel(
+  outcomeRealized: "H" | "D" | "A" | null | undefined,
+  isLiveKnockoutCard: boolean,
+): string {
+  if (!outcomeRealized) return "Final";
+  if (isLiveKnockoutCard && outcomeRealized === "D") return "Decided on penalties";
+  return OUTCOME_LABELS[outcomeRealized];
+}
+
+/**
+ * cp-22: the shootout detail shown beneath a penalty-decided knockout's
+ * REGULATION score, e.g. "PAR won the shootout 4-3". The scoreline above always
+ * stays the regulation (incl. extra time) result; this line names the shootout
+ * winner and tally so the summed/inflated score is never rendered. Returns null
+ * for every group card and any knockout decided in regulation, so the caller
+ * renders nothing. The winner's tally is shown first to read as "won N-M".
+ * Pure and display-only; reads no scored surface.
+ */
+export function shootoutLine(match: MatchDetail): string | null {
+  if (!isLiveKnockout(match)) return null;
+  const so = match.shootout;
+  if (!so || so.winner == null || so.home == null || so.away == null) return null;
+  const winnerCode =
+    so.winner === "H" ? match.home.fifa_code : match.away.fifa_code;
+  const [w, l] = so.winner === "H" ? [so.home, so.away] : [so.away, so.home];
+  return `${winnerCode} won the shootout ${w}-${l}`;
+}
 
 /** A fixture counts as "played" once the nightly regen has joined a score. */
 export function isPlayed(m: MatchDetail): boolean {

@@ -15,8 +15,18 @@ import {
   modalScoreline,
   formatDayLabel,
   formatKickoffTime,
+  isLiveKnockout,
+  outcomeLabel,
+  shootoutLine,
+  ROUND_LABELS,
   type MatchDayGroup,
 } from "@/lib/data/matchListing";
+
+// Re-exported so the existing unit tests (tests/unit/matchesBrowser.test.ts)
+// keep importing them from here, while the single implementations now live in
+// the pure matchListing module and are shared with the live knockout detail
+// route (/match/live/[id]).
+export { outcomeLabel, shootoutLine } from "@/lib/data/matchListing";
 
 /**
  * A row is either a graded group card (matches/) or a live, ungraded knockout
@@ -25,66 +35,6 @@ import {
  * `graded: false`, which is also how we tell them apart at runtime.
  */
 type MatchListItem = MatchDetail | LiveKnockoutMatch;
-
-function isLiveKnockout(m: MatchListItem): m is LiveKnockoutMatch {
-  return (
-    "live_provenance" in m &&
-    (m as LiveKnockoutMatch).live_provenance != null &&
-    (m as LiveKnockoutMatch).live_provenance.graded === false
-  );
-}
-
-const ROUND_LABELS: Record<string, string> = {
-  GRP: "Group stage",
-  R32: "Round of 32",
-  R16: "Round of 16",
-  QF: "Quarter-final",
-  SF: "Semi-final",
-  "3P": "Third-place playoff",
-  FIN: "Final",
-};
-
-const OUTCOME_LABELS: Record<"H" | "D" | "A", string> = {
-  H: "Home win",
-  D: "Draw",
-  A: "Away win",
-};
-
-/**
- * The realized-outcome label shown under a played score. A knockout tie cannot
- * end in a draw: a live knockout card whose regulation result is level was
- * decided on penalties, so it never reads "Draw". Group cards keep the plain
- * H/D/A label, and a card with no recorded outcome falls back to "Final". This
- * is display-only (it reads outcome_realized and feeds no scored surface); the
- * fuller fix that names the shootout winner is deferred to its own checkpoint.
- */
-export function outcomeLabel(
-  outcomeRealized: "H" | "D" | "A" | null | undefined,
-  isLiveKnockout: boolean,
-): string {
-  if (!outcomeRealized) return "Final";
-  if (isLiveKnockout && outcomeRealized === "D") return "Decided on penalties";
-  return OUTCOME_LABELS[outcomeRealized];
-}
-
-/**
- * cp-22: the shootout detail shown beneath a penalty-decided knockout's
- * REGULATION score, e.g. "PAR won the shootout 4-3". The scoreline above always
- * stays the regulation (incl. extra time) result; this line names the shootout
- * winner and tally so the summed/inflated score is never rendered. Returns null
- * for every group card and any knockout decided in regulation, so the caller
- * renders nothing. The winner's tally is shown first to read as "won N-M".
- * Pure and display-only; reads no scored surface.
- */
-export function shootoutLine(match: MatchListItem): string | null {
-  if (!isLiveKnockout(match)) return null;
-  const so = match.shootout;
-  if (!so || so.winner == null || so.home == null || so.away == null) return null;
-  const winnerCode =
-    so.winner === "H" ? match.home.fifa_code : match.away.fifa_code;
-  const [w, l] = so.winner === "H" ? [so.home, so.away] : [so.away, so.home];
-  return `${winnerCode} won the shootout ${w}-${l}`;
-}
 
 /**
  * The message shown when the Upcoming section is empty. When a team filter is
@@ -298,20 +248,18 @@ function MatchRow({ match }: { match: MatchListItem }) {
     padding: "12px 16px",
   } as const;
 
-  // Group cards link to their full per-match breakdown. Live knockout cards
-  // (KO-FD ids) have no priced detail page, so they render as a non-interactive
-  // panel rather than a link that would 404.
-  if (isLiveKnockout(match)) {
-    return (
-      <div className="block rounded" style={cardStyle}>
-        <MatchRowBody match={match} />
-      </div>
-    );
-  }
+  // Both card kinds open a per-match breakdown, but through DISJOINT routes so
+  // the graded wall stays auditable. Group cards go to the graded, frozen
+  // /match/[id] page; live knockout cards (KO-FD ids) go to the separate,
+  // explicitly ungraded /match/live/[id] page, which only ever reads
+  // matches_live/ and never the ledger.
+  const href = isLiveKnockout(match)
+    ? `/match/live/${match.match_id}`
+    : `/match/${match.match_id}`;
 
   return (
     <Link
-      href={`/match/${match.match_id}`}
+      href={href}
       className="no-underline block rounded transition-colors"
       style={cardStyle}
     >
