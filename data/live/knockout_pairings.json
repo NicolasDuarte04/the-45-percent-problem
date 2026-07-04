@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-04T01:46:31Z"
+    "fetched_at_utc": "2026-07-04T04:32:13Z"
   },
   "competition": "WC2026",
   "count": 21,
@@ -235,7 +235,7 @@
       "match_id": "KO-FD537430",
       "source_id": 537430,
       "round": "R32",
-      "status": "IN_PLAY",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-04T01:30:00Z",
       "home": {
         "fifa_code": "COL",
