@@ -396,6 +396,12 @@ export const LiveProvenanceSchema = z.object({
   // cp-16c: the settled-source provenance label load_settled stamped, carried
   // through for traceability (may include a ";conditioning_error=..." tag).
   settled_source: z.string().optional(),
+  // cp-27: True once the live re-sim consumed the REAL Round-of-32 draw and
+  // fixed the decided knockout matches (winners advance, losers eliminated).
+  // knockout_conditioned_count is how many knockout matches were fixed. Optional
+  // for backward compatibility with pre-cp-27 files.
+  knockout_conditioned: z.boolean().optional(),
+  knockout_conditioned_count: z.number().optional(),
   generated_at_utc: z.string(),
 });
 export type LiveProvenance = z.infer<typeof LiveProvenanceSchema>;

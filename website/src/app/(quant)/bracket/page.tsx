@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import {
   loadBracket,
   loadLiveBracket,
+  loadLiveKnockouts,
   loadSnapshotMeta,
   loadTournament,
 } from "@/lib/data/loadSnapshot";
@@ -18,6 +19,7 @@ import {
 } from "@/components/compositions/SnapshotPicker";
 import { SnapshotAwareBracket } from "@/components/compositions/SnapshotAwareBracket";
 import { BracketViewToggle } from "@/components/compositions/BracketViewToggle";
+import { LiveKnockoutRounds } from "@/components/compositions/LiveKnockoutRounds";
 import { BRACKET_STEPS, BRACKET_DURATION_SEC } from "./_steps";
 
 export const metadata = {
@@ -50,6 +52,10 @@ export default async function BracketPage() {
   const liveEnabled = process.env.NEXT_PUBLIC_LIVE_BRACKET === "1";
   const live = liveEnabled ? loadLiveBracket(undefined) : null;
   const liveTournament = live ? mergeTournament(live.tournament, maps) : null;
+  // cp-27: the real, advancing knockout bracket (ungraded matches_live cards),
+  // rendered round by round in the live panel alongside the conditioned marginal
+  // matrix. Empty until the draw resolves, so the live panel degrades cleanly.
+  const liveKnockouts = live ? loadLiveKnockouts(undefined) : [];
 
   const frozenPanel = (
     <Suspense fallback={null}>
@@ -118,12 +124,14 @@ export default async function BracketPage() {
       </Suspense>
   );
 
-  // cp-bracket-ux FIX A: derive the conditioned-state sentence from the live
-  // provenance flag instead of the hardcoded step-b "not yet active" copy.
-  // conditioning is wired now (the active batch conditions on settled results),
-  // so the live numbers diverge from the frozen forecast and the copy must say
-  // so. The "scored by the public ledger" line, the NOT-graded badge, and the
-  // source-batch / conditioned provenance are unchanged in both branches.
+  // cp-bracket-ux FIX A / cp-27: derive the conditioned-state sentence from the
+  // live provenance flags. Group conditioning has been wired since cp-16c; cp-27
+  // adds knockout conditioning on the real draw, so once the knockouts begin the
+  // live view is an advancing bracket (real pairings, settled results) rather
+  // than a per-team marginal matrix that matches the frozen forecast. The
+  // "scored by the public ledger" line, the NOT-graded badge, and the
+  // source-batch provenance are unchanged.
+  const koConditioned = Boolean(live?.provenance.knockout_conditioned);
   const livePanel =
     live && liveTournament ? (
       <div>
@@ -153,9 +161,11 @@ export default async function BracketPage() {
               className="text-[12px] mt-1 max-w-[68ch]"
               style={{ color: "var(--text-tertiary)" }}
             >
-              {live.provenance.conditioned
-                ? "Current-state conditional view, NOT graded. Conditioning is active: this view reflects settled results so far and now differs from the frozen forecast."
-                : "Current-state conditional view, NOT graded; conditioning not yet active, currently matches the frozen forecast."}{" "}
+              {koConditioned
+                ? "Current-state conditional view, NOT graded. It conditions on the real knockout draw and settled results: eliminated teams drop to zero and the bracket below advances round by round as matches settle. It now differs from the frozen forecast."
+                : live.provenance.conditioned
+                  ? "Current-state conditional view, NOT graded. Conditioning is active: this view reflects settled group results so far and now differs from the frozen forecast."
+                  : "Current-state conditional view, NOT graded; conditioning not yet active, currently matches the frozen forecast."}{" "}
               Only the frozen pre-tournament forecast above is scored by the
               public ledger. Sourced from active batch{" "}
               <span className="mono">{live.provenance.live_source_batch_id}</span>
@@ -163,11 +173,22 @@ export default async function BracketPage() {
               <span className="mono">
                 {String(live.provenance.conditioned)}
               </span>
+              {koConditioned ? (
+                <>
+                  {" "}· knockouts conditioned{" "}
+                  <span className="mono">
+                    {live.provenance.knockout_conditioned_count ?? 0}
+                  </span>
+                </>
+              ) : null}
               .
             </p>
           </div>
         </div>
-        <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6">
+        <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6 flex flex-col gap-8">
+          {liveKnockouts.length > 0 ? (
+            <LiveKnockoutRounds knockouts={liveKnockouts} />
+          ) : null}
           <BracketBoard bracket={live.bracket} tournament={liveTournament} />
         </div>
       </div>
