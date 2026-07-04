@@ -1,10 +1,10 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-04T04:32:13Z"
+    "fetched_at_utc": "2026-07-04T07:43:20Z"
   },
   "competition": "WC2026",
-  "count": 21,
+  "count": 24,
   "pairings": [
     {
       "match_id": "KO-FD537417",
@@ -307,6 +307,21 @@
       }
     },
     {
+      "match_id": "KO-FD537379",
+      "source_id": 537379,
+      "round": "R16",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-06T19:00:00Z",
+      "home": {
+        "fifa_code": "POR",
+        "source_name": "Portugal"
+      },
+      "away": {
+        "fifa_code": "ESP",
+        "source_name": "Spain"
+      }
+    },
+    {
       "match_id": "KO-FD537380",
       "source_id": 537380,
       "round": "R16",
@@ -319,6 +334,36 @@
       "away": {
         "fifa_code": "BEL",
         "source_name": "Belgium"
+      }
+    },
+    {
+      "match_id": "KO-FD537381",
+      "source_id": 537381,
+      "round": "R16",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-07T16:00:00Z",
+      "home": {
+        "fifa_code": "ARG",
+        "source_name": "Argentina"
+      },
+      "away": {
+        "fifa_code": "EGY",
+        "source_name": "Egypt"
+      }
+    },
+    {
+      "match_id": "KO-FD537382",
+      "source_id": 537382,
+      "round": "R16",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-07T20:00:00Z",
+      "home": {
+        "fifa_code": "SUI",
+        "source_name": "Switzerland"
+      },
+      "away": {
+        "fifa_code": "COL",
+        "source_name": "Colombia"
       }
     }
   ]
