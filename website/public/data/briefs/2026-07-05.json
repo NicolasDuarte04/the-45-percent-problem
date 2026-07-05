@@ -2,7 +2,7 @@
   "brief_date": "2026-07-05",
   "issue_number": 37,
   "model_variant": "M_STAR",
-  "code_sha": "77e9e8c899b8f8ff",
+  "code_sha": "0983d6254d726f79",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-06T12:00:00Z",
@@ -14,7 +14,7 @@
   },
   "headline": {
     "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
-    "movers_line": "The model-versus-market divergence layer is live, covering 2 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+    "movers_line": "The model-versus-market divergence layer is paused; no divergence figures are published today."
   },
   "teaser": {
     "has_divergence": false
@@ -50,7 +50,7 @@
     "this_brief_archive": "/briefs/2026-07-05"
   },
   "daily": {
-    "generated_at_utc": "2026-07-05T18:01:05Z",
+    "generated_at_utc": "2026-07-05T20:57:04Z",
     "tournament": {
       "phase_label": "Round of 16",
       "matches_settled": 90,
@@ -63,9 +63,9 @@
       "sentence": "The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts."
     },
     "divergence": {
-      "status": "live",
-      "fixtures_covered": 2,
-      "sentence": "The model-versus-market divergence layer is live, covering 2 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+      "status": "paused",
+      "fixtures_covered": 0,
+      "sentence": "The model-versus-market divergence layer is paused; no divergence figures are published today."
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "today_fixtures": [
