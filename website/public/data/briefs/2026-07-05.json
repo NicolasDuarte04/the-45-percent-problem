@@ -2,14 +2,14 @@
   "brief_date": "2026-07-05",
   "issue_number": 37,
   "model_variant": "M_STAR",
-  "code_sha": "b1e12474df41932b",
+  "code_sha": "e508c342a4fb8536",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-06T12:00:00Z",
   "latest_archive_url": "/briefs/2026-07-05",
   "lead_in": {
-    "tournament_sentence": "Round of 16: 90 of 104 matches settled, 14 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
-    "match_sentence": "2 ties scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "tournament_sentence": "Round of 16: 91 of 104 matches settled, 13 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
+    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "fallback_used": false
   },
   "headline": {
@@ -24,14 +24,6 @@
   "suppressed_today": [],
   "featured_teams": [
     {
-      "code": "BRA",
-      "name": "BRAZIL"
-    },
-    {
-      "code": "NOR",
-      "name": "NORWAY"
-    },
-    {
       "code": "MEX",
       "name": "MEXICO"
     },
@@ -42,6 +34,14 @@
     {
       "code": "CAN",
       "name": "CANADA"
+    },
+    {
+      "code": "MAR",
+      "name": "MOROCCO"
+    },
+    {
+      "code": "PAR",
+      "name": "PARAGUAY"
     }
   ],
   "methodology_links": {
@@ -50,13 +50,13 @@
     "this_brief_archive": "/briefs/2026-07-05"
   },
   "daily": {
-    "generated_at_utc": "2026-07-05T21:59:55Z",
+    "generated_at_utc": "2026-07-05T23:04:31Z",
     "tournament": {
       "phase_label": "Round of 16",
-      "matches_settled": 90,
-      "matches_remaining": 14,
+      "matches_settled": 91,
+      "matches_remaining": 13,
       "total_matches": 104,
-      "sentence": "Round of 16: 90 of 104 matches settled, 14 remaining."
+      "sentence": "Round of 16: 91 of 104 matches settled, 13 remaining."
     },
     "r16_checkpoint": {
       "status": "pending",
@@ -69,25 +69,6 @@
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "today_fixtures": [
-      {
-        "match_id": "KO-FD537377",
-        "round": "R16",
-        "graded": false,
-        "kickoff_utc": "2026-07-05T20:00:00Z",
-        "kickoff_local_label": "3:00 PM COT",
-        "home": {
-          "fifa_code": "BRA",
-          "display_name": "Brazil"
-        },
-        "away": {
-          "fifa_code": "NOR",
-          "display_name": "Norway"
-        },
-        "p_home": 0.458972280784487,
-        "p_draw": 0.22964264055186673,
-        "p_away": 0.3113850786636462,
-        "modal_scoreline": "1-1"
-      },
       {
         "match_id": "KO-FD537378",
         "round": "R16",

@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-05T21:58:33Z"
+    "fetched_at_utc": "2026-07-05T23:02:56Z"
   },
   "competition": "WC2026",
   "count": 25,
@@ -280,7 +280,7 @@
       "match_id": "KO-FD537377",
       "source_id": 537377,
       "round": "R16",
-      "status": "LIVE",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-05T20:00:00Z",
       "home": {
         "fifa_code": "BRA",
