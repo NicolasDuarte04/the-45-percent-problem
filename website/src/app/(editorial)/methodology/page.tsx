@@ -82,8 +82,9 @@ export default async function MethodologyEntryPage({
           pre-registered market layer de-vigs bookmaker odds via the power
           method, flags edges above a 3% mainline threshold (5% for
           derivatives), and suppresses them when the volatility gate triggers.
-          This layer is live for group-stage fixtures; knockout fixtures are
-          not yet covered, since those pairings are not known in advance.
+          This layer covered the group-stage fixtures; knockout fixtures are
+          not yet covered because the odds feed has not been remapped to the
+          resolved knockout pairings.
           The full specification: every parameter, every calibration step,
           every kill criterion: lives in the vault.
         </p>

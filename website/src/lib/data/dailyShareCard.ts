@@ -43,6 +43,7 @@ import type { MatchDetail } from "./schemas";
 import {
   dayKey,
   byKickoff,
+  isLiveKnockout,
   isPlayed,
   modalScoreline,
   topScorelines,
@@ -269,6 +270,26 @@ export function recapNote(m: MatchDetail): string | null {
   if (outcome === "H") return `el modelo le dio ${pct(p.H)} a la victoria de ${home}`;
   if (outcome === "A") return `el modelo le dio ${pct(p.A)} a la victoria de ${away}`;
   return `el modelo le dio ${pct(p.D)} al empate`;
+}
+
+/**
+ * cp-29: the Spanish shootout resolution for a penalty-decided knockout on the
+ * recap card, e.g. "penales: PAR ganó 4-3". A knockout that ends level went to
+ * penalties, so a bare "1-1 Final" hides how the tie was actually decided. The
+ * regulation score stays the headline (never the inflated shootout sum); this
+ * line names the winner and the shootout tally, winner first. It reuses the
+ * shared `isLiveKnockout` discriminator and the same `shootout` block that
+ * matchListing's `shootoutLine` reads; the string is rendered in the card's
+ * Colombian Spanish rather than the English quant-surface wording. Returns null
+ * for group cards and any knockout decided in regulation.
+ */
+export function shootoutNote(m: MatchDetail): string | null {
+  if (!isLiveKnockout(m)) return null;
+  const so = m.shootout;
+  if (!so || so.winner == null || so.home == null || so.away == null) return null;
+  const winnerCode = so.winner === "H" ? m.home.fifa_code : m.away.fifa_code;
+  const [w, l] = so.winner === "H" ? [so.home, so.away] : [so.away, so.home];
+  return `penales: ${winnerCode} ganó ${w}-${l}`;
 }
 
 /** One scoreline chip on the preview card: "1-1" with its whole-percent prob. */

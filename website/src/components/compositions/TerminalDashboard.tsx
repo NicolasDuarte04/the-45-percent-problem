@@ -6,6 +6,10 @@ import type {
   TournamentTeam,
 } from "@/lib/data/schemas";
 import { Flag } from "@/components/primitives/Flag";
+import {
+  DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  upcomingDivergenceRows,
+} from "@/lib/data/divergenceFilter";
 
 /**
  * Terminal Dashboard: two compact, terminal-style read-outs from the
@@ -31,7 +35,10 @@ export function TerminalDashboard({
   divergence,
   tournament,
 }: TerminalDashboardProps) {
-  const topDivergences = pickTopDivergences(divergence.rows, TOP_N_DIVERGENCES);
+  // cp-29: only rank fixtures that have not yet kicked off. A settled match is
+  // a post-hoc edge, not a live screening signal.
+  const upcomingRows = upcomingDivergenceRows(divergence);
+  const topDivergences = pickTopDivergences(upcomingRows, TOP_N_DIVERGENCES);
   const movers = pickMovers(tournament.teams, TOP_N_MOVERS_PER_SIDE);
 
   return (
@@ -46,7 +53,11 @@ export function TerminalDashboard({
         gridTemplateColumns: "repeat(auto-fit, minmax(min(440px, 100%), 1fr))",
       }}
     >
-      <DivergenceCard rows={topDivergences} totalMarkets={divergence.rows.length} />
+      <DivergenceCard
+        rows={topDivergences}
+        totalMarkets={upcomingRows.length}
+        hadRows={divergence.rows.length > 0}
+      />
       <MoversCard
         risers={movers.risers}
         fallers={movers.fallers}
@@ -306,9 +317,11 @@ function ShiftBadge({ value }: { value: number }) {
 function DivergenceCard({
   rows,
   totalMarkets,
+  hadRows,
 }: {
   rows: ReturnType<typeof pickTopDivergences>;
   totalMarkets: number;
+  hadRows: boolean;
 }) {
   return (
     <Card ariaLabelledBy="td-divergence-title">
@@ -321,6 +334,23 @@ function DivergenceCard({
 
       <Shelf />
 
+      {rows.length === 0 ? (
+        // cp-29: the settled-match filter emptied the feed. If rows existed in
+        // the snapshot, the group stage is over and knockout coverage is
+        // pending the odds remap; otherwise no odds are ingested yet.
+        <p
+          style={{
+            fontSize: 13,
+            lineHeight: 1.5,
+            color: "var(--text-tertiary)",
+            margin: "18px 0 0",
+          }}
+        >
+          {hadRows
+            ? DIVERGENCE_KNOCKOUT_PENDING_NOTE
+            : "No divergence rows available in this snapshot."}
+        </p>
+      ) : (
       <table
         style={{
           borderCollapse: "collapse",
@@ -364,6 +394,7 @@ function DivergenceCard({
           ))}
         </tbody>
       </table>
+      )}
 
       <CardFoot>
         <span>

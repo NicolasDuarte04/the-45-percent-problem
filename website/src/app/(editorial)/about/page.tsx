@@ -63,7 +63,8 @@ export default function AboutPage() {
           A probabilistic pricing study for the 2026 FIFA World Cup. It
           publishes the nightly state of the M&#9733; probability distribution
           and an append-only record of every forecast the model has ever made.
-          A market-divergence layer is live for group-stage fixtures.
+          The market-divergence layer covered the group-stage fixtures;
+          knockout coverage is pending the odds remap to the resolved pairings.
         </p>
 
         {/* Divider */}

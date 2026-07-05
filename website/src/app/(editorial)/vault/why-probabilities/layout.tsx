@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_why_prob_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/why-probabilities},
+  url          = {https://45analytics.com/vault/why-probabilities},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Why Probabilities. Research Vault. https://the45percent.org/vault/why-probabilities";
+  "The 45% Problem project (2026). Why Probabilities. Research Vault. https://45analytics.com/vault/why-probabilities";
 
 export default function WhyProbabilitiesLayout({
   children,

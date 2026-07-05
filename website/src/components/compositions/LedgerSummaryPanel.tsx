@@ -52,6 +52,12 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
   const clvSign = metrics.clv_cumulative_bps >= 0 ? "+" : "−";
   const clvAbs = Math.abs(metrics.clv_cumulative_bps);
   const inTournament = metrics.matches_settled > 0;
+  // cp-29: the scoring table below is computed on the bijection-validated
+  // champion subset (champion_metric_n, e.g. 72), not on every settled match.
+  // Lead the panel subtitle with that graded count so it reads as the sample
+  // size for the metrics; the total settled count follows, labeled as
+  // tournament progress rather than the metric sample size.
+  const championN = metrics.champion_metric_n ?? metrics.matches_settled;
 
   return (
     <section
@@ -75,6 +81,7 @@ export function LedgerSummaryPanel({ metrics }: LedgerSummaryPanelProps) {
             Evaluation Metrics
           </h2>
           <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+            {championN} graded forecast{championN !== 1 ? "s" : ""} scored ·{" "}
             {metrics.matches_settled} match{metrics.matches_settled !== 1 ? "es" : ""} settled ·
             snapshot <span className="mono">{metrics.snapshot_id}</span>
           </p>

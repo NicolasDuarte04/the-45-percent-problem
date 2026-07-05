@@ -33,7 +33,7 @@ export function TournamentCalibrationStrip({
       >
         <Metric label="Brier (lower = better)" value="-" />
         <Metric label="Log-loss" value="-" />
-        <Metric label="Settled forecasts" value="0" />
+        <Metric label="Graded forecasts" value="0" />
         <div
           style={{
             fontSize: 13,
@@ -58,6 +58,11 @@ export function TournamentCalibrationStrip({
 
   const brier = evaluation.brier.M_STAR;
   const logloss = evaluation.log_loss.M_STAR;
+  // cp-29: the graded metrics (Brier, log-loss, CLV) are scored on the
+  // bijection-validated champion subset, not on every settled match. Show that
+  // subset count (champion_metric_n, e.g. 72) as the sample size beside the
+  // metrics so the 72-match Brier is never juxtaposed with an 82-match count.
+  const championN = evaluation.champion_metric_n ?? evaluation.matches_settled;
 
   return (
     <div
@@ -82,8 +87,8 @@ export function TournamentCalibrationStrip({
         value={logloss !== null ? logloss.toFixed(4) : "-"}
       />
       <Metric
-        label="Settled forecasts"
-        value={evaluation.matches_settled.toLocaleString()}
+        label="Graded forecasts"
+        value={championN.toLocaleString()}
       />
       <div
         style={{
@@ -107,8 +112,8 @@ export function TournamentCalibrationStrip({
           {evaluation.clv_cumulative_bps >= 0 ? "+" : ""}
           {evaluation.clv_cumulative_bps}
         </span>{" "}
-        bps across {evaluation.matches_settled.toLocaleString()} settled
-        forecasts. Kill criteria{" "}
+        bps across {championN.toLocaleString()} graded forecasts. Kill
+        criteria{" "}
         <KillCriteriaInlineStatus
           status={evaluation.kill_criteria_check.status}
         />
