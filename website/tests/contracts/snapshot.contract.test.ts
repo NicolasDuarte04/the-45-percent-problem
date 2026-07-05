@@ -153,12 +153,13 @@ describe("divergence.json schema", () => {
     expect(result.success, result.success ? "" : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it("contains priced rows, unless in the cp-14 pending (no-odds) state", () => {
+  it("contains priced rows, unless in the pending or stale (no-live-odds) state", () => {
     const data = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
-    if (data.status === "pending") {
-      // cp-14 Decision B: when no real odds are ingested the divergence is
-      // "pending" — zero rows and no source_book stamped anywhere. That is a
-      // valid published state; rows populate once live Pinnacle lines land.
+    if (data.status === "pending" || data.status === "stale") {
+      // cp-14 Decision B: "pending" means no real odds are ingested yet.
+      // cp-30: "stale" means real odds landed once but the snapshot is older
+      // than the freshness threshold. Both publish zero rows and stamp no
+      // source_book; rows populate once fresh Pinnacle lines land.
       expect(data.rows.length).toBe(0);
     } else {
       // A live divergence snapshot must carry de-vigged rows.
@@ -421,15 +422,34 @@ describe("cross-artifact consistency", () => {
   // file, or the static page 404s at runtime. This test exists because a
   // [:10] slice in scripts/generate_snapshot.py once shipped to production
   // and broke 62 of 72 group-stage match links; see commit 0b9db6a.
-  it("every match_id referenced in divergence.json has a matches/{id}.json file", () => {
-    const matchesDir = path.join(LATEST, "matches");
+  it("every match_id referenced in divergence.json has a backing detail file", () => {
+    // Group rows (round GRP, M{NN}) render at /match/[id] and must have a
+    // matches/{id}.json. cp-30: knockout rows (KO-FD ids) render at the sibling
+    // /match/live/[id] route and must instead have a matches_live/{id}.json.
+    // A row pointing at the wrong (or missing) file 404s at runtime; see commit
+    // 0b9db6a for the [:10]-slice incident this test guards against.
     const matchFiles = new Set(
-      fs.readdirSync(matchesDir).filter((f) => f.endsWith(".json")).map((f) => f.replace(".json", "")),
+      fs.readdirSync(path.join(LATEST, "matches"))
+        .filter((f) => f.endsWith(".json"))
+        .map((f) => f.replace(".json", "")),
+    );
+    const liveDir = path.join(LATEST, "matches_live");
+    const liveFiles = new Set(
+      fs.existsSync(liveDir)
+        ? fs.readdirSync(liveDir).filter((f) => f.endsWith(".json")).map((f) => f.replace(".json", ""))
+        : [],
     );
     const divergence = DivergenceSnapshotSchema.parse(readJson(path.join(LATEST, "divergence.json")));
-    const referenced = new Set(divergence.rows.map((r) => r.match_id));
-    const missing = [...referenced].filter((id) => !matchFiles.has(id));
-    expect(missing, `matches/ missing JSON for: ${missing.join(", ")}`).toEqual([]);
+    const missing = divergence.rows
+      .filter((r) => {
+        const isKnockout = r.round !== "GRP" || r.match_id.startsWith("KO-");
+        return isKnockout ? !liveFiles.has(r.match_id) : !matchFiles.has(r.match_id);
+      })
+      .map((r) => r.match_id);
+    expect(
+      [...new Set(missing)],
+      `divergence rows missing a backing detail file: ${[...new Set(missing)].join(", ")}`,
+    ).toEqual([]);
   });
 
   it("matches/ contains every group-stage fixture (72 files for the round-robin)", () => {

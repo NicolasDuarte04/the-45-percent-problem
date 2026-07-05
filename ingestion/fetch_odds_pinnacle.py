@@ -558,6 +558,100 @@ def _resolve_match_id(
     return None
 
 
+# ---------------------------------------------------------------------------
+# cp-30: knockout pairing resolution
+# ---------------------------------------------------------------------------
+# The group-stage fixture parquet (wc2026_fixtures.parquet) carries only
+# placeholder team names for the knockout slots ("1A", "BEST3-CDEFI", ...), so a
+# real knockout event (Brazil vs Norway) can never resolve against it and its
+# odds were dropped as "Unresolved" every night. The concrete draw is instead
+# learned by ingestion/fetch_knockout_pairings.py and written to
+# data/live/knockout_pairings.json (KO-FD{source_id} ids, real team names, real
+# kickoff). We build a second lookup from that file and consult it when the group
+# fixture lookup misses. The group logic above is untouched: group events keep
+# resolving to their M{NN} ids for the historical record.
+LIVE_KNOCKOUT_PAIRINGS = PROJECT_ROOT / "data" / "live" / "knockout_pairings.json"
+
+
+def _load_knockout_lookup() -> dict[tuple[str, str, str], str]:
+    """Build a (home_norm, away_norm, date_str_utc) -> KO-FD match_id index.
+
+    Sourced from data/live/knockout_pairings.json. Team names come from each
+    pairing's ``source_name`` (the football-data.org spelling) run through the
+    same alias + normalisation the group resolver uses, so an Odds API spelling
+    ("USA") and the pairing spelling ("United States") collapse to one key. The
+    kickoff day is indexed with a +/-1 day tolerance, matching the group lookup,
+    to absorb timezone-edge quotes. Absent or unreadable file yields an empty
+    lookup (the normal pre-draw state); knockout resolution is then simply
+    disabled and events fall through unchanged.
+    """
+    if not LIVE_KNOCKOUT_PAIRINGS.exists():
+        log.info(
+            "knockout pairings file absent; knockout odds resolution disabled",
+            path=str(LIVE_KNOCKOUT_PAIRINGS),
+        )
+        return {}
+    import json
+
+    try:
+        doc = json.loads(LIVE_KNOCKOUT_PAIRINGS.read_text())
+    except Exception as exc:  # unreadable -> disable, never crash the fetch
+        log.warning("knockout pairings unreadable; knockout resolution disabled", error=str(exc))
+        return {}
+
+    lookup: dict[tuple[str, str, str], str] = {}
+    for p in doc.get("pairings", []):
+        match_id = p.get("match_id")
+        home = (p.get("home") or {}).get("source_name")
+        away = (p.get("away") or {}).get("source_name")
+        kickoff = p.get("kickoff_utc")
+        if not match_id or not home or not away or not kickoff:
+            continue
+        try:
+            k = pd.Timestamp(kickoff)
+            if k.tzinfo is None:
+                k = k.tz_localize("UTC")
+        except Exception:
+            continue
+        h = _norm_team_name(_alias_to_fixture_name(home))
+        a = _norm_team_name(_alias_to_fixture_name(away))
+        for delta in (-1, 0, 1):
+            d = (k + pd.Timedelta(days=delta)).strftime("%Y-%m-%d")
+            lookup[(h, a, d)] = str(match_id)
+    return lookup
+
+
+def _resolve_knockout_match_id(
+    home_raw: str,
+    away_raw: str,
+    kickoff_iso: str,
+    ko_lookup: dict[tuple[str, str, str], str],
+) -> Optional[str]:
+    """Resolve a third-party knockout event to its KO-FD match_id.
+
+    Same alias + both-orientations strategy as ``_resolve_match_id`` (knockout
+    ties are neutral-venue, so the home/away orientation the feed reports is not
+    authoritative). Returns None on miss; the caller then leaves the event
+    unresolved and skips it, exactly as before.
+    """
+    if not ko_lookup:
+        return None
+    h = _norm_team_name(_alias_to_fixture_name(home_raw))
+    a = _norm_team_name(_alias_to_fixture_name(away_raw))
+    try:
+        kickoff_dt = pd.Timestamp(kickoff_iso)
+        if kickoff_dt.tzinfo is None:
+            kickoff_dt = kickoff_dt.tz_localize("UTC")
+        d = kickoff_dt.tz_convert("UTC").strftime("%Y-%m-%d")
+    except Exception:
+        return None
+    if (h, a, d) in ko_lookup:
+        return ko_lookup[(h, a, d)]
+    if (a, h, d) in ko_lookup:   # inverted sides
+        return ko_lookup[(a, h, d)]
+    return None
+
+
 def fetch_via_odds_api(force: bool = False) -> list[dict]:
     """
     Fetch live WC 2026 1X2 odds from The Odds API and return them in the
@@ -646,16 +740,24 @@ def _normalise_odds_api_payload(events: list[dict]) -> list[dict]:
       decimal_odds, is_opening, is_closing, last_refreshed
     """
     lookup, _ = _load_fixture_lookup()
+    ko_lookup = _load_knockout_lookup()
     snapshot_ts = datetime.now(timezone.utc).isoformat()
     records: list[dict] = []
     unresolved = 0
+    knockout_resolved = 0
 
     for ev in events:
         commence  = ev.get("commence_time", "")
         home_team = ev.get("home_team", "")
         away_team = ev.get("away_team", "")
 
+        # Group fixtures resolve to their canonical M{NN} id (historical record).
+        # A miss falls through to cp-30 knockout pairing resolution (KO-FD ids).
         match_id = _resolve_match_id(home_team, away_team, commence, lookup)
+        if match_id is None:
+            match_id = _resolve_knockout_match_id(home_team, away_team, commence, ko_lookup)
+            if match_id is not None:
+                knockout_resolved += 1
         if match_id is None:
             unresolved += 1
             log.warning(
@@ -712,6 +814,7 @@ def _normalise_odds_api_payload(events: list[dict]) -> list[dict]:
         events=len(events),
         rows=len(records),
         unresolved=unresolved,
+        knockout_resolved=knockout_resolved,
     )
     return records
 
@@ -852,11 +955,16 @@ def clean_and_enrich(records: list[dict]) -> pd.DataFrame:
     # key on canonical fixture match_ids, and a non-canonical row would
     # silently miss its fixture and never produce a divergence.
     lookup, _ = _load_fixture_lookup()
+    ko_lookup = _load_knockout_lookup()
     resolved: list[Optional[str]] = []
     for _, r in df.iterrows():
         mid = _resolve_match_id(
             r["home_team_raw"], r["away_team_raw"], r["kickoff_raw"], lookup,
         )
+        if mid is None:  # cp-30: fall through to the resolved knockout pairings
+            mid = _resolve_knockout_match_id(
+                r["home_team_raw"], r["away_team_raw"], r["kickoff_raw"], ko_lookup,
+            )
         resolved.append(mid)
     df["match_id"] = resolved
     unresolved_mask = df["match_id"].isna()

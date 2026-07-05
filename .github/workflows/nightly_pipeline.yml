@@ -63,30 +63,18 @@ jobs:
       - name: Install project dependencies
         run: pip install -e ".[dev]"
 
-      - name: Fetch real Pinnacle odds (Tier 2; The Odds API)
-        # cp-odds-schedule: pull live Pinnacle 1X2 lines ONCE per day, before the
-        # regen step below reads data/raw/odds_pinnacle.parquet. With real odds
-        # present the regen emits a LIVE divergence (non-synthetic); without them
-        # it stays "pending". This is the only place the producer runs - the
-        # on-demand twin (on_demand_regen.yml) deliberately does NOT pull, it
-        # re-reads the committed parquet, so we stay at one pull per day.
-        #
-        # Cost: one GET (sport=soccer_fifa_world_cup, markets=h2h,
-        # bookmakers=pinnacle, regions=us,uk,eu) ~= 3 credits, ~90/month, well
-        # inside the 500/month free tier. Safe failure mode: if the key's tier
-        # does not surface Pinnacle (or WC lines are not open yet), the producer
-        # falls back to synthetic and divergence stays pending - nothing breaks.
-        # The key is referenced only via the secret; it is never printed.
-        env:
-          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
-        run: python ingestion/fetch_odds_pinnacle.py --source oddsapi --force
-
       - name: Fetch concrete knockout pairings from Football-Data (cp-20)
         # cp-20: refresh data/live/knockout_pairings.json BEFORE the regen step
         # below, so emit_live_knockout_matches sees the current draw and the
         # Matches page self-populates knockout cards on every nightly run. This
         # replaces the old manual two-step (dispatch "Refresh WC 2026 kickoff
         # schedule", then dispatch a regen); no operator orchestration needed.
+        #
+        # cp-30: this now runs BEFORE the odds fetch below, because the odds
+        # resolver consults this same file (data/live/knockout_pairings.json) to
+        # map Odds API knockout events to their KO-FD ids. Refreshing the draw
+        # first means the odds pull resolves against today's pairings, not the
+        # last-committed ones.
         #
         # Scope and isolation: a read-only learner of who-plays-whom. Writes ONLY
         # data/live/knockout_pairings.json (a separate namespace). It never writes
@@ -97,14 +85,37 @@ jobs:
         #
         # Non-fatal by design: a transient FD outage or rate-limit must not break
         # the nightly snapshot/odds/bracket publish. On failure the script writes
-        # nothing, the checkout's last committed pairings stay in place, the regen
-        # reuses them, and the run continues. Until the draw resolves the file
-        # lists zero pairings and the knockout surface stays empty.
+        # nothing, the checkout's last committed pairings stay in place, the odds
+        # resolver and regen reuse them, and the run continues. Until the draw
+        # resolves the file lists zero pairings and the knockout surface stays empty.
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
         run: |
           python ingestion/fetch_knockout_pairings.py \
-            || echo "::warning title=knockout-pairings::FD fetch failed; regen will reuse the last committed data/live/knockout_pairings.json"
+            || echo "::warning title=knockout-pairings::FD fetch failed; odds resolver and regen will reuse the last committed data/live/knockout_pairings.json"
+
+      - name: Fetch real Pinnacle odds (Tier 2; The Odds API)
+        # cp-odds-schedule: pull live Pinnacle 1X2 lines ONCE per day, before the
+        # regen step below reads data/raw/odds_pinnacle.parquet. With real odds
+        # present the regen emits a LIVE divergence (non-synthetic); without them
+        # it stays "pending". This is the only place the producer runs - the
+        # on-demand twin (on_demand_regen.yml) deliberately does NOT pull, it
+        # re-reads the committed parquet, so we stay at one pull per day.
+        #
+        # cp-30: knockout h2h events now resolve to their KO-FD ids via the
+        # pairings file refreshed in the step above, so the daily pull produces
+        # LIVE knockout 1X2 divergence (not just group matches). Group resolution
+        # is unchanged for the historical record.
+        #
+        # Cost: one GET (sport=soccer_fifa_world_cup, markets=h2h,
+        # bookmakers=pinnacle, regions=us,uk,eu) ~= 3 credits, ~90/month, well
+        # inside the 500/month free tier. Safe failure mode: if the key's tier
+        # does not surface Pinnacle (or WC lines are not open yet), the producer
+        # falls back to synthetic and divergence stays pending - nothing breaks.
+        # The key is referenced only via the secret; it is never printed.
+        env:
+          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+        run: python ingestion/fetch_odds_pinnacle.py --source oddsapi --force
 
       - name: Regenerate snapshot bundle from locked M2 batch
         # cp-10: settled-result conditioning reads match_outcomes from

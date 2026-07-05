@@ -3,6 +3,7 @@ import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { loadStructuralMaps, mergeDivergence } from "@/lib/db/structuralMerge";
 import {
   DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  DIVERGENCE_STALE_ODDS_NOTE,
   upcomingDivergenceRows,
 } from "@/lib/data/divergenceFilter";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
@@ -15,7 +16,7 @@ export const dynamic = "force-static";
 export const metadata = {
   title: "Divergence Terminal · The 45% Problem",
   description:
-    "Screener for model-vs-market divergence on World Cup 2026 fixtures. Group-stage coverage is complete; knockout-round divergence is pending the odds remap. Sorted by absolute edge magnitude.",
+    "Screener for model-vs-market divergence on World Cup 2026 fixtures. Group-stage coverage is complete; knockout-round divergence is live and ungraded. Sorted by absolute edge magnitude.",
 };
 
 export default async function TerminalPage({
@@ -41,12 +42,18 @@ export default async function TerminalPage({
   // cp-14 Decision B: when no real odds are ingested, the divergence is pending
   // (zero rows, no PINNACLE stamp). Show an honest pending panel instead of the
   // table and the retired synthetic-disclosure banner.
-  const isPending =
-    divergence.status === "pending" || divergence.rows.length === 0;
+  const isPending = divergence.status === "pending";
 
-  // cp-29: the snapshot carried rows but the settled-match filter emptied them.
-  // The group stage is over and knockout divergence is pending the odds remap.
-  const isKnockoutPending = !isPending && upcomingRows.length === 0;
+  // cp-30: real odds landed once but the committed snapshot is stale (older than
+  // the operational freshness threshold), so status "live" was withheld and zero
+  // rows published. Show an honest stale panel, never the last known edges.
+  const isStaleOdds = divergence.status === "stale";
+
+  // cp-29 / cp-30: a live snapshot with no upcoming rows. Either every current
+  // fixture has kicked off, or no upcoming knockout fixture has an open line
+  // right now. Knockout coverage is live (cp-30), so this is not "pending".
+  const isKnockoutPending =
+    !isPending && !isStaleOdds && upcomingRows.length === 0;
 
   return (
     <div
@@ -173,6 +180,39 @@ export default async function TerminalPage({
               .
             </p>
           </div>
+        ) : isStaleOdds ? (
+          <div
+            className="border rounded-md px-5 py-8 text-center"
+            style={{
+              borderColor: "var(--border-default)",
+              backgroundColor: "var(--bg-panel)",
+            }}
+            role="status"
+          >
+            <p
+              className="text-[13px] font-medium"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Odds snapshot stale
+            </p>
+            <p
+              className="text-[12px] mt-1.5 max-w-[640px] mx-auto"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              {DIVERGENCE_STALE_ODDS_NOTE} This freshness guard is operational
+              plumbing on the odds feed, separate from the pre-registered
+              Volatility Gate. The model-vs-market method is documented at{" "}
+              <a
+                href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--accent-focus)" }}
+              >
+                osf.io/spmkg
+              </a>
+              .
+            </p>
+          </div>
         ) : isKnockoutPending ? (
           <div
             className="border rounded-md px-5 py-8 text-center"
@@ -186,15 +226,15 @@ export default async function TerminalPage({
               className="text-[13px] font-medium"
               style={{ color: "var(--text-primary)" }}
             >
-              Group-stage coverage complete
+              No open knockout lines right now
             </p>
             <p
               className="text-[12px] mt-1.5 max-w-[640px] mx-auto"
               style={{ color: "var(--text-tertiary)" }}
             >
-              {DIVERGENCE_KNOCKOUT_PENDING_NOTE} Settled group-stage rows are not
-              shown here: a divergence is a pre-match signal, so once a fixture
-              has kicked off its edge is post-hoc. The model-vs-market method is
+              {DIVERGENCE_KNOCKOUT_PENDING_NOTE} Kicked-off fixtures are not shown
+              here: a divergence is a pre-match signal, so once a fixture has
+              started its edge is post-hoc. The model-vs-market method is
               documented at{" "}
               <a
                 href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"

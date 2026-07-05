@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  DIVERGENCE_STALE_ODDS_NOTE,
+  divergenceMatchHref,
   isDivergenceRowUpcoming,
   upcomingDivergenceRows,
 } from "@/lib/data/divergenceFilter";
@@ -64,12 +66,31 @@ describe("upcomingDivergenceRows", () => {
 });
 
 describe("DIVERGENCE_KNOCKOUT_PENDING_NOTE", () => {
-  it("states group-stage coverage is done and knockout coverage is pending the remap", () => {
+  it("states group-stage coverage is done and knockout coverage is now live (cp-30)", () => {
     expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).toContain("Group-stage divergence coverage is complete");
-    expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).toContain("odds remap");
+    expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).toContain("live");
+    // cp-30 revived the knockout feed; the note must no longer say "pending".
+    expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).not.toContain("pending");
   });
 
   it("carries no em or en dashes", () => {
     expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).not.toMatch(/[\u2013\u2014]/);
+    expect(DIVERGENCE_STALE_ODDS_NOTE).not.toMatch(/[\u2013\u2014]/);
+  });
+});
+
+describe("divergenceMatchHref", () => {
+  it("routes group rows (GRP) to the graded /match/[id]", () => {
+    expect(divergenceMatchHref({ match_id: "M67", round: "GRP" })).toBe("/match/M67");
+  });
+
+  it("routes knockout rows (KO-FD) to the ungraded /match/live/[id]", () => {
+    expect(divergenceMatchHref({ match_id: "KO-FD537377", round: "R16" })).toBe(
+      "/match/live/KO-FD537377",
+    );
+  });
+
+  it("routes by KO- id even when the round field is absent", () => {
+    expect(divergenceMatchHref({ match_id: "KO-FD537383" })).toBe("/match/live/KO-FD537383");
   });
 });

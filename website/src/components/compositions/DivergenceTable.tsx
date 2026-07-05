@@ -27,6 +27,7 @@ import {
 } from "@/lib/formatters";
 import { MARKET_LABELS } from "@/lib/markets";
 import { gateRuleLabel } from "@/lib/gateCoverage";
+import { divergenceMatchHref } from "@/lib/data/divergenceFilter";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -654,7 +655,7 @@ function DivergenceGrid({
                   {/* Matchup */}
                   <div role="gridcell" className="py-3.5 px-2 min-w-0 overflow-hidden">
                     <Link
-                      href={`/match/${row.match_id}`}
+                      href={divergenceMatchHref(row)}
                       className="transition-colors duration-[120ms] block truncate font-medium"
                       style={{ color: "var(--text-primary)" }}
                       onClick={(e) => e.stopPropagation()}
