@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_gate_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/volatility-gate},
+  url          = {https://45analytics.com/vault/volatility-gate},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Volatility Gate: five suppression rules with counterfactuals. Research Vault. https://the45percent.org/vault/volatility-gate";
+  "The 45% Problem project (2026). Volatility Gate: five suppression rules with counterfactuals. Research Vault. https://45analytics.com/vault/volatility-gate";
 
 export default function VolatilityGateLayout({
   children,

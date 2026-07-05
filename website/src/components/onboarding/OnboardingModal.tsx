@@ -202,7 +202,8 @@ export function OnboardingModal({
             >
               bookmaker odds
             </strong>{" "}
-            is live for group-stage fixtures.
+            covered the group-stage fixtures; knockout coverage is pending the
+            odds remap.
           </ClaimRow>
         </div>
 

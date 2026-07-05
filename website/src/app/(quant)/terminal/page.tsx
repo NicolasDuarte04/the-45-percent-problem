@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { loadDivergence, loadFreshness } from "@/lib/data/loadSnapshot";
 import { loadStructuralMaps, mergeDivergence } from "@/lib/db/structuralMerge";
+import {
+  DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  upcomingDivergenceRows,
+} from "@/lib/data/divergenceFilter";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
@@ -11,7 +15,7 @@ export const dynamic = "force-static";
 export const metadata = {
   title: "Divergence Terminal · The 45% Problem",
   description:
-    "Screener for model-vs-market divergence across all upcoming World Cup 2026 markets. Sorted by absolute edge magnitude.",
+    "Screener for model-vs-market divergence on World Cup 2026 fixtures. Group-stage coverage is complete; knockout-round divergence is pending the odds remap. Sorted by absolute edge magnitude.",
 };
 
 export default async function TerminalPage({
@@ -26,15 +30,23 @@ export default async function TerminalPage({
 
   const isStale = freshness.status === "STALE" || freshness.status === "BROKEN";
 
+  // cp-29: only show fixtures that have not yet kicked off. Settled group-stage
+  // rows carried in the live snapshot are post-hoc edges, not live signals.
+  const upcomingRows = upcomingDivergenceRows(divergence);
+
   const allGated =
-    divergence.rows.length > 0 &&
-    divergence.rows.every((r) => r.gate_status === "FIRED");
+    upcomingRows.length > 0 &&
+    upcomingRows.every((r) => r.gate_status === "FIRED");
 
   // cp-14 Decision B: when no real odds are ingested, the divergence is pending
   // (zero rows, no PINNACLE stamp). Show an honest pending panel instead of the
   // table and the retired synthetic-disclosure banner.
   const isPending =
     divergence.status === "pending" || divergence.rows.length === 0;
+
+  // cp-29: the snapshot carried rows but the settled-match filter emptied them.
+  // The group stage is over and knockout divergence is pending the odds remap.
+  const isKnockoutPending = !isPending && upcomingRows.length === 0;
 
   return (
     <div
@@ -116,7 +128,7 @@ export default async function TerminalPage({
           role="alert"
         >
           <div className="max-w-[1152px] mx-auto px-0 md:px-12">
-            ◆ Volatility Gate tripped on all {divergence.rows.length} rows in this snapshot.
+            ◆ Volatility Gate tripped on all {upcomingRows.length} rows in this snapshot.
             All rows remain visible: the gate annotates, it does not filter. Gate rules
             are shown in the Gate column tooltip.
           </div>
@@ -161,9 +173,43 @@ export default async function TerminalPage({
               .
             </p>
           </div>
+        ) : isKnockoutPending ? (
+          <div
+            className="border rounded-md px-5 py-8 text-center"
+            style={{
+              borderColor: "var(--border-default)",
+              backgroundColor: "var(--bg-panel)",
+            }}
+            role="status"
+          >
+            <p
+              className="text-[13px] font-medium"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Group-stage coverage complete
+            </p>
+            <p
+              className="text-[12px] mt-1.5 max-w-[640px] mx-auto"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              {DIVERGENCE_KNOCKOUT_PENDING_NOTE} Settled group-stage rows are not
+              shown here: a divergence is a pre-match signal, so once a fixture
+              has kicked off its edge is post-hoc. The model-vs-market method is
+              documented at{" "}
+              <a
+                href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--accent-focus)" }}
+              >
+                osf.io/spmkg
+              </a>
+              .
+            </p>
+          </div>
         ) : (
           <DivergenceTable
-            rows={divergence.rows}
+            rows={upcomingRows}
             snapshotId={divergence.snapshot_id}
             isStale={isStale}
             initialParams={params}

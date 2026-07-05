@@ -13,9 +13,10 @@ import {
   recapNote,
   selectPreviewDay,
   selectRecapDay,
+  shootoutNote,
   spanishName,
 } from "@/lib/data/dailyShareCard";
-import type { MatchDetail } from "@/lib/data/schemas";
+import type { LiveKnockoutMatch, MatchDetail } from "@/lib/data/schemas";
 
 // Minimal MatchDetail builder, matching tests/unit/matchListing.test.ts. Only
 // the fields the card helpers read are meaningful; the rest are schema-valid
@@ -231,6 +232,45 @@ describe("recapNote", () => {
   });
   it("is null when there is no result", () => {
     expect(recapNote(makeMatch())).toBeNull();
+  });
+});
+
+// cp-29: a penalty-decided knockout is a regulation draw, so the recap card
+// must not stop at a bare "1-1 Final". shootoutNote renders the shootout
+// resolution in the card's Spanish, winner-first, and only for live knockout
+// cards that actually went to a shootout.
+describe("shootoutNote (cp-29)", () => {
+  function knockoutCard(shootout: unknown): LiveKnockoutMatch {
+    return {
+      home: { fifa_code: "GER", display_name: "Germany" },
+      away: { fifa_code: "PAR", display_name: "Paraguay" },
+      score: { home: 1, away: 1 },
+      outcome_realized: "D",
+      live_provenance: { graded: false },
+      shootout,
+    } as unknown as LiveKnockoutMatch;
+  }
+
+  it("names the away winner and shows the tally winner-first", () => {
+    expect(shootoutNote(knockoutCard({ winner: "A", home: 3, away: 4 }))).toBe(
+      "penales: PAR ganó 4-3",
+    );
+  });
+
+  it("names the home winner", () => {
+    expect(shootoutNote(knockoutCard({ winner: "H", home: 5, away: 4 }))).toBe(
+      "penales: GER ganó 5-4",
+    );
+  });
+
+  it("returns null for a group card with no shootout", () => {
+    expect(shootoutNote(makeMatch())).toBeNull();
+  });
+
+  it("returns null when the shootout block is missing or incomplete", () => {
+    expect(shootoutNote(knockoutCard(undefined))).toBeNull();
+    expect(shootoutNote(knockoutCard(null))).toBeNull();
+    expect(shootoutNote(knockoutCard({ winner: "A", home: null, away: 4 }))).toBeNull();
   });
 });
 

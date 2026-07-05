@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_market_layer_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/market-layer},
+  url          = {https://45analytics.com/vault/market-layer},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Market Layer: de-vigging, edge, and the power method. Research Vault. https://the45percent.org/vault/market-layer";
+  "The 45% Problem project (2026). Market Layer: de-vigging, edge, and the power method. Research Vault. https://45analytics.com/vault/market-layer";
 
 export default function MarketLayerLayout({
   children,

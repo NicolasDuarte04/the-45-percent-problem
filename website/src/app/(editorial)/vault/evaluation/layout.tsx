@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_evaluation_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/evaluation},
+  url          = {https://45analytics.com/vault/evaluation},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Evaluation: Brier, log-loss, and CLV in plain English. Research Vault. https://the45percent.org/vault/evaluation";
+  "The 45% Problem project (2026). Evaluation: Brier, log-loss, and CLV in plain English. Research Vault. https://45analytics.com/vault/evaluation";
 
 export default function EvaluationLayout({
   children,

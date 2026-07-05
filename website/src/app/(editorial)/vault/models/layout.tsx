@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_models_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/models},
+  url          = {https://45analytics.com/vault/models},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Anatomy of M0. M★: the five candidate models. Research Vault. https://the45percent.org/vault/models";
+  "The 45% Problem project (2026). Anatomy of M0. M★: the five candidate models. Research Vault. https://45analytics.com/vault/models";
 
 export default function ModelsLayout({ children }: { children: ReactNode }) {
   return (

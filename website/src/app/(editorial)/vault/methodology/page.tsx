@@ -22,11 +22,11 @@ const bibtex = `@misc{forty_five_percent_methodology_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/methodology},
+  url          = {https://45analytics.com/vault/methodology},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Methodology: probabilistic pricing for the 2026 World Cup. Research Vault. https://the45percent.org/vault/methodology";
+  "The 45% Problem project (2026). Methodology: probabilistic pricing for the 2026 World Cup. Research Vault. https://45analytics.com/vault/methodology";
 
 export default function MethodologyPage() {
   return (

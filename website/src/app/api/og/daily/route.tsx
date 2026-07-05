@@ -46,6 +46,7 @@ import {
   recapNote,
   selectPreviewDay,
   selectRecapDay,
+  shootoutNote,
   spanishName,
 } from "@/lib/data/dailyShareCard";
 import {
@@ -161,7 +162,18 @@ export async function GET(req: NextRequest): Promise<Response> {
             center = `${m.score.home}-${m.score.away}`;
             centerLabel = "Final";
           }
-          note = recapNote(m);
+          // cp-29: a penalty-decided knockout ends level in regulation. Keep the
+          // regulation score as the headline but label it "Penales" and prepend
+          // the shootout resolution to the note so the card never shows a bare
+          // "1-1 Final" that hides how the tie was decided.
+          const pen = shootoutNote(m);
+          const cal = recapNote(m);
+          if (pen) {
+            centerLabel = "Penales";
+            note = cal ? `${pen} · ${cal}` : pen;
+          } else {
+            note = cal;
+          }
         } else {
           scorelines = previewScorelines(m.p_model_goals);
         }

@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/the-45-percent},
+  url          = {https://45analytics.com/vault/the-45-percent},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). The 45% Problem. Research Vault. https://the45percent.org/vault/the-45-percent";
+  "The 45% Problem project (2026). The 45% Problem. Research Vault. https://45analytics.com/vault/the-45-percent";
 
 /**
  * §8.6: the titular essay wraps its MDX body in VaultArticle via this

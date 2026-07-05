@@ -8,7 +8,7 @@ import { loadManifest } from "@/lib/data/loadSnapshot";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-    "https://the45percent.org";
+    "https://45analytics.com";
 
   const now = new Date();
 

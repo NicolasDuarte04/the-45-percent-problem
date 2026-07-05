@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_kill_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/kill-criteria},
+  url          = {https://45analytics.com/vault/kill-criteria},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Kill criteria: pre-registered null-result conditions. Research Vault. https://the45percent.org/vault/kill-criteria";
+  "The 45% Problem project (2026). Kill criteria: pre-registered null-result conditions. Research Vault. https://45analytics.com/vault/kill-criteria";
 
 export default function KillCriteriaLayout({
   children,

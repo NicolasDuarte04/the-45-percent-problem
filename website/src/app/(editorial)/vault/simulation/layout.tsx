@@ -12,11 +12,11 @@ const bibtex = `@misc{forty_five_percent_simulation_2026,
   author       = {{The 45\\% Problem project}},
   year         = {2026},
   howpublished = {Research Vault},
-  url          = {https://the45percent.org/vault/simulation},
+  url          = {https://45analytics.com/vault/simulation},
 }`;
 
 const apa =
-  "The 45% Problem project (2026). Simulation: bivariate Poisson and Monte Carlo. Research Vault. https://the45percent.org/vault/simulation";
+  "The 45% Problem project (2026). Simulation: bivariate Poisson and Monte Carlo. Research Vault. https://45analytics.com/vault/simulation";
 
 export default function SimulationLayout({
   children,
