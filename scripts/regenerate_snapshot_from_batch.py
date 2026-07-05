@@ -88,6 +88,10 @@ from frozen_batch import (  # noqa: E402
 WEBSITE_DATA_ROOT = PROJECT_ROOT / "website" / "public" / "data"
 LATEST_DIR        = WEBSITE_DATA_ROOT / "latest"
 SNAPSHOTS_DIR     = WEBSITE_DATA_ROOT / "snapshots"
+# cp-31: committed archive of automated daily Brief issues, one JSON per Colombia
+# civil day. Served by website/src/lib/brief.ts; persisted by the same
+# `git add website/public/data/` the nightly / on-demand regen already commits.
+BRIEFS_DIR        = WEBSITE_DATA_ROOT / "briefs"
 MANIFEST_PATH     = WEBSITE_DATA_ROOT / "manifest.json"
 ACTIVE_BATCH_JSON = PROJECT_ROOT / "data" / "calibration" / "active_batch.json"
 CHAMPION_MODEL_JSON = PROJECT_ROOT / "data" / "calibration" / "champion_model.json"
@@ -1619,6 +1623,25 @@ def main() -> None:
     # cards were written into new_dir there and ride the copytree into latest/.
     # Read by no graded surface (own matches_live/ namespace + dedicated null
     # loader); the frozen ledger, calibration, and locked model are untouched.
+
+    # ── cp-31: generate today's automated daily Brief ────────────────────
+    # A pure function of the bundle just written into new_dir (tournament,
+    # snapshot_meta, divergence, matches/, matches_live/, r16_checkpoint). Runs
+    # after every producing block so it reads the final state, and BEFORE the
+    # copytree so the issue is committed alongside the snapshot. Idempotent: one
+    # file per Colombia civil day, overwritten in place on re-run. Defensive: a
+    # failure here never breaks the nightly (same contract as the live emitters).
+    try:
+        from evaluation.build_daily_brief import publish_daily_brief
+
+        brief_path = publish_daily_brief(
+            bundle_dir=new_dir,
+            briefs_dir=BRIEFS_DIR,
+            generated_at_utc=new_generated_at,
+        )
+        print(f"    [cp-31] daily brief written: {brief_path.relative_to(PROJECT_ROOT)}")
+    except Exception as exc:  # noqa: BLE001 - never break the nightly on the brief
+        print(f"    [cp-31] daily brief skipped (non-fatal): {exc}")
 
     # ── Replace LATEST_DIR with the new bundle ───────────────────────────
     print(f"[5] replacing latest/ with new bundle")

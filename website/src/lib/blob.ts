@@ -1,13 +1,17 @@
 /**
  * Vercel Blob client for the daily brief artifacts.
  *
- * Pipeline contract: the Python `evaluation/build_daily_brief.py` writes
- * `briefs/YYYY-MM-DD.json` (Phase 4). The cron route at /api/cron/send-brief
- * reads it back via `getBriefForDate()` and dispatches.
+ * cp-31: as of the automated producer, the PRIMARY brief source is the committed
+ * archive at `public/data/briefs/` (written by `evaluation/build_daily_brief.py`
+ * during regen and served by `lib/brief.ts`). This Blob module is retained as
+ * the backward-compatible archive of pre-cp-31 issues: `lib/brief.ts` unions
+ * committed issues (which win) with whatever remains in Blob, so old issues stay
+ * reachable by date and in the archive index. New issues are no longer written
+ * here (the regen Actions job has no BLOB_READ_WRITE_TOKEN; committing rides the
+ * existing `git add website/public/data/` path instead).
  *
- * The Python side uploads via the Vercel Blob REST API directly using
- * BLOB_READ_WRITE_TOKEN; this module is the TypeScript reader/writer used by
- * the Next.js routes.
+ * This module is the TypeScript reader/writer used by the Next.js routes; the
+ * `put*` helpers back the manual replay/seed paths only.
  */
 import { put, list, head, del } from "@vercel/blob";
 
