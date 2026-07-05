@@ -84,6 +84,7 @@ from frozen_batch import (  # noqa: E402
     FROZEN_STRENGTH_MATRIX_SHA256,
     FROZEN_TEAM_RUNS_M2,
 )
+from scripts.snapshot_retention import prune_snapshots  # noqa: E402
 
 WEBSITE_DATA_ROOT = PROJECT_ROOT / "website" / "public" / "data"
 LATEST_DIR        = WEBSITE_DATA_ROOT / "latest"
@@ -1663,6 +1664,21 @@ def main() -> None:
         "meta_url":         f"/data/snapshots/{new_snapshot_id}/snapshot_meta.json",
     })
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2))
+
+    # ── cp-32: bounded snapshot retention ────────────────────────────────
+    # Prune old bundles from the working tree (keep the last 48h + each earlier
+    # Colombia civil day's final bundle) so checkout / deploy payload stays
+    # bounded. Git history still holds every pruned bundle, so no audit trail is
+    # lost. The just-written new_dir is within the 48h window, so it is always
+    # kept. latest/ is a sibling of snapshots/ (never iterated here) and is
+    # additionally in the protected set; the frozen batch lives outside
+    # snapshots/ and is protected too. manifest.json is deliberately left intact
+    # as the complete, git-history-backed index. Defensive: any failure here is
+    # logged and swallowed, leaving the freshly published bundle untouched.
+    try:
+        prune_snapshots(SNAPSHOTS_DIR, now)
+    except Exception as exc:  # noqa: BLE001 - retention must never break a publish
+        print(f"    [retention] skipped (non-fatal): {exc}")
 
     # ── Print headline numbers for spot-check ────────────────────────────
     print()

@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { sql } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { matchOutcomes } from "@/lib/db/schema";
+import { MATCH_OUTCOME_CONFLICT_SET } from "@/lib/db/matchOutcomeConflict";
 import { runEvaluatorAcrossPredictions } from "@/lib/sim/runEvaluator";
 import { revalidatePublicSnapshotRoutes } from "@/lib/revalidation";
 import { triggerOnDemandRegen } from "@/lib/regenDispatch";
@@ -153,17 +153,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .values(rows)
       .onConflictDoUpdate({
         target: matchOutcomes.matchId,
-        set: {
-          competition: sql`excluded.competition`,
-          stage: sql`excluded.stage`,
-          homeTeam: sql`excluded.home_team`,
-          awayTeam: sql`excluded.away_team`,
-          homeGoals: sql`excluded.home_goals`,
-          awayGoals: sql`excluded.away_goals`,
-          shootoutWinner: sql`excluded.shootout_winner`,
-          settledAt: sql`excluded.settled_at`,
-          meta: sql`excluded.meta`,
-        },
+        // settled_at is write-once (see MATCH_OUTCOME_CONFLICT_SET): a re-POST
+        // of an already-settled match never re-stamps the timestamp, so the
+        // hourly ingest's repeat sends are a no-op on the stored row.
+        set: MATCH_OUTCOME_CONFLICT_SET,
       });
   } catch (err) {
     console.error("[ingest/match-outcomes] upsert failed", err);
