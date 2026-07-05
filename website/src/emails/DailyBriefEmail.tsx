@@ -43,11 +43,16 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import type { BriefSample, BriefMover } from "@/lib/brief";
+import type {
+  BriefSample,
+  BriefMover,
+  BriefDaily,
+  BriefFixture,
+} from "@/lib/brief";
 import { LEGAL_DISCLAIMER } from "./_disclaimer";
 
-function pct(p: number): string {
-  return `${(p * 100).toFixed(1)}%`;
+function pct(p: number | null | undefined): string {
+  return p == null ? "n/a" : `${(p * 100).toFixed(1)}%`;
 }
 
 function formatDelta(bps: number): string {
@@ -376,6 +381,9 @@ export function DailyBriefEmail({
           </Section>
           <Hr style={styles.rule} />
 
+          {/* ── Section 3.5: cp-31 daily block (conditional) ───────────── */}
+          {brief.daily && <DailyBlock daily={brief.daily} />}
+
           {/* ── Section 4: Tournament probability movers ───────────────── */}
           <Section>
             <Text style={styles.sectionHead}>TOURNAMENT MOVERS</Text>
@@ -504,6 +512,101 @@ function ReproRow({ label, value }: { label: string; value: string }) {
         <Text style={{ ...styles.reproRow, color: PALETTE.ink }}>{value}</Text>
       </Column>
     </Row>
+  );
+}
+
+// ─── cp-31 daily block ────────────────────────────────────────────────────────
+//
+// Renders the deterministic, snapshot-derived daily content the cp-31 producer
+// writes: tournament state, today's fixtures (model 1X2 + modal scoreline),
+// yesterday's results (with shootout resolutions), the R16 checkpoint status,
+// and the AGGREGATE divergence-layer status. It carries NO ranked or per-match
+// market divergence, by construction: the producer never emits one, and this
+// component has nowhere to render one.
+
+function DailyBlock({ daily }: { daily: BriefDaily }) {
+  const hasUngradedToday = daily.today_fixtures.some((f) => !f.graded);
+  return (
+    <>
+      <Section>
+        <Text style={styles.sectionHead}>TOURNAMENT STATE</Text>
+        <Text style={styles.moverDriver}>{daily.tournament.sentence}</Text>
+      </Section>
+      <Hr style={styles.rule} />
+
+      <Section>
+        <Text style={styles.sectionHead}>TODAY</Text>
+        {daily.today_fixtures.length === 0 ? (
+          <Text style={styles.moverDriver}>No ties scheduled today.</Text>
+        ) : (
+          daily.today_fixtures.map((f) => (
+            <FixtureRow key={f.match_id} fixture={f} />
+          ))
+        )}
+        {hasUngradedToday && (
+          <Text style={styles.moverDriver}>{daily.knockout_disclaimer}</Text>
+        )}
+      </Section>
+      <Hr style={styles.rule} />
+
+      <Section>
+        <Text style={styles.sectionHead}>YESTERDAY</Text>
+        {daily.yesterday_results.length === 0 ? (
+          <Text style={styles.moverDriver}>No ties settled yesterday.</Text>
+        ) : (
+          daily.yesterday_results.map((r) => (
+            <Text key={r.match_id} style={styles.moverRow}>
+              <span style={{ color: PALETTE.graphite }}>
+                {r.round}
+                &nbsp;&nbsp;
+              </span>
+              <span style={{ color: PALETTE.ink }}>{r.result_label}</span>
+            </Text>
+          ))
+        )}
+      </Section>
+      <Hr style={styles.rule} />
+
+      <Section>
+        <Text style={styles.sectionHead}>R16 CHECKPOINT</Text>
+        <Text style={styles.moverDriver}>{daily.r16_checkpoint.sentence}</Text>
+      </Section>
+      <Hr style={styles.rule} />
+
+      <Section>
+        <Text style={styles.sectionHead}>DIVERGENCE LAYER</Text>
+        <Text style={styles.moverDriver}>{daily.divergence.sentence}</Text>
+      </Section>
+      <Hr style={styles.rule} />
+    </>
+  );
+}
+
+function FixtureRow({ fixture }: { fixture: BriefFixture }) {
+  return (
+    <>
+      <Text style={styles.moverRow}>
+        <span style={{ color: PALETTE.graphite }}>
+          {fixture.kickoff_local_label}
+          &nbsp;&nbsp;
+          {fixture.round}
+          {fixture.graded ? "" : " (not graded)"}
+          &nbsp;&nbsp;
+        </span>
+        <span style={{ color: PALETTE.ink }}>
+          {fixture.home.display_name} vs {fixture.away.display_name}
+        </span>
+      </Text>
+      <Text style={styles.moverDriver}>
+        <span style={{ color: PALETTE.graphite }}>
+          H {pct(fixture.p_home)} &nbsp; D {pct(fixture.p_draw)} &nbsp; A{" "}
+          {pct(fixture.p_away)}
+          {fixture.modal_scoreline
+            ? ` · modal ${fixture.modal_scoreline}`
+            : ""}
+        </span>
+      </Text>
+    </>
   );
 }
 

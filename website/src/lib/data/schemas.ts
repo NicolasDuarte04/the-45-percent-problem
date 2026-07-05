@@ -495,3 +495,108 @@ export const ManifestEntrySchema = z.object({
 
 export const ManifestSchema = z.array(ManifestEntrySchema);
 export type Manifest = z.infer<typeof ManifestSchema>;
+
+// ── cp-31: committed daily Brief issue (public/data/briefs/<date>.json) ────────
+//
+// The runtime contract for issues written by the producer
+// (evaluation/build_daily_brief.py). The three no-tipster fields are pinned to
+// their empty/false literals in the schema itself, so a validating issue cannot
+// carry a ranked or per-match market divergence: the prohibition is enforced at
+// the type boundary, not merely by the producer.
+
+const BriefTeamRefSchema = z.object({
+  fifa_code: z.string(),
+  display_name: z.string(),
+});
+
+export const BriefFixtureSchema = z.object({
+  match_id: z.string(),
+  round: z.string(),
+  graded: z.boolean(),
+  kickoff_utc: z.string().nullable(),
+  kickoff_local_label: z.string(),
+  home: BriefTeamRefSchema,
+  away: BriefTeamRefSchema,
+  p_home: probability().nullable(),
+  p_draw: probability().nullable(),
+  p_away: probability().nullable(),
+  modal_scoreline: z.string().nullable(),
+});
+
+export const BriefResultSchema = z.object({
+  match_id: z.string(),
+  round: z.string(),
+  graded: z.boolean(),
+  home: BriefTeamRefSchema,
+  away: BriefTeamRefSchema,
+  score: z.object({
+    home: z.number().int().nullable(),
+    away: z.number().int().nullable(),
+  }),
+  outcome: z.enum(["H", "D", "A"]).nullable(),
+  shootout: z
+    .object({
+      winner_name: z.string().nullable(),
+      home: z.number().int(),
+      away: z.number().int(),
+    })
+    .nullable(),
+  result_label: z.string(),
+});
+
+export const BriefDailySchema = z.object({
+  generated_at_utc: z.string(),
+  tournament: z.object({
+    phase_label: z.string(),
+    matches_settled: z.number().int(),
+    matches_remaining: z.number().int(),
+    total_matches: z.number().int(),
+    sentence: z.string(),
+  }),
+  r16_checkpoint: z.object({
+    status: z.enum(["pending", "published"]),
+    sentence: z.string(),
+  }),
+  divergence: z.object({
+    status: z.enum(["live", "paused"]),
+    fixtures_covered: z.number().int().nonnegative(),
+    sentence: z.string(),
+  }),
+  knockout_disclaimer: z.string(),
+  today_fixtures: z.array(BriefFixtureSchema),
+  yesterday_results: z.array(BriefResultSchema),
+  next_fixture_date: z.string().nullable(),
+});
+
+export const DailyBriefIssueSchema = z.object({
+  brief_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  issue_number: z.number().int(),
+  model_variant: z.string(),
+  code_sha: z.string(),
+  data_snapshot_sha: z.string(),
+  mc_runs: z.number().int(),
+  next_brief_utc: z.string(),
+  latest_archive_url: z.string(),
+  lead_in: z.object({
+    tournament_sentence: z.string(),
+    match_sentence: z.string(),
+    fallback_used: z.boolean(),
+  }),
+  headline: z.object({
+    summary_line: z.string(),
+    movers_line: z.string(),
+  }),
+  // No-tipster prohibition, pinned at the type boundary.
+  teaser: z.object({ has_divergence: z.literal(false) }),
+  top_divergences: z.array(z.never()).length(0),
+  tournament_movers: z.array(z.never()).length(0),
+  suppressed_today: z.array(z.never()).length(0),
+  featured_teams: z.array(z.object({ code: z.string(), name: z.string() })),
+  methodology_links: z.object({
+    model_card: z.string(),
+    devig_method: z.string(),
+    this_brief_archive: z.string(),
+  }),
+  daily: BriefDailySchema,
+});
+export type DailyBriefIssue = z.infer<typeof DailyBriefIssueSchema>;
