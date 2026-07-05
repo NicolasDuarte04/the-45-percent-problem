@@ -134,6 +134,11 @@ export const DivergenceRowSchema = z.object({
     host_delta: z.number(),
   }),
   model_version: z.string(),
+  // cp-30: knockout divergence rows are live and ungraded, like the knockout
+  // cards; group rows were never graded either (divergence.json is not the
+  // graded ledger). Stamped false on every row for provenance. Optional so
+  // pre-cp-30 snapshots (rows without this field) still parse.
+  graded: z.boolean().optional(),
   // Per-row snapshot history for the disclosure sparkline (§12.5 approved schema extension)
   history: z.array(DivergenceHistoryEntrySchema).default([]),
 });
@@ -146,8 +151,14 @@ export const DivergenceSnapshotSchema = z.object({
   // cp-14: "pending" means no real odds are ingested yet, so rows is empty and
   // no source_book is stamped anywhere (Decision B). "live" means the rows are
   // real de-vigged Pinnacle lines. Absent on pre-cp-14 snapshots.
-  status: z.enum(["live", "pending"]).optional(),
+  // cp-30: "stale" means real odds DID land once but the committed snapshot is
+  // older than the operational freshness threshold, so rows is empty and status
+  // "live" is withheld. Distinct from "pending"; both publish zero rows.
+  status: z.enum(["live", "pending", "stale"]).optional(),
   pending_reason: z.string().optional(),
+  // cp-30: reason + measured age for the stale state (both absent otherwise).
+  stale_reason: z.string().optional(),
+  snapshot_age_minutes: z.number().min(0).nullable().optional(),
   notes: z.string().optional(),
 });
 export type DivergenceSnapshot = z.infer<typeof DivergenceSnapshotSchema>;

@@ -6,6 +6,7 @@ import { formatUtcShort } from "@/lib/formatters";
 import { MARKET_LABELS } from "@/lib/markets";
 import {
   DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  divergenceMatchHref,
   upcomingDivergenceRows,
 } from "@/lib/data/divergenceFilter";
 
@@ -75,7 +76,7 @@ function DivergenceCard({ row }: { row: DivergenceRow }) {
 
   return (
     <Link
-      href={`/match/${row.match_id}`}
+      href={divergenceMatchHref(row)}
       className="no-underline block"
       style={{ color: "var(--text-primary)" }}
     >

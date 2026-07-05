@@ -994,7 +994,7 @@ def emit_live_knockout_matches(
     source_batch_id: str,
     new_generated_at: str,
     out_dir: Path,
-) -> None:
+) -> dict[str, dict]:
     """cp-17 Stage 2b: emit per-match live knockout cards from the real draw.
 
     Reads the concrete pairings learned by ingestion/fetch_knockout_pairings.py
@@ -1021,18 +1021,19 @@ def emit_live_knockout_matches(
     ``out_dir`` untouched. A missing or empty pairings file is the normal
     pre-draw state and emits nothing.
     """
+    emitted_cards: dict[str, dict] = {}
     try:
         if not LIVE_KNOCKOUT_PAIRINGS.exists():
             print(
                 "    [cp-17] no knockout pairings file "
                 f"({LIVE_KNOCKOUT_PAIRINGS}); live knockout surface skipped"
             )
-            return
+            return emitted_cards
         doc = json.loads(LIVE_KNOCKOUT_PAIRINGS.read_text())
         pairings = doc.get("pairings", [])
         if not pairings:
             print("    [cp-17] knockout pairings file has 0 concrete pairings; nothing to emit")
-            return
+            return emitted_cards
 
         from simulation.match_model import MatchModel
         from simulation.monte_carlo_runner import SimpleEloProvider
@@ -1121,6 +1122,7 @@ def emit_live_knockout_matches(
             }
 
             (live_dir / f"{match_id}.json").write_text(json.dumps(card, indent=2) + "\n")
+            emitted_cards[str(match_id)] = card
             emitted += 1
 
         print(
@@ -1132,6 +1134,7 @@ def emit_live_knockout_matches(
             f"    [cp-17] live knockout surface skipped (error: {exc}); "
             "frozen bundle unaffected"
         )
+    return emitted_cards
 
 
 def main() -> None:
@@ -1449,14 +1452,34 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001 - defensive; never break the nightly
         print(f"    [cp-25b] checkpoint skipped (non-fatal): {exc}")
 
-    # cp-14 commit 5: gated divergence (Decision B). If real odds are present
-    # (the producer ran a real tier), de-vig them against the champion
-    # distribution and stamp PINNACLE honestly. Otherwise emit the pending state:
-    # zero rows, no PINNACLE stamp. The frozen synthetic table is retired.
+    # cp-30: emit the live knockout cards BEFORE the divergence block so the
+    # knockout divergence can read this run's own conditioned per-match 1X2
+    # (p_model_1x2) as its model source. The cards are written into new_dir (they
+    # still ride the copytree into latest/); we also capture them in-memory to
+    # feed build_divergence. Defensive: on any failure this returns {} and
+    # divergence simply produces no knockout rows.
+    knockout_cards = emit_live_knockout_matches(
+        teams_roster,
+        FROZEN_BATCH_ID,
+        new_generated_at,
+        new_dir,
+    )
+
+    # cp-14 commit 5 / cp-30: gated divergence (Decision B, extended to knockout).
+    # If real odds are present (the producer ran a real tier) AND the snapshot is
+    # fresh, de-vig them: group fixtures against the frozen champion distribution,
+    # knockout fixtures against the live conditioned per-match cards, all stamped
+    # PINNACLE honestly. If no real odds -> pending. If real but stale (older than
+    # the operational freshness threshold) -> stale. Both publish zero rows and no
+    # PINNACLE stamp; status "live" is reserved for genuinely fresh odds. The
+    # freshness guard is operational plumbing, NOT a pre-registered gate rule.
     from market.divergence_generator import (
         build_divergence,
+        is_odds_snapshot_stale,
         odds_are_synthetic,
+        odds_snapshot_age_minutes,
         pending_divergence,
+        stale_divergence,
     )
 
     odds_df = None
@@ -1472,6 +1495,13 @@ def main() -> None:
             new_snapshot_id, new_generated_at, "no real odds ingested"
         )
         print("    [cp-14] divergence: pending (no real odds; zero rows, no PINNACLE stamp)")
+    elif is_odds_snapshot_stale(odds_df, new_generated_at):
+        age = odds_snapshot_age_minutes(odds_df, new_generated_at)
+        divergence = stale_divergence(new_snapshot_id, new_generated_at, age)
+        print(
+            f"    [cp-30] divergence: stale (odds age {age} min exceeds freshness "
+            "threshold; zero rows, no PINNACLE stamp)"
+        )
     else:
         divergence = build_divergence(
             new_snapshot_id,
@@ -1481,10 +1511,12 @@ def main() -> None:
             model_map,
             code_sha_str,
             n_runs=n_runs_per_team,
+            knockout_cards=knockout_cards,
         )
+        n_ko = sum(1 for r in divergence["rows"] if r.get("round") != "GRP")
         print(
             f"    [cp-14] divergence: live, {len(divergence['rows'])} real "
-            "de-vigged Pinnacle rows"
+            f"de-vigged Pinnacle rows ({n_ko} knockout)"
         )
     (new_dir / "divergence.json").write_text(json.dumps(divergence, indent=2))
 
@@ -1581,19 +1613,12 @@ def main() -> None:
         new_dir,
     )
 
-    # ── cp-17 Stage 2b: emit the per-match live knockout cards ────────────
+    # ── cp-17 Stage 2b: live knockout cards ───────────────────────────────
+    # Emitted earlier (before the divergence block) so cp-30 knockout divergence
+    # can read this run's own conditioned per-match 1X2 as its model source. The
+    # cards were written into new_dir there and ride the copytree into latest/.
     # Read by no graded surface (own matches_live/ namespace + dedicated null
-    # loader). Pinned to the FROZEN batch id for provenance; the strengths come
-    # from the same roster the group producer uses. Defensive: skips-with-log on
-    # any failure, and emits nothing when the pairings file is missing/empty
-    # (the normal pre-draw state). Written into new_dir before the copytree so it
-    # rides snapshot retention into latest/ for free.
-    emit_live_knockout_matches(
-        teams_roster,
-        FROZEN_BATCH_ID,
-        new_generated_at,
-        new_dir,
-    )
+    # loader); the frozen ledger, calibration, and locked model are untouched.
 
     # ── Replace LATEST_DIR with the new bundle ───────────────────────────
     print(f"[5] replacing latest/ with new bundle")
