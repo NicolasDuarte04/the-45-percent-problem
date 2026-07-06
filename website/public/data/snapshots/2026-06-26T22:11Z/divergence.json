@@ -1,7 +1,0 @@
-{
-  "snapshot_id": "2026-06-26T22:11Z",
-  "generated_at_utc": "2026-06-26T22:11:29Z",
-  "status": "live",
-  "rows": [],
-  "notes": "Real de-vigged Pinnacle divergence. q_market is the power-method de-vigged closing line; p_model is the frozen champion (M2_fifa) per-match distribution."
-}

@@ -1,8 +1,0 @@
-{
-  "snapshot_id": "2026-06-19T11:21Z",
-  "generated_at_utc": "2026-06-19T11:21:34Z",
-  "status": "pending",
-  "pending_reason": "no real odds ingested",
-  "rows": [],
-  "notes": "Live odds ingestion pending. No real bookmaker lines are available yet, so no divergence rows are published. The previous synthetic, Elo-derived rows (which carried a bookmaker source attribution they did not come from) have been retired. When a real odds key is provisioned and the odds producer runs, real de-vigged divergence appears here."
-}
