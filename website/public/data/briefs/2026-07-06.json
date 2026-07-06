@@ -2,14 +2,14 @@
   "brief_date": "2026-07-06",
   "issue_number": 38,
   "model_variant": "M_STAR",
-  "code_sha": "b505b0148dedd220",
+  "code_sha": "ef193c6888c0053e",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-07T12:00:00Z",
   "latest_archive_url": "/briefs/2026-07-06",
   "lead_in": {
-    "tournament_sentence": "Round of 16: 92 of 104 matches settled, 12 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
-    "match_sentence": "2 ties scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "tournament_sentence": "Round of 16: 93 of 104 matches settled, 11 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
+    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "fallback_used": false
   },
   "headline": {
@@ -24,14 +24,6 @@
   "suppressed_today": [],
   "featured_teams": [
     {
-      "code": "POR",
-      "name": "PORTUGAL"
-    },
-    {
-      "code": "ESP",
-      "name": "SPAIN"
-    },
-    {
       "code": "USA",
       "name": "UNITED STATES"
     },
@@ -42,6 +34,14 @@
     {
       "code": "BRA",
       "name": "BRAZIL"
+    },
+    {
+      "code": "NOR",
+      "name": "NORWAY"
+    },
+    {
+      "code": "MEX",
+      "name": "MEXICO"
     }
   ],
   "methodology_links": {
@@ -50,13 +50,13 @@
     "this_brief_archive": "/briefs/2026-07-06"
   },
   "daily": {
-    "generated_at_utc": "2026-07-06T20:52:52Z",
+    "generated_at_utc": "2026-07-06T22:12:57Z",
     "tournament": {
       "phase_label": "Round of 16",
-      "matches_settled": 92,
-      "matches_remaining": 12,
+      "matches_settled": 93,
+      "matches_remaining": 11,
       "total_matches": 104,
-      "sentence": "Round of 16: 92 of 104 matches settled, 12 remaining."
+      "sentence": "Round of 16: 93 of 104 matches settled, 11 remaining."
     },
     "r16_checkpoint": {
       "status": "pending",
@@ -69,25 +69,6 @@
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "today_fixtures": [
-      {
-        "match_id": "KO-FD537379",
-        "round": "R16",
-        "graded": false,
-        "kickoff_utc": "2026-07-06T19:00:00Z",
-        "kickoff_local_label": "2:00 PM COT",
-        "home": {
-          "fifa_code": "POR",
-          "display_name": "Portugal"
-        },
-        "away": {
-          "fifa_code": "ESP",
-          "display_name": "Spain"
-        },
-        "p_home": 0.21568291007431742,
-        "p_draw": 0.20773788442656002,
-        "p_away": 0.5765792054991226,
-        "modal_scoreline": "1-2"
-      },
       {
         "match_id": "KO-FD537380",
         "round": "R16",
