@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-05T23:02:56Z"
+    "fetched_at_utc": "2026-07-06T01:58:46Z"
   },
   "competition": "WC2026",
   "count": 25,
@@ -295,8 +295,8 @@
       "match_id": "KO-FD537378",
       "source_id": 537378,
       "round": "R16",
-      "status": "TIMED",
-      "kickoff_utc": "2026-07-06T00:00:00Z",
+      "status": "PAUSED",
+      "kickoff_utc": "2026-07-06T01:00:00Z",
       "home": {
         "fifa_code": "MEX",
         "source_name": "Mexico"
