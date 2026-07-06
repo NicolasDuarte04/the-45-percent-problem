@@ -7,6 +7,7 @@ import {
   useCallback,
   useTransition,
   useEffect,
+  useSyncExternalStore,
   type CSSProperties,
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -41,6 +42,31 @@ const COL_GRID =
 // section) once its kickoff is more than this far in the past. The 4h buffer
 // keeps an in-progress match visible in the live table during its game window.
 const SETTLED_BUFFER_MS = 4 * 60 * 60 * 1000;
+
+// ── One-shot client clock (external store) ────────────────────────────────────
+// The live/settled partition needs the client's wall clock, which is impure and
+// must not be read during render. useSyncExternalStore is the sanctioned
+// boundary: its getSnapshot must return a CACHED value (a fresh Date.now() each
+// call would trip the "getSnapshot should be cached" guard and re-run the
+// partition memo every render), so we capture the mount-time clock once, at
+// module scope, on the first client read and return it stably thereafter. The
+// server snapshot is null, so SSR and the first hydration paint render every row
+// as live (matching the prerendered HTML); the settled section materialises once
+// hydration completes and the client snapshot takes over.
+let clientNowSnapshot: number | null = null;
+function subscribeClientNow(): () => void {
+  // One-shot value; never notifies a change after mount.
+  return () => {};
+}
+function getClientNowSnapshot(): number | null {
+  if (clientNowSnapshot === null) {
+    clientNowSnapshot = Date.now();
+  }
+  return clientNowSnapshot;
+}
+function getServerNowSnapshot(): number | null {
+  return null;
+}
 
 // ── Sort model ────────────────────────────────────────────────────────────────
 
@@ -783,14 +809,18 @@ export function DivergenceTable({
 
   // ── Live/settled partition clock ───────────────────────────────────────────
   // The route is force-static, so `now` must come from the client to avoid a
-  // hydration mismatch. It stays null through SSR + the first hydration paint
-  // (everything renders as "live", matching the prerendered HTML); the effect
-  // sets it after mount, which partitions played matches into the settled
-  // section below. Client-side only, as the brief specifies.
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => {
-    setNow(Date.now());
-  }, []);
+  // hydration mismatch. It is null through SSR + the first hydration paint
+  // (everything renders as "live", matching the prerendered HTML), then becomes
+  // the mount-time client clock, which partitions played matches into the
+  // settled section below. Sourced from the one-shot external store above (no
+  // setState-in-effect, cached snapshot), so `now` is stable across renders and
+  // the partition memo does not re-run every render. Client-side only, as the
+  // brief specifies.
+  const now = useSyncExternalStore(
+    subscribeClientNow,
+    getClientNowSnapshot,
+    getServerNowSnapshot,
+  );
 
   // Settled reference section is collapsed by default.
   const [settledOpen, setSettledOpen] = useState(false);
@@ -832,9 +862,17 @@ export function DivergenceTable({
   const [teamInput, setTeamInput] = useState<string>(activeTeam);
 
   // Re-sync when the URL changes from elsewhere (Clear, Back/Forward, etc.).
-  useEffect(() => {
+  // React's "adjust state when a prop changes" pattern: compare the URL value
+  // against the value we last synced from and reset during render, rather than
+  // in an effect (which would trip react-hooks/set-state-in-effect and add an
+  // extra render pass). Keystroke edits leave activeTeam unchanged, so they are
+  // never clobbered; only an external URL change (Clear, Back/Forward) resets
+  // the textbox.
+  const [syncedTeam, setSyncedTeam] = useState<string>(activeTeam);
+  if (activeTeam !== syncedTeam) {
+    setSyncedTeam(activeTeam);
     setTeamInput(activeTeam);
-  }, [activeTeam]);
+  }
 
   useEffect(() => {
     if (teamInput === activeTeam) return;
