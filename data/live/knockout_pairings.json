@@ -1,10 +1,10 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-06T02:45:57Z"
+    "fetched_at_utc": "2026-07-06T07:09:05Z"
   },
   "competition": "WC2026",
-  "count": 25,
+  "count": 26,
   "pairings": [
     {
       "match_id": "KO-FD537417",
@@ -295,7 +295,7 @@
       "match_id": "KO-FD537378",
       "source_id": 537378,
       "round": "R16",
-      "status": "IN_PLAY",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-06T01:00:00Z",
       "home": {
         "fifa_code": "MEX",
@@ -379,6 +379,21 @@
       "away": {
         "fifa_code": "MAR",
         "source_name": "Morocco"
+      }
+    },
+    {
+      "match_id": "KO-FD537385",
+      "source_id": 537385,
+      "round": "QF",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-11T21:00:00Z",
+      "home": {
+        "fifa_code": "NOR",
+        "source_name": "Norway"
+      },
+      "away": {
+        "fifa_code": "ENG",
+        "source_name": "England"
       }
     }
   ]
