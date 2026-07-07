@@ -2,14 +2,14 @@
   "brief_date": "2026-07-07",
   "issue_number": 39,
   "model_variant": "M_STAR",
-  "code_sha": "8b2e8ea7ae95547a",
+  "code_sha": "e834bb22c396b676",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-08T12:00:00Z",
   "latest_archive_url": "/briefs/2026-07-07",
   "lead_in": {
-    "tournament_sentence": "Round of 16: 94 of 104 matches settled, 10 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
-    "match_sentence": "2 ties scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "tournament_sentence": "Round of 16: 95 of 104 matches settled, 9 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
+    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "fallback_used": false
   },
   "headline": {
@@ -24,14 +24,6 @@
   "suppressed_today": [],
   "featured_teams": [
     {
-      "code": "ARG",
-      "name": "ARGENTINA"
-    },
-    {
-      "code": "EGY",
-      "name": "EGYPT"
-    },
-    {
       "code": "SUI",
       "name": "SWITZERLAND"
     },
@@ -42,6 +34,14 @@
     {
       "code": "POR",
       "name": "PORTUGAL"
+    },
+    {
+      "code": "ESP",
+      "name": "SPAIN"
+    },
+    {
+      "code": "USA",
+      "name": "UNITED STATES"
     }
   ],
   "methodology_links": {
@@ -50,13 +50,13 @@
     "this_brief_archive": "/briefs/2026-07-07"
   },
   "daily": {
-    "generated_at_utc": "2026-07-07T17:12:15Z",
+    "generated_at_utc": "2026-07-07T19:51:47Z",
     "tournament": {
       "phase_label": "Round of 16",
-      "matches_settled": 94,
-      "matches_remaining": 10,
+      "matches_settled": 95,
+      "matches_remaining": 9,
       "total_matches": 104,
-      "sentence": "Round of 16: 94 of 104 matches settled, 10 remaining."
+      "sentence": "Round of 16: 95 of 104 matches settled, 9 remaining."
     },
     "r16_checkpoint": {
       "status": "pending",
@@ -69,25 +69,6 @@
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "today_fixtures": [
-      {
-        "match_id": "KO-FD537381",
-        "round": "R16",
-        "graded": false,
-        "kickoff_utc": "2026-07-07T16:00:00Z",
-        "kickoff_local_label": "11:00 AM COT",
-        "home": {
-          "fifa_code": "ARG",
-          "display_name": "Argentina"
-        },
-        "away": {
-          "fifa_code": "EGY",
-          "display_name": "Egypt"
-        },
-        "p_home": 0.807512091589682,
-        "p_draw": 0.11979178666166634,
-        "p_away": 0.07269612174865156,
-        "modal_scoreline": "3-1"
-      },
       {
         "match_id": "KO-FD537382",
         "round": "R16",
