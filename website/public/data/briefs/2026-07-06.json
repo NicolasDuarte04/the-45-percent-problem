@@ -2,7 +2,7 @@
   "brief_date": "2026-07-06",
   "issue_number": 38,
   "model_variant": "M_STAR",
-  "code_sha": "c850352af2bb8050",
+  "code_sha": "5515b36fb506507d",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-07T12:00:00Z",
@@ -14,7 +14,7 @@
   },
   "headline": {
     "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
-    "movers_line": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+    "movers_line": "The model-versus-market divergence layer is live, covering 4 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
   },
   "teaser": {
     "has_divergence": false
@@ -50,7 +50,7 @@
     "this_brief_archive": "/briefs/2026-07-06"
   },
   "daily": {
-    "generated_at_utc": "2026-07-07T00:06:04Z",
+    "generated_at_utc": "2026-07-07T01:55:43Z",
     "tournament": {
       "phase_label": "Round of 16",
       "matches_settled": 93,
@@ -64,8 +64,8 @@
     },
     "divergence": {
       "status": "live",
-      "fixtures_covered": 3,
-      "sentence": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+      "fixtures_covered": 4,
+      "sentence": "The model-versus-market divergence layer is live, covering 4 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
     "today_fixtures": [
