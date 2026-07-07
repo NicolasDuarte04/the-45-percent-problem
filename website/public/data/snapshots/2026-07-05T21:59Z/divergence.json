@@ -1,9 +1,0 @@
-{
-  "snapshot_id": "2026-07-05T21:59Z",
-  "generated_at_utc": "2026-07-05T21:59:55Z",
-  "status": "stale",
-  "stale_reason": "odds snapshot is 11269 minutes old (threshold 1800)",
-  "snapshot_age_minutes": 11269,
-  "rows": [],
-  "notes": "Live odds ingestion is stale. The most recent committed bookmaker lines are older than the freshness threshold, so no divergence rows are published and no bookmaker source is stamped. This is an operational freshness guard on the odds feed, separate from the pre-registered Volatility Gate. Rows return once a fresh odds pull lands."
-}
