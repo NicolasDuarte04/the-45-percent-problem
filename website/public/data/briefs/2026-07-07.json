@@ -1,0 +1,155 @@
+{
+  "brief_date": "2026-07-07",
+  "issue_number": 39,
+  "model_variant": "M_STAR",
+  "code_sha": "c3131dba462ef825",
+  "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
+  "mc_runs": 10000,
+  "next_brief_utc": "2026-07-08T12:00:00Z",
+  "latest_archive_url": "/briefs/2026-07-07",
+  "lead_in": {
+    "tournament_sentence": "Round of 16: 94 of 104 matches settled, 10 remaining. The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts.",
+    "match_sentence": "2 ties scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "fallback_used": false
+  },
+  "headline": {
+    "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
+    "movers_line": "The model-versus-market divergence layer is live, covering 4 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+  },
+  "teaser": {
+    "has_divergence": false
+  },
+  "top_divergences": [],
+  "tournament_movers": [],
+  "suppressed_today": [],
+  "featured_teams": [
+    {
+      "code": "ARG",
+      "name": "ARGENTINA"
+    },
+    {
+      "code": "EGY",
+      "name": "EGYPT"
+    },
+    {
+      "code": "SUI",
+      "name": "SWITZERLAND"
+    },
+    {
+      "code": "COL",
+      "name": "COLOMBIA"
+    },
+    {
+      "code": "POR",
+      "name": "PORTUGAL"
+    }
+  ],
+  "methodology_links": {
+    "model_card": "/methodology/m-star",
+    "devig_method": "/methodology/power-devig",
+    "this_brief_archive": "/briefs/2026-07-07"
+  },
+  "daily": {
+    "generated_at_utc": "2026-07-07T08:21:32Z",
+    "tournament": {
+      "phase_label": "Round of 16",
+      "matches_settled": 94,
+      "matches_remaining": 10,
+      "total_matches": 104,
+      "sentence": "Round of 16: 94 of 104 matches settled, 10 remaining."
+    },
+    "r16_checkpoint": {
+      "status": "pending",
+      "sentence": "The Round of 16 live checkpoint remains wired and will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison over the 72 pre-registered group-stage forecasts."
+    },
+    "divergence": {
+      "status": "live",
+      "fixtures_covered": 4,
+      "sentence": "The model-versus-market divergence layer is live, covering 4 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+    },
+    "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "today_fixtures": [
+      {
+        "match_id": "KO-FD537381",
+        "round": "R16",
+        "graded": false,
+        "kickoff_utc": "2026-07-07T16:00:00Z",
+        "kickoff_local_label": "11:00 AM COT",
+        "home": {
+          "fifa_code": "ARG",
+          "display_name": "Argentina"
+        },
+        "away": {
+          "fifa_code": "EGY",
+          "display_name": "Egypt"
+        },
+        "p_home": 0.807512091589682,
+        "p_draw": 0.11979178666166634,
+        "p_away": 0.07269612174865156,
+        "modal_scoreline": "3-1"
+      },
+      {
+        "match_id": "KO-FD537382",
+        "round": "R16",
+        "graded": false,
+        "kickoff_utc": "2026-07-07T20:00:00Z",
+        "kickoff_local_label": "3:00 PM COT",
+        "home": {
+          "fifa_code": "SUI",
+          "display_name": "Switzerland"
+        },
+        "away": {
+          "fifa_code": "COL",
+          "display_name": "Colombia"
+        },
+        "p_home": 0.2981485630492682,
+        "p_draw": 0.2278115135811036,
+        "p_away": 0.47403992336962797,
+        "modal_scoreline": "1-1"
+      }
+    ],
+    "yesterday_results": [
+      {
+        "match_id": "KO-FD537379",
+        "round": "R16",
+        "graded": false,
+        "home": {
+          "fifa_code": "POR",
+          "display_name": "Portugal"
+        },
+        "away": {
+          "fifa_code": "ESP",
+          "display_name": "Spain"
+        },
+        "score": {
+          "home": 0,
+          "away": 1
+        },
+        "outcome": "A",
+        "shootout": null,
+        "result_label": "Portugal 0, Spain 1"
+      },
+      {
+        "match_id": "KO-FD537380",
+        "round": "R16",
+        "graded": false,
+        "home": {
+          "fifa_code": "USA",
+          "display_name": "United States"
+        },
+        "away": {
+          "fifa_code": "BEL",
+          "display_name": "Belgium"
+        },
+        "score": {
+          "home": 1,
+          "away": 4
+        },
+        "outcome": "A",
+        "shootout": null,
+        "result_label": "United States 1, Belgium 4"
+      }
+    ],
+    "next_fixture_date": "2026-07-09"
+  }
+}
