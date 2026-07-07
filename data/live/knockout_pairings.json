@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-07T14:22:49Z"
+    "fetched_at_utc": "2026-07-07T17:10:42Z"
   },
   "competition": "WC2026",
   "count": 27,
@@ -340,7 +340,7 @@
       "match_id": "KO-FD537381",
       "source_id": 537381,
       "round": "R16",
-      "status": "TIMED",
+      "status": "PAUSED",
       "kickoff_utc": "2026-07-07T16:00:00Z",
       "home": {
         "fifa_code": "ARG",
