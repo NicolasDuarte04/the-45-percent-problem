@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-07T19:50:12Z"
+    "fetched_at_utc": "2026-07-07T21:20:27Z"
   },
   "competition": "WC2026",
   "count": 27,
@@ -355,7 +355,7 @@
       "match_id": "KO-FD537382",
       "source_id": 537382,
       "round": "R16",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "kickoff_utc": "2026-07-07T20:00:00Z",
       "home": {
         "fifa_code": "SUI",
