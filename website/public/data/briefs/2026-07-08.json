@@ -2,7 +2,7 @@
   "brief_date": "2026-07-08",
   "issue_number": 40,
   "model_variant": "M_STAR",
-  "code_sha": "efa4894dd4948941",
+  "code_sha": "b76f456c137f776f",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-09T12:00:00Z",
@@ -46,7 +46,7 @@
     "this_brief_archive": "/briefs/2026-07-08"
   },
   "daily": {
-    "generated_at_utc": "2026-07-08T19:20:59Z",
+    "generated_at_utc": "2026-07-08T21:05:18Z",
     "tournament": {
       "phase_label": "Round of 16",
       "matches_settled": 96,
