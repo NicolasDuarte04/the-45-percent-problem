@@ -2,7 +2,7 @@
   "brief_date": "2026-07-08",
   "issue_number": 40,
   "model_variant": "M_STAR",
-  "code_sha": "c8fc7aaf173ddff4",
+  "code_sha": "3d10deb5ec6bf319",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-09T12:00:00Z",
@@ -46,7 +46,7 @@
     "this_brief_archive": "/briefs/2026-07-08"
   },
   "daily": {
-    "generated_at_utc": "2026-07-08T05:49:07Z",
+    "generated_at_utc": "2026-07-08T08:23:07Z",
     "tournament": {
       "phase_label": "Round of 16",
       "matches_settled": 96,
@@ -99,12 +99,16 @@
           "display_name": "Colombia"
         },
         "score": {
+          "home": 0,
+          "away": 0
+        },
+        "outcome": "D",
+        "shootout": {
+          "winner_name": "Switzerland",
           "home": 4,
           "away": 3
         },
-        "outcome": "H",
-        "shootout": null,
-        "result_label": "Switzerland 4, Colombia 3"
+        "result_label": "Switzerland 0, Colombia 0 (Switzerland won the shootout 4-3)"
       }
     ],
     "next_fixture_date": "2026-07-09"

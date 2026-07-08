@@ -1,10 +1,10 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-08T05:47:55Z"
+    "fetched_at_utc": "2026-07-08T08:21:41Z"
   },
   "competition": "WC2026",
-  "count": 27,
+  "count": 28,
   "pairings": [
     {
       "match_id": "KO-FD537417",
@@ -409,6 +409,21 @@
       "away": {
         "fifa_code": "ENG",
         "source_name": "England"
+      }
+    },
+    {
+      "match_id": "KO-FD537386",
+      "source_id": 537386,
+      "round": "QF",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-12T01:00:00Z",
+      "home": {
+        "fifa_code": "ARG",
+        "source_name": "Argentina"
+      },
+      "away": {
+        "fifa_code": "SUI",
+        "source_name": "Switzerland"
       }
     }
   ]
