@@ -1,0 +1,17 @@
+{
+  "forecast_set": "The 72 pre-registered group-stage per-match forecasts from the frozen champion batch, re-scored against realized group results at the Round of 16 settlement moment. No knockout forecasts enter: no frozen per-match knockout forecasts exist (knockout slots carry different teams per Monte Carlo run).",
+  "n": 72,
+  "mean_log_loss_mstar": 0.899338,
+  "mean_log_loss_m0": 0.944197,
+  "mean_diff": -0.044859,
+  "se": 0.030437,
+  "gap_in_se": -1.473847,
+  "threshold_se": 2.0,
+  "tripped": false,
+  "check_detail": "mean_diff=-0.044859, se=0.030437, threshold=2.0\u00d7SE=0.060873, tripped=False",
+  "source_batch_id": "batch_20260512_013228Z",
+  "evaluated_at_utc": "2026-07-07T22:58:53Z",
+  "code_sha": "c95d5ab28e553d6a",
+  "settled_source": "postgres:match_outcomes",
+  "construction": "Paired per-match standard error over the settled group-stage results: se = d.std(ddof=1) / sqrt(n) on the per-match log-loss differences d_i = ll_mstar_i - ll_m0_i. This is a different construction from the Phase 8 pre-tournament cross-validation readings (1.75 SE paired-difference and 6.22 SE marginal); the live gap is its own event and is never a continuation of, or numerically compared to, those cross-validation numbers."
+}
