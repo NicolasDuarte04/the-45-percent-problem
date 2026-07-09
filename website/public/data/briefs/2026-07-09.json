@@ -2,15 +2,15 @@
   "brief_date": "2026-07-09",
   "issue_number": 41,
   "model_variant": "M_STAR",
-  "code_sha": "1450b97069cdf22a",
+  "code_sha": "398bb779c6d22ea6",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-10T12:00:00Z",
   "latest_archive_url": "/briefs/2026-07-09",
   "lead_in": {
-    "tournament_sentence": "Round of 16: 96 of 104 matches settled, 8 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
-    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
-    "fallback_used": false
+    "tournament_sentence": "Quarter-finals: 97 of 104 matches settled, 7 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
+    "match_sentence": "No ties are scheduled today and none settled yesterday. The bracket state carries forward. The next fixtures are on 2026-07-10.",
+    "fallback_used": true
   },
   "headline": {
     "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
@@ -22,29 +22,20 @@
   "top_divergences": [],
   "tournament_movers": [],
   "suppressed_today": [],
-  "featured_teams": [
-    {
-      "code": "FRA",
-      "name": "FRANCE"
-    },
-    {
-      "code": "MAR",
-      "name": "MOROCCO"
-    }
-  ],
+  "featured_teams": [],
   "methodology_links": {
     "model_card": "/methodology/m-star",
     "devig_method": "/methodology/power-devig",
     "this_brief_archive": "/briefs/2026-07-09"
   },
   "daily": {
-    "generated_at_utc": "2026-07-09T20:46:49Z",
+    "generated_at_utc": "2026-07-09T22:20:43Z",
     "tournament": {
-      "phase_label": "Round of 16",
-      "matches_settled": 96,
-      "matches_remaining": 8,
+      "phase_label": "Quarter-finals",
+      "matches_settled": 97,
+      "matches_remaining": 7,
       "total_matches": 104,
-      "sentence": "Round of 16: 96 of 104 matches settled, 8 remaining."
+      "sentence": "Quarter-finals: 97 of 104 matches settled, 7 remaining."
     },
     "r16_checkpoint": {
       "status": "published",
@@ -56,27 +47,7 @@
       "sentence": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
-    "today_fixtures": [
-      {
-        "match_id": "KO-FD537383",
-        "round": "QF",
-        "graded": false,
-        "kickoff_utc": "2026-07-09T20:00:00Z",
-        "kickoff_local_label": "3:00 PM COT",
-        "home": {
-          "fifa_code": "FRA",
-          "display_name": "France"
-        },
-        "away": {
-          "fifa_code": "MAR",
-          "display_name": "Morocco"
-        },
-        "p_home": 0.659067946871825,
-        "p_draw": 0.18277667329094635,
-        "p_away": 0.15815537983722863,
-        "modal_scoreline": "2-1"
-      }
-    ],
+    "today_fixtures": [],
     "yesterday_results": [],
     "next_fixture_date": "2026-07-10"
   }
