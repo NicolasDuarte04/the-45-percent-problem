@@ -2,7 +2,7 @@
   "brief_date": "2026-07-09",
   "issue_number": 41,
   "model_variant": "M_STAR",
-  "code_sha": "425c4f5fc81f902a",
+  "code_sha": "adfdbb6edc8f8925",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-10T12:00:00Z",
@@ -29,7 +29,7 @@
     "this_brief_archive": "/briefs/2026-07-09"
   },
   "daily": {
-    "generated_at_utc": "2026-07-10T01:32:25Z",
+    "generated_at_utc": "2026-07-10T04:48:35Z",
     "tournament": {
       "phase_label": "Quarter-finals",
       "matches_settled": 97,
