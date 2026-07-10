@@ -1,0 +1,112 @@
+{
+  "brief_date": "2026-07-10",
+  "issue_number": 42,
+  "model_variant": "M_STAR",
+  "code_sha": "a8324ee8985b1afa",
+  "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
+  "mc_runs": 10000,
+  "next_brief_utc": "2026-07-11T12:00:00Z",
+  "latest_archive_url": "/briefs/2026-07-10",
+  "lead_in": {
+    "tournament_sentence": "Quarter-finals: 97 of 104 matches settled, 7 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
+    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "fallback_used": false
+  },
+  "headline": {
+    "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
+    "movers_line": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+  },
+  "teaser": {
+    "has_divergence": false
+  },
+  "top_divergences": [],
+  "tournament_movers": [],
+  "suppressed_today": [],
+  "featured_teams": [
+    {
+      "code": "ESP",
+      "name": "SPAIN"
+    },
+    {
+      "code": "BEL",
+      "name": "BELGIUM"
+    },
+    {
+      "code": "FRA",
+      "name": "FRANCE"
+    },
+    {
+      "code": "MAR",
+      "name": "MOROCCO"
+    }
+  ],
+  "methodology_links": {
+    "model_card": "/methodology/m-star",
+    "devig_method": "/methodology/power-devig",
+    "this_brief_archive": "/briefs/2026-07-10"
+  },
+  "daily": {
+    "generated_at_utc": "2026-07-10T08:20:16Z",
+    "tournament": {
+      "phase_label": "Quarter-finals",
+      "matches_settled": 97,
+      "matches_remaining": 7,
+      "total_matches": 104,
+      "sentence": "Quarter-finals: 97 of 104 matches settled, 7 remaining."
+    },
+    "r16_checkpoint": {
+      "status": "published",
+      "sentence": "The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire."
+    },
+    "divergence": {
+      "status": "live",
+      "fixtures_covered": 3,
+      "sentence": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+    },
+    "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "today_fixtures": [
+      {
+        "match_id": "KO-FD537384",
+        "round": "QF",
+        "graded": false,
+        "kickoff_utc": "2026-07-10T19:00:00Z",
+        "kickoff_local_label": "2:00 PM COT",
+        "home": {
+          "fifa_code": "ESP",
+          "display_name": "Spain"
+        },
+        "away": {
+          "fifa_code": "BEL",
+          "display_name": "Belgium"
+        },
+        "p_home": 0.6977109267323334,
+        "p_draw": 0.16857557048603558,
+        "p_away": 0.13371350278163108,
+        "modal_scoreline": "2-1"
+      }
+    ],
+    "yesterday_results": [
+      {
+        "match_id": "KO-FD537383",
+        "round": "QF",
+        "graded": false,
+        "home": {
+          "fifa_code": "FRA",
+          "display_name": "France"
+        },
+        "away": {
+          "fifa_code": "MAR",
+          "display_name": "Morocco"
+        },
+        "score": {
+          "home": 2,
+          "away": 0
+        },
+        "outcome": "H",
+        "shootout": null,
+        "result_label": "France 2, Morocco 0"
+      }
+    ],
+    "next_fixture_date": "2026-07-11"
+  }
+}
