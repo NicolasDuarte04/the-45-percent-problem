@@ -338,7 +338,17 @@ def test_interim_state_writes_nothing(tmp_path: Path, model_map) -> None:
     latest = tmp_path / "latest"
     new_dir.mkdir()
     latest.mkdir()
-    (new_dir / "evaluation_metrics.json").write_text(EVAL_METRICS_PATH.read_text())
+
+    # Seed a SYNTHETIC pre-checkpoint evaluation_metrics.json. The interim state
+    # is defined by the ABSENCE of the r16_checkpoint field, so the seed must not
+    # already carry that key. Reading the live committed EVAL_METRICS_PATH here
+    # would be non-hermetic: the checkpoint fired and published on 2026-07-07, so
+    # the live metrics file now carries r16_checkpoint permanently, which would
+    # make the "no field" assertion below pass or fail on repo state rather than
+    # on producer behavior.
+    (new_dir / "evaluation_metrics.json").write_text(
+        json.dumps({"snapshot_id": "synthetic-interim"}, indent=2)
+    )
 
     # Below the R16 settlement threshold and not forced: no artifact, no field.
     parquet = _write_outcomes(tmp_path, model_map, n_group=10, n_r16=3)
