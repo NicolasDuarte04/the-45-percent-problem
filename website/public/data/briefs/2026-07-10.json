@@ -2,19 +2,19 @@
   "brief_date": "2026-07-10",
   "issue_number": 42,
   "model_variant": "M_STAR",
-  "code_sha": "b6aa66acaa1d3990",
+  "code_sha": "6e4fa1da30c45216",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-11T12:00:00Z",
   "latest_archive_url": "/briefs/2026-07-10",
   "lead_in": {
-    "tournament_sentence": "Quarter-finals: 97 of 104 matches settled, 7 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
-    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "tournament_sentence": "Quarter-finals: 98 of 104 matches settled, 6 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
+    "match_sentence": "No ties are scheduled today. 1 result from yesterday are recorded below and reconciled into the tournament state.",
     "fallback_used": false
   },
   "headline": {
     "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
-    "movers_line": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+    "movers_line": "The model-versus-market divergence layer is live, covering 2 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
   },
   "teaser": {
     "has_divergence": false
@@ -23,14 +23,6 @@
   "tournament_movers": [],
   "suppressed_today": [],
   "featured_teams": [
-    {
-      "code": "ESP",
-      "name": "SPAIN"
-    },
-    {
-      "code": "BEL",
-      "name": "BELGIUM"
-    },
     {
       "code": "FRA",
       "name": "FRANCE"
@@ -46,13 +38,13 @@
     "this_brief_archive": "/briefs/2026-07-10"
   },
   "daily": {
-    "generated_at_utc": "2026-07-10T16:54:47Z",
+    "generated_at_utc": "2026-07-11T01:25:45Z",
     "tournament": {
       "phase_label": "Quarter-finals",
-      "matches_settled": 97,
-      "matches_remaining": 7,
+      "matches_settled": 98,
+      "matches_remaining": 6,
       "total_matches": 104,
-      "sentence": "Quarter-finals: 97 of 104 matches settled, 7 remaining."
+      "sentence": "Quarter-finals: 98 of 104 matches settled, 6 remaining."
     },
     "r16_checkpoint": {
       "status": "published",
@@ -60,31 +52,11 @@
     },
     "divergence": {
       "status": "live",
-      "fixtures_covered": 3,
-      "sentence": "The model-versus-market divergence layer is live, covering 3 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+      "fixtures_covered": 2,
+      "sentence": "The model-versus-market divergence layer is live, covering 2 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
     },
     "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
-    "today_fixtures": [
-      {
-        "match_id": "KO-FD537384",
-        "round": "QF",
-        "graded": false,
-        "kickoff_utc": "2026-07-10T19:00:00Z",
-        "kickoff_local_label": "2:00 PM COT",
-        "home": {
-          "fifa_code": "ESP",
-          "display_name": "Spain"
-        },
-        "away": {
-          "fifa_code": "BEL",
-          "display_name": "Belgium"
-        },
-        "p_home": 0.6977109267323334,
-        "p_draw": 0.16857557048603558,
-        "p_away": 0.13371350278163108,
-        "modal_scoreline": "2-1"
-      }
-    ],
+    "today_fixtures": [],
     "yesterday_results": [
       {
         "match_id": "KO-FD537383",

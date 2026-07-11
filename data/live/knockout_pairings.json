@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-10T16:53:19Z"
+    "fetched_at_utc": "2026-07-11T01:24:15Z"
   },
   "competition": "WC2026",
   "count": 28,
@@ -385,7 +385,7 @@
       "match_id": "KO-FD537384",
       "source_id": 537384,
       "round": "QF",
-      "status": "TIMED",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-10T19:00:00Z",
       "home": {
         "fifa_code": "ESP",
