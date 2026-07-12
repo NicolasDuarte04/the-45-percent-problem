@@ -1,10 +1,10 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-11T01:24:15Z"
+    "fetched_at_utc": "2026-07-12T01:26:14Z"
   },
   "competition": "WC2026",
-  "count": 28,
+  "count": 29,
   "pairings": [
     {
       "match_id": "KO-FD537417",
@@ -295,7 +295,7 @@
       "match_id": "KO-FD537378",
       "source_id": 537378,
       "round": "R16",
-      "status": "FINISHED",
+      "status": "2026-07-06 01:00:00Z",
       "kickoff_utc": "2026-07-06T01:00:00Z",
       "home": {
         "fifa_code": "MEX",
@@ -400,7 +400,7 @@
       "match_id": "KO-FD537385",
       "source_id": 537385,
       "round": "QF",
-      "status": "TIMED",
+      "status": "FINISHED",
       "kickoff_utc": "2026-07-11T21:00:00Z",
       "home": {
         "fifa_code": "NOR",
@@ -415,7 +415,7 @@
       "match_id": "KO-FD537386",
       "source_id": 537386,
       "round": "QF",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "kickoff_utc": "2026-07-12T01:00:00Z",
       "home": {
         "fifa_code": "ARG",
@@ -424,6 +424,21 @@
       "away": {
         "fifa_code": "SUI",
         "source_name": "Switzerland"
+      }
+    },
+    {
+      "match_id": "KO-FD537387",
+      "source_id": 537387,
+      "round": "SF",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-14T19:00:00Z",
+      "home": {
+        "fifa_code": "FRA",
+        "source_name": "France"
+      },
+      "away": {
+        "fifa_code": "ESP",
+        "source_name": "Spain"
       }
     }
   ]
