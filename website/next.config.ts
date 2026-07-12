@@ -75,6 +75,29 @@ const WC_SEGMENTS = [
   "vault",
 ];
 
+// cp-35: the bounded edge-cache policy shared by every public page route.
+// Browsers always revalidate (max-age=0); the Vercel edge may hold a copy
+// for up to 5 minutes (s-maxage=300) and serve stale for another 10 minutes
+// while it refreshes in the background (stale-while-revalidate=600). This is
+// the identical value the cp-16 home and bracket rules already use.
+const BOUNDED_PAGE_CACHE =
+  "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+
+// cp-35: WC segments whose page HTML gets the bounded policy, at BOTH the old
+// root path (/vault) and its post-migration twin (/the-45-percent-problem/
+// vault, servable via the always-on rewrites). This is WC_SEGMENTS minus
+// "brief": /brief manages its own cache lifetime (it is an ISR route,
+// `export const revalidate = 600`, so Next already emits a bounded
+// `s-maxage=600, stale-while-revalidate=...` for it); layering a second
+// Cache-Control rule on top would be wrong. /briefs (the static archive) is
+// a separate segment and stays covered.
+const PAGE_CACHE_TWIN_SEGMENTS = WC_SEGMENTS.filter((s) => s !== "brief");
+
+// cp-35: public page routes that live only at the root path, with no
+// /the-45-percent-problem/* rewrite twin (they are absent from WC_SEGMENTS so
+// rewrites() never mirrors them). /matches is the cp-17 fixtures index.
+const PAGE_CACHE_ROOT_ONLY_SEGMENTS = ["matches"];
+
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
 
@@ -135,51 +158,39 @@ const nextConfig: NextConfig = {
   // and are similarly cheap. The Plausible script tag is unaffected and
   // hot-loads regardless, so per-user analytics still fire on every view.
   async headers() {
+    const bounded = [{ key: "Cache-Control", value: BOUNDED_PAGE_CACHE }];
+    // cp-35: extend the cp-16 bounded policy (previously only on the home and
+    // bracket pages) to every remaining public page route, so prerendered
+    // page HTML cannot pin stale at the edge. Root Cause: a statically
+    // generated App Router page is served by Next with an intrinsic
+    // `s-maxage=31536000` (one year) Cache-Control; without an override the
+    // Vercel CDN held a week-old copy of /vault/kill-criteria while daily
+    // deploys shipped fresh HTML. This bounded policy caps any edge copy at
+    // 5 minutes. Excluded by construction (none appear in the segment lists):
+    // /api/*, /confirmed, /verify, /unsubscribe, /dev, /voto21junio/*, and
+    // /brief (ISR, owns its own Cache-Control). /data/* keeps its own tighter
+    // cp-34 rule below.
     return [
-      {
-        source: "/",
-        headers: [
-          {
-            key: "Cache-Control",
-            value:
-              "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
-          },
-        ],
-      },
-      {
-        source: "/bracket",
-        headers: [
-          {
-            key: "Cache-Control",
-            value:
-              "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
-          },
-        ],
-      },
-      // Session 15: the same two pages at their post-migration canonical
-      // paths (served via the /the-45-percent-problem/* rewrites) get the
-      // same edge-cache policy. Headers match the incoming URL, so the
-      // original entries above stop applying once the 301 inventory is live.
-      {
-        source: "/the-45-percent-problem",
-        headers: [
-          {
-            key: "Cache-Control",
-            value:
-              "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
-          },
-        ],
-      },
-      {
-        source: "/the-45-percent-problem/bracket",
-        headers: [
-          {
-            key: "Cache-Control",
-            value:
-              "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
-          },
-        ],
-      },
+      // Home (not a WC segment) and its post-migration twin, served via the
+      // always-on /the-45-percent-problem rewrite. Headers match the incoming
+      // URL, so the root entry stops applying once the 301 inventory is live.
+      { source: "/", headers: bounded },
+      { source: "/the-45-percent-problem", headers: bounded },
+      // Every WC segment (except /brief) at its root path and its twin, plus
+      // the segment index and all subpaths. /bracket and its twin, previously
+      // hand-written, are now generated here from the same list that drives
+      // rewrites() and redirects().
+      ...PAGE_CACHE_TWIN_SEGMENTS.flatMap((s) => [
+        { source: `/${s}`, headers: bounded },
+        { source: `/${s}/:path*`, headers: bounded },
+        { source: `/the-45-percent-problem/${s}`, headers: bounded },
+        { source: `/the-45-percent-problem/${s}/:path*`, headers: bounded },
+      ]),
+      // Root-only public routes with no rewrite twin (absent from WC_SEGMENTS).
+      ...PAGE_CACHE_ROOT_ONLY_SEGMENTS.flatMap((s) => [
+        { source: `/${s}`, headers: bounded },
+        { source: `/${s}/:path*`, headers: bounded },
+      ]),
       // cp-34: raw data JSON under public/data. These files (snapshot,
       // evaluation_metrics, r16_checkpoint, etc.) are rewritten on every
       // nightly publish, so the edge must not pin an old copy. Symptom
