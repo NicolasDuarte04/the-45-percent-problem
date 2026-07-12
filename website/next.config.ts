@@ -180,6 +180,27 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // cp-34: raw data JSON under public/data. These files (snapshot,
+      // evaluation_metrics, r16_checkpoint, etc.) are rewritten on every
+      // nightly publish, so the edge must not pin an old copy. Symptom
+      // observed twice in production: the plain URL served a weeks-stale
+      // file while the same URL with a cache-busting query string served
+      // the current one, because /data/* had no Cache-Control policy and
+      // the Vercel edge held an old copy indefinitely. This policy makes
+      // browsers always revalidate (max-age=0, must-revalidate) and caps
+      // any edge copy at 60 seconds. Static assets in public/ are served
+      // only at their literal root path, so /the-45-percent-problem/data/*
+      // is not a servable twin (data is not a WC rewrite segment) and needs
+      // no mirrored rule.
+      {
+        source: "/data/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, s-maxage=60, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
