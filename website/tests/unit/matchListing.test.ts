@@ -10,7 +10,7 @@ import {
   formatDayLabel,
   formatKickoffTime,
   audienceDayKeyFromMs,
-  partitionToday,
+  partitionByState,
   filterByTeam,
 } from "@/lib/data/matchListing";
 import type { MatchDetail } from "@/lib/data/schemas";
@@ -224,34 +224,55 @@ describe("audienceDayKeyFromMs", () => {
   });
 });
 
-describe("partitionToday", () => {
+describe("partitionByState", () => {
   // a, b are June 17 in Bogota; c (03:00Z June 19) is 10:00 PM June 18 there.
   const a = makeMatch({ match_id: "M01", kickoff_utc: "2026-06-17T20:00:00Z" });
   const b = makeMatch({ match_id: "M02", kickoff_utc: "2026-06-17T23:00:00Z" });
   const c = makeMatch({ match_id: "M03", kickoff_utc: "2026-06-19T03:00:00Z" });
+  // A clock before every fixture, so nothing has kicked off yet (no awaiting).
+  const beforeAll = Date.parse("2026-06-17T00:00:00Z");
 
   it("splits today's fixtures from the rest by audience-local day", () => {
-    const { today, rest } = partitionToday([a, b, c], "2026-06-17");
+    const { awaiting, today, rest } = partitionByState([a, b, c], "2026-06-17", beforeAll);
+    expect(awaiting).toEqual([]);
     expect(today.map((m) => m.match_id)).toEqual(["M01", "M02"]);
     expect(rest.map((m) => m.match_id)).toEqual(["M03"]);
   });
 
   it("keeps a UTC-midnight-crossing kickoff under its local today", () => {
     // todayKey is June 18 in Bogota; c kicks off 10:00 PM that local day.
-    const { today, rest } = partitionToday([a, b, c], "2026-06-18");
+    const { today, rest } = partitionByState([a, b, c], "2026-06-18", beforeAll);
     expect(today.map((m) => m.match_id)).toEqual(["M03"]);
     expect(rest.map((m) => m.match_id)).toEqual(["M01", "M02"]);
   });
 
   it("returns an empty today set when nothing kicks off today", () => {
-    const { today, rest } = partitionToday([a, b, c], "2026-06-16");
+    const { today, rest } = partitionByState([a, b, c], "2026-06-16", beforeAll);
     expect(today).toEqual([]);
     expect(rest.map((m) => m.match_id)).toEqual(["M01", "M02", "M03"]);
   });
 
   it("preserves input order within each partition", () => {
-    const { rest } = partitionToday([c, a, b], "2026-06-17");
+    const { rest } = partitionByState([c, a, b], "2026-06-17", beforeAll);
     expect(rest.map((m) => m.match_id)).toEqual(["M03"]);
+  });
+
+  it("routes past-kickoff, unsettled fixtures to awaiting, never to upcoming", () => {
+    // now is after a and b have kicked off (June 17) but before c. a and b are
+    // score-less past-kickoff fixtures -> awaiting; c is still today-and-future.
+    const now = Date.parse("2026-06-18T12:00:00Z");
+    const { awaiting, today, rest } = partitionByState([a, b, c], "2026-06-18", now);
+    expect(awaiting.map((m) => m.match_id)).toEqual(["M01", "M02"]);
+    expect(today.map((m) => m.match_id)).toEqual(["M03"]);
+    expect(rest).toEqual([]);
+  });
+
+  it("treats a fixture exactly at its kickoff instant as awaiting", () => {
+    const now = Date.parse(a.kickoff_utc);
+    const { awaiting, today, rest } = partitionByState([a], "2026-06-17", now);
+    expect(awaiting.map((m) => m.match_id)).toEqual(["M01"]);
+    expect(today).toEqual([]);
+    expect(rest).toEqual([]);
   });
 });
 

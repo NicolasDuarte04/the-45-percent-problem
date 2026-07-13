@@ -27,7 +27,7 @@
  *                dressed up as yesterday's.
  * The route also accepts an explicit ?day=YYYY-MM-DD override.
  *
- * "Día N" is derived from the tournament start (2026-06-11 = Día 1), counted on
+ * "Day N" is derived from the tournament start (2026-06-11 = Day 1), counted on
  * the same audience-local day basis.
  *
  * Everything here is pure data transformation so it can be unit-tested
@@ -35,9 +35,10 @@
  * src/app/api/og/_lib/dailyCard.tsx; the route in
  * src/app/api/og/daily/route.tsx.
  *
- * Copy is Colombian Spanish. Punctuation is restricted to ASCII plus the
- * middot used across the site chrome; the score separator is a plain
- * hyphen (never the en dash the live MatchesBrowser bar uses).
+ * Copy is English (matching the rest of the site), using each team's published
+ * display name. Punctuation is restricted to ASCII plus the middot used across
+ * the site chrome; the score separator is a plain hyphen (never the en dash the
+ * live MatchesBrowser bar uses).
  */
 import type { MatchDetail } from "./schemas";
 import {
@@ -59,80 +60,6 @@ const MS_PER_DAY = 86_400_000;
 export type DailyVariant = "recap" | "preview";
 
 /**
- * Spanish display names for the 48 FIFA World Cup 2026 qualifiers, keyed by
- * FIFA 3-letter code. The published per-match JSON carries English display
- * names; the card shows Spanish. Falls back to the English name for any code
- * not present here, so a draw change degrades gracefully rather than breaking.
- */
-export const COUNTRY_NAMES_ES: Record<string, string> = {
-  // Group A
-  MEX: "México",
-  RSA: "Sudáfrica",
-  KOR: "Corea del Sur",
-  CZE: "República Checa",
-  // Group B
-  CAN: "Canadá",
-  BIH: "Bosnia y Herzegovina",
-  QAT: "Catar",
-  SUI: "Suiza",
-  // Group C
-  BRA: "Brasil",
-  MAR: "Marruecos",
-  HAI: "Haití",
-  SCO: "Escocia",
-  // Group D
-  USA: "Estados Unidos",
-  PAR: "Paraguay",
-  AUS: "Australia",
-  TUR: "Turquía",
-  // Group E
-  GER: "Alemania",
-  CUW: "Curazao",
-  CIV: "Costa de Marfil",
-  ECU: "Ecuador",
-  // Group F
-  NED: "Países Bajos",
-  JPN: "Japón",
-  SWE: "Suecia",
-  TUN: "Túnez",
-  // Group G
-  BEL: "Bélgica",
-  EGY: "Egipto",
-  IRN: "Irán",
-  NZL: "Nueva Zelanda",
-  // Group H
-  ESP: "España",
-  CPV: "Cabo Verde",
-  KSA: "Arabia Saudita",
-  URU: "Uruguay",
-  // Group I
-  FRA: "Francia",
-  SEN: "Senegal",
-  IRQ: "Irak",
-  NOR: "Noruega",
-  // Group J
-  ARG: "Argentina",
-  ALG: "Argelia",
-  AUT: "Austria",
-  JOR: "Jordania",
-  // Group K
-  POR: "Portugal",
-  UZB: "Uzbekistán",
-  COL: "Colombia",
-  COD: "RD del Congo",
-  // Group L
-  ENG: "Inglaterra",
-  CRO: "Croacia",
-  GHA: "Ghana",
-  PAN: "Panamá",
-};
-
-/** Spanish name for a FIFA code, falling back to the published display name. */
-export function spanishName(code: string, fallback: string): string {
-  return COUNTRY_NAMES_ES[code.toUpperCase()] ?? fallback;
-}
-
-/**
  * Tournament day number for a "YYYY-MM-DD" audience-local day key. The constant
  * TOURNAMENT_START is itself the Bogota civil day of the opener, and dayNumber
  * differences two such keys, so the count stays anchored on the same basis:
@@ -147,11 +74,11 @@ export function dayNumber(day: string): number {
   return Math.round((d - start) / MS_PER_DAY) + 1;
 }
 
-/** Long-form Spanish date for a "YYYY-MM-DD" key, e.g. "18 de junio de 2026". */
-export function formatSpanishDate(day: string): string {
+/** Long-form English date for a "YYYY-MM-DD" key, e.g. "June 18, 2026". */
+export function formatCardDate(day: string): string {
   const d = new Date(`${day}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return day;
-  return new Intl.DateTimeFormat("es-CO", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -258,30 +185,29 @@ export function pct(p: number): string {
 
 /**
  * Recap calibration note: the probability the model assigned to the result
- * that actually happened. e.g. "el modelo le dio 73% a la victoria de México".
+ * that actually happened. e.g. "the model gave Mexico 73% to win".
  * Returns null when the realized outcome cannot be determined.
  */
 export function recapNote(m: MatchDetail): string | null {
   const outcome = realizedOutcome(m);
   if (!outcome) return null;
   const p = m.p_model_1x2;
-  const home = spanishName(m.home.fifa_code, m.home.display_name);
-  const away = spanishName(m.away.fifa_code, m.away.display_name);
-  if (outcome === "H") return `el modelo le dio ${pct(p.H)} a la victoria de ${home}`;
-  if (outcome === "A") return `el modelo le dio ${pct(p.A)} a la victoria de ${away}`;
-  return `el modelo le dio ${pct(p.D)} al empate`;
+  const home = m.home.display_name;
+  const away = m.away.display_name;
+  if (outcome === "H") return `the model gave ${home} ${pct(p.H)} to win`;
+  if (outcome === "A") return `the model gave ${away} ${pct(p.A)} to win`;
+  return `the model gave the draw ${pct(p.D)}`;
 }
 
 /**
- * cp-29: the Spanish shootout resolution for a penalty-decided knockout on the
- * recap card, e.g. "penales: PAR ganó 4-3". A knockout that ends level went to
+ * cp-29: the shootout resolution for a penalty-decided knockout on the recap
+ * card, e.g. "penalties: PAR won 4-3". A knockout that ends level went to
  * penalties, so a bare "1-1 Final" hides how the tie was actually decided. The
  * regulation score stays the headline (never the inflated shootout sum); this
  * line names the winner and the shootout tally, winner first. It reuses the
  * shared `isLiveKnockout` discriminator and the same `shootout` block that
- * matchListing's `shootoutLine` reads; the string is rendered in the card's
- * Colombian Spanish rather than the English quant-surface wording. Returns null
- * for group cards and any knockout decided in regulation.
+ * matchListing's `shootoutLine` reads. Returns null for group cards and any
+ * knockout decided in regulation.
  */
 export function shootoutNote(m: MatchDetail): string | null {
   if (!isLiveKnockout(m)) return null;
@@ -289,7 +215,7 @@ export function shootoutNote(m: MatchDetail): string | null {
   if (!so || so.winner == null || so.home == null || so.away == null) return null;
   const winnerCode = so.winner === "H" ? m.home.fifa_code : m.away.fifa_code;
   const [w, l] = so.winner === "H" ? [so.home, so.away] : [so.away, so.home];
-  return `penales: ${winnerCode} ganó ${w}-${l}`;
+  return `penalties: ${winnerCode} won ${w}-${l}`;
 }
 
 /** One scoreline chip on the preview card: "1-1" with its whole-percent prob. */
@@ -321,20 +247,20 @@ export function previewScorelines(
 /**
  * Preview note: the model's top 1X2 outcome and, when the goal grid is
  * present, the modal scoreline. e.g.
- *   "favorito: México con 73% · marcador modal 2-0"
- *   "el modelo ve un empate (32%) · marcador modal 1-1"
+ *   "favorite: Mexico at 73% · modal scoreline 2-0"
+ *   "the model sees a draw (32%) · modal scoreline 1-1"
  */
 export function previewNote(m: MatchDetail): string {
   const p = m.p_model_1x2;
-  const home = spanishName(m.home.fifa_code, m.home.display_name);
-  const away = spanishName(m.away.fifa_code, m.away.display_name);
+  const home = m.home.display_name;
+  const away = m.away.display_name;
   const modal = modalScoreline(m.p_model_goals);
-  const modalPart = modal ? ` · marcador modal ${modal.home}-${modal.away}` : "";
+  const modalPart = modal ? ` · modal scoreline ${modal.home}-${modal.away}` : "";
 
   let head: string;
-  if (p.H >= p.D && p.H >= p.A) head = `favorito: ${home} con ${pct(p.H)}`;
-  else if (p.A >= p.D && p.A >= p.H) head = `favorito: ${away} con ${pct(p.A)}`;
-  else head = `el modelo ve un empate (${pct(p.D)})`;
+  if (p.H >= p.D && p.H >= p.A) head = `favorite: ${home} at ${pct(p.H)}`;
+  else if (p.A >= p.D && p.A >= p.H) head = `favorite: ${away} at ${pct(p.A)}`;
+  else head = `the model sees a draw (${pct(p.D)})`;
 
   return `${head}${modalPart}`;
 }

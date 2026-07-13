@@ -15,7 +15,7 @@
  *   - Deep navy premium canvas (#0A1730), high contrast.
  *   - A single smooth horizontal gradient band across the very top
  *     (gold -> sunset -> night), rendered via Satori's linear-gradient support.
- *   - Gold (#F2C94C) as the signature accent: the "Día N" title, the favorite's
+ *   - Gold (#F2C94C) as the signature accent: the "Day N" title, the favorite's
  *     win percentage, and the 45analytics.com link.
  *   - Circular flag badges; the favorite team's badge gets a gold ring, the
  *     other a light ring.
@@ -58,10 +58,16 @@ export const DAILY_C = {
 const TOP_GRADIENT =
   "linear-gradient(90deg, #F2C94C, #FF7A59, #E5468A, #7C5CFF, #2E6BFF)";
 
-const VARIANT_LABEL: Record<DailyVariant, string> = {
-  recap:   "Resultados",
-  preview: "Por jugar hoy",
-};
+// Header eyebrow label under the day number. Recap is always "Results". Preview
+// only claims "Playing today" when the subject day is the audience-local today
+// (isToday, decided by the route in America/Bogota). A preview pulled forward to
+// a later day (e.g. a rest-day roll-forward) reads "Upcoming" instead, with its
+// real date already shown alongside, so it never mislabels a future fixture as
+// today's.
+function variantLabel(variant: DailyVariant, isToday: boolean): string {
+  if (variant === "recap") return "Results";
+  return isToday ? "Playing today" : "Upcoming";
+}
 
 // ── Per-row model ────────────────────────────────────────────────────────────
 
@@ -79,7 +85,7 @@ export interface DailyRow {
   center: string;
   /** Sublabel under the centre value (recap only). */
   centerLabel: string;
-  /** One-line calibration note (Spanish), or null when undeterminable. */
+  /** One-line calibration note, or null when undeterminable. */
   note: string | null;
   /**
    * Top-3 modal scorelines for preview rows. Non-empty switches the row to the
@@ -94,6 +100,9 @@ export interface DailyCardProps {
   variant: DailyVariant;
   dayNumber: number;
   dateLabel: string;
+  /** Whether the subject day is the audience-local today (drives the preview
+   * "Playing today" vs "Upcoming" eyebrow). Ignored on recap. */
+  isToday: boolean;
   rows: DailyRow[];
   /** Champion calibration metrics, recap only. */
   metrics: { brier: string; rps: string; n: number } | null;
@@ -241,7 +250,7 @@ function FavoriteChip({ code, pct, s }: { code: string; pct: string; s: RowSizes
           color: DAILY_C.quiet,
         }}
       >
-        favorito
+        favorite
       </span>
       <span
         style={{
@@ -312,7 +321,7 @@ function ScorelineStrip({ chips, s }: { chips: ScorelineChip[]; s: RowSizes }) {
           marginBottom: s.slLabelMb,
         }}
       >
-        marcadores más probables
+        most likely scorelines
       </span>
       <div style={{ display: "flex", flexDirection: "row", gap: s.slGap }}>
         {chips.map((c, i) => {
@@ -453,7 +462,7 @@ function MatchRow({ row, s, grow }: { row: DailyRow; s: RowSizes; grow: boolean 
 
       {/* Percentages */}
       <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: s.pct, color: DAILY_C.soft }}>
-        {`L ${Math.round((p.H / total) * 100)}%  ·  E ${Math.round((p.D / total) * 100)}%  ·  V ${Math.round((p.A / total) * 100)}%`}
+        {`Home ${Math.round((p.H / total) * 100)}%  ·  Draw ${Math.round((p.D / total) * 100)}%  ·  Away ${Math.round((p.A / total) * 100)}%`}
       </span>
 
       {/* Preview: top-3 scoreline strip. Recap: calibration note. */}
@@ -504,6 +513,7 @@ export function DailyCard({
   variant,
   dayNumber,
   dateLabel,
+  isToday,
   rows,
   metrics,
   emptyNote,
@@ -553,7 +563,7 @@ export function DailyCard({
               color: DAILY_C.quiet,
             }}
           >
-            45ANALYTICS.COM · MUNDIAL 2026
+            45ANALYTICS.COM · WORLD CUP 2026
           </span>
           <span
             style={{
@@ -564,7 +574,7 @@ export function DailyCard({
               marginTop: 14,
             }}
           >
-            {`Día ${dayNumber}`}
+            {`Day ${dayNumber}`}
           </span>
           <span
             style={{
@@ -574,7 +584,7 @@ export function DailyCard({
               marginTop: 12,
             }}
           >
-            {`${dateLabel} · ${VARIANT_LABEL[variant]}`}
+            {`${dateLabel} · ${variantLabel(variant, isToday)}`}
           </span>
         </div>
         <HeaderMotif />
@@ -615,14 +625,14 @@ export function DailyCard({
       >
         {variant === "recap" && metrics ? (
           <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 19, color: DAILY_C.ink }}>
-            {`Récord público del campeón · RPS ${metrics.rps} · Brier ${metrics.brier} · ${metrics.n} partidos`}
+            {`Champion public record · RPS ${metrics.rps} · Brier ${metrics.brier} · ${metrics.n} matches`}
           </span>
         ) : null}
         <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 15, color: DAILY_C.quiet }}>
-          Probabilidades del modelo · mercado pendiente
+          Model probabilities · market pending
         </span>
         <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 17, color: DAILY_C.gold }}>
-          probabilidad, no predicción · 45analytics.com
+          probability, not prediction · 45analytics.com
         </span>
       </div>
     </div>

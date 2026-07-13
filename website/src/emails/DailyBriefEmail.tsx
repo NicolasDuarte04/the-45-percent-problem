@@ -361,7 +361,11 @@ export function DailyBriefEmail({
             <ReproRow label="CODE_SHA" value={brief.code_sha.slice(0, 7)} />
             <ReproRow
               label="DATA_SHA"
-              value={brief.data_snapshot_sha.slice(0, 7)}
+              // data_snapshot_sha carries a "sha256:" prefix (exactly 7 chars),
+              // so a bare slice(0, 7) would drop the whole hash and print
+              // "sha256:". Strip the prefix first, matching the unprefixed
+              // CODE_SHA row, so the real 7-digit hash shows.
+              value={brief.data_snapshot_sha.replace(/^sha256:/i, "").slice(0, 7)}
             />
             <ReproRow
               label="MC_RUNS"

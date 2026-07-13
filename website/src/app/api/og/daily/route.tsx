@@ -17,7 +17,7 @@
  * manual work.
  *
  * Framing is strictly calibration-led. No market lines or betting edges appear
- * (the market column is intentionally pending). Copy is Colombian Spanish.
+ * (the market column is intentionally pending). Copy is English.
  *
  * Implementation invariants mirror the existing OG routes:
  *   - runtime: nodejs (the flag/font loaders read from disk).
@@ -40,14 +40,13 @@ import {
   type DailyVariant,
   audienceDayKeyFromMs,
   dayNumber,
-  formatSpanishDate,
+  formatCardDate,
   matchesForCard,
   previewScorelines,
   recapNote,
   selectPreviewDay,
   selectRecapDay,
   shootoutNote,
-  spanishName,
 } from "@/lib/data/dailyShareCard";
 import {
   DailyCard,
@@ -108,6 +107,13 @@ export async function GET(req: NextRequest): Promise<Response> {
         ? selectRecapDay(matches, todayKey)
         : selectPreviewDay(matches, todayKey));
 
+    // Whether the subject day is the audience-local "today" (America/Bogota, the
+    // same basis todayKey and every dayKey use). The preview header only claims
+    // "Playing today" when this holds; a fixture pulled forward from a rest day
+    // (subjectDay > todayKey) reads "Upcoming" with its real date instead, so a
+    // July 14 fixture is never labelled as playing on July 12. Recap ignores it.
+    const isToday = subjectDay != null && subjectDay === todayKey;
+
     let fonts: { mono: ArrayBuffer; serif: ArrayBuffer } | null;
     try {
       fonts = await loadFonts();
@@ -120,20 +126,21 @@ export async function GET(req: NextRequest): Promise<Response> {
     // (e.g. pre-tournament recap, or a knockout-phase gap where the group
     // fixtures are all played and the live knockout feed has no fixture for
     // this day yet). Render a graceful empty card, not a 500. The header still
-    // reads the correct calendar day: derive "Dia N" and the date from today,
-    // not a hardcoded 0, so a fixture-less card shows "Dia 18", never "Dia 0".
+    // reads the correct calendar day: derive "Day N" and the date from today,
+    // not a hardcoded 0, so a fixture-less card shows "Day 18", never "Day 0".
     if (!subjectDay) {
       return renderCard(
         {
           variant,
           dayNumber: dayNumber(todayKey),
-          dateLabel: formatSpanishDate(todayKey),
+          dateLabel: formatCardDate(todayKey),
+          isToday: true,
           rows: [],
           metrics: null,
           emptyNote:
             variant === "recap"
-              ? "Aún no hay partidos jugados."
-              : "No hay partidos por jugar.",
+              ? "No matches played yet."
+              : "No matches to play.",
         },
         variant,
         fonts,
@@ -169,7 +176,7 @@ export async function GET(req: NextRequest): Promise<Response> {
           const pen = shootoutNote(m);
           const cal = recapNote(m);
           if (pen) {
-            centerLabel = "Penales";
+            centerLabel = "Penalties";
             note = cal ? `${pen} · ${cal}` : pen;
           } else {
             note = cal;
@@ -179,8 +186,8 @@ export async function GET(req: NextRequest): Promise<Response> {
         }
 
         return {
-          homeName: spanishName(m.home.fifa_code, m.home.display_name),
-          awayName: spanishName(m.away.fifa_code, m.away.display_name),
+          homeName: m.home.display_name,
+          awayName: m.away.display_name,
           homeCode: m.home.fifa_code.toUpperCase(),
           awayCode: m.away.fifa_code.toUpperCase(),
           homeFlag,
@@ -218,14 +225,15 @@ export async function GET(req: NextRequest): Promise<Response> {
       {
         variant,
         dayNumber: dayNumber(subjectDay),
-        dateLabel: formatSpanishDate(subjectDay),
+        dateLabel: formatCardDate(subjectDay),
+        isToday,
         rows,
         metrics,
         emptyNote:
           rows.length === 0
             ? variant === "recap"
-              ? "Aún no hay partidos jugados."
-              : "No hay partidos por jugar."
+              ? "No matches played yet."
+              : "No matches to play."
             : null,
       },
       variant,
@@ -248,7 +256,7 @@ function renderCard(
     ...fontsToImageResponseOptions(fonts),
     headers: {
       "Content-Type": "image/png",
-      "Content-Disposition": `inline; filename="45analytics-dia-${variant}.png"`,
+      "Content-Disposition": `inline; filename="45analytics-day-${variant}.png"`,
       "Cache-Control": "public, max-age=3600, s-maxage=3600",
     },
   });
