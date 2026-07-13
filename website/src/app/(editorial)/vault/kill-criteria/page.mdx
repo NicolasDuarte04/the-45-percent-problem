@@ -9,7 +9,8 @@
   sanity-gate firing was `pivot_paper_framing`, the procedural
   obligation reflected in this essay. M2 stays as M★, sealed in
   `champion_model.json` with `CHAMPION_LOCKED: true`. The live R16
-  checkpoint, on cumulative tournament forecasts, is still ahead.
+  checkpoint was evaluated on 2026-07-07 and did not fire: M2 was
+  1.47 SE better than M0 on the 72 pre-registered forecasts.
 </Dropcap>
 
 This page describes the criterion that fired the warning, the
@@ -261,7 +262,7 @@ make from its outputs have changed.
 1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, divergences, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
 2. The de-vigging machinery, divergence calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged divergences and gate decisions against M★'s (M2_fifa) probabilities.
 3. CLV continues to be tracked on the M★ row, measuring whether M2's probabilities lead the market over time. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
-4. The R16 live checkpoint will be evaluated when the Round of 16 settles, on a live M2-versus-M0 comparison.
+4. The R16 live checkpoint was evaluated on 2026-07-07 when the Round of 16 settled, on a live M2-versus-M0 comparison; it did not fire, with M2 1.47 SE better than M0 on the 72 pre-registered forecasts.
 
 <MarginNote>
   An OSF amendment is the only path to changing M★'s identity during
@@ -292,8 +293,9 @@ the most recent snapshot. It updates nightly with each build.
 The status block reads from the snapshot and renders the dual
 reading: a `WARNING: 1.75 SE / 2.0 SE (paired-difference)` badge
 alongside a `CLEARED: 6.22 SE / 2.0 SE (marginal)` reference and the
-Phase 8 timestamp. The badge state will be re-evaluated when the R16
-live checkpoint resolves on live tournament data.
+Phase 8 timestamp. The R16 live checkpoint resolved on 2026-07-07 and
+did not fire, with M2 1.47 SE better than M0 on the 72 pre-registered
+forecasts, so the Phase 8 badge state stands.
 
 The [Transparency Ledger](/ledger) shows the full kill-criteria check
 panel alongside the rolling calibration metrics (Brier, log-loss, RPS)

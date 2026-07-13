@@ -33,6 +33,35 @@ import { SnapshotAwareHome } from "@/components/compositions/SnapshotAwareHome";
 // /api/snapshots/[id]/page-data.
 export const dynamic = "force-static";
 
+// cp-38: the landing leaderboard and modal-path bracket render the frozen
+// pre-tournament snapshot (computed before the opening match), not the
+// live conditional view. This visible label keeps the two from being read
+// as live results; the live conditional bracket lives on /bracket.
+function FrozenForecastLabel() {
+  return (
+    <p
+      className="mono"
+      style={{
+        fontSize: 11,
+        letterSpacing: ".04em",
+        lineHeight: 1.5,
+        color: "var(--text-tertiary)",
+        margin: "0 0 12px",
+      }}
+    >
+      <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>
+        FROZEN PRE-TOURNAMENT FORECAST.
+      </span>{" "}
+      Computed before the opening match and not updated with results. The
+      live conditional view lives on the{" "}
+      <Link href="/bracket" style={{ color: "var(--accent-focus)" }}>
+        Bracket page
+      </Link>
+      .
+    </p>
+  );
+}
+
 export default async function Home() {
   const picker = resolveSnapshotPickerState(undefined);
 
@@ -82,10 +111,12 @@ export default async function Home() {
             international match data. Model-implied probabilities come from
             10,000 Monte Carlo simulations per nightly snapshot; a
             market-comparison layer de-vigs bookmaker odds and reports signed
-            model-vs-market divergence for group-stage fixtures in the
-            divergence terminal. Knockout fixtures are not yet covered: the
-            odds feed has not been remapped to the resolved knockout pairings.
-            The &#8220;45%
+            model-vs-market divergence in the divergence terminal. It covers
+            knockout fixtures live: model probabilities conditioned on settled
+            results are compared against de-vigged market odds, ungraded. Only
+            the 72 pre-registered group-stage forecasts are ever graded. When
+            the odds are older than 30 hours the layer reports itself stale
+            rather than showing stale rows. The &#8220;45%
             problem&#8221; refers to a systematic
             divergence documented in Phase 1: market-implied championship
             probabilities for mid-tier contenders cluster near 45% of their
@@ -213,6 +244,7 @@ export default async function Home() {
                 </div>
               }
             />
+            <FrozenForecastLabel />
             <div style={{ marginBottom: 12 }}>
               <SnapshotBanner
                 selected={picker.selected}
@@ -236,6 +268,7 @@ export default async function Home() {
               title="Most likely bracket"
               rightSlot={<GhostLink href="/bracket">Full bracket →</GhostLink>}
             />
+            <FrozenForecastLabel />
             {/* MostLikelyBracket declares min-width: 1100px (the largest
                 offender). Wrapper traps the overflow inside the section
                 instead of forcing the document horizontal scrollbar.

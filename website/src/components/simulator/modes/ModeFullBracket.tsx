@@ -1131,6 +1131,16 @@ export function ModeFullBracket({
           Twelve group winners, twelve runners-up, eight best 3rd-place teams, then the full knockout bracket.
         </p>
 
+        {/* cp-38: the real group stage is settled and the tournament is at the
+            quarterfinals, yet this mode still starts the user at "rank the
+            groups". This note frames the flow as an explicit counterfactual so
+            the group-ranking step does not read as a live prompt. */}
+        <p className="mt-2 font-sans text-[13px] leading-[1.6] text-[var(--text-quiet)]">
+          The real group stage is final and the tournament is at the
+          quarterfinals. This simulator is a counterfactual: you are re-running
+          the tournament from the start under your own assumptions.
+        </p>
+
         {/* Step 1 · Groups. Mission 2 refactor: single-group carousel
             with peek slivers + 12-dot progress strip + Auto-fill from
             Elo + Show-all-12 escape hatch. The legacy 12-grid wall is
