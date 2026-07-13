@@ -48,6 +48,7 @@ export function upcomingEmptyMessage(query: string): string {
     : "No upcoming fixtures yet; knockout pairings appear here once the draw resolves.";
 }
 
+
 /** A team's name + flag, aligned toward or away from the centre column. */
 function TeamLabel({
   code,
@@ -371,6 +372,18 @@ export function MatchesBrowser({
   const [playedOpen, setPlayedOpen] = useState(false);
   useEffect(() => {
     setNow(Date.now());
+  }, []);
+
+  // cp-39: the global find-a-team control (masthead) links here as
+  // /matches?team=<name>. Prefill the filter from that param on mount. We read
+  // window.location directly rather than useSearchParams so this force-static,
+  // fully-prerendered page needs no Suspense boundary (which, wrapping the
+  // whole list, would leave it client-rendered). The query is already a
+  // client-only concern: it starts empty at SSR to match the prerendered HTML,
+  // and this effect lifts the filter after hydration, exactly like `now` above.
+  useEffect(() => {
+    const team = new URLSearchParams(window.location.search).get("team");
+    if (team) setQuery(team);
   }, []);
 
   const teamListId = useId();

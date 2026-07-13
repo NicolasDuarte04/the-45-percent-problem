@@ -7,6 +7,7 @@ import {
   upcomingDivergenceRows,
 } from "@/lib/data/divergenceFilter";
 import { DivergenceTable } from "@/components/compositions/DivergenceTable";
+import { SnapshotParamNotice } from "@/components/compositions/SnapshotParamNotice";
 import { CanvasTour } from "@/components/compositions/CanvasTour";
 import { TourTriggerButton } from "@/components/compositions/TourTriggerButton";
 import { TERMINAL_STEPS, TERMINAL_DURATION_SEC } from "./_steps";
@@ -144,6 +145,12 @@ export default async function TerminalPage({
 
       {/* ── Main table, or honest pending panel ──────────────────────────── */}
       <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6">
+        {/* cp-39: the terminal only ever shows the current snapshot. If a
+            visitor deep-links ?snapshot=<id>, say so instead of silently
+            showing the latest while the header still names a snapshot id. */}
+        <Suspense fallback={null}>
+          <SnapshotParamNotice currentId={divergence.snapshot_id} />
+        </Suspense>
         {isPending ? (
           <div
             className="border rounded-md px-5 py-8 text-center"

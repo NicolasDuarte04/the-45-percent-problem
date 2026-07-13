@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import {
   loadBracket,
+  loadFreshness,
   loadLiveBracket,
   loadLiveKnockouts,
   loadSnapshotMeta,
@@ -56,6 +57,15 @@ export default async function BracketPage() {
   // rendered round by round in the live panel alongside the conditioned marginal
   // matrix. Empty until the draw resolves, so the live panel degrades cleanly.
   const liveKnockouts = live ? loadLiveKnockouts(undefined) : [];
+
+  // cp-39: default to the LIVE conditional view when live data is available AND
+  // the snapshot is fresh; fall back to the frozen forecast when live data is
+  // stale or absent. Freshness is the operational staleness status the regen
+  // stamps into freshness.json (the same signal the terminal uses). The page is
+  // force-static, so this is evaluated at build time (each nightly / on-demand
+  // regen rebuilds it), which is the correct moment: a build whose live data
+  // was already stale opens on frozen.
+  const liveFresh = loadFreshness(undefined).status === "FRESH";
 
   const frozenPanel = (
     <Suspense fallback={null}>
@@ -208,7 +218,11 @@ export default async function BracketPage() {
           unavailable the page renders frozen-only with no toggle, preserving
           the flag gate exactly as before. */}
       {livePanel ? (
-        <BracketViewToggle frozen={frozenPanel} live={livePanel} />
+        <BracketViewToggle
+          frozen={frozenPanel}
+          live={livePanel}
+          defaultView={liveFresh ? "live" : "frozen"}
+        />
       ) : (
         frozenPanel
       )}

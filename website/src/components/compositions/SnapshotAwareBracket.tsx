@@ -41,6 +41,7 @@ export function SnapshotAwareBracket({
       snapshotId={requested!}
       current={current}
       weekAgo={weekAgo}
+      fallback={children}
     />
   );
 }

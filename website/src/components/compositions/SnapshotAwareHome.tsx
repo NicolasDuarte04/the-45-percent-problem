@@ -41,6 +41,7 @@ export function SnapshotAwareHome({
       snapshotId={requested!}
       current={current}
       weekAgo={weekAgo}
+      fallback={children}
     />
   );
 }

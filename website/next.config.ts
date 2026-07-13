@@ -102,8 +102,19 @@ const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
 
   async redirects() {
-    if (!UMBRELLA_AT_ROOT_CUTOVER) return [];
+    // cp-39: the /teams/[code] placeholder is retired. The populated team
+    // progression pages live at /team/[code]; every per-team deep link
+    // permanently (308) redirects to its real page. This is always on,
+    // independent of the umbrella-cutover flag. The /teams index itself (no
+    // code segment) does not match `/teams/:code` and keeps listing all 48
+    // teams.
+    const TEAM_ROUTE_REDIRECTS = [
+      { source: "/teams/:code", destination: "/team/:code", permanent: true },
+    ];
+
+    if (!UMBRELLA_AT_ROOT_CUTOVER) return TEAM_ROUTE_REDIRECTS;
     return [
+      ...TEAM_ROUTE_REDIRECTS,
       // The umbrella's staging address canonicalises to the front door.
       // (Safe from loops: redirects are matched against the incoming URL
       // only; the `/` → /45analytics rewrite below is internal.)

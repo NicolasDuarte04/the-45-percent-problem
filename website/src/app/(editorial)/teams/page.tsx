@@ -7,7 +7,7 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Teams | 45analytics",
   description:
-    "All 48 qualified teams in the 2026 FIFA World Cup. Each team's page lands in a future phase; the index is published now so the routes resolve from the daily brief.",
+    "All 48 qualified teams in the 2026 FIFA World Cup. Each team links to its progression page: model probability over time from group stage to champion.",
 };
 
 interface TeamRow {
@@ -68,9 +68,9 @@ export default function TeamsIndexPage() {
             margin: "16px 0 0",
           }}
         >
-          Per-team pages with model probability over time land in a later
-          phase. This index is published now so the team chips on the daily
-          brief resolve to a real route.
+          Every team links to its progression page: the model&rsquo;s
+          probability over time from group stage to champion, its group-stage
+          standing, and its bracket-path projections.
         </p>
       </header>
 
@@ -87,7 +87,7 @@ export default function TeamsIndexPage() {
         {teams.map((team) => (
           <li key={team.code}>
             <Link
-              href={`/teams/${team.code}`}
+              href={`/team/${team.code}`}
               className="no-underline"
               style={{
                 display: "flex",

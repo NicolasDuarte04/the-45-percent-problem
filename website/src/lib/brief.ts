@@ -82,7 +82,7 @@ export interface BriefMethodologyLinks {
 }
 
 export interface BriefFeaturedTeam {
-  /** FIFA 3-letter code (e.g. "BRA"). Used as the route slug at /teams/[code]. */
+  /** FIFA 3-letter code (e.g. "BRA"). Used as the route slug at /team/[code]. */
   code: string;
   /** Display name as it appears on the chip (e.g. "BRAZIL"). */
   name: string;

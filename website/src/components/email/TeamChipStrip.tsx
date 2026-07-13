@@ -19,7 +19,7 @@ export async function TeamChipStrip({ data }: TeamChipStripProps = {}) {
       {teams.map((team) => (
         <Link
           key={team.code}
-          href={`/teams/${team.code}`}
+          href={`/team/${team.code}`}
           className={styles.chip}
         >
           {team.name}

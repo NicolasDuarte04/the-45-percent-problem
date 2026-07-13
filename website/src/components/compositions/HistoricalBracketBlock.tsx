@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import type {
   BracketSnapshot,
@@ -15,12 +15,16 @@ import {
   SnapshotBanner,
   SnapshotPicker,
 } from "@/components/compositions/SnapshotPicker";
+import { SnapshotUnavailableNotice } from "@/components/compositions/SnapshotUnavailableNotice";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 
 interface HistoricalBracketBlockProps {
   snapshotId: string;
   current: SnapshotInfo;
   weekAgo: SnapshotInfo | null;
+  /** The current-snapshot bracket content, shown as fallback when the
+   *  requested snapshot is unavailable. */
+  fallback: ReactNode;
 }
 
 interface BracketPageData {
@@ -38,6 +42,7 @@ export function HistoricalBracketBlock({
   snapshotId,
   current,
   weekAgo,
+  fallback,
 }: HistoricalBracketBlockProps) {
   const [state, setState] = useState<FetchState>({ kind: "loading" });
 
@@ -101,25 +106,20 @@ export function HistoricalBracketBlock({
   }
 
   if (state.kind === "error") {
+    // cp-39: the requested snapshot is unavailable (pruned/unknown, or a
+    // transient failure). Fall back to the current-snapshot bracket, but name
+    // the substitution instead of silently rendering latest under the
+    // requested id.
+    const variant = /not found/i.test(state.message) ? "pruned" : "error";
     return (
-      <ShellChrome
-        current={current}
-        weekAgo={weekAgo}
-        selectedId={snapshotId}
-        body={
-          <div
-            className="mono"
-            style={{
-              fontSize: 12,
-              letterSpacing: ".04em",
-              color: "var(--text-tertiary)",
-              padding: "32px 0",
-            }}
-          >
-            Snapshot {snapshotId} could not be loaded ({state.message}).
-          </div>
-        }
-      />
+      <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 pt-6">
+        <SnapshotUnavailableNotice
+          requestedId={snapshotId}
+          currentId={current.id}
+          variant={variant}
+        />
+        {fallback}
+      </div>
     );
   }
 
