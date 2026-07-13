@@ -1,0 +1,112 @@
+{
+  "brief_date": "2026-07-12",
+  "issue_number": 44,
+  "model_variant": "M_STAR",
+  "code_sha": "c52bbd5e92994f86",
+  "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
+  "mc_runs": 10000,
+  "next_brief_utc": "2026-07-13T12:00:00Z",
+  "latest_archive_url": "/briefs/2026-07-12",
+  "lead_in": {
+    "tournament_sentence": "Quarter-finals: 100 of 104 matches settled, 4 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
+    "match_sentence": "No ties are scheduled today. 2 results from yesterday are recorded below and reconciled into the tournament state.",
+    "fallback_used": false
+  },
+  "headline": {
+    "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
+    "movers_line": "The model-versus-market divergence layer is live, covering 2 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+  },
+  "teaser": {
+    "has_divergence": false
+  },
+  "top_divergences": [],
+  "tournament_movers": [],
+  "suppressed_today": [],
+  "featured_teams": [
+    {
+      "code": "NOR",
+      "name": "NORWAY"
+    },
+    {
+      "code": "ENG",
+      "name": "ENGLAND"
+    },
+    {
+      "code": "ARG",
+      "name": "ARGENTINA"
+    },
+    {
+      "code": "SUI",
+      "name": "SWITZERLAND"
+    }
+  ],
+  "methodology_links": {
+    "model_card": "/methodology/m-star",
+    "devig_method": "/methodology/power-devig",
+    "this_brief_archive": "/briefs/2026-07-12"
+  },
+  "daily": {
+    "generated_at_utc": "2026-07-13T01:28:42Z",
+    "tournament": {
+      "phase_label": "Quarter-finals",
+      "matches_settled": 100,
+      "matches_remaining": 4,
+      "total_matches": 104,
+      "sentence": "Quarter-finals: 100 of 104 matches settled, 4 remaining."
+    },
+    "r16_checkpoint": {
+      "status": "published",
+      "sentence": "The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire."
+    },
+    "divergence": {
+      "status": "live",
+      "fixtures_covered": 2,
+      "sentence": "The model-versus-market divergence layer is live, covering 2 fixtures. This brief reports the layer status only; it never ranks or names individual divergences."
+    },
+    "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "today_fixtures": [],
+    "yesterday_results": [
+      {
+        "match_id": "KO-FD537385",
+        "round": "QF",
+        "graded": false,
+        "home": {
+          "fifa_code": "NOR",
+          "display_name": "Norway"
+        },
+        "away": {
+          "fifa_code": "ENG",
+          "display_name": "England"
+        },
+        "score": {
+          "home": 1,
+          "away": 2
+        },
+        "outcome": "A",
+        "shootout": null,
+        "result_label": "Norway 1, England 2"
+      },
+      {
+        "match_id": "KO-FD537386",
+        "round": "QF",
+        "graded": false,
+        "home": {
+          "fifa_code": "ARG",
+          "display_name": "Argentina"
+        },
+        "away": {
+          "fifa_code": "SUI",
+          "display_name": "Switzerland"
+        },
+        "score": {
+          "home": 3,
+          "away": 1
+        },
+        "outcome": "H",
+        "shootout": null,
+        "result_label": "Argentina 3, Switzerland 1"
+      }
+    ],
+    "next_fixture_date": "2026-07-14"
+  }
+}
