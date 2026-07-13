@@ -7,6 +7,14 @@ type View = "frozen" | "live";
 interface BracketViewToggleProps {
   frozen: ReactNode;
   live: ReactNode;
+  /**
+   * Which view is shown first. cp-39: the operator decision is to default to
+   * the live conditional view when live data is available and fresh, and to
+   * fall back to the frozen forecast when it is stale. The page computes this
+   * from the snapshot freshness at build time; the toggle only honors it.
+   * Labels and the one-click path to the other view are unchanged.
+   */
+  defaultView?: View;
 }
 
 const TOGGLE_BTN_BASE: React.CSSProperties = {
@@ -79,14 +87,20 @@ function ToggleButton({
  * non-null with the flag on); otherwise the page renders the frozen panel alone
  * with no toggle, leaving the flag gate intact.
  *
- * cp-27: the initial view is FROZEN, matching the "(default)" above. The live
- * conditional view now conditions on the real knockout draw, so it is a genuine
- * departure from the pre-registered forecast; it stays opt-in behind the toggle
- * (and the NEXT_PUBLIC_LIVE_BRACKET flag). Making Live the default again is a
- * separate operator decision after live verification.
+ * cp-39: the initial view is now operator-controlled via `defaultView`. The
+ * recorded decision is to open on the LIVE conditional view when live data is
+ * available and fresh, and to fall back to FROZEN when it is stale or absent.
+ * The page computes that from snapshot freshness at build time and passes it in.
+ * Either way both panels are prerendered, the labels are unchanged, and the
+ * other view is one click away. The live view remains gated on the
+ * NEXT_PUBLIC_LIVE_BRACKET flag (it only renders when the page supplies it).
  */
-export function BracketViewToggle({ frozen, live }: BracketViewToggleProps) {
-  const [view, setView] = useState<View>("frozen");
+export function BracketViewToggle({
+  frozen,
+  live,
+  defaultView = "frozen",
+}: BracketViewToggleProps) {
+  const [view, setView] = useState<View>(defaultView);
 
   const select = (next: View) => {
     if (next === view) return;

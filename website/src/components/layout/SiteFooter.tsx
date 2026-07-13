@@ -1,4 +1,19 @@
+import Link from "next/link";
 import { loadSnapshotMeta } from "@/lib/data/loadSnapshot";
+
+// cp-39: compact footer nav so the previously orphaned editorial pages
+// (About, Methodology, Teams, the Briefs archive) and the OSF preregistration
+// are reachable from every page. The OSF link points at the same
+// preregistration the Cite column references.
+const OSF_URL = "https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321";
+
+const FOOTER_LINKS: { label: string; href: string; external?: boolean }[] = [
+  { label: "About", href: "/about" },
+  { label: "Methodology", href: "/methodology" },
+  { label: "Teams", href: "/teams" },
+  { label: "Briefs archive", href: "/briefs" },
+  { label: "OSF", href: OSF_URL, external: true },
+];
 
 export function SiteFooter() {
   const meta = loadSnapshotMeta();
@@ -14,6 +29,36 @@ export function SiteFooter() {
         paddingBottom: 32,
       }}
     >
+      <nav
+        aria-label="Site"
+        className="max-w-screen-xl mx-auto flex flex-wrap items-center gap-x-6 gap-y-2 mb-10 pb-8 border-b"
+        style={{ borderColor: "var(--border-subtle)" }}
+      >
+        {FOOTER_LINKS.map((link) =>
+          link.external ? (
+            <a
+              key={link.label}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="no-underline mono text-[11px] uppercase tracking-[.06em] hover:underline underline-offset-4"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {link.label}
+            </a>
+          ) : (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="no-underline mono text-[11px] uppercase tracking-[.06em] hover:underline underline-offset-4"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {link.label}
+            </Link>
+          ),
+        )}
+      </nav>
+
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 text-[11px]">
         {/* Col 1 · Research description */}
         <div className="space-y-2">

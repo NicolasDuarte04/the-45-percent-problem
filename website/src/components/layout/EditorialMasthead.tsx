@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { TeamJump } from "./TeamJump";
 
 interface Tab {
   id: string;
@@ -40,7 +41,23 @@ const TABS: Tab[] = [
     id: "bracket",
     label: "Bracket",
     href: "/bracket",
-    match: (p) => p.startsWith("/bracket") || p.startsWith("/team"),
+    // cp-39: Bracket highlights only on /bracket. It previously also matched
+    // any "/team" prefix, which wrongly lit Bracket on /teams and every
+    // /team/[code] page (both now belong to the Teams tab below).
+    match: (p) => p.startsWith("/bracket"),
+  },
+  {
+    id: "teams",
+    label: "Teams",
+    href: "/teams",
+    // Highlights on the /teams index and on every per-team progression page
+    // (/team/[code]). The trailing slash on "/team/" keeps this from also
+    // matching unrelated routes, and "/teams" is matched explicitly.
+    match: (p) =>
+      p === "/teams" ||
+      p.startsWith("/teams/") ||
+      p === "/team" ||
+      p.startsWith("/team/"),
   },
   {
     id: "vault",
@@ -300,6 +317,12 @@ export function EditorialMasthead({
               button itself is hidden on mobile via .hidden md:inline-flex
               to keep the narrow-viewport row uncluttered. */}
           <MastheadOnboardingPill />
+
+          {/* cp-39 · global find-a-team. A compact search icon on every page
+              that jumps to /team/[code] or the team-filtered /matches. Shown at
+              all breakpoints; on mobile it sits in row 1 next to the brief link
+              (small enough not to worsen the narrow-viewport row). */}
+          <TeamJump />
         </div>
 
         <nav

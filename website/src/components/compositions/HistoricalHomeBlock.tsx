@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import type {
   DivergenceSnapshot,
@@ -24,11 +24,15 @@ import { TerminalDashboard } from "@/components/compositions/TerminalDashboard";
 import { TournamentCalibrationStrip } from "@/components/compositions/TournamentCalibrationStrip";
 import { TournamentLeaderboard } from "@/components/compositions/TournamentLeaderboard";
 import { TrailerSection } from "@/components/compositions/TrailerSection";
+import { SnapshotUnavailableNotice } from "@/components/compositions/SnapshotUnavailableNotice";
 
 interface HistoricalHomeBlockProps {
   snapshotId: string;
   current: SnapshotInfo;
   weekAgo: SnapshotInfo | null;
+  /** The current-snapshot home content, shown as fallback when the requested
+   *  snapshot is unavailable. */
+  fallback: ReactNode;
 }
 
 interface HomePageData {
@@ -47,6 +51,7 @@ export function HistoricalHomeBlock({
   snapshotId,
   current,
   weekAgo,
+  fallback,
 }: HistoricalHomeBlockProps) {
   const [state, setState] = useState<FetchState>({ kind: "loading" });
 
@@ -89,13 +94,19 @@ export function HistoricalHomeBlock({
   }
 
   if (state.kind === "error") {
+    // cp-39: the requested snapshot is unavailable (pruned/unknown, or a
+    // transient failure). Fall back to the current snapshot content, but say
+    // so explicitly rather than silently showing latest under the requested id.
+    const variant = /not found/i.test(state.message) ? "pruned" : "error";
     return (
-      <FailureNotice
-        current={current}
-        weekAgo={weekAgo}
-        selectedId={snapshotId}
-        message={state.message}
-      />
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <SnapshotUnavailableNotice
+          requestedId={snapshotId}
+          currentId={current.id}
+          variant={variant}
+        />
+        {fallback}
+      </div>
     );
   }
 
@@ -226,46 +237,6 @@ function LoadingSkeleton({
         }}
       >
         Loading historical snapshot {selectedId}...
-      </div>
-    </section>
-  );
-}
-
-function FailureNotice({
-  current,
-  weekAgo,
-  selectedId,
-  message,
-}: {
-  current: SnapshotInfo;
-  weekAgo: SnapshotInfo | null;
-  selectedId: string;
-  message: string;
-}) {
-  return (
-    <section style={{ marginBottom: 56 }}>
-      <SectionHead
-        eyebrow="§ 1 · Championship pricing"
-        title="Tournament leaderboard"
-        rightSlot={
-          <SnapshotPicker
-            current={current}
-            weekAgo={weekAgo}
-            selectedId={selectedId}
-            basePath="/"
-          />
-        }
-      />
-      <div
-        className="mono"
-        style={{
-          fontSize: 12,
-          letterSpacing: ".04em",
-          color: "var(--text-tertiary)",
-          padding: "32px 0",
-        }}
-      >
-        Snapshot {selectedId} could not be loaded ({message}).
       </div>
     </section>
   );
