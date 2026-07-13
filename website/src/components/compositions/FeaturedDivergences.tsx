@@ -5,7 +5,7 @@ import type { DivergenceRow, DivergenceSnapshot } from "@/lib/data/schemas";
 import { formatUtcShort } from "@/lib/formatters";
 import { MARKET_LABELS } from "@/lib/markets";
 import {
-  DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  divergenceEmptyStateNote,
   divergenceMatchHref,
   upcomingDivergenceRows,
 } from "@/lib/data/divergenceFilter";
@@ -16,15 +16,15 @@ interface FeaturedDivergencesProps {
 
 export function FeaturedDivergences({ divergence }: FeaturedDivergencesProps) {
   // cp-29: drop rows whose fixture already kicked off; a settled match is not a
-  // live edge. If the filter empties a feed that did carry rows, the group
-  // stage is over and knockout coverage is pending the odds remap.
+  // live edge. cp-30 made knockout coverage live, so an empty feed means no
+  // upcoming fixture currently has an open de-vigged line (between rounds, or
+  // the odds are stale); it is not a pending remap.
   const upcoming = upcomingDivergenceRows(divergence);
   const top3 = [...upcoming]
     .sort((a, b) => Math.abs(b.edge_E) - Math.abs(a.edge_E))
     .slice(0, 3);
 
   if (top3.length === 0) {
-    const hadRows = divergence.rows.length > 0;
     return (
       <div
         className="rounded-2xl border px-6 py-6"
@@ -35,9 +35,7 @@ export function FeaturedDivergences({ divergence }: FeaturedDivergencesProps) {
           fontSize: 13,
         }}
       >
-        {hadRows
-          ? DIVERGENCE_KNOCKOUT_PENDING_NOTE
-          : "No divergence rows available in this snapshot."}
+        {divergenceEmptyStateNote(divergence)}
       </div>
     );
   }

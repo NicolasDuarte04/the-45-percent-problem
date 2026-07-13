@@ -63,6 +63,30 @@ export const DIVERGENCE_STALE_ODDS_NOTE =
   "fresh odds pull.";
 
 /**
+ * The empty-state line for the cp-14 pending state: no real bookmaker lines
+ * are ingested yet, so no divergence rows are published.
+ */
+export const DIVERGENCE_PENDING_NOTE =
+  "No real bookmaker lines are ingested yet, so no divergence rows are " +
+  "published. Real de-vigged divergence appears once the odds producer runs.";
+
+/**
+ * cp-38: the empty-state explanation for the landing divergence modules,
+ * mirroring the /terminal panels so an empty widget reads as legitimately
+ * empty rather than broken. A live snapshot can have no rows to show for two
+ * honest reasons: between knockout rounds few upcoming fixtures have an open
+ * de-vigged line, or the freshness guard has marked the odds stale (rows are
+ * withheld rather than shown stale). Group-stage grading is unaffected in
+ * every case. Status-driven so the landing gives the same reason the /terminal
+ * panel would.
+ */
+export function divergenceEmptyStateNote(snapshot: DivergenceSnapshot): string {
+  if (snapshot.status === "stale") return DIVERGENCE_STALE_ODDS_NOTE;
+  if (snapshot.status === "pending") return DIVERGENCE_PENDING_NOTE;
+  return DIVERGENCE_KNOCKOUT_PENDING_NOTE;
+}
+
+/**
  * The detail-page href for a divergence row. Knockout rows (KO-FD ids, round
  * other than GRP) live in the ungraded matches_live/ namespace and render at
  * /match/live/[id]; group rows resolve to the graded /match/[id] route. A row

@@ -7,7 +7,7 @@ import type {
 } from "@/lib/data/schemas";
 import { Flag } from "@/components/primitives/Flag";
 import {
-  DIVERGENCE_KNOCKOUT_PENDING_NOTE,
+  divergenceEmptyStateNote,
   upcomingDivergenceRows,
 } from "@/lib/data/divergenceFilter";
 
@@ -56,7 +56,7 @@ export function TerminalDashboard({
       <DivergenceCard
         rows={topDivergences}
         totalMarkets={upcomingRows.length}
-        hadRows={divergence.rows.length > 0}
+        emptyNote={divergenceEmptyStateNote(divergence)}
       />
       <MoversCard
         risers={movers.risers}
@@ -317,11 +317,11 @@ function ShiftBadge({ value }: { value: number }) {
 function DivergenceCard({
   rows,
   totalMarkets,
-  hadRows,
+  emptyNote,
 }: {
   rows: ReturnType<typeof pickTopDivergences>;
   totalMarkets: number;
-  hadRows: boolean;
+  emptyNote: string;
 }) {
   return (
     <Card ariaLabelledBy="td-divergence-title">
@@ -335,9 +335,10 @@ function DivergenceCard({
       <Shelf />
 
       {rows.length === 0 ? (
-        // cp-29: the settled-match filter emptied the feed. If rows existed in
-        // the snapshot, the group stage is over and knockout coverage is
-        // pending the odds remap; otherwise no odds are ingested yet.
+        // cp-29 / cp-30: the settled-match filter emptied the feed. Knockout
+        // coverage is live, so the note (status-driven, mirroring /terminal)
+        // explains the legitimate empty reason: few fixtures remain between
+        // rounds, or the freshness guard marked the odds stale.
         <p
           style={{
             fontSize: 13,
@@ -346,9 +347,7 @@ function DivergenceCard({
             margin: "18px 0 0",
           }}
         >
-          {hadRows
-            ? DIVERGENCE_KNOCKOUT_PENDING_NOTE
-            : "No divergence rows available in this snapshot."}
+          {emptyNote}
         </p>
       ) : (
       <table

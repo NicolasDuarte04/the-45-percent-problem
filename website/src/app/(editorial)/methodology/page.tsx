@@ -82,9 +82,11 @@ export default async function MethodologyEntryPage({
           pre-registered market layer de-vigs bookmaker odds via the power
           method, flags edges above a 3% mainline threshold (5% for
           derivatives), and suppresses them when the volatility gate triggers.
-          This layer covered the group-stage fixtures; knockout fixtures are
-          not yet covered because the odds feed has not been remapped to the
-          resolved knockout pairings.
+          The layer covers knockout fixtures live: model probabilities
+          conditioned on settled results are compared against de-vigged market
+          odds, ungraded. Only the 72 pre-registered group-stage forecasts are
+          ever graded. When the odds are older than 30 hours the layer reports
+          itself stale rather than showing stale rows.
           The full specification: every parameter, every calibration step,
           every kill criterion: lives in the vault.
         </p>
