@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  COUNTRY_NAMES_ES,
   TOURNAMENT_START,
   dayNumber,
   favorite,
-  formatSpanishDate,
+  formatCardDate,
   matchesForCard,
   previewNote,
   previewScorelines,
@@ -14,7 +13,6 @@ import {
   selectPreviewDay,
   selectRecapDay,
   shootoutNote,
-  spanishName,
 } from "@/lib/data/dailyShareCard";
 import type { LiveKnockoutMatch, MatchDetail } from "@/lib/data/schemas";
 
@@ -55,22 +53,9 @@ describe("dayNumber", () => {
   });
 });
 
-describe("spanishName", () => {
-  it("returns the Spanish name for a known FIFA code", () => {
-    expect(spanishName("MEX", "Mexico")).toBe("México");
-    expect(spanishName("usa", "United States")).toBe("Estados Unidos");
-  });
-  it("falls back to the published name for an unknown code", () => {
-    expect(spanishName("ZZZ", "Atlantis")).toBe("Atlantis");
-  });
-  it("covers all 48 qualifiers", () => {
-    expect(Object.keys(COUNTRY_NAMES_ES)).toHaveLength(48);
-  });
-});
-
-describe("formatSpanishDate", () => {
-  it("formats a day key in long Spanish form", () => {
-    expect(formatSpanishDate("2026-06-18")).toBe("18 de junio de 2026");
+describe("formatCardDate", () => {
+  it("formats a day key in long English form", () => {
+    expect(formatCardDate("2026-06-18")).toBe("June 18, 2026");
   });
 });
 
@@ -218,17 +203,17 @@ describe("pct", () => {
 describe("recapNote", () => {
   it("credits the probability on a home win", () => {
     const note = recapNote(makeMatch({ score: { home: 2, away: 0 }, outcome_realized: "H" }));
-    expect(note).toBe("el modelo le dio 73% a la victoria de México");
+    expect(note).toBe("the model gave Mexico 73% to win");
   });
   it("credits the away side on an away win", () => {
     const note = recapNote(
       makeMatch({ score: { home: 0, away: 1 }, outcome_realized: "A" }),
     );
-    expect(note).toBe("el modelo le dio 11% a la victoria de Sudáfrica");
+    expect(note).toBe("the model gave South Africa 11% to win");
   });
   it("credits the draw on a draw", () => {
     const note = recapNote(makeMatch({ score: { home: 1, away: 1 }, outcome_realized: "D" }));
-    expect(note).toBe("el modelo le dio 16% al empate");
+    expect(note).toBe("the model gave the draw 16%");
   });
   it("is null when there is no result", () => {
     expect(recapNote(makeMatch())).toBeNull();
@@ -253,13 +238,13 @@ describe("shootoutNote (cp-29)", () => {
 
   it("names the away winner and shows the tally winner-first", () => {
     expect(shootoutNote(knockoutCard({ winner: "A", home: 3, away: 4 }))).toBe(
-      "penales: PAR ganó 4-3",
+      "penalties: PAR won 4-3",
     );
   });
 
   it("names the home winner", () => {
     expect(shootoutNote(knockoutCard({ winner: "H", home: 5, away: 4 }))).toBe(
-      "penales: GER ganó 5-4",
+      "penalties: GER won 5-4",
     );
   });
 
@@ -280,17 +265,17 @@ describe("previewNote", () => {
       makeMatch({ p_model_goals: [[0.1, 0.05], [0.4, 0.1]] }),
     );
     // argmax of the grid is [1][0] -> 1-0; favourite is the home side at 73%.
-    expect(note).toBe("favorito: México con 73% · marcador modal 1-0");
+    expect(note).toBe("favorite: Mexico at 73% · modal scoreline 1-0");
   });
   it("reports a draw when the draw is the top outcome", () => {
     const note = previewNote(
       makeMatch({ p_model_1x2: { H: 0.25, D: 0.5, A: 0.25 }, p_model_goals: [] }),
     );
-    expect(note).toBe("el modelo ve un empate (50%)");
+    expect(note).toBe("the model sees a draw (50%)");
   });
   it("omits the modal clause when the goal grid is empty", () => {
     const note = previewNote(makeMatch({ p_model_goals: [] }));
-    expect(note).toBe("favorito: México con 73%");
+    expect(note).toBe("favorite: Mexico at 73%");
   });
 });
 
@@ -356,7 +341,6 @@ describe("no em/en dashes in generated copy", () => {
       recapNote(m),
       previewNote(m),
       ...scorelineStrings,
-      ...Object.values(COUNTRY_NAMES_ES),
     ];
     for (const s of strings) {
       expect(s == null || (!s.includes(enDash) && !s.includes(emDash))).toBe(true);

@@ -152,7 +152,7 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
         role="table"
         data-guide-id="bracket-matrix"
         aria-label="Bracket board: per-round marginal probabilities"
-        className="brk-grid grid no-scrollbar"
+        className="brk-grid grid no-scrollbar scroll-fade-x"
         style={{
           gridTemplateColumns: `minmax(180px, 1.4fr) repeat(${ROUNDS.length}, minmax(92px, 1fr))`,
           gap: 1,
@@ -276,6 +276,18 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
             );
           })}
       </div>
+
+      {/* cp-40: mobile swipe cue. The matrix is far wider than a phone (a team
+          column plus one column per round), and its scrollbar is hidden, so
+          without a hint the later rounds read as absent. Shown only on mobile;
+          the md+ layout fits the columns without scrolling. */}
+      <p
+        className="md:hidden mt-2 mono text-[10px] uppercase tracking-[.08em]"
+        style={{ color: "var(--text-quiet)" }}
+        aria-hidden="true"
+      >
+        Swipe to see later rounds &rarr;
+      </p>
 
       {/* Legend · sequential ramp strip (sourced from probabilityRamp.ts) */}
       <div className="mt-4 flex items-center justify-between flex-wrap gap-3">

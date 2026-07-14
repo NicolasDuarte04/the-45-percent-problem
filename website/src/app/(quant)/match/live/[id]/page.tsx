@@ -15,6 +15,7 @@ import { Flag } from "@/components/primitives/Flag";
 import { MatchHeader } from "@/components/compositions/MatchHeader";
 import { GoalMatrixHeatmap } from "@/components/compositions/GoalMatrixHeatmap";
 import { StrengthInputsPanel } from "@/components/compositions/StrengthInputsPanel";
+import { LiveKnockoutStatusLine } from "@/components/compositions/LiveKnockoutStatusLine";
 import { ProvenanceBlock } from "@/components/layout/ProvenanceBlock";
 import type { LiveKnockoutMatch } from "@/lib/data/schemas";
 
@@ -233,14 +234,9 @@ export default async function LiveKnockoutDetailPage({
                 </span>
               ) : null}
             </p>
-          ) : modal ? (
-            <p
-              className="text-[12px] mt-1 mono"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              modal scoreline {modal.home}-{modal.away}
-            </p>
-          ) : null}
+          ) : (
+            <LiveKnockoutStatusLine kickoffUtc={card.kickoff_utc} modal={modal} />
+          )}
         </div>
       </div>
 

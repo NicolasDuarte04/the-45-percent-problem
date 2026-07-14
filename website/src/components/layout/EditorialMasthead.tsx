@@ -341,7 +341,7 @@ export function EditorialMasthead({
           // right. The order-2 class keeps the source-order layout
           // correct on md+ where the brief link is order-3 and the CTA
           // is order-4.
-          className="flex min-w-0 md:min-w-fit flex-1 items-baseline gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar whitespace-nowrap md:order-2"
+          className="flex min-w-0 md:min-w-fit flex-1 items-baseline gap-4 md:gap-6 overflow-x-auto md:overflow-visible no-scrollbar scroll-fade-x whitespace-nowrap md:order-2"
           aria-label="Primary"
         >
           {/* Mobile-only "Open terminal" entry. The desktop CTA lives in

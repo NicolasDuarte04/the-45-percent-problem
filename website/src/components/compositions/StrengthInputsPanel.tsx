@@ -34,6 +34,21 @@ interface CardSpec {
   formula?: string;
 }
 
+/**
+ * Weighted-form and FIFA-rank inputs are not populated for every fixture; the
+ * producer emits a literal 0 as the absent sentinel rather than a real value.
+ * Rendering that 0 as "0.00" / "0" reads as a genuine measurement, so treat 0 as
+ * missing and show "n/a". A FIFA rank of 0 is structurally impossible (ranks
+ * start at 1), and a weighted-form score is never exactly 0 once computed, so
+ * this never masks a real value. Elo, which IS always populated, is unaffected.
+ */
+function formValue(v: number): string {
+  return v === 0 ? "n/a" : v.toFixed(2);
+}
+function rankValue(v: number): string {
+  return v === 0 ? "n/a" : String(v);
+}
+
 export function StrengthInputsPanel({ match }: StrengthInputsPanelProps) {
   const s = match.strength_inputs;
   const l = match.lambda;
@@ -88,19 +103,19 @@ export function StrengthInputsPanel({ match }: StrengthInputsPanelProps) {
     {
       key: "form_home",
       label: `form · ${home}`,
-      value: s.form_home.toFixed(2),
+      value: formValue(s.form_home),
       sub: "weighted recent",
     },
     {
       key: "form_away",
       label: `form · ${away}`,
-      value: s.form_away.toFixed(2),
+      value: formValue(s.form_away),
       sub: "weighted recent",
     },
     {
       key: "fifa_rank",
       label: "FIFA rank",
-      value: `${s.fifa_rank_home} · ${s.fifa_rank_away}`,
+      value: `${rankValue(s.fifa_rank_home)} · ${rankValue(s.fifa_rank_away)}`,
       sub: `${home} · ${away}`,
     },
   ];

@@ -88,13 +88,18 @@ export function SiteFooter() {
           >
             Provenance
           </div>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 mono">
+          {/* cp-40: the value column is minmax(0,1fr), not 1fr, and the cells
+              break long tokens, so the unbreakable full-length data_sha
+              (sha256:...) can no longer set a min-content wider than the phone
+              viewport and push the footer ~19px past the right edge (the faint
+              dark-page edge sliver). */}
+          <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 mono">
             <dt style={{ color: "var(--text-quiet)" }}>snapshot</dt>
-            <dd style={{ color: "var(--text-secondary)" }}>{meta.snapshot_id}</dd>
+            <dd className="break-all" style={{ color: "var(--text-secondary)" }}>{meta.snapshot_id}</dd>
             <dt style={{ color: "var(--text-quiet)" }}>code</dt>
-            <dd style={{ color: "var(--text-secondary)" }}>{meta.code_sha}</dd>
+            <dd className="break-all" style={{ color: "var(--text-secondary)" }}>{meta.code_sha}</dd>
             <dt style={{ color: "var(--text-quiet)" }}>data</dt>
-            <dd style={{ color: "var(--text-secondary)" }}>{meta.data_sha}</dd>
+            <dd className="break-all" style={{ color: "var(--text-secondary)" }}>{meta.data_sha}</dd>
           </dl>
         </div>
 

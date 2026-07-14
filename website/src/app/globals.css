@@ -1333,6 +1333,30 @@ body[data-has-sticky-meter] {
     height: 0;
   }
 
+  /* cp-40: horizontal-scroll edge cue for hidden-scrollbar strips on mobile.
+     A short mask fade at the trailing (right) edge signals that content
+     continues off-screen when the scrollbar itself is hidden. Applied with
+     .no-scrollbar on the masthead nav strip and the bracket matrix. Desktop
+     (md+) shows the whole strip inline, so the fade is scoped to <768px and
+     never dims content there. The gradient is vertically full-opacity, so it
+     leaves vertically-sticky headers (bracket) untouched. */
+  @media (max-width: 767px) {
+    .scroll-fade-x {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        #000 0,
+        #000 calc(100% - 26px),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to right,
+        #000 0,
+        #000 calc(100% - 26px),
+        transparent 100%
+      );
+    }
+  }
+
   /* Most-likely bracket: interactive states.
      Team rows link to /team/[code]. The row highlights on hover, and the
      enclosing card lifts slightly. */

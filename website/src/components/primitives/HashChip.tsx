@@ -12,7 +12,14 @@ interface HashChipProps {
 
 export function HashChip({ sha, kind, className }: HashChipProps) {
   const [copied, setCopied] = useState(false);
-  const short = sha.slice(0, 7);
+  // Some sources store the hash with a "sha256:" algorithm prefix (data_sha in
+  // snapshot_meta) and some without (code_sha, ledger data_sha). "sha256:" is
+  // exactly 7 chars, so slicing the first 7 off a prefixed value yields a bare
+  // "sha256:" and drops the whole hash. Strip the prefix first so the truncated
+  // chip always shows real hash digits; the full value stays available on tap
+  // (copy) and in the aria-label.
+  const digits = sha.replace(/^sha256:/i, "");
+  const short = digits.slice(0, 7);
   const label = kind === "code_sha" ? "code" : "data";
 
   async function handleCopy() {

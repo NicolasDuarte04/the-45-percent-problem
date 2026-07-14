@@ -9,7 +9,7 @@ import type { MatchDetail, LiveKnockoutMatch } from "@/lib/data/schemas";
 import {
   splitPlayedUpcoming,
   groupByDay,
-  partitionToday,
+  partitionByState,
   filterByTeam,
   audienceDayKeyFromMs,
   modalScoreline,
@@ -315,8 +315,7 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
  * Download affordance for the daily Instagram share card. Each link hits the
  * /api/og/daily route, which renders a branded 1080x1350 PNG from the live
  * snapshot (recap = the latest played day, preview = the next day to be
- * played). The PNG content is Colombian Spanish; this operator-facing control
- * matches the rest of the English page chrome.
+ * played). The PNG content is English, matching the rest of the page chrome.
  */
 function ShareCard() {
   const linkStyle = {
@@ -335,7 +334,7 @@ function ShareCard() {
       <div className="flex gap-2 flex-wrap">
         <a
           href="/api/og/daily?variant=recap"
-          download="45analytics-dia-recap.png"
+          download="45analytics-day-recap.png"
           className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
           style={linkStyle}
         >
@@ -344,7 +343,7 @@ function ShareCard() {
         </a>
         <a
           href="/api/og/daily?variant=preview"
-          download="45analytics-dia-preview.png"
+          download="45analytics-day-preview.png"
           className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
           style={linkStyle}
         >
@@ -405,11 +404,18 @@ export function MatchesBrowser({
   );
 
   const todayKey = now != null ? audienceDayKeyFromMs(now) : null;
-  const { today, rest } = useMemo(() => {
-    if (todayKey == null) return { today: [] as MatchListItem[], rest: upcoming };
-    return partitionToday(upcoming, todayKey);
-  }, [upcoming, todayKey]);
+  const { awaiting, today, rest } = useMemo(() => {
+    // Pre-hydration (now == null) the page keeps its prerendered shape: no
+    // clock, so nothing is split off as Today or Awaiting and every unplayed
+    // fixture sits under Upcoming. The effect sets `now` after mount, which
+    // then lifts today's and past-kickoff fixtures into their honest sections.
+    if (todayKey == null || now == null) {
+      return { awaiting: [] as MatchListItem[], today: [] as MatchListItem[], rest: upcoming };
+    }
+    return partitionByState(upcoming, todayKey, now);
+  }, [upcoming, todayKey, now]);
 
+  const awaitingGroups = useMemo(() => groupByDay(awaiting), [awaiting]);
   const todayGroups = useMemo(() => groupByDay(today), [today]);
   const upcomingGroups = useMemo(() => groupByDay(rest), [rest]);
   const playedGroups = useMemo(() => groupByDay(played), [played]);
@@ -469,6 +475,18 @@ export function MatchesBrowser({
         </p>
       ) : (
         <>
+          {/* ── Awaiting result ───────────────────────────────────────────── */}
+          {/* Past-kickoff fixtures whose score has not been ingested yet. They
+              have started (or finished) but are not settled, so they read as
+              "awaiting result" rather than sitting under Upcoming as if still
+              to come. */}
+          {awaiting.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <SectionHeader title="Awaiting result" count={awaiting.length} />
+              <DayGroups groups={awaitingGroups} />
+            </section>
+          )}
+
           {/* ── Today ─────────────────────────────────────────────────────── */}
           {today.length > 0 && (
             <section className="flex flex-col gap-4">

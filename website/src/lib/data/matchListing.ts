@@ -262,22 +262,46 @@ export function audienceDayKeyFromMs(ms: number): string {
 }
 
 /**
- * Split an upcoming (unplayed) list into the fixtures kicking off on
- * `todayKey` and everything else, preserving the input order. `today` is the
- * set whose audience-local kickoff day equals todayKey; `rest` is the
- * remainder (future days, plus any earlier-dated fixture not yet settled).
- * Pass the already-sorted upcoming list so both partitions stay chronological.
+ * Split an upcoming (unplayed, score-less) list into three honest states
+ * relative to the client clock `nowMs`, preserving input order within each
+ * bucket. Pass the already-sorted upcoming list so every bucket stays
+ * chronological.
+ *
+ *   - `awaiting`: kickoff is at or before now but no score has been joined yet.
+ *     The match has kicked off (it may be in progress, or finished with the
+ *     result not yet ingested), so it is honestly "awaiting result" and must
+ *     never be shown as a future fixture. This is the round-boundary fix: a
+ *     past-kickoff, not-yet-settled match previously fell into `rest` and read
+ *     as Upcoming.
+ *   - `today`:    kickoff is still in the FUTURE and on the audience-local
+ *     `todayKey`. A fixture that already kicked off today is `awaiting`, not
+ *     here.
+ *   - `rest`:     every other still-future fixture (later days).
+ *
+ * Grouping (played vs upcoming) is unchanged and still keyed on score presence;
+ * this only refines how the score-less `upcoming` set is presented. An
+ * unparseable kickoff can never be "awaiting" (no known start), so it falls
+ * through to today/rest by its day key.
  */
-export function partitionToday<T extends MatchDetail>(
+export function partitionByState<T extends MatchDetail>(
   upcoming: T[],
   todayKey: string,
-): { today: T[]; rest: T[] } {
+  nowMs: number,
+): { awaiting: T[]; today: T[]; rest: T[] } {
+  const awaiting: T[] = [];
   const today: T[] = [];
   const rest: T[] = [];
   for (const m of upcoming) {
-    (dayKey(m.kickoff_utc) === todayKey ? today : rest).push(m);
+    const ko = Date.parse(m.kickoff_utc);
+    if (!Number.isNaN(ko) && ko <= nowMs) {
+      awaiting.push(m);
+    } else if (dayKey(m.kickoff_utc) === todayKey) {
+      today.push(m);
+    } else {
+      rest.push(m);
+    }
   }
-  return { today, rest };
+  return { awaiting, today, rest };
 }
 
 /**
