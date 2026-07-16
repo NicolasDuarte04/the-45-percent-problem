@@ -1,0 +1,27 @@
+\begin{table*}[ht]
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lS[table-format=1.4]S[table-format=1.4]S[table-format=1.4]S[table-format=2.4]rS[table-format=2.4]rrS[table-format=1.4]S[table-format=1.4]S[table-format=2.4]l}
+\toprule
+\multirow{2}{*}{Model} &
+\multicolumn{3}{c}{Accuracy} &
+\multicolumn{2}{c}{DM vs $M_0$} &
+\multicolumn{2}{c}{Nyberg} &
+\multicolumn{5}{c}{Trading (CLV)} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-13}
+ & {\footnotesize$\overline{\text{BS}}$} & {\footnotesize$\overline{\text{RPS}}$} & {\footnotesize$\overline{\text{LL}}$} &
+   {\footnotesize DM$^*$} & Rej. &
+   {\footnotesize LR} & Rej. &
+   $N_{\text{bets}}$ & $\overline{\text{CLV}}$ & $\widehat{SR}$ & HM 95\% LB & Decision \\
+\midrule
+$M_0$ (Elo baseline) & 0.5543 & 0.1703 & 0.9442 & --- & --- & --- & --- & --- & --- & --- & --- & --- \\
+$M_1$ (Elo + Form) & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- \\
+$M_2$ (Elo + FIFA) & 0.5274 & 0.1596 & 0.8993 & -1.1073 & $\times$ & --- & --- & --- & --- & --- & --- & --- \\
+$M_3$ (Macro-prior) & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- \\
+\rowcolor{yellow!25}
+$M^\star$ (Champion) & 0.5274 & 0.1596 & 0.8993 & -1.1073 & $\times$ & --- & --- & --- & --- & --- & --- & --- \\
+Market (de-vigged) & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\label{tab:ablation}
+\end{table*}

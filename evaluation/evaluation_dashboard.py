@@ -100,6 +100,28 @@ def _fmt(x: float) -> str:
     return f"{x:.{_DP}f}"
 
 
+def _latex_escape(s: str) -> str:
+    """Escape the LaTeX-special characters that can appear in prose disclosures
+    (underscore, percent, ampersand, hash, dollar, braces, tilde, caret). Kept
+    small: the disclosure strings are plain ASCII sentences."""
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    out = []
+    for ch in s:
+        out.append(replacements.get(ch, ch))
+    return "".join(out)
+
+
 # ---------------------------------------------------------------------------
 # JSON builder
 # ---------------------------------------------------------------------------
@@ -147,6 +169,7 @@ def _build_json(
     constants_sha: str,
     tournament: str = "FIFA2026",
     generated_at_utc: Optional[str] = None,
+    meta: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     models_block: dict[str, Any] = {}
 
@@ -226,7 +249,7 @@ def _build_json(
     ts = generated_at_utc or (
         datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:23] + "Z"
     )
-    return {
+    payload = {
         "schema_version": "7.0",
         "generated_at_utc": ts,
         "tournament": tournament,
@@ -235,6 +258,14 @@ def _build_json(
         "kill_criterion_detail": metrics.kill_criterion_detail,
         "models": models_block,
     }
+    # Optional additive block. When present, it carries report-level provenance
+    # and honesty disclosures (timing, null-cell inventory, cross-check). It is
+    # an extra top-level key the ablation_v7 schema tolerates (no
+    # additionalProperties restriction); absent by default, so existing callers
+    # are byte-identical.
+    if meta is not None:
+        payload["meta"] = meta
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -353,6 +384,15 @@ def _build_latex(ablation: dict[str, Any]) -> tuple[str, str]:
         "\n}"
     )
 
+    # When a report-level meta block is present (cp-36), append its timing
+    # disclosure and gaps note to the caption so the paper fragment carries the
+    # same honesty statements the JSON meta does. LaTeX-escape the prose.
+    meta = ablation.get("meta") or {}
+    disclosures = [meta.get("timing_disclosure"), meta.get("gaps_note")]
+    disclosure_text = " ".join(_latex_escape(d) for d in disclosures if d)
+    if disclosure_text:
+        caption = caption[: -len("\n}")] + "\n  " + disclosure_text + "\n}"
+
     return tex, caption
 
 
@@ -369,6 +409,7 @@ def compile_ablation(
     tournament: str = "FIFA2026",
     expected_constants_sha: Optional[str] = None,
     generated_at_utc: Optional[str] = None,
+    meta: Optional[dict[str, Any]] = None,
 ) -> None:
     """
     Compile ablation.json and ablation.tex from pre-computed results.
@@ -400,6 +441,7 @@ def compile_ablation(
         constants_sha=constants_sha,
         tournament=tournament,
         generated_at_utc=generated_at_utc,
+        meta=meta,
     )
 
     tex_body, tex_caption = _build_latex(ablation)

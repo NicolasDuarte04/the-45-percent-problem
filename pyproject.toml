@@ -61,6 +61,12 @@ dev = [
     # fresh `pip install -e ".[dev]"`), so pytest collection failed in CI. The
     # cp-10.2 gate surfaced it; declaring it here keeps the suite runnable.
     "hypothesis>=6.0",
+    # cp-36: tests/test_ablation_report.py validates ablation.json against
+    # schema/ablation_v7.json (the schema's first consumer). jsonschema was an
+    # undeclared test dependency (present in local venvs, absent on a fresh
+    # `pip install -e ".[dev]"`), so CI failed at collection. The validation
+    # must actually run in CI, so it is declared here rather than skipped.
+    "jsonschema>=4.0",
     "black>=24.0",
     "ruff>=0.3",
     "mypy>=1.8",
