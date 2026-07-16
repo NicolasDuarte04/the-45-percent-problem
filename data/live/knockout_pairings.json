@@ -1,10 +1,10 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-16T01:22:47Z"
+    "fetched_at_utc": "2026-07-16T21:20:23Z"
   },
   "competition": "WC2026",
-  "count": 30,
+  "count": 32,
   "pairings": [
     {
       "match_id": "KO-FD537417",
@@ -450,6 +450,36 @@
       "home": {
         "fifa_code": "ENG",
         "source_name": "England"
+      },
+      "away": {
+        "fifa_code": "ARG",
+        "source_name": "Argentina"
+      }
+    },
+    {
+      "match_id": "KO-FD537389",
+      "source_id": 537389,
+      "round": "3P",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-18T21:00:00Z",
+      "home": {
+        "fifa_code": "FRA",
+        "source_name": "France"
+      },
+      "away": {
+        "fifa_code": "ENG",
+        "source_name": "England"
+      }
+    },
+    {
+      "match_id": "KO-FD537390",
+      "source_id": 537390,
+      "round": "FIN",
+      "status": "TIMED",
+      "kickoff_utc": "2026-07-19T19:00:00Z",
+      "home": {
+        "fifa_code": "ESP",
+        "source_name": "Spain"
       },
       "away": {
         "fifa_code": "ARG",
