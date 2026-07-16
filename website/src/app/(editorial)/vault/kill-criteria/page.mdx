@@ -259,7 +259,7 @@ make from its outputs have changed.
 
 **What did not change:**
 
-1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. Forecasts for all five model variants (M0, M1, M2, M3, M★) are logged with their respective probabilities, divergences, and gate decisions in `forecast_log.jsonl` and `gate_log.jsonl`.
+1. The engine continues to run on its 60-second tick during live tournament hours and 5-minute tick off-hours. The forecast-log API exists, and the frozen champion batch pins the M0 and M2 (M★) per-match distributions the published surfaces score against; per-match logs for the M1 and M3 shadow variants were not committed.
 2. The de-vigging machinery, divergence calculation, and [Volatility Gate](/vault/volatility-gate) all remain active. They continue to produce flagged divergences and gate decisions against M★'s (M2_fifa) probabilities.
 3. CLV continues to be tracked on the M★ row, measuring whether M2's probabilities lead the market over time. The same metric runs against the four shadow models as pseudo-CLV (see [Evaluation](/vault/evaluation)).
 4. The R16 live checkpoint was evaluated on 2026-07-07 when the Round of 16 settled, on a live M2-versus-M0 comparison; it did not fire, with M2 1.47 SE better than M0 on the 72 pre-registered forecasts.

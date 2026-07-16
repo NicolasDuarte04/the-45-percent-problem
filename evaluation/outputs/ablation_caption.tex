@@ -1,0 +1,11 @@
+\caption{
+  Ablation results for M0--M3 and Champion $M^\star$ on the 2026 FIFA World Cup. 
+  Accuracy metrics (Brier, RPS, log-loss) computed on all tournament matches with realized outcomes. 
+  DM$^*$ = Harvey-Leybourne-Newbold corrected Diebold-Mariano statistic (Brier loss, two-sided $\alpha=0.05$). 
+  Nyberg LR = likelihood-ratio test of market efficiency at $\alpha=0.05$ ($\chi^2_2$). 
+  CLV computed on M$^\star$ bets; pseudo-CLV for shadow models. 
+  HM 95\% LB = lower bound of Hall-Mueller bootstrap Sharpe 95\% CI. 
+  Pre-registration constants SHA (first 16 chars): \texttt{691993cce8194898}.
+  Generated: \texttt{2026-07-16T00:00:00.000Z}.
+  The kill-criterion checkpoint was published within the 72-hour window on 2026-07-07; this full templated report reuses that same frozen re-scoring, adds no new forecasts, and was compiled after that window, dated accordingly. This report scores the 72 pre-registered group-stage forecasts from the frozen champion batch, re-scored against the realized group results with the same per-match regulation-outcome construction the R16 kill-criterion checkpoint uses. It populates M0 and the champion M2 (= M\_STAR) accuracy with 95 percent seeded bootstrap confidence intervals and the HLN-corrected Diebold-Mariano comparison of M2 and M\_STAR against M0. Every other cell is null, and null means null: M1 and M3 have no committed per-match forecasts, so their accuracy is null; there are no committed market lines, so the de-vigged market row, the DM-vs-market column, and the Nyberg market-efficiency test are all null; every trading and CLV column is null because no bet ledger was committed; and the knockout stages are structurally absent because the frozen batch carries no per-match knockout forecasts (knockout slots hold different teams on every Monte Carlo run), so by\_stage carries only the single group row (n = 72). No shadow model, market estimate, or knockout score was invented to fill a column.
+}

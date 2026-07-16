@@ -1457,6 +1457,25 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001 - defensive; never break the nightly
         print(f"    [cp-25b] checkpoint skipped (non-fatal): {exc}")
 
+    # cp-36: the templated R16 ablation report. Given the same regen treatment as
+    # the r16_checkpoint above: publish_ablation writes ablation.json into new_dir
+    # BEFORE the copytree into latest/, so the committed published surface rides
+    # into latest/ for free instead of being wiped by the nightly rmtree. The
+    # content is frozen (it scores the fixed 72 group outcomes), so the steady
+    # state is a byte-identical carry-forward of the committed file; the compute
+    # branch is a first-publish fallback only. Never breaks the nightly.
+    from evaluation.ablation_report import publish_ablation
+
+    try:
+        publish_ablation(
+            new_dir=new_dir,
+            latest_dir=LATEST_DIR,
+            generated_at_utc=new_generated_at,
+            matches_dir=matches_src,
+        )
+    except Exception as exc:  # noqa: BLE001 - defensive; never break the nightly
+        print(f"    [cp-36] ablation report skipped (non-fatal): {exc}")
+
     # cp-30: emit the live knockout cards BEFORE the divergence block so the
     # knockout divergence can read this run's own conditioned per-match 1X2
     # (p_model_1x2) as its model source. The cards are written into new_dir (they

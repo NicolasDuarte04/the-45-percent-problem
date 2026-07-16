@@ -167,7 +167,8 @@ export function R16CheckpointStatusBlock() {
         >
           M2 (M&#8902;) was not worse than M0 by 2 or more standard errors; the
           kill criterion did not fire. The full evaluation is published as
-          promised.
+          promised, as the templated ablation report at{" "}
+          <a href="/data/latest/ablation.json">/data/latest/ablation.json</a>.
         </p>
       )}
 
