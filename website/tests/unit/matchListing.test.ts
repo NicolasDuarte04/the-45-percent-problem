@@ -12,8 +12,9 @@ import {
   audienceDayKeyFromMs,
   partitionByState,
   filterByTeam,
+  buildTeamUpcoming,
 } from "@/lib/data/matchListing";
-import type { MatchDetail } from "@/lib/data/schemas";
+import type { MatchDetail, LiveKnockoutMatch } from "@/lib/data/schemas";
 
 // Minimal MatchDetail builder. The listing helpers only read a handful of
 // fields (kickoff_utc, match_id, score, p_model_goals), so the rest are
@@ -310,5 +311,123 @@ describe("filterByTeam", () => {
 
   it("returns nothing when no side matches", () => {
     expect(filterByTeam([mex, eng], "brazil")).toEqual([]);
+  });
+});
+
+// cp-41: a live knockout card builder. buildTeamUpcoming reads home/away
+// fifa_code + display_name, kickoff_utc, match_id, score, and the
+// live_provenance discriminator, so the rest are schema-valid placeholders.
+function makeKnockout(
+  overrides: Partial<LiveKnockoutMatch> = {},
+): LiveKnockoutMatch {
+  return {
+    match_id: "KO-FD537390",
+    round: "FIN",
+    kickoff_utc: "2026-07-19T19:00:00Z",
+    home: { fifa_code: "ESP", display_name: "Spain" },
+    away: { fifa_code: "ARG", display_name: "Argentina" },
+    p_model_1x2: { H: 0.5, D: 0.2, A: 0.3 },
+    p_model_goals: [],
+    lambda: { home: 1.4, away: 1.2, rho: -0.05 },
+    shootout_applicable: true,
+    p_shootout_home_if_ko: 0.5,
+    market_divergence: [],
+    strength_inputs: {
+      elo_home: 2165,
+      elo_away: 2100,
+      form_home: 0,
+      form_away: 0,
+      fifa_rank_home: 1,
+      fifa_rank_away: 2,
+    },
+    forecast_ids: [],
+    p_advance_home: 0.5,
+    p_advance_away: 0.5,
+    live_provenance: {
+      source_batch_id: "batch_test",
+      schedule_feed: { source: "test", fetched_at_utc: "2026-07-17T00:00:00Z" },
+      graded: false,
+      n_sims: 20000,
+      generated_at_utc: "2026-07-17T00:00:00Z",
+    },
+    ...overrides,
+  };
+}
+
+describe("buildTeamUpcoming", () => {
+  const groupUpcoming = [
+    {
+      match_id: "M15",
+      kickoff_utc: "2026-06-15T16:00:00+00:00",
+      opponent: "Cabo Verde",
+      is_home: true,
+    },
+  ];
+
+  it("drops a settled group fixture and folds in a live knockout tie (finalist)", () => {
+    const final = makeKnockout(); // ESP vs ARG, score null
+    const out = buildTeamUpcoming(
+      "ESP",
+      groupUpcoming,
+      new Set(["M15"]), // M15 has a joined score -> settled
+      [final],
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({
+      match_id: "KO-FD537390",
+      opponent: "Argentina",
+      is_home: true,
+      is_live_knockout: true,
+    });
+  });
+
+  it("resolves the opponent from the away side when the team is home, and vice versa", () => {
+    const final = makeKnockout();
+    const espSide = buildTeamUpcoming("ESP", [], new Set(), [final]);
+    expect(espSide[0]).toMatchObject({ opponent: "Argentina", is_home: true });
+    const argSide = buildTeamUpcoming("ARG", [], new Set(), [final]);
+    expect(argSide[0]).toMatchObject({ opponent: "Spain", is_home: false });
+  });
+
+  it("excludes a knockout that has already been played (score present)", () => {
+    const settledKo = makeKnockout({
+      match_id: "KO-FD537388",
+      round: "SF",
+      score: { home: 1, away: 2 },
+    });
+    const out = buildTeamUpcoming("ESP", [], new Set(), [settledKo]);
+    expect(out).toEqual([]);
+  });
+
+  it("excludes knockouts the team is not in", () => {
+    const otherTie = makeKnockout({
+      match_id: "KO-FD537389",
+      round: "3P",
+      home: { fifa_code: "FRA", display_name: "France" },
+      away: { fifa_code: "ENG", display_name: "England" },
+    });
+    expect(buildTeamUpcoming("ESP", [], new Set(), [otherTie])).toEqual([]);
+    const fra = buildTeamUpcoming("FRA", [], new Set(), [otherTie]);
+    expect(fra[0]).toMatchObject({ opponent: "England", is_home: true });
+  });
+
+  it("keeps an unplayed group fixture and sorts merged rows by kickoff", () => {
+    const unplayedGroup = [
+      {
+        match_id: "M40",
+        kickoff_utc: "2026-06-24T16:00:00+00:00",
+        opponent: "Japan",
+        is_home: false,
+      },
+    ];
+    const final = makeKnockout(); // 2026-07-19, later
+    const out = buildTeamUpcoming("ESP", unplayedGroup, new Set(), [final]);
+    expect(out.map((m) => m.match_id)).toEqual(["M40", "KO-FD537390"]);
+    expect(out[0].is_live_knockout).toBe(false);
+  });
+
+  it("returns an empty list for an eliminated team with only settled group fixtures", () => {
+    const out = buildTeamUpcoming("MEX", groupUpcoming, new Set(["M15"]), []);
+    expect(out).toEqual([]);
   });
 });

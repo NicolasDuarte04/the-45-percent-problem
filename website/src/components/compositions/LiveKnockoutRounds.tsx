@@ -28,7 +28,7 @@ const ROUND_LABEL: Record<string, string> = {
 };
 
 function pct(p: number | undefined): string {
-  if (p == null || Number.isNaN(p)) return "—";
+  if (p == null || Number.isNaN(p)) return "-";
   return `${Math.round(p * 100)}%`;
 }
 
@@ -71,7 +71,7 @@ function Side({
             fontWeight: isWinner ? 600 : 400,
           }}
         >
-          {goals ?? "—"}
+          {goals ?? "-"}
         </span>
       ) : (
         <span
@@ -102,7 +102,7 @@ function MatchCard({ m }: { m: LiveKnockoutMatch }) {
       (m.outcome_realized === "D" && m.shootout?.winner === "A"));
   const pens =
     settled && m.outcome_realized === "D" && m.shootout
-      ? `pens ${m.shootout.home ?? "?"}–${m.shootout.away ?? "?"}`
+      ? `pens ${m.shootout.home ?? "?"}-${m.shootout.away ?? "?"}`
       : null;
 
   return (

@@ -180,7 +180,7 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
                 className="mono text-[18px] font-medium leading-none"
                 style={{ color: "var(--text-primary)" }}
               >
-                {match.score.home}&thinsp;&ndash;&thinsp;{match.score.away}
+                {match.score.home}&thinsp;-&thinsp;{match.score.away}
               </span>
               <span
                 className="mono text-[9px] uppercase tracking-[.08em] mt-1"
@@ -203,7 +203,7 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
                 className="mono text-[9px] uppercase tracking-[.08em] mb-1"
                 style={{ color: "var(--text-quiet)" }}
               >
-                {modal ? `modal ${modal.home}–${modal.away}` : "1X2"}
+                {modal ? `modal ${modal.home}-${modal.away}` : "1X2"}
               </span>
               <div className="w-full">
                 <ProbabilityBar
@@ -234,7 +234,7 @@ function MatchRowBody({ match }: { match: MatchListItem }) {
           className="mono text-[9px] uppercase tracking-[.07em] mt-2 pt-2 border-t"
           style={{ color: "var(--text-quiet)", borderColor: "var(--border-subtle)" }}
         >
-          Live · not graded — only the frozen pre-tournament group forecast is
+          Live · not graded. Only the frozen pre-tournament group forecast is
           scored
         </div>
       )}

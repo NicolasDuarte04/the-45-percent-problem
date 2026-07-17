@@ -95,6 +95,88 @@ export function isPlayed(m: MatchDetail): boolean {
   return m.score != null;
 }
 
+/**
+ * A team-page "upcoming fixture" row. Distinct from the raw team-file entry: it
+ * carries `is_live_knockout` so the page routes graded group cards to
+ * /match/[id] and ungraded live knockout cards to /match/live/[id].
+ */
+export interface TeamUpcomingItem {
+  match_id: string;
+  kickoff_utc: string;
+  opponent: string;
+  is_home: boolean;
+  is_live_knockout: boolean;
+}
+
+/** The raw upcoming shape as it appears in teams/<code>.json. */
+export interface TeamFileUpcoming {
+  match_id: string;
+  kickoff_utc: string;
+  opponent: string;
+  is_home?: boolean;
+}
+
+/**
+ * Build a team's genuinely-upcoming fixture list for the team page (cp-41).
+ *
+ * The frozen teams/<code>.json `upcoming_matches` list drifts from truth in two
+ * ways this repairs at the read layer (the JSON itself is a historical artifact
+ * and is not rewritten):
+ *
+ *  (a) A group fixture that has since been PLAYED is not upcoming. Any entry
+ *      whose match_id is in `settledMatchIds` (a match with a joined score) is
+ *      dropped, regardless of any missing flag on the team file. This is the
+ *      same "played once a score is joined" test /matches uses (`isPlayed`).
+ *  (b) Live knockout fixtures the team reached are absent from the frozen team
+ *      file entirely. They are resolved here from the same `matches_live/`
+ *      pairing data the /matches page reads (`loadLiveKnockouts`), filtered to
+ *      ties involving this team that have not themselves been played.
+ *
+ * De-duplicated by match_id (a knockout wins over a same-id group entry) and
+ * sorted ascending by kickoff, match_id as the stable tiebreak.
+ */
+export function buildTeamUpcoming(
+  fifaCode: string,
+  groupUpcoming: TeamFileUpcoming[],
+  settledMatchIds: ReadonlySet<string>,
+  liveKnockouts: LiveKnockoutMatch[],
+): TeamUpcomingItem[] {
+  const items = new Map<string, TeamUpcomingItem>();
+
+  for (const m of groupUpcoming) {
+    if (settledMatchIds.has(m.match_id)) continue;
+    items.set(m.match_id, {
+      match_id: m.match_id,
+      kickoff_utc: m.kickoff_utc,
+      opponent: m.opponent,
+      is_home: m.is_home ?? true,
+      is_live_knockout: false,
+    });
+  }
+
+  for (const k of liveKnockouts) {
+    const isHome = k.home.fifa_code === fifaCode;
+    const isAway = k.away.fifa_code === fifaCode;
+    if (!isHome && !isAway) continue;
+    // A settled knockout is not upcoming either.
+    if (isPlayed(k)) continue;
+    items.set(k.match_id, {
+      match_id: k.match_id,
+      kickoff_utc: k.kickoff_utc,
+      opponent: isHome ? k.away.display_name : k.home.display_name,
+      is_home: isHome,
+      is_live_knockout: true,
+    });
+  }
+
+  return [...items.values()].sort((a, b) => {
+    const ta = Date.parse(a.kickoff_utc);
+    const tb = Date.parse(b.kickoff_utc);
+    if (ta !== tb) return ta - tb;
+    return a.match_id.localeCompare(b.match_id);
+  });
+}
+
 /** Chronological compare on kickoff_utc, with match_id as a stable tiebreak. */
 export function byKickoff(a: MatchDetail, b: MatchDetail): number {
   const ta = Date.parse(a.kickoff_utc);

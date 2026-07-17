@@ -472,7 +472,7 @@ export function GoalMatrixHeatmap({
                       letterSpacing: "-0.01em",
                     }}
                   >
-                    {s.home}−{s.away}
+                    {s.home}-{s.away}
                   </span>
                   <span className="flex-1" />
                   <span
