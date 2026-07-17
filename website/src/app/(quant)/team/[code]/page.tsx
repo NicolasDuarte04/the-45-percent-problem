@@ -2,7 +2,10 @@ import { notFound } from "next/navigation";
 import {
   loadSnapshotMeta,
   loadTeam,
+  loadLiveKnockouts,
+  loadMatchIfPresent,
 } from "@/lib/data/loadSnapshot";
+import { buildTeamUpcoming, isPlayed } from "@/lib/data/matchListing";
 import { getStructuralTeams } from "@/lib/db/structuralData";
 import { loadStructuralMaps, mergeTeamProgression } from "@/lib/db/structuralMerge";
 import { TeamHeader } from "@/components/compositions/TeamHeader";
@@ -64,6 +67,27 @@ export default async function TeamPage({
 
   const meta = loadSnapshotMeta();
 
+  // cp-41: the frozen team file's upcoming list drifts from truth (it can list a
+  // fixture that has since been played, and never carries live knockout ties).
+  // Repair it at the read layer: drop group fixtures with a joined score, and
+  // fold in live knockout ties involving this team from the same matches_live/
+  // pairing data /matches reads. The team JSON is a historical artifact and is
+  // not rewritten.
+  const settledMatchIds = new Set(
+    team.upcoming_matches
+      .filter((m) => {
+        const detail = loadMatchIfPresent(m.match_id);
+        return detail != null && isPlayed(detail);
+      })
+      .map((m) => m.match_id),
+  );
+  const upcoming = buildTeamUpcoming(
+    team.fifa_code,
+    team.upcoming_matches,
+    settledMatchIds,
+    loadLiveKnockouts(),
+  );
+
   return (
     <div
       className="flex flex-col"
@@ -108,7 +132,7 @@ export default async function TeamPage({
         />
 
         <UpcomingMatchesList
-          matches={team.upcoming_matches}
+          matches={upcoming}
           fifaCode={team.fifa_code}
         />
 

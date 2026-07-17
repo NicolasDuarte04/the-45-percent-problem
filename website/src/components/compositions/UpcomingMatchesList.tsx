@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { TeamProgression } from "@/lib/data/schemas";
+import type { TeamUpcomingItem } from "@/lib/data/matchListing";
 
 interface UpcomingMatchesListProps {
-  matches: TeamProgression["upcoming_matches"];
+  matches: TeamUpcomingItem[];
   fifaCode: string;
 }
 
@@ -60,10 +60,15 @@ export function UpcomingMatchesList({
           const kickoff = new Date(m.kickoff_utc);
           const kickoffLabel =
             kickoff.toISOString().replace("T", " ").slice(0, 16) + "Z";
+          // Live knockout cards live in the separate, explicitly ungraded
+          // /match/live/[id] route; graded group cards go to /match/[id].
+          const href = m.is_live_knockout
+            ? `/match/live/${m.match_id}`
+            : `/match/${m.match_id}`;
           return (
             <Link
               key={m.match_id}
-              href={`/match/${m.match_id}`}
+              href={href}
               className="grid items-center transition-colors duration-[120ms]"
               style={{
                 gridTemplateColumns: "1fr auto auto",

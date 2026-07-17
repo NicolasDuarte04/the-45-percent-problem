@@ -459,9 +459,10 @@ def build_brief(bundle_dir: Path, generated_at_utc: str) -> dict:
     elif yesterday_results:
         n = len(yesterday_results)
         res_word = "result" if n == 1 else "results"
+        res_verb = "is" if n == 1 else "are"
         match_sentence = (
-            f"No ties are scheduled today. {n} {res_word} from yesterday are "
-            "recorded below and reconciled into the tournament state."
+            f"No ties are scheduled today. {n} {res_word} from yesterday "
+            f"{res_verb} recorded below and reconciled into the tournament state."
         )
     else:
         tail = (

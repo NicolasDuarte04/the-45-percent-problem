@@ -329,6 +329,62 @@ def test_modal_scoreline_matches_site_argmax():
     assert modal_scoreline([]) is None
 
 
+def _settled_yesterday_card(match_id: str, home: str, away: str) -> dict:
+    """A knockout card kicked off and settled on the Bogota 'yesterday'
+    (2026-07-04) relative to GEN_AT."""
+    return _ko_card(
+        match_id,
+        home,
+        away,
+        "2026-07-04T21:00:00Z",  # Bogota 16:00 on 2026-07-04 (yesterday)
+        p_1x2={"H": 0.5, "D": 0.25, "A": 0.25},
+        modal=(2, 1),
+        settled={
+            "score": {"home": 2, "away": 1},
+            "outcome_realized": "H",
+            "settled_at_utc": "2026-07-05 05:00:00+00:00",
+        },
+    )
+
+
+def test_yesterday_results_singular_agreement(tmp_path):
+    """One result yesterday and no ties today: the sentence must agree in the
+    singular ('1 result ... is recorded'), never '1 result ... are recorded'."""
+    _write_bundle(
+        tmp_path,
+        meta=_base_meta(),
+        tournament={"model_variant": "M2_fifa", "mc_runs": 10000, "teams": []},
+        divergence={"status": "pending", "rows": []},
+        matches_live=[_settled_yesterday_card("KO-ONE", "ESP", "GER")],
+    )
+    brief = build_brief(tmp_path, GEN_AT)
+    ms = brief["lead_in"]["match_sentence"]
+    assert brief["daily"]["today_fixtures"] == []
+    assert len(brief["daily"]["yesterday_results"]) == 1
+    assert "1 result from yesterday is recorded" in ms
+    assert "are recorded" not in ms
+
+
+def test_yesterday_results_plural_agreement(tmp_path):
+    """Two results yesterday: the sentence stays plural ('2 results ... are
+    recorded')."""
+    _write_bundle(
+        tmp_path,
+        meta=_base_meta(),
+        tournament={"model_variant": "M2_fifa", "mc_runs": 10000, "teams": []},
+        divergence={"status": "pending", "rows": []},
+        matches_live=[
+            _settled_yesterday_card("KO-ONE", "ESP", "GER"),
+            _settled_yesterday_card("KO-TWO", "ARG", "BRA"),
+        ],
+    )
+    brief = build_brief(tmp_path, GEN_AT)
+    ms = brief["lead_in"]["match_sentence"]
+    assert brief["daily"]["today_fixtures"] == []
+    assert len(brief["daily"]["yesterday_results"]) == 2
+    assert "2 results from yesterday are recorded" in ms
+
+
 def test_no_typographic_dashes(tmp_path):
     _standard_bundle(tmp_path)
     brief = build_brief(tmp_path, GEN_AT)

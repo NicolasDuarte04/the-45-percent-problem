@@ -72,7 +72,7 @@ export const LEDGER_STEPS: TourStep[] = [
         Each point is a decile bin of forecast probabilities. The x-axis is
         the bin&rsquo;s mean predicted probability; the y-axis is the
         empirical frequency in that bin. Points on the diagonal indicate
-        perfect calibration. Point area encodes sample count &mdash; small
+        perfect calibration. Point area encodes sample count: small
         bins are noisier and should be discounted accordingly.
       </>
     ),

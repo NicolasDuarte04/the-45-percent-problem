@@ -16,7 +16,7 @@ export const BRACKET_STEPS: TourStep[] = [
         An unconditional, ensemble-level summary of how each team progresses
         through the World Cup under M&#9733;. The view is a substitute for a
         traditional knockout tree: before the draw is played, slots are
-        unresolved, so a tree cannot be drawn &mdash; the matrix below is the
+        unresolved, so a tree cannot be drawn. The matrix below is the
         faithful alternative.
       </>
     ),
@@ -32,7 +32,7 @@ export const BRACKET_STEPS: TourStep[] = [
         Rows are teams, columns are rounds (R16 through Champion). Each cell
         encodes the marginal probability of reaching that round across{" "}
         <span className="mono">10k</span> Monte Carlo simulations. Cell
-        shading is monotonic in probability &mdash; deeper peach on the Prism
+        shading is monotonic in probability: deeper peach on the Prism
         scale corresponds to higher probability. Rows are sorted by champion
         probability descending.
       </>
@@ -47,7 +47,7 @@ export const BRACKET_STEPS: TourStep[] = [
     body: (
       <>
         Each cell reports{" "}
-        <span className="mono">P(team reaches round R)</span> &mdash; marginal
+        <span className="mono">P(team reaches round R)</span>: marginal
         over all possible group-stage and bracket realisations. These are not
         conditional probabilities of the form{" "}
         <span className="mono">P(reach R | reached R&minus;1)</span>; the

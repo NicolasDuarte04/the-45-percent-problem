@@ -82,8 +82,8 @@ export const TERMINAL_STEPS: TourStep[] = [
         When the gate fires on a row, it is annotated with a{" "}
         <span style={{ color: "var(--gate-fired)" }}>&#9670;</span> marker, not
         removed from the table. The gate flags conditions under which a
-        divergence is less reliable &mdash; stale price, named-event proximity,
-        exchange disagreement, low liquidity &mdash; so the reader can discount
+        divergence is less reliable (stale price, named-event proximity,
+        exchange disagreement, low liquidity) so the reader can discount
         the row, not so the system can hide it.{" "}
         <span className="mono">&epsilon; = 3%</span> mainline.
       </>
@@ -98,8 +98,8 @@ export const TERMINAL_STEPS: TourStep[] = [
     body: (
       <>
         When every row in a snapshot has the gate tripped, this banner is
-        shown. Rows remain visible &mdash; the gate annotates, it does not
-        filter &mdash; but the reader is warned that no divergence in this
+        shown. Rows remain visible (the gate annotates, it does not
+        filter) but the reader is warned that no divergence in this
         snapshot is currently in clean conditions.
       </>
     ),
