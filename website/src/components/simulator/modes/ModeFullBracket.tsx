@@ -1136,8 +1136,8 @@ export function ModeFullBracket({
             groups". This note frames the flow as an explicit counterfactual so
             the group-ranking step does not read as a live prompt. */}
         <p className="mt-2 font-sans text-[13px] leading-[1.6] text-[var(--text-quiet)]">
-          The real group stage is final and the tournament is at the
-          quarterfinals. This simulator is a counterfactual: you are re-running
+          The real tournament has moved on; results here do not track it.
+          This simulator is a counterfactual: you are re-running
           the tournament from the start under your own assumptions.
         </p>
 
