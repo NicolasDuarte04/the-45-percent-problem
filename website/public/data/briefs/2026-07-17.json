@@ -2,7 +2,7 @@
   "brief_date": "2026-07-17",
   "issue_number": 49,
   "model_variant": "M_STAR",
-  "code_sha": "90ce562706093e1b",
+  "code_sha": "3f3045241d67f4c4",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-18T12:00:00Z",
@@ -29,7 +29,7 @@
     "this_brief_archive": "/briefs/2026-07-17"
   },
   "daily": {
-    "generated_at_utc": "2026-07-17T19:01:07Z",
+    "generated_at_utc": "2026-07-18T01:19:42Z",
     "tournament": {
       "phase_label": "Semi-finals",
       "matches_settled": 102,
