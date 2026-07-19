@@ -1,0 +1,83 @@
+{
+  "brief_date": "2026-07-18",
+  "issue_number": 50,
+  "model_variant": "M_STAR",
+  "code_sha": "b223d4dc30c44e7b",
+  "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
+  "mc_runs": 10000,
+  "next_brief_utc": "2026-07-19T12:00:00Z",
+  "latest_archive_url": "/briefs/2026-07-18",
+  "lead_in": {
+    "tournament_sentence": "Semi-finals: 102 of 104 matches settled, 2 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
+    "match_sentence": "1 tie scheduled today; the model's 1X2 and modal scorelines are logged against each fixture. Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "fallback_used": false
+  },
+  "headline": {
+    "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
+    "movers_line": "The model-versus-market divergence layer is live, covering 1 fixture. This brief reports the layer status only; it never ranks or names individual divergences."
+  },
+  "teaser": {
+    "has_divergence": false
+  },
+  "top_divergences": [],
+  "tournament_movers": [],
+  "suppressed_today": [],
+  "featured_teams": [
+    {
+      "code": "FRA",
+      "name": "FRANCE"
+    },
+    {
+      "code": "ENG",
+      "name": "ENGLAND"
+    }
+  ],
+  "methodology_links": {
+    "model_card": "/methodology/m-star",
+    "devig_method": "/methodology/power-devig",
+    "this_brief_archive": "/briefs/2026-07-18"
+  },
+  "daily": {
+    "generated_at_utc": "2026-07-19T01:25:36Z",
+    "tournament": {
+      "phase_label": "Semi-finals",
+      "matches_settled": 102,
+      "matches_remaining": 2,
+      "total_matches": 104,
+      "sentence": "Semi-finals: 102 of 104 matches settled, 2 remaining."
+    },
+    "r16_checkpoint": {
+      "status": "published",
+      "sentence": "The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire."
+    },
+    "divergence": {
+      "status": "live",
+      "fixtures_covered": 1,
+      "sentence": "The model-versus-market divergence layer is live, covering 1 fixture. This brief reports the layer status only; it never ranks or names individual divergences."
+    },
+    "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "today_fixtures": [
+      {
+        "match_id": "KO-FD537389",
+        "round": "3P",
+        "graded": false,
+        "kickoff_utc": "2026-07-18T21:00:00Z",
+        "kickoff_local_label": "4:00 PM COT",
+        "home": {
+          "fifa_code": "FRA",
+          "display_name": "France"
+        },
+        "away": {
+          "fifa_code": "ENG",
+          "display_name": "England"
+        },
+        "p_home": 0.4471815900596024,
+        "p_draw": 0.23086103399808422,
+        "p_away": 0.32195737594231344,
+        "modal_scoreline": "1-1"
+      }
+    ],
+    "yesterday_results": [],
+    "next_fixture_date": "2026-07-19"
+  }
+}
