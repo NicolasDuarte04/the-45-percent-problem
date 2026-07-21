@@ -6,7 +6,7 @@ Checkpoint 15 (UX rollout). Live WC 2026 match-outcome ingestion.
 Hourly cron during the tournament window. Pulls newly-finished matches
 from Football-Data.org, normalises team names to FIFA 3-letter codes,
 maps the dataset's stage labels to the schema used by match_outcomes
-(group / r32 / r16 / qf / sf / final), and POSTs each batch to the
+(group / r32 / r16 / qf / sf / 3p / final), and POSTs each batch to the
 website's bearer-authenticated ingest endpoint at
 `/api/ingest/match-outcomes`.
 
@@ -209,6 +209,13 @@ STAGE_MAP: dict[str, str] = {
     "QUARTER_FINAL": "qf",
     "SEMI_FINALS": "sf",
     "SEMI_FINAL": "sf",
+    # cp-43: the third-place playoff. Football-Data v4 labels this match
+    # THIRD_PLACE, distinct from every other knockout label, so without
+    # this entry STAGE_MAP.get returns None and clean_and_enrich silently
+    # skips the bronze match as an "Unknown stage". The "3p" key matches
+    # the repo's lowercase stage convention (group / r32 / ... / final) and
+    # the existing uppercase "3P" round label used across the live surfaces.
+    "THIRD_PLACE": "3p",
     "FINAL": "final",
 }
 

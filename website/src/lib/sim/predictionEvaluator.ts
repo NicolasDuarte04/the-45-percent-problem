@@ -56,7 +56,11 @@ import type { Prediction, MatchOutcome } from "@/lib/db/schema";
 export const EVALUATOR_VERSION = "v2";
 
 /** Stage names used across match_outcomes and the evaluator. */
-export type MatchStage = "group" | "r32" | "r16" | "qf" | "sf" | "final";
+// "3p" is the third-place playoff (cp-43). It contests no place in the
+// bracket (both sides already lost their semifinal), so it is never a kill
+// stage and no prediction maps onto it; it exists here only so the settled
+// bronze match typechecks and the stage helpers stay exhaustive.
+export type MatchStage = "group" | "r32" | "r16" | "qf" | "sf" | "3p" | "final";
 
 export interface EvaluatorInput {
   prediction: Prediction;
@@ -242,6 +246,8 @@ function stageLabel(stage: MatchStage): string {
       return "QF";
     case "sf":
       return "SF";
+    case "3p":
+      return "3rd-place playoff";
     case "final":
       return "Final";
   }
@@ -390,8 +396,14 @@ function stageOrder(stage: MatchStage): number {
       return 3;
     case "sf":
       return 4;
-    case "final":
+    case "3p":
+      // The bronze match is played after the semifinals and before the
+      // final. Only ever used to sort one team's own matches chronologically
+      // (an sf loser then plays 3p; it never coexists with the final), so a
+      // strict slot between sf and final keeps that ordering honest.
       return 5;
+    case "final":
+      return 6;
   }
 }
 
