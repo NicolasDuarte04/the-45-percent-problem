@@ -49,8 +49,8 @@ export function upcomingDivergenceRows(
  * rounds, or when the day's matches have all kicked off).
  */
 export const DIVERGENCE_KNOCKOUT_PENDING_NOTE =
-  "Group-stage divergence coverage is complete. Knockout-round divergence is " +
-  "live; no upcoming knockout fixture currently has an open de-vigged line.";
+  "Group-stage divergence coverage is complete. Knockout-round divergence " +
+  "coverage is complete; no upcoming knockout fixture had an open de-vigged line.";
 
 /**
  * The empty-state line for the cp-30 stale-odds guard: real bookmaker lines
@@ -59,16 +59,15 @@ export const DIVERGENCE_KNOCKOUT_PENDING_NOTE =
  */
 export const DIVERGENCE_STALE_ODDS_NOTE =
   "The most recent bookmaker odds snapshot is stale (older than the freshness " +
-  "threshold), so no divergence edges are shown. Coverage resumes on the next " +
-  "fresh odds pull.";
+  "threshold), so no divergence edges are shown.";
 
 /**
  * The empty-state line for the cp-14 pending state: no real bookmaker lines
  * are ingested yet, so no divergence rows are published.
  */
 export const DIVERGENCE_PENDING_NOTE =
-  "No real bookmaker lines are ingested yet, so no divergence rows are " +
-  "published. Real de-vigged divergence appears once the odds producer runs.";
+  "No real bookmaker lines were ingested during the tournament, so no " +
+  "divergence rows were published.";
 
 /**
  * cp-38: the empty-state explanation for the landing divergence modules,

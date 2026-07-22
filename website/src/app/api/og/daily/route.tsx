@@ -33,7 +33,9 @@ import type { NextRequest } from "next/server";
 import {
   loadAllMatches,
   loadEvaluationMetrics,
+  loadLedger,
   loadLiveKnockouts,
+  loadSnapshotMeta,
 } from "@/lib/data/loadSnapshot";
 import { formatMono } from "@/lib/formatters";
 import {
@@ -41,6 +43,7 @@ import {
   audienceDayKeyFromMs,
   dayNumber,
   formatCardDate,
+  isTournamentComplete,
   matchesForCard,
   previewScorelines,
   recapNote,
@@ -49,6 +52,7 @@ import {
   shootoutNote,
 } from "@/lib/data/dailyShareCard";
 import {
+  CompletedCard,
   DailyCard,
   type DailyRow,
 } from "../_lib/dailyCard";
@@ -120,6 +124,71 @@ export async function GET(req: NextRequest): Promise<Response> {
     } catch (err) {
       console.error("[og/daily] font load failed, rendering with default fonts", err);
       fonts = null;
+    }
+
+    // cp-44: once the tournament is complete there is no day to preview and no
+    // fresh day to recap, so both variants render one completed-tournament
+    // summary card built strictly from committed published numbers, instead of
+    // an empty "No matches to play" preview or a stale recap of the final day.
+    // This is gated on the snapshot meta (completed phase, 0 remaining), so
+    // pre-completion behaviour is byte-identical.
+    const meta = loadSnapshotMeta();
+    if (isTournamentComplete(meta)) {
+      let metrics: { brier: string; rps: string; n: number } | null = null;
+      try {
+        const ev = loadEvaluationMetrics();
+        const brier = ev.brier.M_STAR;
+        const rps = ev.rps.M_STAR;
+        if (brier != null && rps != null) {
+          metrics = {
+            brier: formatMono(brier, 3),
+            rps: formatMono(rps, 3),
+            n: ev.champion_metric_n ?? ev.matches_settled,
+          };
+        }
+      } catch (err) {
+        console.error("[og/daily] evaluation metrics load failed", err);
+      }
+
+      // R16 kill-criterion checkpoint, read from the published artifact. The gap
+      // is displayed as its magnitude with an explicit direction word; positive
+      // gap_in_se means M2 was worse than M0, negative means better. The graded
+      // ledger size (the pre-registered group-stage forecast count) is read from
+      // the same artifact's n rather than hardcoded.
+      let checkpoint: { gapText: string; fired: boolean } | null = null;
+      let gradedN = 0;
+      try {
+        const cp = loadEvaluationMetrics().r16_checkpoint;
+        if (cp) {
+          const direction = cp.gap_in_se > 0 ? "worse than" : "better than";
+          checkpoint = {
+            gapText: `${Math.abs(cp.gap_in_se).toFixed(2)} SE ${direction} M0`,
+            fired: cp.tripped,
+          };
+          gradedN = cp.n;
+        }
+      } catch (err) {
+        console.error("[og/daily] r16 checkpoint load failed", err);
+      }
+      // Fallback to the graded ledger's own row count if the checkpoint artifact
+      // is unavailable, so the number is always sourced from a committed file.
+      if (gradedN === 0) {
+        try {
+          gradedN = loadLedger().length;
+        } catch {
+          gradedN = 0;
+        }
+      }
+
+      return renderCompleted(
+        {
+          settledCount: meta.matches_settled,
+          gradedN,
+          metrics,
+          checkpoint,
+        },
+        fonts,
+      );
     }
 
     // No subject day means the snapshot has no matches for this variant
@@ -257,6 +326,24 @@ function renderCard(
     headers: {
       "Content-Type": "image/png",
       "Content-Disposition": `inline; filename="45analytics-day-${variant}.png"`,
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+    },
+  });
+}
+
+// cp-44: the completed-tournament summary card, rendered for every variant once
+// the tournament is over. Same canvas and cache posture as renderCard.
+function renderCompleted(
+  props: React.ComponentProps<typeof CompletedCard>,
+  fonts: { mono: ArrayBuffer; serif: ArrayBuffer } | null,
+): Response {
+  return new ImageResponse(<CompletedCard {...props} />, {
+    width: 1080,
+    height: 1350,
+    ...fontsToImageResponseOptions(fonts),
+    headers: {
+      "Content-Type": "image/png",
+      "Content-Disposition": `inline; filename="45analytics-tournament-summary.png"`,
       "Cache-Control": "public, max-age=3600, s-maxage=3600",
     },
   });

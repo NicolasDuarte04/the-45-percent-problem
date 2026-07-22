@@ -507,6 +507,224 @@ function HeaderMotif() {
   );
 }
 
+// ── Completed-tournament summary card (cp-44) ────────────────────────────────
+// Once the WC 2026 is over there is no day to preview and no fresh day to
+// recap, so the daily route renders this one summary card for every variant
+// instead of an empty or stale fixture card. It carries only committed,
+// published numbers: the settled-fixture count from the snapshot meta, the
+// champion public-record calibration line, the graded-ledger size (the 72
+// pre-registered group-stage forecasts), and the Round-of-16 kill-criterion
+// checkpoint outcome. No fixtures, no market lines, no betting framing.
+
+export interface CompletedCardProps {
+  /** Settled-fixture count from the snapshot meta (104 of 104). */
+  settledCount: number;
+  /** Graded-ledger size: the 72 pre-registered group-stage forecasts. */
+  gradedN: number;
+  /** Champion public-record calibration metrics, or null on load failure. */
+  metrics: { brier: string; rps: string; n: number } | null;
+  /** R16 kill-criterion checkpoint line, or null when the artifact is absent. */
+  checkpoint: { gapText: string; fired: boolean } | null;
+}
+
+function SummaryPanel({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: DAILY_C.panel,
+        border: `1px solid ${DAILY_C.border}`,
+        borderRadius: 12,
+        padding: "26px 30px",
+        gap: 8,
+      }}
+    >
+      <span
+        style={{
+          display: "flex",
+          fontFamily: "'JetBrains Mono'",
+          fontSize: 17,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: DAILY_C.quiet,
+        }}
+      >
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+export function CompletedCard({
+  settledCount,
+  gradedN,
+  metrics,
+  checkpoint,
+}: CompletedCardProps) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        backgroundColor: DAILY_C.bg,
+        fontFamily: "'JetBrains Mono'",
+      }}
+    >
+      {/* Top gradient band: one smooth sweep, gold into sunset into night. */}
+      <div style={{ display: "flex", height: 14, backgroundImage: TOP_GRADIENT }} />
+
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          padding: "44px 64px 0 64px",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono'",
+              fontSize: 23,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: DAILY_C.quiet,
+            }}
+          >
+            45ANALYTICS.COM · WORLD CUP 2026
+          </span>
+          <span
+            style={{
+              fontFamily: "'Source Serif 4'",
+              fontSize: 72,
+              lineHeight: 1.05,
+              color: DAILY_C.gold,
+              marginTop: 14,
+            }}
+          >
+            Tournament complete
+          </span>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono'",
+              fontSize: 22,
+              color: DAILY_C.soft,
+              marginTop: 12,
+            }}
+          >
+            The final research record
+          </span>
+        </div>
+        <HeaderMotif />
+      </div>
+
+      {/* Summary panels */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          justifyContent: "center",
+          gap: 20,
+          padding: "36px 64px 0 64px",
+        }}
+      >
+        <SummaryPanel label="Tournament record">
+          <span
+            style={{
+              display: "flex",
+              fontFamily: "'Source Serif 4'",
+              fontSize: 52,
+              lineHeight: 1,
+              color: DAILY_C.gold,
+            }}
+          >
+            {`${settledCount} of ${settledCount} fixtures settled`}
+          </span>
+        </SummaryPanel>
+
+        <SummaryPanel label="Graded ledger">
+          <span
+            style={{
+              display: "flex",
+              fontFamily: "'JetBrains Mono'",
+              fontSize: 24,
+              lineHeight: 1.35,
+              color: DAILY_C.ink,
+            }}
+          >
+            {`${gradedN} pre-registered group-stage forecasts`}
+          </span>
+        </SummaryPanel>
+
+        {metrics ? (
+          <SummaryPanel label="Champion public record">
+            <span
+              style={{
+                display: "flex",
+                fontFamily: "'JetBrains Mono'",
+                fontSize: 24,
+                lineHeight: 1.35,
+                color: DAILY_C.ink,
+              }}
+            >
+              {`RPS ${metrics.rps} · Brier ${metrics.brier} · ${metrics.n} matches`}
+            </span>
+          </SummaryPanel>
+        ) : null}
+
+        {checkpoint ? (
+          <SummaryPanel label="Round of 16 checkpoint">
+            <span
+              style={{
+                display: "flex",
+                fontFamily: "'JetBrains Mono'",
+                fontSize: 22,
+                lineHeight: 1.35,
+                color: DAILY_C.ink,
+              }}
+            >
+              {`Kill criterion ${checkpoint.fired ? "fired" : "did not fire"} · M2 ${checkpoint.gapText}`}
+            </span>
+          </SummaryPanel>
+        ) : null}
+      </div>
+
+      {/* Footer */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          padding: "22px 64px 44px 64px",
+          marginTop: 22,
+          borderTop: `1px solid ${DAILY_C.border}`,
+        }}
+      >
+        <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 15, color: DAILY_C.quiet }}>
+          Knockout rounds are ungraded; only the group-stage forecasts are scored
+        </span>
+        <span style={{ display: "flex", fontFamily: "'JetBrains Mono'", fontSize: 17, color: DAILY_C.gold }}>
+          probability, not prediction · 45analytics.com
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── Card ─────────────────────────────────────────────────────────────────────
 
 export function DailyCard({

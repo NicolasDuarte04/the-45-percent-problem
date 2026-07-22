@@ -10,14 +10,6 @@ const t = {
   fontSerif: "var(--brief-font-serif)",
 };
 
-function formatNextBrief(iso: string): string {
-  const d = new Date(iso);
-  const date = d.toISOString().slice(0, 10);
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${date}  ${hh}:${mm} UTC`;
-}
-
 export interface LiveDataBlockProps {
   data?: BriefSample;
   /**
@@ -48,7 +40,7 @@ export async function LiveDataBlock({
 
   return (
     <section
-      aria-label="Today's brief at a glance"
+      aria-label="The latest brief at a glance"
       style={{
         maxWidth: 560,
         margin: "0 0 20px",
@@ -156,10 +148,8 @@ export async function LiveDataBlock({
         }}
       >
         <span>
-          NEXT BRIEF&nbsp;&nbsp;
-          <span style={{ color: t.ink }}>
-            {formatNextBrief(brief.next_brief_utc)}
-          </span>
+          COMPLETED SERIES&nbsp;&nbsp;
+          <span style={{ color: t.ink }}>World Cup 2026</span>
         </span>
         <a
           href={brief.latest_archive_url}
@@ -196,7 +186,7 @@ function CalibrationSummary({ moversLine }: { moversLine: string }) {
           marginBottom: 6,
         }}
       >
-        DAILY MODEL OUTPUT
+        MODEL OUTPUT
       </div>
       <div
         style={{

@@ -4,6 +4,7 @@ import {
   dayNumber,
   favorite,
   formatCardDate,
+  isTournamentComplete,
   matchesForCard,
   previewNote,
   previewScorelines,
@@ -390,5 +391,33 @@ describe("knockout-phase selectors (cp-19 item 2)", () => {
     expect(selectRecapDay(merged, "2026-06-28")).toBe("2026-06-27");
     const rows = matchesForCard(merged, "2026-06-27", "recap");
     expect(rows.map((m) => m.match_id)).toEqual(["KO-FD2"]);
+  });
+});
+
+// cp-44: the archive-posture gate. Synthesizes its own snapshot meta rather
+// than reading any live repo snapshot, so it cannot drift with the data.
+describe("isTournamentComplete (cp-44)", () => {
+  it("is true only when the phase is completed and zero fixtures remain", () => {
+    expect(
+      isTournamentComplete({ tournament_phase: "completed", matches_remaining: 0 }),
+    ).toBe(true);
+  });
+
+  it("is false while the tournament is still running", () => {
+    expect(
+      isTournamentComplete({ tournament_phase: "final", matches_remaining: 1 }),
+    ).toBe(false);
+    expect(
+      isTournamentComplete({ tournament_phase: "group_stage", matches_remaining: 40 }),
+    ).toBe(false);
+    expect(
+      isTournamentComplete({ tournament_phase: "pre_tournament", matches_remaining: 104 }),
+    ).toBe(false);
+  });
+
+  it("is false if the phase says completed but fixtures still remain (never gates on phase alone)", () => {
+    expect(
+      isTournamentComplete({ tournament_phase: "completed", matches_remaining: 3 }),
+    ).toBe(false);
   });
 });

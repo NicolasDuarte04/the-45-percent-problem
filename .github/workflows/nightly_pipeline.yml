@@ -9,8 +9,17 @@
 name: Nightly Simulation Pipeline
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  # cp-44 archive wind-down (2026-07-22): the WC 2026 tournament is complete
+  # (104 of 104 fixtures settled, phase "completed"). The data is final, so the
+  # nightly cron has no fresh work to do; a scheduled run only burns minutes and
+  # rewrites byte-identical snapshots. The cron is retired here. workflow_dispatch
+  # is kept so the operator can still regenerate the bundle on demand (this is
+  # also the path that produces the daily brief JSON, so a manual dispatch is the
+  # only way it emits an issue now, by design).
+  #
+  # To resume nightly runs, uncomment the two schedule lines below.
+  # schedule:
+  #   - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       force_r16_checkpoint:

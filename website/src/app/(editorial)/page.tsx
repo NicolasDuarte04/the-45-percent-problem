@@ -62,6 +62,128 @@ function FrozenForecastLabel() {
   );
 }
 
+// cp-44 closing moment: the landing page's final module, surfacing the settled
+// research record with links and no new computation. Every number is read from
+// the committed published artifacts (snapshot meta and the R16 checkpoint
+// mirrored into evaluation_metrics from r16_checkpoint.json). No divergence
+// ranking, no tip framing: only the pre-registered result and where to read it.
+function ClosingMoment({
+  settled,
+  checkpoint,
+}: {
+  settled: number;
+  checkpoint:
+    | {
+        n: number;
+        mean_log_loss_mstar: number;
+        mean_log_loss_m0: number;
+        gap_in_se: number;
+        threshold_se: number;
+        tripped: boolean;
+      }
+    | null
+    | undefined;
+}) {
+  const labelStyle = {
+    fontSize: 11,
+    letterSpacing: ".08em",
+    textTransform: "uppercase" as const,
+    color: "var(--text-tertiary)",
+    marginBottom: 8,
+  };
+  const bodyStyle = {
+    fontFamily: "var(--font-sans)",
+    fontSize: 14,
+    lineHeight: 1.7,
+    color: "var(--text-secondary)",
+    margin: 0,
+  };
+  const linkStyle = { color: "var(--accent-focus)", fontWeight: 500 } as const;
+
+  // Checkpoint prose reads its magnitude and direction from the artifact.
+  const gap = checkpoint ? Math.abs(checkpoint.gap_in_se).toFixed(2) : null;
+  const direction = checkpoint && checkpoint.gap_in_se > 0 ? "worse than" : "better than";
+
+  return (
+    <section style={{ marginBottom: 56 }}>
+      <SectionHead
+        eyebrow="§ 5 · Closing"
+        title="The tournament, closed out"
+        rightSlot={<GhostLink href="/vault">Research vault →</GhostLink>}
+      />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+          maxWidth: 620,
+          borderTop: "1px solid var(--rule)",
+          paddingTop: 24,
+        }}
+      >
+        <div>
+          <div className="mono" style={labelStyle}>
+            Tournament record
+          </div>
+          <p style={bodyStyle}>
+            {settled} of {settled} fixtures are settled. The graded{" "}
+            <Link href="/ledger" style={linkStyle}>
+              ledger
+            </Link>{" "}
+            is the 72 pre-registered group-stage forecasts, and no knockout
+            forecast was ever scored.
+          </p>
+        </div>
+
+        {checkpoint ? (
+          <div>
+            <div className="mono" style={labelStyle}>
+              Round of 16 checkpoint
+            </div>
+            <p style={bodyStyle}>
+              {`The pre-registered Round of 16 kill criterion ${
+                checkpoint.tripped ? "fired" : "did not fire"
+              }. Across the ${checkpoint.n} pre-registered group-stage forecasts, M★ carried a mean log loss of `}
+              <span className="mono">
+                {checkpoint.mean_log_loss_mstar.toFixed(3)}
+              </span>
+              {` against M0’s `}
+              <span className="mono">
+                {checkpoint.mean_log_loss_m0.toFixed(3)}
+              </span>
+              {`, ${gap} standard errors ${direction} M0 and ${
+                checkpoint.tripped ? "beyond" : "inside"
+              } the ${checkpoint.threshold_se.toFixed(1)} SE threshold. The paired per-match construction is its own event, never compared to the Phase 8 cross-validation readings. Read the `}
+              <Link href="/vault/kill-criteria" style={linkStyle}>
+                kill-criteria record
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
+
+        <div>
+          <div className="mono" style={labelStyle}>
+            Ablation report
+          </div>
+          <p style={bodyStyle}>
+            The full ablation report is published as promised, with nulls kept
+            honest wherever no per-match forecast or market line was committed:{" "}
+            <a href="/data/latest/ablation.json" style={linkStyle}>
+              ablation.json
+            </a>{" "}
+            and the{" "}
+            <Link href="/vault/evaluation" style={linkStyle}>
+              evaluation essay
+            </Link>{" "}
+            in the vault.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default async function Home() {
   const picker = resolveSnapshotPickerState(undefined);
 
@@ -106,17 +228,16 @@ export default async function Home() {
               margin: "0 0 20px",
             }}
           >
-            Probabilistic pricing for FIFA World Cup 2026. M&#9733; is a
-            bivariate Poisson model with Dixon-Coles correction, calibrated on
-            international match data. Model-implied probabilities come from
-            10,000 Monte Carlo simulations per nightly snapshot; a
-            market-comparison layer de-vigs bookmaker odds and reports signed
-            model-vs-market divergence in the divergence terminal. It covers
-            knockout fixtures live: model probabilities conditioned on settled
-            results are compared against de-vigged market odds, ungraded. Only
-            the 72 pre-registered group-stage forecasts are ever graded. When
-            the odds are older than 30 hours the layer reports itself stale
-            rather than showing stale rows. The &#8220;45%
+            Probabilistic pricing for FIFA World Cup 2026, now a completed,
+            citable research archive. M&#9733; is a bivariate Poisson model with
+            Dixon-Coles correction, calibrated on international match data.
+            Model-implied probabilities came from 10,000 Monte Carlo simulations
+            per snapshot, rebuilt through the tournament; a market-comparison
+            layer de-vigged bookmaker odds and reported signed model-vs-market
+            divergence in the divergence terminal. The knockout rounds were
+            tracked conditioned on settled results and compared against
+            de-vigged market odds, ungraded. Only the 72 pre-registered
+            group-stage forecasts are ever graded. The &#8220;45%
             problem&#8221; refers to a systematic
             divergence documented in Phase 1: market-implied championship
             probabilities for mid-tier contenders cluster near 45% of their
@@ -172,7 +293,7 @@ export default async function Home() {
           className="md:col-span-2 flex flex-wrap items-center gap-3"
         >
           <Link
-            href="/brief"
+            href="/briefs"
             className="no-underline inline-flex items-center"
             style={{
               fontFamily: "var(--font-sans)",
@@ -186,7 +307,7 @@ export default async function Home() {
               background: "transparent",
             }}
           >
-            Receive the daily brief →
+            Read the brief archive →
           </Link>
         </div>
         <div
@@ -337,6 +458,9 @@ export default async function Home() {
           <RecentWritingList />
         </section>
       </Suspense>
+
+      {/* ── § 5 · Closing moment (cp-44) ───────────────────────────────────── */}
+      <ClosingMoment settled={meta.matches_settled} checkpoint={evaluation.r16_checkpoint} />
 
       {/* ── Terminal CTA block ─────────────────────────────────────────────── */}
       <TerminalCTA />

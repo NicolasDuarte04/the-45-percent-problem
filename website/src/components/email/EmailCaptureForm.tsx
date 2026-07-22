@@ -15,7 +15,7 @@ type ErrorVariant =
 
 const ERROR_COPY: Record<ErrorVariant, string> = {
   invalid: "That email does not look right. Check the address and try again.",
-  active: "This address is already subscribed. Check your inbox for the daily brief.",
+  active: "This address is already subscribed. Check your inbox.",
   pending: "A confirmation email is already on its way. Check your inbox.",
   rateLimit: "Too many attempts in a short window. Wait a minute and try again.",
   turnstile: "Captcha check failed. Reload the page and try again.",
@@ -214,7 +214,7 @@ export function EmailCaptureForm({
             lineHeight: 1.6,
           }}
         >
-          Daily, 12:00 UTC. Methodology open. Unsubscribe one click.
+          Methodology open. Unsubscribe one click.
         </p>
       </form>
     </>
@@ -254,7 +254,7 @@ function PendingPanel({ email, layout }: { email: string; layout: "desktop" | "m
         }}
       >
         We sent a confirmation link to <span style={{ fontFamily: t.fontMono, fontSize: 14 }}>{email}</span>.
-        Click it to start receiving the brief.
+        Click it to confirm your subscription.
       </p>
       <p
         style={{
@@ -272,7 +272,7 @@ function PendingPanel({ email, layout }: { email: string; layout: "desktop" | "m
         }}
       >
         Not in your inbox within a minute? Check your spam or promotions folder,
-        and mark it &ldquo;not spam&rdquo; so the daily brief reaches you.
+        and mark it &ldquo;not spam&rdquo; so 45analytics email reaches you.
       </p>
       <p
         style={{

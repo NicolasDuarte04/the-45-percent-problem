@@ -61,8 +61,8 @@ export default async function ConfirmedPage({ searchParams }: ConfirmedPageProps
             margin: "0 0 24px",
           }}
         >
-          Your first daily brief arrives at the next 12:00 UTC. Methodology
-          stays open. Unsubscribe with one click from any email.
+          The World Cup 2026 brief is complete; every issue is in the archive.
+          Methodology stays open. Unsubscribe with one click from any email.
         </p>
 
         {/* Phase 3 mounts <LiveDataBlock /> here. Static placeholder for v1. */}

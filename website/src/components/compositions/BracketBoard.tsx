@@ -132,14 +132,13 @@ export function BracketBoard({ bracket, tournament }: BracketBoardProps) {
               margin: 0,
             }}
           >
-            A traditional knockout tree cannot be drawn yet; the draw has not
-            been played, so the model has no match-to-match edges between
-            slots. The matrix below is the faithful substitute: each row is a
-            team, each column is a round, and each cell is the marginal
-            probability that the team reaches that round across {" "}
-            <span className="mono">10k</span> Monte Carlo simulations. Once
-            the draw resolves, this view augments with slot labels; the
-            per-round figures remain marginal probabilities (conditional,
+            A traditional knockout tree cannot be drawn from this frozen
+            forecast: it was computed before the draw, so the model has no
+            match-to-match edges between slots. The matrix below is the faithful
+            substitute: each row is a team, each column is a round, and each cell
+            is the marginal probability that the team reaches that round across {" "}
+            <span className="mono">10k</span> Monte Carlo simulations. The
+            per-round figures are marginal probabilities (conditional,
             reach-given-survival probabilities are a planned enhancement).
           </p>
         </div>

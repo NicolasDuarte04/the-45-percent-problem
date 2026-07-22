@@ -23,6 +23,12 @@ export default async function MatchesPage() {
   const knockouts = loadLiveKnockouts();
   const meta = loadSnapshotMeta();
 
+  // cp-44: the tournament is a completed archive once the snapshot reports the
+  // "completed" phase with zero remaining fixtures. This swaps the in-tournament
+  // "Upcoming" empty state for the completed-archive note.
+  const tournamentComplete =
+    meta.tournament_phase === "completed" && meta.matches_remaining === 0;
+
   return (
     <div
       className="flex flex-col"
@@ -50,7 +56,12 @@ export default async function MatchesPage() {
       </div>
 
       <div className="max-w-[1152px] mx-auto w-full px-4 md:px-12 py-6 flex flex-col gap-10">
-        <MatchesBrowser matches={matches} knockouts={knockouts} />
+        <MatchesBrowser
+          matches={matches}
+          knockouts={knockouts}
+          tournamentComplete={tournamentComplete}
+          settledCount={meta.matches_settled}
+        />
 
         <ProvenanceBlock meta={meta} />
       </div>

@@ -60,6 +60,22 @@ const MS_PER_DAY = 86_400_000;
 export type DailyVariant = "recap" | "preview";
 
 /**
+ * cp-44: whether the tournament is a completed archive. True once the snapshot
+ * meta reports the "completed" phase with zero remaining fixtures. When this
+ * holds there are no upcoming fixtures to preview and no fresh day to recap, so
+ * the daily share route renders a single completed-tournament summary card for
+ * every variant instead of an empty preview ("No matches to play") or a stale
+ * recap of the final day dressed up as the current day. Pure so it can be
+ * unit-tested against a synthesized meta.
+ */
+export function isTournamentComplete(meta: {
+  tournament_phase: string;
+  matches_remaining: number;
+}): boolean {
+  return meta.tournament_phase === "completed" && meta.matches_remaining === 0;
+}
+
+/**
  * Tournament day number for a "YYYY-MM-DD" audience-local day key. The constant
  * TOURNAMENT_START is itself the Bogota civil day of the opener, and dayNumber
  * differences two such keys, so the count stays anchored on the same basis:

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SectionHead } from "@/components/compositions/SectionHead";
 import { EmailCaptureForm } from "@/components/email/EmailCaptureForm";
 import { LiveDataBlock } from "@/components/email/LiveDataBlock";
@@ -12,7 +13,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Daily brief | 45analytics",
   description:
-    "The 45A daily brief. Probabilistic divergences from the nightly Monte Carlo run. One issue per UTC day. Methodology open. Unsubscribe one click.",
+    "The 45A daily brief from the World Cup 2026 run: probabilistic divergences from the Monte Carlo model, one issue per UTC day. Now a completed, fully readable archive. Methodology open.",
 };
 
 export default async function BriefSignupPage({
@@ -39,7 +40,7 @@ export default async function BriefSignupPage({
       >
         <SectionHead
           eyebrow="Daily brief"
-          title="The model and the market, every day at 12:00 UTC"
+          title="The model and the market, now a complete archive"
         />
         <p
           style={{
@@ -51,7 +52,7 @@ export default async function BriefSignupPage({
             maxWidth: 560,
           }}
         >
-          How likely is your team to win? How likely does the market think?
+          How likely was your team to win? How likely did the market think?
         </p>
         <p
           style={{
@@ -63,9 +64,13 @@ export default async function BriefSignupPage({
             maxWidth: 560,
           }}
         >
-          Get the quantitative baseline before kickoff. We run 10,000
-          simulations daily to track your team&rsquo;s true probability of
-          advancing, delivered straight to your inbox.
+          Through the World Cup 2026 window the brief ran one issue per UTC day,
+          each built from 10,000 Monte Carlo simulations. The run is complete;
+          every issue is collected in the{" "}
+          <Link href="/briefs" style={{ color: "var(--accent-focus)", fontWeight: 500 }}>
+            brief archive
+          </Link>
+          , free to read.
         </p>
         <LiveDataBlock showFallbackMarker={showFallbackMarker} />
         <EmailCaptureForm source="brief" />

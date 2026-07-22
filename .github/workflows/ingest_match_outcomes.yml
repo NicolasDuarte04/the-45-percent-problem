@@ -26,8 +26,16 @@
 name: Ingest live match outcomes
 
 on:
-  schedule:
-    - cron: "0 * * * *"
+  # cp-44 archive wind-down (2026-07-22): the WC 2026 tournament is complete, so
+  # there are no new match outcomes to ingest. The Python script already
+  # short-circuits outside the June 11 to July 19, 2026 window (plus buffer), so
+  # the scheduled run is inert now; the cron is retired to stop it firing hourly
+  # for nothing. workflow_dispatch is kept so the operator can still run a manual
+  # backfill on demand.
+  #
+  # To resume hourly ingestion, uncomment the two schedule lines below.
+  # schedule:
+  #   - cron: "0 * * * *"
   workflow_dispatch: {}
 
 jobs:

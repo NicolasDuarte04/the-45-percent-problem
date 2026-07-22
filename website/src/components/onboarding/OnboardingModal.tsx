@@ -178,13 +178,13 @@ export function OnboardingModal({
             OSF before the data came in.
           </ClaimRow>
           <ClaimRow n="02">
-            Each night it runs{" "}
+            Each night through the tournament it ran{" "}
             <strong
               style={{ fontWeight: 600, color: "var(--text-primary)" }}
             >
               {mcRunsDisplay} simulations
             </strong>{" "}
-            of the tournament and publishes the results. Right now it puts{" "}
+            of the tournament and published the results. Its forecast put{" "}
             {leaderName} first, at{" "}
             <span
               className="mono"
@@ -202,7 +202,7 @@ export function OnboardingModal({
             >
               bookmaker odds
             </strong>{" "}
-            covers knockout fixtures live and ungraded; only the 72
+            covered knockout fixtures ungraded; only the 72
             pre-registered group-stage forecasts are ever graded.
           </ClaimRow>
         </div>

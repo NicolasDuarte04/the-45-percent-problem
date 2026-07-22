@@ -143,7 +143,7 @@ export function LedgerTable({ records }: LedgerTableProps) {
           color: "var(--text-tertiary)",
         }}
       >
-        No settled forecasts in this snapshot. Ledger populates as matches complete.
+        No settled forecasts in this snapshot.
       </div>
     );
   }

@@ -96,9 +96,9 @@ export default async function BracketPage() {
                   className="text-[12px] mt-1"
                   style={{ color: "var(--text-tertiary)" }}
                 >
-                  These probabilities do not yet condition on settled results.
-                  They are the pre-tournament forecast the public ledger grades,
-                  held fixed as matches play out.
+                  These probabilities do not condition on settled results. They
+                  are the pre-tournament forecast the public ledger grades, held
+                  fixed as the tournament played out.
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
@@ -172,10 +172,10 @@ export default async function BracketPage() {
               style={{ color: "var(--text-tertiary)" }}
             >
               {koConditioned
-                ? "Current-state conditional view, NOT graded. It conditions on the real knockout draw and settled results: eliminated teams drop to zero and the bracket below advances round by round as matches settle. It now differs from the frozen forecast."
+                ? "Final conditional view, NOT graded. It conditions on the real knockout draw and settled results: eliminated teams drop to zero and the bracket below advanced round by round as matches settled. It differs from the frozen forecast."
                 : live.provenance.conditioned
-                  ? "Current-state conditional view, NOT graded. Conditioning is active: this view reflects settled group results so far and now differs from the frozen forecast."
-                  : "Current-state conditional view, NOT graded; conditioning not yet active, currently matches the frozen forecast."}{" "}
+                  ? "Final conditional view, NOT graded. Conditioning is active: this view reflects the settled group results and differs from the frozen forecast."
+                  : "Final conditional view, NOT graded; conditioning not active, matches the frozen forecast."}{" "}
               Only the frozen pre-tournament forecast above is scored by the
               public ledger. Sourced from active batch{" "}
               <span className="mono">{live.provenance.live_source_batch_id}</span>

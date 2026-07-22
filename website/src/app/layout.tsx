@@ -49,7 +49,7 @@ const sourceSerif4 = Source_Serif_4({
 export const metadata: Metadata = {
   title: "The 45% Problem · Probabilistic Pricing for FIFA World Cup 2026",
   description:
-    "An institutional quantitative terminal publishing M★ probability distributions for the 2026 FIFA World Cup, updated nightly.",
+    "An institutional quantitative terminal publishing M★ probability distributions for the 2026 FIFA World Cup. A completed research archive.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
   ),
