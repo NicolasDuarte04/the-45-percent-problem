@@ -29,7 +29,10 @@ const ADMIN_TOKEN_ENV = "BRIEF_DISPATCH_TOKEN";
 
 const TeamCodeSchema = z.string().regex(/^[A-Z]{3}$/);
 
-const StageSchema = z.enum(["group", "r32", "r16", "qf", "sf", "final"]);
+// "3p" is the third-place playoff (cp-43). The manual admin fallback
+// accepts it too so an operator can correct or backfill the bronze match
+// through the same stage vocabulary as the live ingest path.
+const StageSchema = z.enum(["group", "r32", "r16", "qf", "sf", "3p", "final"]);
 
 const BodySchema = z
   .object({

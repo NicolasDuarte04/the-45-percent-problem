@@ -273,7 +273,10 @@ export const matchOutcomes = pgTable(
     matchId: text("match_id").primaryKey(),
     competition: text("competition").notNull(),
     stage: text("stage", {
-      enum: ["group", "r32", "r16", "qf", "sf", "final"],
+      // "3p" = third-place playoff (cp-43). The column is plain text; this
+      // enum is Drizzle's TS-level typing, so accepting the bronze match's
+      // stage needs it listed here for the insert to typecheck.
+      enum: ["group", "r32", "r16", "qf", "sf", "3p", "final"],
     }).notNull(),
     homeTeam: varchar("home_team", { length: 3 }).notNull(),
     awayTeam: varchar("away_team", { length: 3 }).notNull(),

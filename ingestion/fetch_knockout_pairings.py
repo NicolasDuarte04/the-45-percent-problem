@@ -98,23 +98,27 @@ DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "live" / "knockout_pairings.json"
 
 # Football-Data stage label -> canonical website round code. STAGE_MAP (shared
 # with the outcomes ingestion) yields lowercase keys; the website schema and the
-# per-match surface use the upper-case canonical codes below. THIRD_PLACE is
-# absent from STAGE_MAP (the outcomes pipeline ignores it) so it is added here.
+# per-match surface use the upper-case canonical codes below. Every non-group
+# STAGE_MAP value must have an entry here, since the dict comprehension below
+# looks each one up: the third-place playoff ("3p", added to STAGE_MAP in cp-43)
+# maps to the "3P" round code, matching the existing uppercase display code.
 _STAGE_TO_ROUND: dict[str, str] = {
     "r32": "R32",
     "r16": "R16",
     "qf": "QF",
     "sf": "SF",
+    "3p": "3P",
     "final": "FIN",
 }
 # Knockout stage raw labels we accept from the feed. Group stage is explicitly
-# excluded: this script learns knockout pairings only.
+# excluded: this script learns knockout pairings only. THIRD_PLACE resolves
+# through STAGE_MAP ("3p") and then _STAGE_TO_ROUND ("3P") like any other
+# knockout label, so no special-case entry is needed.
 _KO_STAGE_RAW_TO_ROUND: dict[str, str] = {
     raw: _STAGE_TO_ROUND[key]
     for raw, key in STAGE_MAP.items()
     if key != "group"
 }
-_KO_STAGE_RAW_TO_ROUND["THIRD_PLACE"] = "3P"
 
 
 def _to_z(iso: str) -> str:

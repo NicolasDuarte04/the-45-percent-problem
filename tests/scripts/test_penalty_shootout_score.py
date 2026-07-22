@@ -182,6 +182,55 @@ def test_irreconcilable_penalty_keeps_fulltime_without_shootout():
     assert "meta" not in out
 
 
+# ── cp-43: third-place playoff stage mapping ─────────────────────────────────
+
+
+def test_third_place_playoff_stage_is_mapped_not_skipped():
+    # Regression for cp-43. Football-Data v4 labels the bronze match
+    # THIRD_PLACE, a stage string STAGE_MAP did not carry, so clean_and_enrich
+    # dropped it as an "Unknown stage" and the archive stalled at 103 of 104
+    # settled. The row must now be written with the lowercase "3p" stage.
+    raw = {
+        "matches": [
+            _fd_match(
+                source_id=537389,
+                stage="THIRD_PLACE",
+                home="France",
+                away="England",
+                full=(2, 1),
+            )
+        ]
+    }
+    out = _only(clean_and_enrich(raw), "FD537389")
+    assert out["stage"] == "3p"
+    assert out["homeTeam"] == "FRA"
+    assert out["awayTeam"] == "ENG"
+    assert (out["homeGoals"], out["awayGoals"]) == (2, 1)
+
+
+def test_third_place_playoff_with_shootout_stores_regulation():
+    # The bronze match can go to penalties too; the cp-22 regulation/shootout
+    # split must still apply once the stage is accepted.
+    raw = {
+        "matches": [
+            _fd_match(
+                source_id=537389,
+                stage="THIRD_PLACE",
+                home="France",
+                away="England",
+                full=(5, 6),
+                pens=(4, 5),
+            )
+        ]
+    }
+    # fullTime 5-6 is regulation 1-1 plus the shootout tally 4-5.
+    out = _only(clean_and_enrich(raw), "FD537389")
+    assert out["stage"] == "3p"
+    assert (out["homeGoals"], out["awayGoals"]) == (1, 1)
+    assert out["shootoutWinner"] == "ENG"
+    assert out["meta"] == {"shootout": {"home": 4, "away": 5}}
+
+
 # ── settled_source shootout extraction ───────────────────────────────────────
 
 

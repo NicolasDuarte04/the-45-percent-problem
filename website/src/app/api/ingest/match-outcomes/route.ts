@@ -46,7 +46,10 @@ const INGEST_TOKEN_ENV = "INGEST_TOKEN";
 const MAX_BATCH = 50;
 
 const TeamCodeSchema = z.string().regex(/^[A-Z]{3}$/);
-const StageSchema = z.enum(["group", "r32", "r16", "qf", "sf", "final"]);
+// "3p" is the third-place playoff (cp-43). It joins the enum so the
+// ingest of the bronze match is accepted; group-stage grading is
+// unaffected (the ledger's scope is group-only).
+const StageSchema = z.enum(["group", "r32", "r16", "qf", "sf", "3p", "final"]);
 
 const OutcomeSchema = z
   .object({

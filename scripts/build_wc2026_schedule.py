@@ -97,8 +97,9 @@ DRAW_ROUND_TO_KEY: dict[str, str] = {
     "FIN": "final",
 }
 
-# FD third-place label is absent from the outcomes STAGE_MAP (that pipeline
-# ignores it); add it here for the schedule join.
+# FD third-place label maps to "3p" in the outcomes STAGE_MAP (cp-43). The
+# explicit entry is kept as a defensive restatement of that join key so this
+# schedule build stays correct even if STAGE_MAP's THIRD_PLACE row ever moves.
 KO_STAGE_MAP: dict[str, str] = {**STAGE_MAP, "THIRD_PLACE": "3p"}
 
 # Known-official kickoffs (UTC) used as the publish gate. These come from the
