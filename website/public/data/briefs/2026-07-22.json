@@ -2,7 +2,7 @@
   "brief_date": "2026-07-22",
   "issue_number": 54,
   "model_variant": "M_STAR",
-  "code_sha": "5941425817b19523",
+  "code_sha": "79ef23c2645e8605",
   "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "mc_runs": 10000,
   "next_brief_utc": "2026-07-23T12:00:00Z",
@@ -29,7 +29,7 @@
     "this_brief_archive": "/briefs/2026-07-22"
   },
   "daily": {
-    "generated_at_utc": "2026-07-22T12:50:03Z",
+    "generated_at_utc": "2026-07-23T01:31:25Z",
     "tournament": {
       "phase_label": "Completed",
       "matches_settled": 104,
