@@ -1,7 +1,7 @@
 {
   "schedule_feed": {
     "source": "football-data.org/v4/competitions/WC/matches",
-    "fetched_at_utc": "2026-07-24T01:26:37Z"
+    "fetched_at_utc": "2026-07-25T01:26:34Z"
   },
   "competition": "WC2026",
   "count": 32,
