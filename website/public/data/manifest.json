@@ -1972,5 +1972,11 @@
     "generated_at_utc": "2026-08-04T01:20:33Z",
     "bundle_url": "/data/snapshots/2026-08-04T01:20Z/",
     "meta_url": "/data/snapshots/2026-08-04T01:20Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-08-05T01:24Z",
+    "generated_at_utc": "2026-08-05T01:24:04Z",
+    "bundle_url": "/data/snapshots/2026-08-05T01:24Z/",
+    "meta_url": "/data/snapshots/2026-08-05T01:24Z/snapshot_meta.json"
   }
 ]
