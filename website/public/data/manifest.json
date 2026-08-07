@@ -1984,5 +1984,11 @@
     "generated_at_utc": "2026-08-06T01:21:43Z",
     "bundle_url": "/data/snapshots/2026-08-06T01:21Z/",
     "meta_url": "/data/snapshots/2026-08-06T01:21Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-08-07T02:02Z",
+    "generated_at_utc": "2026-08-07T02:02:27Z",
+    "bundle_url": "/data/snapshots/2026-08-07T02:02Z/",
+    "meta_url": "/data/snapshots/2026-08-07T02:02Z/snapshot_meta.json"
   }
 ]
