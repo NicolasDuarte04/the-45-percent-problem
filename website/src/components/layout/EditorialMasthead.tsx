@@ -285,7 +285,7 @@ export function EditorialMasthead({
               whiteSpace: "nowrap",
             }}
           >
-            Today&rsquo;s brief
+            Brief
           </Link>
 
           {!onTerminal && (

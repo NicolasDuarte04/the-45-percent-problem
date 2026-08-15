@@ -33,7 +33,7 @@ export function UpcomingMatchesList({
             className="mono text-[11px] mt-[3px]"
             style={{ color: "var(--text-tertiary)" }}
           >
-            group-stage and knockout matches resolved from the draw
+            group-stage and knockout fixtures for this team
           </div>
         </div>
         <span
@@ -52,8 +52,8 @@ export function UpcomingMatchesList({
             color: "var(--text-tertiary)",
           }}
         >
-          No upcoming fixtures in the snapshot. {fifaCode} may have been
-          eliminated or the draw is pending.
+          No upcoming fixtures. The tournament is complete; every {fifaCode}{" "}
+          result is on the matches page.
         </div>
       ) : (
         matches.map((m) => {

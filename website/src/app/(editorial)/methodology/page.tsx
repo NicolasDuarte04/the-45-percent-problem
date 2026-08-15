@@ -22,7 +22,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Methodology | 45analytics",
   description:
-    "The 45analytics model in one sentence; and a link into the long-form Phase 1 framework essay. Today's daily brief shown above for reference.",
+    "The 45analytics model in one sentence; and a link into the long-form Phase 1 framework essay. The latest published brief shown above for reference.",
 };
 
 export default async function MethodologyEntryPage({
@@ -66,7 +66,8 @@ export default async function MethodologyEntryPage({
             color: "var(--text-primary)",
           }}
         >
-          A bivariate Poisson model with Dixon-Coles correction, run nightly.
+          A bivariate Poisson model with Dixon-Coles correction, run nightly
+          through the tournament.
         </h1>
         <p
           style={{
@@ -78,15 +79,13 @@ export default async function MethodologyEntryPage({
             maxWidth: 640,
           }}
         >
-          10,000 Monte Carlo simulations per nightly snapshot. The
-          pre-registered market layer de-vigs bookmaker odds via the power
-          method, flags edges above a 3% mainline threshold (5% for
-          derivatives), and suppresses them when the volatility gate triggers.
-          The layer covers knockout fixtures live: model probabilities
-          conditioned on settled results are compared against de-vigged market
-          odds, ungraded. Only the 72 pre-registered group-stage forecasts are
-          ever graded. When the odds are older than 30 hours the layer reports
-          itself stale rather than showing stale rows.
+          10,000 Monte Carlo simulations per snapshot, rebuilt nightly through
+          the tournament. The pre-registered market layer de-vigs bookmaker odds
+          via the power method, flags edges above a 3% mainline threshold (5%
+          for derivatives), and suppresses them when the volatility gate
+          triggers. The layer tracked knockout fixtures conditioned on settled
+          results against de-vigged market odds, ungraded. Only the 72
+          pre-registered group-stage forecasts are ever graded.
           The full specification: every parameter, every calibration step,
           every kill criterion: lives in the vault.
         </p>
@@ -95,7 +94,7 @@ export default async function MethodologyEntryPage({
       <section
         data-surface="brief"
         style={{ background: "transparent", marginBottom: 40 }}
-        aria-label="Today's brief at a glance"
+        aria-label="The latest brief at a glance"
       >
         <div
           className="mono"
@@ -107,7 +106,7 @@ export default async function MethodologyEntryPage({
             marginBottom: 14,
           }}
         >
-          Today&rsquo;s brief
+          Latest brief
         </div>
         <LiveDataBlock showFallbackMarker={showFallbackMarker} />
       </section>

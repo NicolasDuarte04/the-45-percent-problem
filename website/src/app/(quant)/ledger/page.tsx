@@ -35,7 +35,7 @@ function TopMissesNarrative({ records }: { records: LedgerRecord[] }) {
         className="py-6 text-center text-[12px]"
         style={{ color: "var(--text-tertiary)" }}
       >
-        No M★ misses recorded in this snapshot. This section populates as matches settle.
+        No M★ misses recorded in the graded ledger.
       </div>
     );
   }
@@ -285,8 +285,8 @@ export default function LedgerPage() {
                 bracket
               </Link>
               . The pre-registered progression checkpoint (which teams the
-              frozen model favored to advance) will be reported here when it
-              settles.
+              frozen model favored to advance) has now settled with the
+              tournament.
             </p>
           ) : null}
           </div>

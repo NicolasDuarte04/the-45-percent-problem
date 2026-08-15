@@ -51,7 +51,7 @@ export const BRACKET_STEPS: TourStep[] = [
         over all possible group-stage and bracket realisations. These are not
         conditional probabilities of the form{" "}
         <span className="mono">P(reach R | reached R&minus;1)</span>; the
-        latter become reportable only after the draw resolves and slots are
+        latter became reportable only after the draw resolved and slots were
         populated.
       </>
     ),

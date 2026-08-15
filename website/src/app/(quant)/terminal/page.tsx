@@ -164,18 +164,17 @@ export default async function TerminalPage({
               className="text-[13px] font-medium"
               style={{ color: "var(--text-primary)" }}
             >
-              Live odds ingestion pending
+              No bookmaker lines were ingested
             </p>
             <p
               className="text-[12px] mt-1.5 max-w-[640px] mx-auto"
               style={{ color: "var(--text-tertiary)" }}
             >
-              No real bookmaker lines are ingested yet, so no divergence rows are
-              published. The earlier synthetic, Elo-derived rows (which carried a
-              bookmaker source attribution they did not come from) have been
-              retired rather than shown behind a disclaimer. Real de-vigged
-              divergence appears here once the odds producer runs with a
-              provisioned key. The model-vs-market method is documented at{" "}
+              No real bookmaker lines were ingested during the tournament, so no
+              divergence rows were published. The earlier synthetic, Elo-derived
+              rows (which carried a bookmaker source attribution they did not
+              come from) were retired rather than shown behind a disclaimer. The
+              model-vs-market method is documented at{" "}
               <a
                 href="https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321"
                 target="_blank"
@@ -233,7 +232,7 @@ export default async function TerminalPage({
               className="text-[13px] font-medium"
               style={{ color: "var(--text-primary)" }}
             >
-              No open knockout lines right now
+              No open knockout lines were published
             </p>
             <p
               className="text-[12px] mt-1.5 max-w-[640px] mx-auto"
@@ -286,8 +285,8 @@ export default async function TerminalPage({
             Rows where the Volatility Gate tripped are annotated with a{" "}
             <span style={{ color: "var(--gate-fired)" }}>◆</span> dot and remain
             visible: the gate annotates, it does not filter. Gate rules are shown
-            in the Gate column hover-card. Today the gate evaluates only the
-            Pinnacle staleness rule from a single odds snapshot; the news,
+            in the Gate column hover-card. As published, the gate evaluates only
+            the Pinnacle staleness rule from a single odds snapshot; the news,
             intra-book, cross-book and Polymarket rules report as pending data in
             that hover-card and the row detail, so an{" "}
             <span className="mono">Open</span> status is never a full five-rule pass.{" "}

@@ -66,11 +66,13 @@ describe("upcomingDivergenceRows", () => {
 });
 
 describe("DIVERGENCE_KNOCKOUT_PENDING_NOTE", () => {
-  it("states group-stage coverage is done and knockout coverage is now live (cp-30)", () => {
+  it("states group-stage and knockout coverage are both complete (cp-44)", () => {
     expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).toContain("Group-stage divergence coverage is complete");
-    expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).toContain("live");
-    // cp-30 revived the knockout feed; the note must no longer say "pending".
+    // cp-44 archive posture: the tournament is over, so the note reads as a
+    // completed record, not a live feed.
+    expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).toContain("coverage is complete");
     expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).not.toContain("pending");
+    expect(DIVERGENCE_KNOCKOUT_PENDING_NOTE).not.toContain("is live");
   });
 
   it("carries no em or en dashes", () => {

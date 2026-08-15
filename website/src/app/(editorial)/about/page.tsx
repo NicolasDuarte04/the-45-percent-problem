@@ -60,14 +60,13 @@ export default function AboutPage() {
             maxWidth: "64ch",
           }}
         >
-          A probabilistic pricing study for the 2026 FIFA World Cup. It
-          publishes the nightly state of the M&#9733; probability distribution
-          and an append-only record of every forecast the model has ever made.
-          The market-divergence layer covers knockout fixtures live: model
-          probabilities conditioned on settled results are compared against
-          de-vigged market odds, ungraded. Only the 72 pre-registered
-          group-stage forecasts are ever graded. When the odds are older than
-          30 hours the layer reports itself stale rather than showing stale rows.
+          A probabilistic pricing study for the 2026 FIFA World Cup, now a
+          completed research archive. It publishes the final state of the
+          M&#9733; probability distribution and an append-only record of every
+          forecast the model made. The market-divergence layer tracked knockout
+          fixtures conditioned on settled results against de-vigged market odds,
+          ungraded. Only the 72 pre-registered group-stage forecasts are ever
+          graded.
         </p>
 
         {/* Divider */}
@@ -93,10 +92,11 @@ export default function AboutPage() {
             What this is
           </h2>
           <p style={{ fontSize: 16, lineHeight: "26px", color: "var(--text-secondary)", marginBottom: 16 }}>
-            A publicly-hosted, nightly-rebuilt, read-only research terminal.
-            It renders the state of M&#9733; against the 2026 FIFA World Cup and
-            publishes its forecast record. Its content is primarily tabular.
-            Its voice is primarily academic.
+            A publicly-hosted, read-only research terminal, rebuilt nightly
+            through the tournament and now archived. It renders the final state
+            of M&#9733; against the 2026 FIFA World Cup and publishes its
+            forecast record. Its content is primarily tabular. Its voice is
+            primarily academic.
           </p>
           <p style={{ fontSize: 16, lineHeight: "26px", color: "var(--text-secondary)", marginBottom: 16 }}>
             Every number rendered is traceable to a specific{" "}

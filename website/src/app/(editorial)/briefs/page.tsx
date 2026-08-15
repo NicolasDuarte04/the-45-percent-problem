@@ -10,7 +10,7 @@ export const revalidate = 600;
 export const metadata: Metadata = {
   title: "Brief Archive | 45analytics",
   description:
-    "Every published 45analytics daily brief, reverse-chronological. The model and the market, every day at 12:00 UTC.",
+    "Every 45analytics daily brief from the World Cup 2026 run, reverse-chronological. A completed, fully readable archive.",
 };
 
 function rowSummary(brief: BriefSample): string {
@@ -22,8 +22,6 @@ function rowSummary(brief: BriefSample): string {
   // largest market divergence; movers_line is the calibration summary.
   return brief.headline.movers_line || "Daily model brief.";
 }
-
-const FIRST_ISSUE_PLANNED = "2026-06-11";
 
 export default async function BriefsArchivePage() {
   const briefs = await listAvailableBriefs();
@@ -177,7 +175,7 @@ function ArchiveEmptyState() {
         borderRadius: 2,
         background: "var(--bg-panel-elev)",
       }}
-      aria-label="No briefs published yet"
+      aria-label="No briefs in this archive"
     >
       <div
         className="mono"
@@ -189,7 +187,7 @@ function ArchiveEmptyState() {
           marginBottom: 8,
         }}
       >
-        ◆ Pre-launch
+        ◆ Archive
       </div>
       <p
         style={{
@@ -200,7 +198,7 @@ function ArchiveEmptyState() {
           margin: "0 0 12px",
         }}
       >
-        No dispatches published yet.
+        No dispatches in this archive.
       </p>
       <p
         style={{
@@ -211,7 +209,8 @@ function ArchiveEmptyState() {
           margin: 0,
         }}
       >
-        First issue lands {FIRST_ISSUE_PLANNED} at 12:00 UTC.
+        The brief ran daily through the World Cup 2026 window; its published
+        issues are collected here.
       </p>
     </section>
   );

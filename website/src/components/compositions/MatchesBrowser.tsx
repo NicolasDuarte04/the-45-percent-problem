@@ -312,12 +312,68 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
 }
 
 /**
- * Download affordance for the daily Instagram share card. Each link hits the
- * /api/og/daily route, which renders a branded 1080x1350 PNG from the live
- * snapshot (recap = the latest played day, preview = the next day to be
- * played). The PNG content is English, matching the rest of the page chrome.
+ * cp-44: completed-tournament note. Once the WC 2026 is over there are no
+ * upcoming fixtures, so the old "knockout pairings appear once the draw
+ * resolves" empty state is stale. This replaces it with the archive framing:
+ * the record is final, every settled card is still browsable below (the Played
+ * section), and the reader is pointed at the graded ledger, the bracket, and
+ * the research vault. `settledCount` is read from the snapshot meta so the line
+ * stays true to the published record rather than hardcoding a total.
  */
-function ShareCard() {
+function CompletedArchiveNote({ settledCount }: { settledCount: number }) {
+  const linkStyle = { color: "var(--accent-focus)" } as const;
+  return (
+    <section
+      className="flex flex-col gap-3"
+      aria-label="Tournament complete"
+    >
+      <div
+        className="flex items-baseline gap-3 border-b pb-2"
+        style={{ borderColor: "var(--border-default)" }}
+      >
+        <h2
+          className="text-[14px] font-medium tracking-tight"
+          style={{ color: "var(--text-primary)" }}
+        >
+          Tournament complete
+        </h2>
+      </div>
+      <p className="text-[13px]" style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>
+        The tournament is complete. All {settledCount} fixtures are settled.
+        Every settled match stays browsable below, each with its real final
+        score and the probability the model gave the result.
+      </p>
+      <p className="text-[13px]" style={{ color: "var(--text-tertiary)", lineHeight: 1.6 }}>
+        Read the record: the graded{" "}
+        <Link href="/ledger" style={linkStyle}>
+          ledger
+        </Link>{" "}
+        of the 72 pre-registered group-stage forecasts, the{" "}
+        <Link href="/bracket" style={linkStyle}>
+          bracket
+        </Link>
+        , and the research{" "}
+        <Link href="/vault" style={linkStyle}>
+          vault
+        </Link>
+        .
+      </p>
+    </section>
+  );
+}
+
+/**
+ * Download affordance for the Instagram share card. Each link hits the
+ * /api/og/daily route, which renders a branded 1080x1350 PNG.
+ *
+ * During the tournament this offered two day-cards (recap = the latest played
+ * day, preview = the next day to be played). cp-44: once the tournament is
+ * complete the route renders a single completed-tournament summary card for
+ * every variant, so here we collapse to one honest "Tournament summary" link
+ * rather than two labels that both now resolve to the same summary. The PNG
+ * content is English, matching the rest of the page chrome.
+ */
+function ShareCard({ tournamentComplete }: { tournamentComplete: boolean }) {
   const linkStyle = {
     border: "1px solid var(--border-default)",
     background: "var(--bg-panel)",
@@ -329,27 +385,41 @@ function ShareCard() {
         className="mono text-[10px] uppercase tracking-[.08em]"
         style={{ color: "var(--text-tertiary)" }}
       >
-        Daily share card
+        {tournamentComplete ? "Share card" : "Daily share card"}
       </span>
       <div className="flex gap-2 flex-wrap">
-        <a
-          href="/api/og/daily?variant=recap"
-          download="45analytics-day-recap.png"
-          className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
-          style={linkStyle}
-        >
-          <Download size={14} aria-hidden="true" />
-          Results recap
-        </a>
-        <a
-          href="/api/og/daily?variant=preview"
-          download="45analytics-day-preview.png"
-          className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
-          style={linkStyle}
-        >
-          <Download size={14} aria-hidden="true" />
-          Today&rsquo;s preview
-        </a>
+        {tournamentComplete ? (
+          <a
+            href="/api/og/daily"
+            download="45analytics-tournament-summary.png"
+            className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
+            style={linkStyle}
+          >
+            <Download size={14} aria-hidden="true" />
+            Tournament summary
+          </a>
+        ) : (
+          <>
+            <a
+              href="/api/og/daily?variant=recap"
+              download="45analytics-day-recap.png"
+              className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
+              style={linkStyle}
+            >
+              <Download size={14} aria-hidden="true" />
+              Results recap
+            </a>
+            <a
+              href="/api/og/daily?variant=preview"
+              download="45analytics-day-preview.png"
+              className="no-underline inline-flex items-center gap-1.5 text-[13px] rounded px-3 py-2"
+              style={linkStyle}
+            >
+              <Download size={14} aria-hidden="true" />
+              Today&rsquo;s preview
+            </a>
+          </>
+        )}
       </div>
     </div>
   );
@@ -358,9 +428,17 @@ function ShareCard() {
 export function MatchesBrowser({
   matches,
   knockouts = [],
+  tournamentComplete = false,
+  settledCount = 0,
 }: {
   matches: MatchDetail[];
   knockouts?: LiveKnockoutMatch[];
+  /** cp-44: true once the tournament is over (meta phase "completed", 0
+   * remaining). Swaps the in-tournament "Upcoming" empty state for the
+   * completed-archive note and collapses the share card to one summary link. */
+  tournamentComplete?: boolean;
+  /** Settled-fixture count from the snapshot meta, shown in the completed note. */
+  settledCount?: number;
 }) {
   const [query, setQuery] = useState("");
   // The route is force-static, so "now" must come from the client to avoid a
@@ -434,8 +512,8 @@ export function MatchesBrowser({
 
   return (
     <div className="flex flex-col gap-10">
-      {/* ── Daily share card ────────────────────────────────────────────── */}
-      <ShareCard />
+      {/* ── Share card ──────────────────────────────────────────────────── */}
+      <ShareCard tournamentComplete={tournamentComplete} />
 
       {/* ── Search ──────────────────────────────────────────────────────── */}
       <div role="search" className="flex flex-col gap-1.5">
@@ -495,17 +573,27 @@ export function MatchesBrowser({
             </section>
           )}
 
-          {/* ── Upcoming ──────────────────────────────────────────────────── */}
-          <section className="flex flex-col gap-4">
-            <SectionHeader title="Upcoming" count={rest.length} />
-            {upcomingGroups.length === 0 ? (
-              <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
-                {upcomingEmptyMessage(query)}
-              </p>
-            ) : (
-              <DayGroups groups={upcomingGroups} />
-            )}
-          </section>
+          {/* ── Upcoming / Completed ──────────────────────────────────────── */}
+          {/* cp-44: once the tournament is complete there are no upcoming
+              fixtures, so with no team filter active we show the completed
+              archive note instead of the in-tournament "Upcoming" section and
+              its "pairings appear once the draw resolves" empty state. A filter
+              keeps the normal Upcoming section (its emptiness is then
+              attributable to the filter, not to the tournament being over). */}
+          {tournamentComplete && query.trim().length === 0 ? (
+            <CompletedArchiveNote settledCount={settledCount} />
+          ) : (
+            <section className="flex flex-col gap-4">
+              <SectionHeader title="Upcoming" count={rest.length} />
+              {upcomingGroups.length === 0 ? (
+                <p className="text-[12px]" style={{ color: "var(--text-tertiary)" }}>
+                  {upcomingEmptyMessage(query)}
+                </p>
+              ) : (
+                <DayGroups groups={upcomingGroups} />
+              )}
+            </section>
+          )}
 
           {/* ── Played (collapsible) ──────────────────────────────────────── */}
           {played.length > 0 && (

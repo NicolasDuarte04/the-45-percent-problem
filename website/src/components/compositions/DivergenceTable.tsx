@@ -1081,7 +1081,7 @@ export function DivergenceTable({
               expandedIds={expandedIds}
               onToggleExpand={toggleExpand}
               containerStyle={staleStyle}
-              ariaLabel={`Divergence terminal, live and upcoming markets. ${liveSorted.length} rows`}
+              ariaLabel={`Divergence terminal, published markets. ${liveSorted.length} rows`}
             />
           ) : (
             <div

@@ -162,14 +162,14 @@ export function LiveKnockoutRounds({
           className="text-[13px] font-medium"
           style={{ color: "var(--text-primary)" }}
         >
-          Live bracket · resolved pairings, round by round
+          Final bracket · resolved pairings, round by round
         </h3>
         <p
           className="text-[11px] mt-0.5"
           style={{ color: "var(--text-tertiary)" }}
         >
-          The actual draw as it resolves: settled results on decided matches, the
-          model&apos;s conditional advance probability on matches still to play.
+          The actual draw as it resolved: settled results on every decided match,
+          with the model&apos;s conditional advance probability recorded alongside.
           Ungraded.
         </p>
       </div>
