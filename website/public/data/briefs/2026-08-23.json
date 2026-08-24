@@ -1,0 +1,54 @@
+{
+  "brief_date": "2026-08-23",
+  "issue_number": 86,
+  "model_variant": "M_STAR",
+  "code_sha": "e7216ff71b8235a8",
+  "data_snapshot_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
+  "mc_runs": 10000,
+  "next_brief_utc": "2026-08-24T12:00:00Z",
+  "latest_archive_url": "/briefs/2026-08-23",
+  "lead_in": {
+    "tournament_sentence": "Completed: 104 of 104 matches settled, 0 remaining. The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire.",
+    "match_sentence": "No ties are scheduled today and none settled yesterday. The bracket state carries forward.",
+    "fallback_used": true
+  },
+  "headline": {
+    "summary_line": "The frozen pre-tournament forecast is logged against the day's fixtures, extending the running calibration record.",
+    "movers_line": "The model-versus-market divergence layer is paused; no divergence figures are published today."
+  },
+  "teaser": {
+    "has_divergence": false
+  },
+  "top_divergences": [],
+  "tournament_movers": [],
+  "suppressed_today": [],
+  "featured_teams": [],
+  "methodology_links": {
+    "model_card": "/methodology/m-star",
+    "devig_method": "/methodology/power-devig",
+    "this_brief_archive": "/briefs/2026-08-23"
+  },
+  "daily": {
+    "generated_at_utc": "2026-08-24T00:35:22Z",
+    "tournament": {
+      "phase_label": "Completed",
+      "matches_settled": 104,
+      "matches_remaining": 0,
+      "total_matches": 104,
+      "sentence": "Completed: 104 of 104 matches settled, 0 remaining."
+    },
+    "r16_checkpoint": {
+      "status": "published",
+      "sentence": "The Round of 16 checkpoint has been evaluated: on the 72 pre-registered group-stage forecasts, M2 was 1.47 SE better than M0 against the 2.0 SE threshold; the kill criterion did not fire."
+    },
+    "divergence": {
+      "status": "paused",
+      "fixtures_covered": 0,
+      "sentence": "The model-versus-market divergence layer is paused; no divergence figures are published today."
+    },
+    "knockout_disclaimer": "Model numbers for knockout ties are live and not graded; only the frozen pre-tournament group forecasts are scored.",
+    "today_fixtures": [],
+    "yesterday_results": [],
+    "next_fixture_date": null
+  }
+}
