@@ -17,7 +17,7 @@ T-14 days to WC kickoff. Three items audited on `cp-07-prelaunch-audit-and-fix` 
   "generated_at_utc": "2026-05-28T01:51:30Z",
   "code_sha": "8b1188b2343cca09",
   "data_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
-  "pre_reg_tag": "v1.0.0-mstar-lock",
+  "pre_reg_tag": "v1.0.0-MSTAR-LOCKED",
   "champion_model": "M_STAR",
   "mc_runs": 10000,
   "tournament_phase": "pre_tournament",

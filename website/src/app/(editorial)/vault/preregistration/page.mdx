@@ -140,13 +140,14 @@ Pre-registrations on OSF cannot be deleted; they can be amended only by
 filing a child registration that references the parent and produces a
 visible fork in the audit trail.
 
-### The signed Git tag
+### The annotated Git tag
 
-`v1.0.0-mstar-lock`. The same constant set is committed to the project
-repository under this signed Git tag. A signed tag cannot be moved or
-backdated without invalidating its cryptographic signature. The
-tagger's GPG public key fingerprint is published on the OSF record and
-in the repository's `SECURITY.md`.
+`v1.0.0-MSTAR-LOCKED`. The same constant set is committed to the project
+repository under this annotated Git tag, whose message carries the
+lockdown date and the OSF URL. The tag is annotated rather than
+GPG-signed, so it is a convenience pointer and not a cryptographic
+guarantee; the binding guarantees are the OSF timestamp above and the
+sealed constants file below.
 
 ### The sealed `pre_reg_constants.yaml`
 
@@ -175,23 +176,18 @@ Navigate to `osf.io/spmkg`. Confirm the lockdown timestamp
 (2026-04-22T00:00:00Z) and the registration status (LOCKED). Read the
 form as submitted. Note the DOI for citation: `10.17605/OSF.IO/8B5HD`.
 
-### Signed-tag verification
+### Tag verification
 
 ```bash
 git clone https://github.com/the45percent/the-45-percent
-git verify-tag v1.0.0-mstar-lock
+git rev-list -n1 v1.0.0-MSTAR-LOCKED
+git cat-file -p v1.0.0-MSTAR-LOCKED
 ```
 
-A successful response shows the tagger identity, the signing key
-fingerprint, and the commit SHA the tag points to. The fingerprint can
-be cross-checked against the value published on the OSF record. A
-mismatch indicates the tag was forged or tampered with.
-
-<MarginNote>
-  The `git verify-tag` command requires that the tagger's GPG public key
-  is in your local keyring. The key fingerprint is published on the OSF
-  record and in the repository's `SECURITY.md`.
-</MarginNote>
+The first command must resolve to the commit SHA published on the OSF
+record. The second prints the tag's message, which carries the lockdown
+date and the OSF URL. A mismatch on the commit SHA indicates the tag
+was moved.
 
 ### Constants file SHA check
 
@@ -216,7 +212,7 @@ drifted apart, which is a research-integrity concern in its own right.
 
 The constants below are reproduced from the tagged commit for
 reference. The canonical version lives at
-`v1.0.0-mstar-lock:evaluation/pre_reg_constants.yaml` in the project
+`v1.0.0-MSTAR-LOCKED:evaluation/pre_reg_constants.yaml` in the project
 repository, and that version contains roughly seventy leaf-level
 constants. The block reproduced here is a curated subset covering the
 headline commitments. Any discrepancy between this page and the tagged
@@ -224,7 +220,7 @@ file is an error in this page.
 
 ```yaml
 # pre_reg_constants.yaml (curated subset)
-# Sealed 2026-04-22 · tag v1.0.0-mstar-lock
+# Sealed 2026-04-22 · tag v1.0.0-MSTAR-LOCKED
 # Schema version 8.0 · status LOCKED
 
 meta:

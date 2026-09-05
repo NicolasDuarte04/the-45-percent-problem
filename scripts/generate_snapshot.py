@@ -468,7 +468,7 @@ def main() -> None:
         "generated_at_utc": GENERATED_AT,
         "code_sha": code_sha,
         "data_sha": data_sha,
-        "pre_reg_tag": "v1.0.0-mstar-lock",
+        "pre_reg_tag": "v1.0.0-MSTAR-LOCKED",
         "champion_model": "M0",
         "mc_runs": MC_RUNS,
         "tournament_phase": "pre_tournament",

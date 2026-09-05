@@ -22,7 +22,7 @@ The phase therefore operates under a **one-way door** principle: every action in
 1. **Single source of truth.** After Phase 8 completes, `pre_reg_constants.yaml` is the **only** place any downstream module reads a tunable constant from. Any hard-coded magic number discovered in code post-lock is a **defect**, not a configuration choice.
 2. **Public before private.** Every artifact produced in Phase 8 (CV battery report, constants YAML, README, design docs) is uploaded to OSF **before** the Git tag is pushed to the remote. The OSF timestamp is the authoritative pre-registration moment; the Git tag is its cryptographic mirror.
 3. **Hash everything.** The YAML, the CV report PDF, every design doc in the repository, and the Parquet data snapshot used for calibration all receive explicit SHA-256 values recorded in the OSF manifest. The paper quotes these SHAs verbatim.
-4. **Clean working tree.** The `v1.0.0-mstar-lock` tag is only pushed from a working tree where `git status --porcelain` produces zero lines. The tag message itself records the current `HEAD` SHA, the data snapshot SHA, and the OSF DOI.
+4. **Clean working tree.** The `v1.0.0-MSTAR-LOCKED` tag is only pushed from a working tree where `git status --porcelain` produces zero lines. The tag message itself records the current `HEAD` SHA, the data snapshot SHA, and the OSF DOI.
 5. **No retroactive edits.** Once a file is OSF-registered, it is never overwritten in the repository. Corrections live in `amendments/` and reference the original artifact by SHA.
 6. **Decision provenance.** The M★ crown is *declared* in Phase 8 via the formal CV battery even though Phase 4 flagged M2 as the champion candidate. The Phase 4 result is a **preview**; the Phase 8 battery is the **adjudication**. The paper cites only Phase 8.
 7. **Frozen means frozen.** Post-lock the repository accepts exactly two categories of commits: (a) pure data additions to `data/snapshots/`, and (b) amendment records under `amendments/`. Every other change is blocked by branch protection and CI.
@@ -232,7 +232,7 @@ osf.io/<handle>/
   │     ├── cv_battery_result.json
   │     └── cv_folds.parquet
   ├── 04_code_reference/
-  │     ├── git_sha.txt                      # v1.0.0-mstar-lock SHA
+  │     ├── git_sha.txt                      # v1.0.0-MSTAR-LOCKED SHA
   │     ├── repo_tree.txt                    # full file tree at freeze
   │     └── dependency_lock.txt              # uv.lock / requirements-lock.txt
   ├── 05_data_manifest/
@@ -250,7 +250,7 @@ osf.io/<handle>/
 3. **Manifest file.** `00_README.md` ends with a **Manifest** table listing every file's SHA-256. This manifest is the human-readable cross-check of everything in `pre_reg_constants.yaml → meta`.
 4. **Pre-registration mint.** From the OSF project, create a **Frozen Registration** of type *OSF Preregistration* (not *Open-Ended Registration*). The registration snapshots the full component tree at a UTC timestamp and issues a persistent DOI. Once minted, the registration is **immutable** — files cannot be added, removed, or modified within the registered snapshot.
 5. **Embargo.** The registration is created with an embargo aligned to the live MVP website launch. After the embargo lifts, the record is public and discoverable. Target public-visibility date: **2026-04-25** (aligned with the April 25 live MVP website launch).
-6. **DOI capture.** The minted DOI is written back into the repository at `docs/osf_registration_doi.txt` in the **same commit** that produces the Git tag (§4). The DOI is also embedded in the `v1.0.0-mstar-lock` tag message.
+6. **DOI capture.** The minted DOI is written back into the repository at `docs/osf_registration_doi.txt` in the **same commit** that produces the Git tag (§4). The DOI is also embedded in the `v1.0.0-MSTAR-LOCKED` tag message.
 7. **Amendment protocol.** Post-registration amendments are only possible via an OSF *child registration* linked to the parent. Each amendment requires: (a) a dated justification document, (b) a new SHA for the changed artifact, (c) a paper-manuscript footnote quoting the amendment DOI. The amendment process is invoked only for the scenarios enumerated in §4.4 (critical-bug hotfix) and never for performance reasons.
 
 ### 3.4 Pre-registered Hypotheses (content of `06_pre_registered_hypotheses.md`)
@@ -297,7 +297,7 @@ Encode the pre-registration into the repository itself. After this step, the cod
    This commit contains only: the sealed YAML, `evaluation/constants.sha`, `docs/osf_registration_doi.txt`, and `04_code_reference/git_sha.txt` (self-referencing; see §4.3 for how this is achieved).
 3. **Signed annotated tag.**
    ```bash
-   git tag -s v1.0.0-mstar-lock -m "M★ locked for FIFA WC 2026. OSF DOI: {doi}. Data SHA: {sha}."
+   git tag -s v1.0.0-MSTAR-LOCKED -m "M★ locked for FIFA WC 2026. OSF DOI: {doi}. Data SHA: {sha}."
    ```
    The `-s` flag mandates a GPG/SSH signature from a key whose public half is recorded on OSF under `04_code_reference/`.
 4. **Push order.** The tag is pushed **after** the OSF registration is minted (§3) but **before** public embargo lifts. This guarantees the tag's timestamp is bracketed by the OSF timestamp on both ends, rendering any "we tagged it later" objection mechanically impossible.
@@ -312,7 +312,7 @@ Encode the pre-registration into the repository itself. After this step, the cod
 
 The Phase 7 `forecast_log` schema already mandates a `code_sha` field (see Phase 7 §1.3). Phase 8 **tightens** this contract:
 
-- At forecast emit time, `forecast_log.emit_opening()` calls `git rev-parse HEAD` **and** verifies that the current `HEAD` is an ancestor of `v1.0.0-mstar-lock` OR is the tag itself.
+- At forecast emit time, `forecast_log.emit_opening()` calls `git rev-parse HEAD` **and** verifies that the current `HEAD` is an ancestor of `v1.0.0-MSTAR-LOCKED` OR is the tag itself.
 - If `HEAD` is the tag exactly, `code_sha` is emitted as the full 40-character SHA.
 - If `HEAD` is a descendant (data-only commit per §4.4), the emitted record additionally carries a `post_lock_diff` field listing the files changed since the tag, for the auditor's consumption.
 - If `HEAD` is **not** a descendant of the tag (i.e., a force-push or branch switch corrupted history), emission aborts with `PostLockHistoryViolation` and the `market_pipeline.py` scheduler shuts down the live site until manual resolution.
@@ -321,11 +321,11 @@ The self-referential `git_sha.txt` file in the final commit is generated by a tw
 
 ### 4.4 What Is Allowed Post-Lock (STRICT BOUNDARIES)
 
-The only commits accepted on `main` after `v1.0.0-mstar-lock` are:
+The only commits accepted on `main` after `v1.0.0-MSTAR-LOCKED` are:
 
 1. **Pure data additions** to `data/snapshots/`. Specifically: new daily Pinnacle/Polymarket odds captures, new match-result records from completed WC 2026 matches, new FIFA-ranking monthly updates. These commits must pass the `post-lock-guard` CI check, which:
    - Asserts that the diff touches **only** files matching `data/snapshots/**` and `data/raw_odds/**`.
-   - Asserts that `pre_reg_constants.yaml`, every file under `src/`, and every file under `schema/` are byte-identical to their `v1.0.0-mstar-lock` versions.
+   - Asserts that `pre_reg_constants.yaml`, every file under `src/`, and every file under `schema/` are byte-identical to their `v1.0.0-MSTAR-LOCKED` versions.
    - Asserts that the new data file appears in an append-only manner (no pre-existing Parquet is modified).
 2. **Amendment records** under `amendments/{YYYY-MM-DD}-{slug}/` containing a justification markdown, an OSF child-registration DOI, and any replacement artifact. Amendments require:
    - A public blog post or paper-manuscript footnote announcing the change.
@@ -340,7 +340,7 @@ The following changes are blocked by CI and, should they somehow land, trigger i
 1. **Any edit to `src/`.** Bug fixes included. If a critical defect is found, the response is an OSF amendment (§4.4.2), not a silent patch.
 2. **Any edit to `pre_reg_constants.yaml`.** Changing a threshold mid-tournament is the canonical example of the pre-registration failure mode this entire phase exists to prevent.
 3. **Any edit to `schema/`.** Schema evolution constitutes a silent breaking of reproducibility guarantees.
-4. **Rebasing, squashing, or rewriting history at or before `v1.0.0-mstar-lock`.** The tag's SHA must remain stable for the lifetime of the project.
+4. **Rebasing, squashing, or rewriting history at or before `v1.0.0-MSTAR-LOCKED`.** The tag's SHA must remain stable for the lifetime of the project.
 5. **Deleting any file under `evaluation/forecasts/`.** Write-once semantics are enforced by filesystem-level tests in CI.
 6. **Swapping `M★` for another model mid-tournament**, even if a shadow model (M1/M3) outperforms. This is restated here for completeness of the post-lock prohibition list; the underlying rule is Phase 7 §6.3.
 
@@ -359,8 +359,8 @@ The hotfix protocol is a pre-registered escape valve, not a license to tune. Inv
 
 ### 4.7 Acceptance Criteria (§4)
 
-- [ ] `v1.0.0-mstar-lock` tag exists on the remote, is signed, and its signature validates against the registered key.
-- [ ] `git show v1.0.0-mstar-lock` produces a tag message containing the OSF DOI and the data snapshot SHA verbatim.
+- [ ] `v1.0.0-MSTAR-LOCKED` tag exists on the remote, is signed, and its signature validates against the registered key.
+- [ ] `git show v1.0.0-MSTAR-LOCKED` produces a tag message containing the OSF DOI and the data snapshot SHA verbatim.
 - [ ] Branch protection rules on `main` are configured per §4.2; a test PR that modifies `src/` is blocked by CI with the expected `post-lock-guard` failure.
 - [ ] A synthetic test commit that adds a single new Parquet file under `data/snapshots/` passes CI end-to-end.
 - [ ] `forecast_log.emit_opening()` on a `HEAD` that is not a descendant of the tag raises `PostLockHistoryViolation`; golden test covers this case.
@@ -389,12 +389,12 @@ The following are **explicitly out of scope** for Phase 8. Any request to extend
 The phase is **complete** when all of the following hold simultaneously:
 
 - [ ] §1 (CV Battery), §2 (YAML Freeze), §3 (OSF Submission), §4 (Git Tag) each pass their local acceptance criteria.
-- [ ] `v1.0.0-mstar-lock` points to a commit whose tree contains a sealed `pre_reg_constants.yaml` with `meta.pre_registration_status == "LOCKED"`.
+- [ ] `v1.0.0-MSTAR-LOCKED` points to a commit whose tree contains a sealed `pre_reg_constants.yaml` with `meta.pre_registration_status == "LOCKED"`.
 - [ ] OSF Frozen Registration is minted with public visibility on or before **2026-04-25 23:59 UTC** (April 25 live MVP website launch).
-- [ ] Three independent reproductions (three fresh clones on three different machines, ideally three different operating systems) can: (a) check out `v1.0.0-mstar-lock`, (b) run `src/calibration/run_cv_battery.py`, (c) obtain a `cv_battery_result.json` that is byte-identical to the OSF-registered copy.
+- [ ] Three independent reproductions (three fresh clones on three different machines, ideally three different operating systems) can: (a) check out `v1.0.0-MSTAR-LOCKED`, (b) run `src/calibration/run_cv_battery.py`, (c) obtain a `cv_battery_result.json` that is byte-identical to the OSF-registered copy.
 - [ ] The `post-lock-guard` CI check is live and has blocked at least one intentional test-violation PR (documented in `.github/guard_test_pr.md`).
 - [ ] Every downstream module (Phase 5 match_model, Phase 6 market_pipeline, Phase 7 forecast_log and evaluation_dashboard) reads its constants from the sealed YAML at import time; this is asserted by an integration test that mutates the YAML and observes every dependent test failing with the expected `ConstantsMismatchError`.
-- [ ] The paper's methods section references the OSF DOI and the `v1.0.0-mstar-lock` SHA by name; a lint check in the manuscript build rejects any PR whose methods section lacks both strings.
+- [ ] The paper's methods section references the OSF DOI and the `v1.0.0-MSTAR-LOCKED` SHA by name; a lint check in the manuscript build rejects any PR whose methods section lacks both strings.
 - [ ] A one-page **Lockdown Certificate** is generated at `docs/lockdown_certificate.pdf` containing the DOI, tag SHA, YAML SHA, data SHA, CV-battery winner, and the signed author statement *"To the best of my knowledge, the pre-registration is complete and no post-hoc modifications have been made."*
 
 ---
@@ -404,7 +404,7 @@ The phase is **complete** when all of the following hold simultaneously:
 1. `src/calibration/run_cv_battery.py` — produces the CV-battery artifacts that feed the YAML.
 2. `src/lockdown/seal_constants.py` — validates and seals `pre_reg_constants.yaml`; depends on artifacts from step 1.
 3. **OSF project creation and upload** — manual workflow, scripted only for idempotent SHA verification (`src/lockdown/osf_verify.py`).
-4. Final freeze commit (§4.2.2) and signed tag (§4.2.3) — strictly after the OSF DOI is in hand.
+4. Final freeze commit (§4.2.2) and annotated tag (§4.2.3) — strictly after the OSF DOI is in hand.
 5. `post-lock-guard` CI workflow — implemented and enabled on `main`; a violation test PR demonstrates it works.
 6. `forecast_log` patch for `PostLockHistoryViolation` — appended to the existing Phase 7 module; backward-compatible golden-test addition.
 7. Lockdown Certificate generator (`src/lockdown/make_certificate.py`) — consumes the sealed YAML and the tag to produce the final PDF.

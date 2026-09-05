@@ -10,7 +10,7 @@
  *   - TypeScript built-ins (the Pick<T> utility type)
  *   - JSDoc convention (a "Returns the directory" leader on a function)
  *   - English code comments (a comment using the verb "returns")
- *   - Git tag identifiers (e.g. v1.0.0-mstar-lock)
+ *   - Git tag identifiers (e.g. v1.0.0-MSTAR-LOCKED)
  *   - The project's own academic vault essays (research writing about
  *     prediction, locks-on-publication, returns-on-investment)
  *   - A Blueprint Kelly-sizing term ("5% longshot", defined in

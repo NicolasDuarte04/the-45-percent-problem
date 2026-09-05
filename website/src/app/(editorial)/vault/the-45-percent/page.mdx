@@ -75,7 +75,7 @@ mainline markets, 5% on derivatives), Kelly fractions
 (<InlineMath math="f = 1/4" /> on mainlines, <InlineMath math="f = 1/8" />
 on longshots under 10% implied probability), the Volatility Gate's five
 suppression rules, the evaluation metrics, and the kill criterion itself.
-A signed Git tag (`v1.0.0-mstar-lock`) locks the code. Anything that
+An annotated Git tag (`v1.0.0-MSTAR-LOCKED`) locks the code. Anything that
 changes after lockdown is either a data ingestion (new matches as they
 happen) or an OSF-amended hotfix with a corresponding registry record.
 
@@ -238,14 +238,14 @@ documented and the protocol stays in force.
 
 There is no place on the site where the displayed model can quietly
 change between M0, M2, or anything else without an OSF amendment
-record. The signed Git tag and the locked champion artifact prevent
+record. The OSF amendment trail and the locked champion artifact prevent
 it.
 
 ## Where to go next
 
 * **[Models](/vault/models)**: The full M0 to M3 ablation, including the cross-validation tables and the M1 collapse.
 * **[Kill criteria](/vault/kill-criteria)**: The formal statement, the dual SE reading, and the live status block. The sanity-gate warning fired; the R16 live checkpoint is still ahead.
-* **[Pre-registration](/vault/preregistration)**: The OSF DOI, the signed Git tag, the sealed constants file, and the amendment v1.1 record.
+* **[Pre-registration](/vault/preregistration)**: The OSF DOI, the annotated Git tag, the sealed constants file, and the amendment v1.1 record.
 * **[Why probabilities](/vault/why-probabilities)**: Why we built around a probability distribution rather than a point prediction, and why that decision is the reason the kill criterion was even possible to define.
 * **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, CLV, and the Diebold-Mariano and Nyberg tests we use to grade ourselves.
 

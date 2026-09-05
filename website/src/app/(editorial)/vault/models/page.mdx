@@ -323,7 +323,7 @@ ranking snapshot.
 M★ is a live model, not a frozen prediction. What is frozen is its
 identity: the assignment of M★ to M2_fifa, sealed in the OSF
 pre-registration, anchored by `champion_model.json` and locked by the
-signed Git tag `v1.0.0-mstar-lock`. The only path to changing M★'s
+annotated Git tag `v1.0.0-MSTAR-LOCKED`. The only path to changing M★'s
 identity during the tournament is an OSF amendment with a corresponding
 registry record. That record is public. There is no quiet substitution
 available, and no version of the live site where the displayed model
@@ -366,5 +366,5 @@ there.
 * **[Simulation](/vault/simulation)**: the Bivariate Poisson + Dixon-Coles engine that consumes each model's strength matrix.
 * **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, the Diebold-Mariano machinery, and the metrics the kill criterion was built on.
 * **[Kill criteria](/vault/kill-criteria)**: the formal mathematical statement and the live status block.
-* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the signed git tag, and the sealed constants file.
+* **[Pre-registration](/vault/preregistration)**: the OSF DOI, the annotated git tag, and the sealed constants file.
 * **[Why probabilities](/vault/why-probabilities)**: why the kill criterion is even definable in the first place.

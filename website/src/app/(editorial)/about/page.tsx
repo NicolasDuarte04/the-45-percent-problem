@@ -146,7 +146,7 @@ export default function AboutPage() {
               osf.io/spmkg
             </a>{" "}
             and git tag{" "}
-            <span className="mono">v1.0.0-mstar-lock</span>.
+            <span className="mono">v1.0.0-MSTAR-LOCKED</span>.
           </p>
         </section>
 
@@ -220,7 +220,7 @@ export default function AboutPage() {
   author       = {Duarte Jaraba, Nicol\\'{a}s},
   year         = {2026},
   howpublished = {\\url{https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321}},
-  note         = {Pre-registered, tag v1.0.0-mstar-lock},
+  note         = {Pre-registered, tag v1.0.0-MSTAR-LOCKED},
 }`}
           </pre>
         </section>

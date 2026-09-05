@@ -4,7 +4,7 @@
   "generated_at_utc": "2026-04-23T00:00:03Z",
   "code_sha": "synthetic",
   "data_sha": "sha256:synthetic",
-  "pre_reg_tag": "v1.0.0-mstar-lock",
+  "pre_reg_tag": "v1.0.0-MSTAR-LOCKED",
   "champion_model": "M_STAR",
   "mc_runs": 1000,
   "tournament_phase": "pre_tournament",

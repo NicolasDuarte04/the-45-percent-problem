@@ -8,9 +8,9 @@ effect.
 
 This runbook is intended for a single operator with shell access to the
 project root and write access to `public/data/latest/` and
-`data/snapshots/`. It assumes the signed Git tag `v1.0.0-mstar-lock` is
-present and verifiable, the snapshot pipeline is healthy, and the
-orchestrator service is reachable.
+`data/snapshots/`. It assumes the annotated Git tag `v1.0.0-MSTAR-LOCKED` is
+present and resolves to the locked commit, the snapshot pipeline is healthy,
+and the orchestrator service is reachable.
 
 ---
 
@@ -19,13 +19,14 @@ orchestrator service is reachable.
 The goal of these checks is to catch any drift in the locked state before
 the operator is under kickoff-day time pressure.
 
-**Step 0.1.** Verify the signed Git tag from the project root:
+**Step 0.1.** Verify the Git tag resolves to the locked commit, from the
+project root:
 
 ```
-git verify-tag v1.0.0-mstar-lock
+git rev-list -n1 v1.0.0-MSTAR-LOCKED
 ```
 
-The tagger identity, GPG fingerprint, and commit SHA must match the values
+The output must equal `2bdd5f7b7885d7b217110256bcbce9c3264b51c2`, the commit
 published on the OSF record at `osf.io/spmkg`. Any mismatch is a
 stop-the-line condition. Do not proceed.
 
@@ -235,7 +236,7 @@ and remove it before any further forecasts are written.
 If any of the following happens during the transition, halt the
 orchestrator and open an incident.
 
-* The signed Git tag fails to verify.
+* `git rev-list -n1 v1.0.0-MSTAR-LOCKED` does not return `2bdd5f7b7885d7b217110256bcbce9c3264b51c2`.
 * Either of the calibration SHAs mismatches its sealed value.
 * The orchestrator does not switch to the 60-second tick within 5 minutes of the phase flip.
 * The forecast log fails to append for two consecutive cycles after the first match kicks off.

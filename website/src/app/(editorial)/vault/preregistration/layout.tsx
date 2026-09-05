@@ -4,7 +4,7 @@ import { VaultArticle } from "../_layouts/Article";
 export const metadata = {
   title: "Pre-registration · Research Vault",
   description:
-    "The OSF lockdown, the signed git tag, and a plain-English account of what pre-registration commits this project to.",
+    "The OSF lockdown, the annotated git tag, and a plain-English account of what pre-registration commits this project to.",
 };
 
 const bibtex = `@misc{forty_five_percent_prereg_2026,
@@ -28,7 +28,7 @@ export default function PreregistrationLayout({
     <VaultArticle
       eyebrow="§ III · Artifact of record"
       title="Pre-registration"
-      deck="The OSF lockdown, the signed git tag, and a plain-English account of what pre-registration commits this project to; and what it does not."
+      deck="The OSF lockdown, the annotated git tag, and a plain-English account of what pre-registration commits this project to; and what it does not."
       readingTimeMinutes={9}
       lastRevised="2026-04-22"
       doi="10.17605/OSF.IO/8B5HD"

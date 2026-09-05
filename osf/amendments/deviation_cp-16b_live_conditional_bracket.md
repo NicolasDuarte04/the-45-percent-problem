@@ -4,7 +4,7 @@
 pre-registered model or hypotheses).
 **Pre-registration:** osf.io/spmkg.
 **Champion model:** M2_fifa (M_STAR), locked, pre-registration tag
-v1.0.0-mstar-lock. This deviation does NOT unlock, retrain, recalibrate, or
+v1.0.0-MSTAR-LOCKED. This deviation does NOT unlock, retrain, recalibrate, or
 modify the champion model, the simulation engine, or any pre-registered
 parameter.
 **Date filed:** (fill in on filing).

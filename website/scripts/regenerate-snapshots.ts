@@ -349,7 +349,7 @@ function buildSnapshotMeta() {
     generated_at_utc: GENERATED_AT,
     code_sha: CODE_SHA,
     data_sha: DATA_SHA,
-    pre_reg_tag: "v1.0.0-mstar-lock",
+    pre_reg_tag: "v1.0.0-MSTAR-LOCKED",
     champion_model: "M_STAR" as const,
     mc_runs: 10000,
     tournament_phase: "pre_tournament" as const,

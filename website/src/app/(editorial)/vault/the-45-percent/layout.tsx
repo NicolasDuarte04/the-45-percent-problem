@@ -41,7 +41,7 @@ export default function TheFortyFivePercentLayout({
         {
           href: "/vault/preregistration",
           title: "Pre-registration",
-          blurb: "OSF lockdown, DOI, and the signed git tag.",
+          blurb: "OSF lockdown, DOI, and the annotated git tag.",
         },
         {
           href: "/ledger",
