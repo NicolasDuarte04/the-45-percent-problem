@@ -1,0 +1,28 @@
+{
+  "fifa_code": "BRA",
+  "display_name": "Brazil",
+  "group": "C",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1984.0,
+  "progression": {
+    "p_group_qualification": 0.9726,
+    "p_r16": 0.7137,
+    "p_qf": 0.4393,
+    "p_sf": 0.3045,
+    "p_final": 0.142,
+    "p_champion": 0.0635,
+    "ci_95_champion": [
+      0.058886,
+      0.068449
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M05",
+      "kickoff_utc": "2026-06-13T22:00:00+00:00",
+      "opponent": "Morocco",
+      "is_home": true
+    }
+  ]
+}
