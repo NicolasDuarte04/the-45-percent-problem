@@ -2,10 +2,13 @@
   In Phase 8, the kill criterion's pre-flight sanity gate fired a
   warning. M2, the candidate that won the cross-validation log-loss
   battery, beat M0 by 1.75 standard errors under one of two SE
-  conventions on disk, falling short of the pre-registered 2.0 SE bar
-  by 0.25 SE under that reading. Under the other reading, in
-  `data/calibration/champion_model.json`, the gap is 6.22 SE and the
-  bar is cleared decisively. The pre-registered consequence on a
+  readings on disk, falling short of the pre-registered 2.0 SE bar
+  by 0.25 SE under that reading. Under the other, in
+  `data/calibration/cv_battery_results.json`, the gap is 6.22 SE and
+  the bar is cleared decisively. Amendment v1.2 (2026-09-07) corrects
+  how both readings have been named and adds the paired construction
+  the criterion actually defines: 1.96 to 2.24, straddling the bar.
+  The pre-registered consequence on a
   sanity-gate firing was `pivot_paper_framing`, the procedural
   obligation reflected in this essay. M2 stays as M★, sealed in
   `champion_model.json` with `CHAMPION_LOCKED: true`. The live R16
@@ -14,8 +17,9 @@
 </Dropcap>
 
 This page describes the criterion that fired the warning, the
-inequality it encodes, the two SE conventions that produce different
-gap numbers from the same locked data, the two stages at which the
+inequality it encodes, the two SE readings that produce different
+gap numbers from the same locked data and what each of them actually
+divides by, the two stages at which the
 criterion is evaluated, and what the firing has and has not changed
 about the project's operations. The procedural argument for why a
 pre-registered stopping rule is necessary at all sits at the bottom;
@@ -57,15 +61,15 @@ The criterion fires when this inequality fails:
 
 The firing condition is "M★ does not beat M0 by 2 SE." This can
 happen in two ways. M★ might beat M0 by less than 2 SE, which is what
-the paired-difference SE reading in
 `evaluation/cv_battery_result.json` reports for Phase 8: a 1.75 SE
 gap, falling 0.25 SE short of the bar. M★ might also fail to beat M0
 at all, which would be a stronger failure mode. Both fire the
 criterion under that reading; both trigger the same pre-registered
-consequence (`pivot_paper_framing`). The marginal-SE reading in
-`champion_model.json` reports 6.22 SE for the same comparison, which
-clears the bar. The two readings, and what they mean, are documented
-in the "Dual SE reading" subsection below.
+consequence (`pivot_paper_framing`). A second published figure, 6.22
+SE, clears the bar. Neither of those two figures is the paired
+<InlineMath math="\mathrm{SE}(\overline{d})" /> written above; what
+each one actually divides by, and what the paired construction returns,
+is set out in "Two SE readings" below.
 
 The threshold value is 2.0 standard errors, sealed in
 `pre_reg_constants.yaml::kill_criterion.threshold_standard_errors` and
@@ -98,65 +102,113 @@ the Diebold-Mariano comparisons described in
 
 <SectionRule />
 
-## Dual SE reading
+## Two SE readings
 
-The same 0.041 log-loss gap between M2 and M0 produces two different
-SE numbers in the two locked CV files. Both files are signed; both are
-sealed; both are part of the OSF pre-registration record. They
-disagree because they use different standard-error conventions, not
-because the underlying data disagrees.
+<MarginNote>
+  Corrected by [amendment
+  v1.2](https://github.com/NicolasDuarte04/the-45-percent-problem/blob/main/osf/amendments/amendment_v1.2_evaluation_reporting_corrections.md)
+  on 2026-09-07. Until v1.2 this section called 6.22 a "marginal SE"
+  and 1.75 a "paired-difference SE", and explained the gap between
+  them as a marginal-versus-paired distinction. That explanation was
+  wrong. Neither number is a paired difference. No sealed statistic
+  changed; the labels and the reasoning did.
+</MarginNote>
 
-### The marginal-SE reading
+Two SE readings of the M2-versus-M0 gap have been published by this
+project, 6.22 and 1.75. They differ for two reasons, and neither
+reason is the one this page used to give.
 
-`data/calibration/champion_model.json` reports
-<InlineMath math="\sigma_{CV} = 0.006587" />, M2's own marginal sigma
-over the five-fold cross-validation mean. Dividing the locked
-<InlineMath math="\Delta_{vs M_0} = -0.04096" /> by this sigma yields
-a gap of <InlineMath math="6.22" /> SE. The file carries
-`CHAMPION_LOCKED: true`. Under this convention the sanity bar is
-cleared decisively.
+They come from **different cross-validation batteries**, with
+different folds and therefore different gaps. And each divides its gap
+by a **different dispersion of M2 alone** — one by a standard
+deviation, the other by a standard error. Neither uses M0's variance.
+Neither uses the fold-level pairing. Neither is
+<InlineMath math="\mathrm{SE}(\overline{d})" />.
 
-The marginal-SE reading treats each model's CV-mean uncertainty as a
-property of that model alone, comparable to a confidence interval on
-the model's own log-loss. It does not directly model the per-fold
-correlation between M2 and M0 losses on the same matches.
+### 6.22: the gap over M2's between-fold standard deviation
 
-### The paired-difference SE reading
+`data/calibration/cv_battery_results.json` is the Phase 4
+model-development battery, whose folds are five fixed tournament
+windows. It reports
+<InlineMath math="\sigma_{CV} = 0.006587" /> for M2, computed at
+`models/model_registry.py:822` as `np.std(valid_folds, ddof=1)` — the
+standard deviation *between* M2's fold losses, with no division by
+<InlineMath math="\sqrt{n}" />. Dividing the locked
+<InlineMath math="\Delta_{CV} = -0.04096" /> by it yields
+<InlineMath math="6.22" />. It answers: how many between-fold standard
+deviations of M2's own loss does the gap span?
 
-`evaluation/cv_battery_result.json` reports
-<InlineMath math="\mathrm{m\_star\_vs\_m0\_gap\_se} = 1.7518" />,
-computed as a paired-difference SE on per-fold log-loss differences.
-The file carries `sanity_gate_passed: false` and a
-`decision_narrative` that contains the phrase
-"WARNING: sanity gate NOT passed". Under this convention the bar is
-not cleared and the sanity-gate warning fires.
+Two things about this battery matter and are documented in [working
+paper §6.4](/vault/models). It ran on four folds, not five — the 2016
+fold is empty in this corpus and serialises as `null`. And its fifth
+fold *is* the 2022 hold-out, so
+<InlineMath math="\Delta_{CV}" /> is not computed on a sample
+disjoint from the hold-out verification.
 
-The paired-difference SE acknowledges that M2 and M0 are evaluated on
-the same per-fold match samples and that their per-match log-losses
-are correlated. It is the SE convention most commonly used in the
-forecast-evaluation literature (Diebold-Mariano and its descendants).
-The pre-registered Diebold-Mariano machinery described in
-[Evaluation](/vault/evaluation) is closer in spirit to this reading
-than to the marginal one.
+### 1.75: the gap over the standard error of M2's cross-fold mean
+
+`evaluation/cv_battery_result.json` is the Phase 8 pre-registration
+battery, whose folds are a stratified five-fold partition of the
+calibration matches only, with the 2022 hold-out excluded and scored
+separately. It reports
+<InlineMath math="\mathrm{m\_star\_vs\_m0\_gap\_se} = 1.7518" />. The
+computation is at `src/calibration/run_cv_battery.py:616-619`:
+
+<BlockMath math="\frac{\overline{\ell}_{M_0} - \overline{\ell}_{M_2}}{\mathrm{se\_log\_loss}_{M_2}} = \frac{0.031685}{0.018087} = 1.7518" />
+
+where <InlineMath math="\mathrm{se\_log\_loss}_{M_2}" /> is
+<InlineMath math="\mathrm{sd}/\sqrt{5}" /> over M2's own folds. The
+variable in the source is literally named `se_for_gate = champ_se` —
+the champion's standard error, not the standard error of a difference.
+This file carries `sanity_gate_passed: false` and a
+`decision_narrative` containing "WARNING: sanity gate NOT passed".
+
+### What the paired construction actually returns
+
+The paired reading is the one the criterion above defines and the one
+`evaluation/accuracy_metrics.check_kill_criterion` implements:
+<InlineMath math="d_i = \ell^{M_2}_i - \ell^{M_0}_i" />, then
+<InlineMath math="\mathrm{se} = \mathrm{sd}(d,\,\mathrm{ddof}{=}1)/\sqrt{n}" />.
+Computed on the folds of each battery:
+
+| Battery | n | gap | gap / between-fold SD | gap / mean SE | paired |
+|---|---|---|---|---|---|
+| Phase 4 (`cv_battery_results.json`) | 4 | 0.040960 | **6.22** | 12.44 | 1.96 |
+| Phase 8 (`cv_battery_result.json`) | 5 | 0.031685 | 0.78 | **1.75** | 2.24 |
+
+Three readings follow from this table.
+
+The published pair is not a marginal-versus-paired contrast. It is a
+between-fold-SD reading of one battery beside a mean-SE reading of a
+different one.
+
+Most of the distance between 6.22 and 1.75 is neither the
+<InlineMath math="\sqrt{n}" /> nor the pairing. It is the fold
+construction. M2's between-fold spread is 0.006587 in the Phase 4
+tournament windows and 0.040443 in the Phase 8 stratified folds, a
+factor of 6.1, because tournament-window folds make M2's losses far
+more homogeneous than a stratified partition does.
+
+And the honest number is neither 6.22 nor 1.75. On the paired
+construction the gap reads 1.96 on the Phase 4 folds and 2.24 on the
+Phase 8 folds. It straddles the 2.0 bar. It is not comfortably above
+it, as 6.22 suggests. It is not clearly below it, as 1.75 suggests.
 
 ### How to read the two together
 
-Neither file is wrong. Both readings answer different questions about
-the same data. The marginal SE asks "how precisely do we know M2's
-own CV mean log-loss?" The paired-difference SE asks "how precisely
-do we know the gap between M2 and M0 on the same evaluation samples?"
-The paired-difference SE is almost always the smaller of the two when
-the two models are correlated on the per-match level, which they are
-here.
+Both files remain sealed and neither is edited. What changed on
+2026-09-07 is the description, and the direction of the correction is
+worth stating plainly: it does not rescue the champion. The gate's
+verdict was recorded on the wrong denominator, and the corrected
+denominator puts the gap on the threshold rather than clear of it.
 
-The protocol seals both conventions implicitly by sealing both files.
-The pre-registration's primary criterion (lowest mean CV log-loss
-with adequate gap to runner-up) does not depend on the SE convention,
-and M2 wins under that criterion in both files. The 2.0-SE sanity
-gate does depend on the convention. The honest report is that the
-sanity-gate warning fired under the paired-difference reading and did
-not fire under the marginal reading. The locked file is
-`champion_model.json`; M2 is M★; the warning is documented here.
+The pre-registration seals the threshold (2.0) and the consequence
+(`pivot_paper_framing`). It does not seal an SE construction — a gap
+in the registration that this page previously papered over by
+presenting two conventions as though the protocol had chosen between
+them. The only construction the project implements against that
+constant is the paired one, so that is the one the corrected reading
+should carry.
 
 <SectionRule />
 
@@ -176,26 +228,34 @@ the cross-validation hold-out (calibration 2010 to 2021, hold-out 2022
 World Cup), before the 2026 tournament started. The full adjudication
 table:
 
-| Model | Mean CV LL | Marginal SE | Δ vs M0 | DM p vs M0 | Status |
+| Model | Mean CV LL | Between-fold SD | Δ vs M0 | DM p vs M0 | Status |
 |---|---|---|---|---|---|
-| **M2_fifa** | 0.99337 | 0.00659 | −0.04096 | 0.0032 | Champion (`CHAMPION_LOCKED: true`); sanity-gate warning under paired-difference SE |
+| **M2_fifa** | 0.99337 | 0.00659 | −0.04096 | 0.0032 | Champion (`CHAMPION_LOCKED: true`); sanity-gate warning logged |
 | **M3_macro** | 1.02694 | 0.02949 | −0.00739 | 0.3443 | Eligible; below M0 in point estimate |
 | **M0_elo** | 1.03433 | 0.03844 | 0.000 | 1.0000 | Baseline |
 | **M1_form** | 1.08110 | 0.07514 | +0.04677 | 0.0061 | Disqualified (significantly worse than M0) |
 
 Values are from the locked
-`data/calibration/cv_battery_results.json`. M2 cleared the primary
-criterion by having the lowest mean log-loss across the candidate
-set, with a 1.49 SE gap to the runner-up (M3_macro) and a
-Diebold-Mariano test against M0 returning
-<InlineMath math="p = 0.003" />.
+`data/calibration/cv_battery_results.json` (Phase 4). M2 cleared the
+primary criterion by having the lowest mean log-loss across the
+candidate set, with a Diebold-Mariano test against M0 returning
+<InlineMath math="p = 0.003" />. The 1.49 SE gap to the runner-up
+(M3_macro) that this page previously attributed to the same file is
+`ll_gap_in_se` from the *other* battery,
+`evaluation/cv_battery_result.json` (Phase 8); amendment v1.2 corrects
+the attribution. Note also that the Phase 4 battery evaluated four
+folds, not five — the 2016 fold is empty in this corpus and
+serialises as `null` — and that its fifth fold is the 2022 hold-out
+itself, so this table's means are not computed on a sample disjoint
+from the hold-out verification.
 
-The 2-SE sanity gate, applied with the paired-difference SE in
+The 2-SE sanity gate, as implemented in
 `evaluation/cv_battery_result.json`, reports a 1.75 SE gap and
-`sanity_gate_passed: false`. The same gap measured with M2's marginal
-sigma in `champion_model.json` is 6.22 SE. The pre-registered
-consequence (`kill.action: pivot_paper_framing`) took effect under
-the paired-difference reading: the paper's framing pivoted to the
+`sanity_gate_passed: false`. The same gap measured against M2's
+between-fold standard deviation in the Phase 4 battery is 6.22 SE. On
+the paired construction the criterion actually defines, it is 1.96 to
+2.24 — see "Two SE readings" above. The pre-registered
+consequence (`kill.action: pivot_paper_framing`) took effect: the paper's framing pivoted to the
 sanity-gate-warning narrative, and the project committed to
 acknowledging the warning transparently in the public ledger and the
 vault essays. M★ was not demoted; the pre-registered action is a
@@ -254,7 +314,7 @@ make from its outputs have changed.
 **What changed:**
 
 1. The paper's framing pivoted from "we built a model that finds market mispricings" to the kill-criterion narrative described in [The 45% Problem](/vault/the-45-percent).
-2. The vault essays, this page, and the live ledger acknowledge the sanity-gate warning under the paired-difference SE reading. The project's brand commitment is to acknowledge the warning visibly, not to bury it inside the locked file.
+2. The vault essays, this page, and the live ledger acknowledge the sanity-gate warning. The project's brand commitment is to acknowledge the warning visibly, not to bury it inside the locked file.
 3. The R16 live checkpoint is treated as a real test of M2 against M0 on live forecasts, not a procedural formality.
 
 **What did not change:**
@@ -288,9 +348,9 @@ the most recent snapshot. It updates nightly with each build.
 
 <KillCriteriaStatusBlock />
 
-The status block reads from the snapshot and renders the dual
-reading: a `WARNING: 1.75 SE / 2.0 SE (paired-difference)` badge
-alongside a `CLEARED: 6.22 SE / 2.0 SE (marginal)` reference and the
+The status block reads from the snapshot and renders both readings: a
+`WARNING: 1.75 SE / 2.0 SE` badge on the mean-SE reading alongside a
+`CLEARED: 6.22 SE / 2.0 SE` reference on the between-fold-SD reading, plus the
 Phase 8 timestamp. The R16 live checkpoint resolved on 2026-07-07 and
 did not fire, with M2 1.47 SE better than M0 on the 72 pre-registered
 forecasts, so the Phase 8 badge state stands.
@@ -316,9 +376,9 @@ project from public record if the criterion fires. The OSF DOI
 `10.17605/OSF.IO/8B5HD` and the annotated Git tag `v1.0.0-MSTAR-LOCKED`
 are public and time-stamped. The
 Phase 8 sanity-gate warning is now part of that permanent record.
-The model cards have been updated with the dual SE reading; the
-terminal displays the warning badge alongside the cleared marginal
-reading; the forecast log carries every model's probabilities and
+The model cards have been updated with both SE readings; the
+terminal displays the warning badge alongside the reading that
+clears; the forecast log carries every model's probabilities and
 divergences against M★ (M2_fifa) in every row.
 
 <PullQuote cite="this project's pre-registration, OSF 2026-04-22">
@@ -329,9 +389,9 @@ divergences against M★ (M2_fifa) in every row.
 The Phase 8 sanity-gate warning is the strongest available
 vindication of the pre-registration discipline. Without the 2-SE bar,
 the project would have launched a public website with M2 as M★ and
-either quietly suppressed the paired-difference SE warning that one
-of the two locked files surfaces, or reported only the marginal
-reading that clears the bar without acknowledging the other.
+either quietly suppressed the sanity-gate warning that one
+of the two locked files surfaces, or reported only the reading
+that clears the bar without acknowledging the other.
 Pre-registration forces both readings into the public record. With
 the bar in place, the project published an honest dual reading on
 day one and a clear plan for the R16 checkpoint that follows on live

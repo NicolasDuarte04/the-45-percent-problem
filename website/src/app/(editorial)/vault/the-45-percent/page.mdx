@@ -135,14 +135,20 @@ to patch our own Elo sparsity. M2's 0.041 log-loss gap to M0 is
 significant by the Diebold-Mariano test (<InlineMath math="p = 0.003" />),
 and M2 was selected as M★ under the protocol's primary criterion
 (lowest mean CV log-loss with adequate gap to the runner-up). Two
-standard-error conventions exist in the locked files. Under the
-marginal-SE reading used by `champion_model.json`
+standard-error conventions exist in the locked files. Measured against
+the champion's between-fold standard deviation in the
+model-development battery
 (<InlineMath math="\sigma_{CV} = 0.0066" />), the gap to M0 is
-<InlineMath math="6.22" /> SE; under the paired-difference SE reading
-used by `evaluation/cv_battery_result.json`, the gap is
+<InlineMath math="6.22" /> SE; measured against the standard error of
+the champion's cross-fold mean in
+`evaluation/cv_battery_result.json`, the gap is
 <InlineMath math="1.75" /> SE. The pre-registered sanity threshold was
 <InlineMath math="2.0" /> SE. The first reading clears the bar
 decisively; the second does not, and the sanity-gate warning fired.
+Amendment v1.2 (2026-09-07) adds the reading that matters most and was
+missing: on the paired construction the criterion actually defines,
+the gap is 1.96 on the first battery's folds and 2.24 on the
+second's. It sits on the bar.
 
 The pre-registered action on a sanity-gate firing was
 `pivot_paper_framing`, a procedural obligation to acknowledge the gap
@@ -173,9 +179,11 @@ already wide because of the corpus size. M3 (macro prior) beat M0 in
 point estimate by only 0.007 log-loss units; the sigma swallowed it.
 M1 (decayed form) was significantly worse than M0. M2 cleared the
 primary criterion, but only one of the two SE conventions on disk
-clears the 2.0-SE sanity bar that the project sealed in April. The
-sanity-gate warning is a real signal that the gap is not as wide as
-the marginal SE makes it look.
+clears the 2.0-SE sanity bar that the project sealed in April, and
+the paired construction that the criterion actually defines puts the
+gap at 1.96 to 2.24 — on the bar, not clear of it. The sanity-gate
+warning is a real signal that the gap is not as wide as the 6.22
+figure makes it look.
 
 **Pre-registration earned its keep.** This is the reading we are most
 certain about. Without the protocol, we would have launched a public
@@ -192,8 +200,7 @@ A note we owe the reader. The Phase 8 outcome is not a strong claim
 about market efficiency, nor a clean validation of the FIFA-blend
 hypothesis. It is, narrowly, that on a corpus of 347 matches, with a
 2.0-SE sanity threshold, on the four ranking signals we tested, M2
-won the log-loss race and triggered a sanity-gate warning under the
-paired-difference SE convention. A larger corpus might tell a
+won the log-loss race and triggered a sanity-gate warning. A larger corpus might tell a
 different story. A different threshold might tell a different story.
 A different metric, such as calibration on knockout-only matches,
 might tell a different story.
@@ -214,8 +221,9 @@ The honest claim is: under our protocol, on our data, with the
 constants we sealed in April and the data-completeness amendment we
 filed in May, M★ is M2_fifa, sealed in
 `data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`,
-and the sanity-gate warning under the paired-difference SE reading is
-acknowledged transparently.
+and the sanity-gate warning is acknowledged transparently, together
+with the amendment v1.2 correction to how its standard errors were
+labelled.
 
 ## What you'll see during the tournament
 

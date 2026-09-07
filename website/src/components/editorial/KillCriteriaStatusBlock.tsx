@@ -6,20 +6,32 @@ import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
  *
  * Per LOCKDOWN_PLAN_2026-05-11 Section 5 (vault narrative rewrite) and
  * Section 8 Item 8.4 (dual-badge render), the block surfaces two SE
- * readings of the same Phase 8 cross-validation gap:
+ * readings of the M2-vs-M0 cross-validation gap:
  *
- *   - Paired-difference SE (from evaluation/cv_battery_result.json's
+ *   - Mean-SE reading (from evaluation/cv_battery_result.json's
  *     `m_star_vs_m0_gap_se`, mirrored into evaluation_metrics.json as
  *     `kill_criteria_check.gap_se`). Reads 1.75 SE today; the sanity
  *     gate did not clear the 2.0 SE threshold under this convention,
  *     so the badge renders WARNING.
- *   - Marginal SE (from data/calibration/champion_model.json's
- *     `sigma_CV = 0.006587` divided into `delta_vs_M0 = -0.04096`).
- *     Reads 6.22 SE; this convention clears the 2.0 SE bar decisively,
- *     so the badge renders CLEARED.
+ *   - Between-fold-SD reading (from data/calibration/cv_battery_results.json's
+ *     `sigma_CV = 0.006587` divided into `delta_CV = -0.04096`, mirrored in
+ *     champion_model.json). Reads 6.22 SE; this convention clears the
+ *     2.0 SE bar decisively, so the badge renders CLEARED.
  *
- * The marginal-SE value is fixed at the OSF lock and lives in the
- * sealed champion_model.json. It does not flow through
+ * AMENDMENT v1.2 (2026-09-07) — LABEL CORRECTION. Until v1.2 these were
+ * described as a "paired-difference" and a "marginal" reading. Neither is
+ * a paired difference. Both divide the gap by a dispersion of M2 alone:
+ * 6.22 by M2's between-fold standard deviation (`np.std(ddof=1)`, no
+ * sqrt(n)), 1.75 by the standard error of M2's cross-fold mean
+ * (`sd/sqrt(5)`) in a DIFFERENT battery with a different fold
+ * construction. The genuinely paired statistic — the construction the
+ * pre-registered criterion is implemented on, at
+ * evaluation/accuracy_metrics.check_kill_criterion — reads 1.96 on the
+ * Phase 4 folds and 2.24 on the Phase 8 folds, straddling the 2.0 bar.
+ * See osf/amendments/amendment_v1.2_evaluation_reporting_corrections.md.
+ *
+ * The 6.22 value is fixed at the OSF lock and lives in the sealed
+ * calibration artifacts. It does not flow through
  * evaluation_metrics.json today, so the value is hardcoded here as a
  * static reference (the architect's Section 8 spec explicitly allows
  * "a static configuration" for this purpose; introducing a new
@@ -32,8 +44,12 @@ import { loadEvaluationMetrics } from "@/lib/data/loadSnapshot";
  * checkpoint).
  */
 
-// Marginal-SE reading from data/calibration/champion_model.json.
-// delta_vs_M0 = -0.04096 / sigma_CV = 0.006587 = 6.218 SE.
+// Between-fold-SD reading from data/calibration/cv_battery_results.json.
+// delta_CV = -0.04096 / sigma_CV = 0.006587 = 6.218 SE, where sigma_CV is
+// np.std(fold_losses, ddof=1) with NO division by sqrt(n). Named
+// MARGINAL_GAP_SE for continuity with the sealed `marginal_gap_se` field
+// in evaluation_metrics.json, which amendment v1.2 deliberately does not
+// rename (it is published in dozens of historical snapshots).
 const MARGINAL_GAP_SE = 6.22;
 
 export function KillCriteriaStatusBlock() {
@@ -43,7 +59,7 @@ export function KillCriteriaStatusBlock() {
 
   const dateLabel = timestamp.slice(0, 10);
 
-  // Paired-difference badge state. When the gap is below the threshold,
+  // Mean-SE badge state. When the gap is below the threshold,
   // we render WARNING (not FAILED): per Section 5, the sanity-gate firing
   // is a procedural warning under `pivot_paper_framing`, not an automatic
   // demotion.
@@ -53,7 +69,7 @@ export function KillCriteriaStatusBlock() {
     ? "var(--color-prism-mint)"
     : "var(--color-prism-rose)";
 
-  // Marginal-SE badge state. Hardcoded at 6.22 SE; this convention clears
+  // Between-fold-SD badge state. Hardcoded at 6.22 SE; this convention clears
   // the 2.0 SE bar decisively, so the badge is always CLEARED today. If
   // the locked sigma_CV ever moves (an OSF amendment would be required),
   // update the MARGINAL_GAP_SE constant above.
@@ -64,14 +80,16 @@ export function KillCriteriaStatusBlock() {
     : "var(--color-prism-rose)";
 
   // Block accent: the locked champion artifact wins for the visual
-  // emphasis (marginal reading); the paired-difference warning lives
-  // alongside but does not flip the locked status.
+  // emphasis (between-fold-SD reading); the mean-SE warning lives
+  // alongside but does not flip the locked status. v1.2 leaves this
+  // emphasis unchanged; see the "Proposed but not executed" section of
+  // the amendment.
   const accentColor = marginalColor;
 
   return (
     <div
       role="status"
-      aria-label={`Kill criterion status; marginal: ${marginalLabel}; paired-difference: ${pairedLabel}`}
+      aria-label={`Kill criterion status; between-fold SD reading: ${marginalLabel}; mean SE reading: ${pairedLabel}`}
       style={{
         border: "1px solid var(--border-default)",
         borderLeft: `3px solid ${accentColor}`,
@@ -113,7 +131,7 @@ export function KillCriteriaStatusBlock() {
         </span>
       </div>
 
-      {/* Dual badge: marginal and paired-difference, side by side */}
+      {/* Dual badge: between-fold SD and mean SE, side by side */}
       <div
         style={{
           display: "grid",
@@ -122,7 +140,7 @@ export function KillCriteriaStatusBlock() {
           marginBottom: 14,
         }}
       >
-        {/* Marginal-SE badge */}
+        {/* Between-fold-SD badge */}
         <div
           style={{
             display: "flex",
@@ -132,7 +150,7 @@ export function KillCriteriaStatusBlock() {
             border: `1px solid ${marginalColor}`,
             borderRadius: "var(--radius)",
           }}
-          aria-label={`Marginal SE reading: ${marginalLabel} at ${MARGINAL_GAP_SE.toFixed(2)} SE`}
+          aria-label={`Between-fold SD reading: ${marginalLabel} at ${MARGINAL_GAP_SE.toFixed(2)} SE`}
         >
           <span
             className="mono"
@@ -149,7 +167,7 @@ export function KillCriteriaStatusBlock() {
             className="mono"
             style={{ fontSize: 12, color: "var(--text-tertiary)" }}
           >
-            marginal sigma (champion_model.json)
+            gap / between-fold SD (cv_battery_results.json)
           </span>
           <span
             style={{
@@ -164,7 +182,7 @@ export function KillCriteriaStatusBlock() {
           </span>
         </div>
 
-        {/* Paired-difference SE badge */}
+        {/* Mean-SE badge */}
         <div
           style={{
             display: "flex",
@@ -174,7 +192,7 @@ export function KillCriteriaStatusBlock() {
             border: `1px solid ${pairedColor}`,
             borderRadius: "var(--radius)",
           }}
-          aria-label={`Paired-difference SE reading: ${pairedLabel} at ${gap_se.toFixed(2)} SE`}
+          aria-label={`Mean SE reading: ${pairedLabel} at ${gap_se.toFixed(2)} SE`}
         >
           <span
             className="mono"
@@ -191,7 +209,7 @@ export function KillCriteriaStatusBlock() {
             className="mono"
             style={{ fontSize: 12, color: "var(--text-tertiary)" }}
           >
-            paired-difference SE (cv_battery_result.json)
+            gap / SE of champion mean (cv_battery_result.json)
           </span>
           <span
             style={{
@@ -235,9 +253,11 @@ export function KillCriteriaStatusBlock() {
           margin: 0,
         }}
       >
-        Two SE readings; locked under the marginal reading; warning logged
-        under the paired-difference reading; R16 live checkpoint is the
-        next adjudication.
+        Two SE readings, neither of them a paired difference; locked under
+        the between-fold SD reading; warning logged under the mean SE
+        reading; on the paired construction the gap reads 1.96 to 2.24 and
+        straddles the bar (amendment v1.2); R16 live checkpoint is the next
+        adjudication.
       </p>
     </div>
   );

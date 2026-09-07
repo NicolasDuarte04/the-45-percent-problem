@@ -2,12 +2,14 @@
   Pre-registration is a procedural commitment whose value is
   invisible until the protocol fires. In Phase 8 the protocol fired a
   sanity-gate warning. The cross-validation log-loss battery sealed
-  M2_fifa as M★ with `CHAMPION_LOCKED: true`; the same battery, under
-  the paired-difference SE convention used in
-  `evaluation/cv_battery_result.json`, returned a 1.75 SE gap to M0,
-  below the pre-registered 2.0 SE bar. The marginal-SE reading in
-  `champion_model.json` reports the same comparison as 6.22 SE. The
-  pre-registered contingency on a sanity-gate firing was
+  M2_fifa as M★ with `CHAMPION_LOCKED: true`;
+  `evaluation/cv_battery_result.json` returned a 1.75 SE gap to M0,
+  below the pre-registered 2.0 SE bar. A second reading of the same
+  comparison, against the champion's between-fold standard deviation
+  in the model-development battery, is 6.22 SE. Amendment v1.2
+  (2026-09-07) corrects how those two have been described and reports
+  that the paired construction the criterion actually defines gives
+  1.96 to 2.24. The pre-registered contingency on a sanity-gate firing was
   `pivot_paper_framing`, the procedural obligation to acknowledge the
   gap publicly. M2 stays as M★; the warning is documented. Amendment
   v1.1 (data-completeness backfill on `fifa_rankings.parquet`, filed
@@ -60,12 +62,13 @@ the primary criterion selects, not whichever model performs best in
 hindsight.
 
 M★ is **M2_fifa**, sealed in `data/calibration/champion_model.json`
-with `CHAMPION_LOCKED: true`. The sanity-gate warning fired under the
-paired-difference SE convention in `evaluation/cv_battery_result.json`
-(1.75 SE gap, below the 2.0 SE bar); under the marginal-SE convention
-in `champion_model.json` the gap is 6.22 SE and the bar is cleared.
-The full selection procedure, the dual SE reading, and the
-contingency that fired are documented in
+with `CHAMPION_LOCKED: true`. The sanity-gate warning fired in
+`evaluation/cv_battery_result.json` (1.75 SE gap, below the 2.0 SE
+bar); measured against the champion's between-fold standard deviation
+in the model-development battery the gap is 6.22 SE and the bar is
+cleared; on the paired construction it is 1.96 to 2.24 and straddles
+the bar. The full selection procedure, both SE readings, the v1.2
+label correction, and the contingency that fired are documented in
 [Models](/vault/models) and [Kill criteria](/vault/kill-criteria).
 The key invariant: selection used only pre-tournament data, completed
 before the opening match.
@@ -93,9 +96,9 @@ The 2.0 SE log-loss gap requirement, locked in
 `pre_reg_constants.yaml::kill_criterion.threshold_standard_errors`
 and mirrored at `kill.ll_gap_se`. Pre-registered action on firing:
 `pivot_paper_framing`. The Phase 8 sanity gate ran the criterion as a
-pre-flight check on the cross-validation hold-out; under the
-paired-difference SE convention it fired a warning, and under the
-marginal SE convention it cleared. The pre-registered consequence
+pre-flight check on the cross-validation hold-out; on the Phase 8
+mean-SE reading it fired a warning, and on the Phase 4
+between-fold-SD reading it cleared. The pre-registered consequence
 took effect: the paper's framing pivoted, the vault essays
 acknowledge the warning, and the locked file
 `champion_model.json` records M2_fifa as M★ with
@@ -289,8 +292,8 @@ locked state can change during the tournament. They are not the same.
 A **pre-registered contingency** is an action sealed in the original
 registration that conditionally takes effect when its trigger fires.
 The canonical example is the kill criterion's `pivot_paper_framing`
-action, which fired in Phase 8 when the paired-difference SE reading
-returned 1.75 SE against the 2.0 SE bar. Applying a contingency does
+action, which fired in Phase 8 when the gate returned 1.75 SE
+against the 2.0 SE bar. Applying a contingency does
 not require an amendment, because the action was part of the
 registration from the start. The Phase 8 framing pivot is recorded in
 the vault essays and on this site.
@@ -371,10 +374,11 @@ is a pre-registered claim. Anything else is descriptive.
 
 The Phase 8 sanity-gate warning made the procedural commitment
 visible. Without it, the project would have launched a public website
-with M2 as M★ and reported only the marginal-SE reading that clears
-the 2 SE bar. With it, the project launched with M2 as M★ under the
-protocol's primary criterion and a transparent acknowledgement of
-both SE readings. Amendment v1.1 made the procedural commitment
+with M2 as M★ and reported only the reading that clears the 2 SE
+bar. With it, the project launched with M2 as M★ under the protocol's
+primary criterion and a transparent acknowledgement of both SE
+readings — and, in amendment v1.2, a public correction when those
+readings turned out to be mislabelled. Amendment v1.1 made the procedural commitment
 visible a second time: a data-completeness gap was caught, filed as a
 public child record, and corrected against the protocol's own
 amendment process. That is what pre-registration was for.

@@ -305,10 +305,16 @@ export const EvaluationMetricsSchema = z.object({
     tripped: z.boolean(),
     gap_se: z.number(),
     threshold_se: z.number(),
-    // Marginal-SE reading from data/calibration/champion_model.json
-    // (delta_vs_M0 / sigma_CV). Optional for backward compat with
-    // snapshots written before the dual-SE field landed; absence is
-    // treated as "render the neutral pre-tournament pill."
+    // The M2-vs-M0 gap divided by M2's BETWEEN-FOLD standard deviation:
+    // delta_CV / sigma_CV from data/calibration/cv_battery_results.json,
+    // where sigma_CV is np.std(fold_losses, ddof=1) with no division by
+    // sqrt(n). Despite the field name it is NOT a "marginal SE" and NOT a
+    // paired difference; amendment v1.2 corrects the label but deliberately
+    // keeps the FIELD NAME, which is published in dozens of historical
+    // snapshots and cannot be renamed without breaking them.
+    // Optional for backward compat with snapshots written before the
+    // dual-SE field landed; absence is treated as "render the neutral
+    // pre-tournament pill."
     marginal_gap_se: z.number().optional(),
     // Pill state. `pre_tournament_locked` is the only sane state when
     // matches_settled === 0; the three `in_tournament_*` states are

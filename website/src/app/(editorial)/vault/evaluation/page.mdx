@@ -347,11 +347,13 @@ bootstrap. They answer different questions.
 
 A note on the current state. M★ is M2_fifa, sealed in
 `data/calibration/champion_model.json` with `CHAMPION_LOCKED: true`;
-the paired-difference SE convention in
 `evaluation/cv_battery_result.json` reads a 1.75 SE gap and the
-sanity-gate warning fired, while the marginal-SE convention in
-`champion_model.json` reads 6.22 SE and clears the bar (see
-[Kill criteria](/vault/kill-criteria) for the dual reading). No real
+sanity-gate warning fired, while the same gap measured against the
+champion's between-fold standard deviation in the model-development
+battery reads 6.22 SE and clears the bar. Neither is the paired
+construction this page's Diebold-Mariano machinery uses; on that
+construction the gap is 1.96 to 2.24 (see
+[Kill criteria](/vault/kill-criteria) and amendment v1.2). No real
 Kelly stakes are placed against any model's edges, because the project
 does not place real bets at any time; pseudo-CLV continues to grade
 us anyway, because it is the same math run on hypothetical bets logged

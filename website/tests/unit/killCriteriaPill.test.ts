@@ -11,7 +11,7 @@ describe("deriveKillCriteriaPillState", () => {
     expect(state.glyph).toBe("●");
     expect(state.label).toBe("AWAITING TOURNAMENT KICKOFF");
     expect(state.ariaLabel).toContain("M2_fifa");
-    expect(state.ariaLabel).toContain("marginal SE");
+    expect(state.ariaLabel).toContain("between-fold SD reading");
     expect(state.ariaLabel).toContain("/vault/kill-criteria");
   });
 
@@ -94,14 +94,18 @@ describe("deriveKillCriteriaPillState", () => {
     expect(state.label).toBe("AWAITING TOURNAMENT KICKOFF");
   });
 
-  it("aria-label embeds the supplied marginal and paired SE readings", () => {
+  it("aria-label embeds both supplied SE readings under names that describe the arithmetic", () => {
     const state = deriveKillCriteriaPillState({
       status: "pre_tournament_locked",
       matchesSettled: 0,
       marginalGapSe: 6.22,
       pairedGapSe: 1.75,
     });
-    expect(state.ariaLabel).toContain("6.22 marginal SE");
-    expect(state.ariaLabel).toContain("1.75 paired SE");
+    // Amendment v1.2: neither published reading is a paired difference, so the
+    // aria-label names the arithmetic rather than calling one "marginal" and
+    // the other "paired". See KillCriteriaPill.tsx.
+    expect(state.ariaLabel).toContain("6.22 SE on the between-fold SD reading");
+    expect(state.ariaLabel).toContain("1.75 SE on the mean SE reading");
+    expect(state.ariaLabel).not.toContain("paired");
   });
 });
