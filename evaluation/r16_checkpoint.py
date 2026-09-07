@@ -101,9 +101,16 @@ _CONSTRUCTION_NOTE = (
     "Paired per-match standard error over the settled group-stage results: "
     "se = d.std(ddof=1) / sqrt(n) on the per-match log-loss differences "
     "d_i = ll_mstar_i - ll_m0_i. This is a different construction from the "
-    "Phase 8 pre-tournament cross-validation readings (1.75 SE paired-difference "
-    "and 6.22 SE marginal); the live gap is its own event and is never a "
-    "continuation of, or numerically compared to, those cross-validation numbers."
+    "pre-tournament cross-validation readings the project has published. "
+    "Neither of those is a paired difference, and amendment v1.2 corrects the "
+    "labels: the 6.22 figure is the M2-vs-M0 gap divided by M2's between-fold "
+    "standard deviation (sigma_CV in data/calibration/cv_battery_results.json, "
+    "np.std(ddof=1), no sqrt(n)); the 1.75 figure is the same gap in the Phase 8 "
+    "battery divided by the standard error of M2's cross-fold mean "
+    "(se_log_loss in evaluation/cv_battery_result.json). Both divide by a "
+    "dispersion of the champion alone. The live gap is its own event and is "
+    "never a continuation of, or numerically compared to, those "
+    "cross-validation numbers."
 )
 
 _FORECAST_SET_NOTE = (
