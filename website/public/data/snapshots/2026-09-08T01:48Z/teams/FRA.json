@@ -1,0 +1,28 @@
+{
+  "fifa_code": "FRA",
+  "display_name": "France",
+  "group": "I",
+  "confederation": "UEFA",
+  "elo_rating": 2081.0,
+  "progression": {
+    "p_group_qualification": 0.9309,
+    "p_r16": 0.7019,
+    "p_qf": 0.436,
+    "p_sf": 0.2848,
+    "p_final": 0.2292,
+    "p_champion": 0.1488,
+    "ci_95_champion": [
+      0.141959,
+      0.15591
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M17",
+      "kickoff_utc": "2026-06-16T19:00:00+00:00",
+      "opponent": "Senegal",
+      "is_home": true
+    }
+  ]
+}
