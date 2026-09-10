@@ -1,0 +1,174 @@
+{
+  "generated_at_utc": "2026-07-16T00:00:00.000Z",
+  "kill_criterion_detail": "mean_diff=-0.044859, se=0.030437, threshold=2.0×SE=0.060873, tripped=False",
+  "kill_criterion_tripped": false,
+  "meta": {
+    "checkpoint_crosscheck": {
+      "checkpoint_evaluated_at_utc": "2026-07-07T22:58:53Z",
+      "checkpoint_source": "postgres:match_outcomes",
+      "matches_r16_checkpoint": true,
+      "mean_log_loss_m0": 0.944197,
+      "mean_log_loss_mstar": 0.899338
+    },
+    "constants_sha_note": "The report embeds the live pre_reg_constants.yaml sha. The committed evaluation/constants.sha is the Phase 8 seal-time hash and no longer matches the YAML after post-seal additive sections were appended (commit 39899d24). expected_constants_sha is intentionally not enforced here; the situation is documented in the deviation note rather than silently reconciled.",
+    "gaps_note": "This report scores the 72 pre-registered group-stage forecasts from the frozen champion batch, re-scored against the realized group results with the same per-match regulation-outcome construction the R16 kill-criterion checkpoint uses. It populates M0 and the champion M2 (= M_STAR) accuracy with 95 percent seeded bootstrap confidence intervals and the HLN-corrected Diebold-Mariano comparison of M2 and M_STAR against M0. Every other cell is null, and null means null: M1 and M3 have no committed per-match forecasts, so their accuracy is null; there are no committed market lines, so the de-vigged market row, the DM-vs-market column, and the Nyberg market-efficiency test are all null; every trading and CLV column is null because no bet ledger was committed; and the knockout stages are structurally absent because the frozen batch carries no per-match knockout forecasts (knockout slots hold different teams on every Monte Carlo run), so by_stage carries only the single group row (n = 72). No shadow model, market estimate, or knockout score was invented to fill a column.",
+    "n_scored": 72,
+    "null_cells": [
+      "M1.accuracy",
+      "M3.accuracy",
+      "MARKET_DEVIGGED.accuracy",
+      "*.dm_vs_market",
+      "*.nyberg",
+      "*.trading",
+      "knockout_stages"
+    ],
+    "populated_cells": [
+      "M0.accuracy",
+      "M2.accuracy",
+      "M_STAR.accuracy",
+      "M2.dm_vs_m0",
+      "M_STAR.dm_vs_m0"
+    ],
+    "report_kind": "r16_ablation_templated",
+    "source_batch_id": "batch_20260512_013228Z",
+    "timing_disclosure": "The kill-criterion checkpoint was published within the 72-hour window on 2026-07-07; this full templated report reuses that same frozen re-scoring, adds no new forecasts, and was compiled after that window, dated accordingly."
+  },
+  "models": {
+    "M0": {
+      "accuracy": {
+        "brier_ci": [
+          0.4511,
+          0.6591
+        ],
+        "brier_mean": 0.5543,
+        "log_loss_ci": [
+          0.7957,
+          1.0968
+        ],
+        "log_loss_mean": 0.9442,
+        "n_forecasts": 72,
+        "rps_ci": [
+          0.1406,
+          0.2024
+        ],
+        "rps_mean": 0.1703,
+        "rps_median": 0.1501
+      },
+      "by_stage": {
+        "group": {
+          "brier_mean": 0.5543,
+          "log_loss_mean": 0.9442,
+          "n": 72,
+          "rps_mean": 0.1703
+        }
+      },
+      "dm_vs_m0": null,
+      "dm_vs_market": null,
+      "nyberg": null,
+      "trading": null
+    },
+    "M1": {
+      "accuracy": null,
+      "by_stage": {},
+      "dm_vs_m0": null,
+      "dm_vs_market": null,
+      "nyberg": null,
+      "trading": null
+    },
+    "M2": {
+      "accuracy": {
+        "brier_ci": [
+          0.4271,
+          0.6319
+        ],
+        "brier_mean": 0.5274,
+        "log_loss_ci": [
+          0.7567,
+          1.0475
+        ],
+        "log_loss_mean": 0.8993,
+        "n_forecasts": 72,
+        "rps_ci": [
+          0.1313,
+          0.1902
+        ],
+        "rps_mean": 0.1596,
+        "rps_median": 0.1494
+      },
+      "by_stage": {
+        "group": {
+          "brier_mean": 0.5274,
+          "log_loss_mean": 0.8993,
+          "n": 72,
+          "rps_mean": 0.1596
+        }
+      },
+      "dm_vs_m0": {
+        "hln_applied": true,
+        "pvalue": 0.2719,
+        "reject": false,
+        "stat": -1.1073
+      },
+      "dm_vs_market": null,
+      "nyberg": null,
+      "trading": null
+    },
+    "M3": {
+      "accuracy": null,
+      "by_stage": {},
+      "dm_vs_m0": null,
+      "dm_vs_market": null,
+      "nyberg": null,
+      "trading": null
+    },
+    "MARKET_DEVIGGED": {
+      "accuracy": null,
+      "by_stage": {},
+      "dm_vs_m0": null,
+      "dm_vs_market": null,
+      "nyberg": null,
+      "trading": null
+    },
+    "M_STAR": {
+      "accuracy": {
+        "brier_ci": [
+          0.4271,
+          0.6319
+        ],
+        "brier_mean": 0.5274,
+        "log_loss_ci": [
+          0.7567,
+          1.0475
+        ],
+        "log_loss_mean": 0.8993,
+        "n_forecasts": 72,
+        "rps_ci": [
+          0.1313,
+          0.1902
+        ],
+        "rps_mean": 0.1596,
+        "rps_median": 0.1494
+      },
+      "by_stage": {
+        "group": {
+          "brier_mean": 0.5274,
+          "log_loss_mean": 0.8993,
+          "n": 72,
+          "rps_mean": 0.1596
+        }
+      },
+      "dm_vs_m0": {
+        "hln_applied": true,
+        "pvalue": 0.2719,
+        "reject": false,
+        "stat": -1.1073
+      },
+      "dm_vs_market": null,
+      "nyberg": null,
+      "trading": null
+    }
+  },
+  "pre_reg_constants_sha": "691993cce8194898e7eef164526a7e81cec94edff2823aa37f3882fedc09c227",
+  "schema_version": "7.0",
+  "tournament": "FIFA2026"
+}
