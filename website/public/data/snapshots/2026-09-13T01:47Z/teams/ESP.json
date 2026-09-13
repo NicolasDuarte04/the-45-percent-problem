@@ -1,0 +1,28 @@
+{
+  "fifa_code": "ESP",
+  "display_name": "Spain",
+  "group": "H",
+  "confederation": "UEFA",
+  "elo_rating": 2165.0,
+  "progression": {
+    "p_group_qualification": 0.9791,
+    "p_r16": 0.781,
+    "p_qf": 0.5878,
+    "p_sf": 0.4238,
+    "p_final": 0.3014,
+    "p_champion": 0.1824,
+    "ci_95_champion": [
+      0.174953,
+      0.19009
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M15",
+      "kickoff_utc": "2026-06-15T16:00:00+00:00",
+      "opponent": "Cabo Verde",
+      "is_home": true
+    }
+  ]
+}
