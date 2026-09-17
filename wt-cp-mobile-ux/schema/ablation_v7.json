@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ablation_v7",
+  "title": "Phase 7 Ablation Table",
+  "description": "Schema for ablation.json produced by evaluation_dashboard.py",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at_utc",
+    "tournament",
+    "pre_reg_constants_sha",
+    "kill_criterion_tripped",
+    "models"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "7.0"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "tournament": {
+      "type": "string"
+    },
+    "pre_reg_constants_sha": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "kill_criterion_tripped": {
+      "type": "boolean"
+    },
+    "kill_criterion_detail": {
+      "type": "string"
+    },
+    "models": {
+      "type": "object",
+      "properties": {
+        "M0": { "$ref": "#/definitions/modelEntry" },
+        "M1": { "$ref": "#/definitions/modelEntry" },
+        "M2": { "$ref": "#/definitions/modelEntry" },
+        "M3": { "$ref": "#/definitions/modelEntry" },
+        "M_STAR": { "$ref": "#/definitions/modelEntry" },
+        "MARKET_DEVIGGED": { "$ref": "#/definitions/modelEntry" }
+      }
+    }
+  },
+  "definitions": {
+    "ciArray": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "accuracyBlock": {
+      "type": "object",
+      "required": ["brier_mean", "rps_mean", "log_loss_mean"],
+      "properties": {
+        "n_forecasts": { "type": "integer", "minimum": 0 },
+        "brier_mean": { "type": "number", "minimum": 0, "maximum": 2 },
+        "brier_ci": { "$ref": "#/definitions/ciArray" },
+        "rps_mean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rps_median": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rps_ci": { "$ref": "#/definitions/ciArray" },
+        "log_loss_mean": { "type": "number", "minimum": 0 },
+        "log_loss_ci": { "$ref": "#/definitions/ciArray" }
+      }
+    },
+    "dmBlock": {
+      "type": "object",
+      "required": ["stat", "pvalue", "reject"],
+      "properties": {
+        "stat": { "type": "number" },
+        "pvalue": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reject": { "type": "boolean" },
+        "hln_applied": { "type": "boolean" }
+      }
+    },
+    "nybergBlock": {
+      "type": "object",
+      "required": ["lr", "pvalue", "reject_primary"],
+      "properties": {
+        "lr": { "type": "number", "minimum": 0 },
+        "pvalue": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reject_primary": { "type": "boolean" },
+        "reject_bonferroni": { "type": "boolean" },
+        "wald_hc3_stat": { "type": ["number", "null"] },
+        "wald_hc3_pvalue": { "type": ["number", "null"] }
+      }
+    },
+    "tradingBlock": {
+      "type": "object",
+      "required": ["n_bets", "clv_mean", "sharpe", "decision"],
+      "properties": {
+        "n_bets": { "type": "integer", "minimum": 0 },
+        "clv_mean": { "type": "number" },
+        "clv_std": { "type": "number", "minimum": 0 },
+        "sharpe": { "type": "number" },
+        "hm_ci_90": { "$ref": "#/definitions/ciArray" },
+        "hm_ci_95": { "$ref": "#/definitions/ciArray" },
+        "hm_ci_low": { "type": "number" },
+        "decision": {
+          "type": "string",
+          "enum": ["GENUINE_EDGE", "WEAK_EDGE", "NO_EDGE"]
+        },
+        "block_length": { "type": "integer", "minimum": 4, "maximum": 12 },
+        "z_stat": { "type": "number" },
+        "z_reject": { "type": "boolean" }
+      }
+    },
+    "stageEntry": {
+      "type": "object",
+      "properties": {
+        "n": { "type": "integer", "minimum": 0 },
+        "brier_mean": { "type": "number" },
+        "rps_mean": { "type": "number" },
+        "log_loss_mean": { "type": "number" }
+      }
+    },
+    "modelEntry": {
+      "type": "object",
+      "properties": {
+        "accuracy": {
+          "oneOf": [
+            { "$ref": "#/definitions/accuracyBlock" },
+            { "type": "null" }
+          ]
+        },
+        "dm_vs_m0": {
+          "oneOf": [
+            { "$ref": "#/definitions/dmBlock" },
+            { "type": "null" }
+          ]
+        },
+        "dm_vs_market": {
+          "oneOf": [
+            { "$ref": "#/definitions/dmBlock" },
+            { "type": "null" }
+          ]
+        },
+        "nyberg": {
+          "oneOf": [
+            { "$ref": "#/definitions/nybergBlock" },
+            { "type": "null" }
+          ]
+        },
+        "trading": {
+          "oneOf": [
+            { "$ref": "#/definitions/tradingBlock" },
+            { "type": "null" }
+          ]
+        },
+        "by_stage": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/stageEntry" }
+        }
+      }
+    }
+  }
+}

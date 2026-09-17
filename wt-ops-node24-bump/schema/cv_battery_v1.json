@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cv_battery_v1.json",
+  "title": "CV Battery Result — Phase 8 M★ Adjudication",
+  "description": "Machine-readable output of the Phase 8 pre-registered 5-fold stratified CV battery.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at_utc",
+    "seed",
+    "data_snapshot_sha",
+    "cv_folds_sha",
+    "n_calibration_matches",
+    "n_holdout_matches",
+    "n_folds",
+    "models",
+    "champion_id",
+    "champion_selection"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "seed": { "type": "integer", "const": 20260422 },
+    "data_snapshot_sha": { "type": "string", "minLength": 64, "maxLength": 64 },
+    "cv_folds_sha": { "type": "string", "minLength": 64, "maxLength": 64 },
+    "n_calibration_matches": { "type": "integer", "minimum": 1 },
+    "n_holdout_matches": { "type": "integer", "minimum": 1 },
+    "n_folds": { "type": "integer", "const": 5 },
+    "models": {
+      "type": "object",
+      "required": ["M0_elo", "M1_form", "M2_fifa", "M3_macro"],
+      "additionalProperties": false,
+      "properties": {
+        "M0_elo":   { "$ref": "#/definitions/model_result" },
+        "M1_form":  { "$ref": "#/definitions/model_result" },
+        "M2_fifa":  { "$ref": "#/definitions/model_result" },
+        "M3_macro": { "$ref": "#/definitions/model_result" }
+      }
+    },
+    "champion_id": {
+      "type": "string",
+      "enum": ["M0_elo", "M1_form", "M2_fifa", "M3_macro"]
+    },
+    "champion_selection": { "$ref": "#/definitions/champion_selection" }
+  },
+  "definitions": {
+    "model_result": {
+      "type": "object",
+      "required": [
+        "mean_log_loss", "se_log_loss",
+        "mean_brier", "se_brier",
+        "mean_rps", "se_rps",
+        "fold_log_losses",
+        "holdout_log_loss", "holdout_brier", "holdout_rps",
+        "runtime_seconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mean_log_loss":    { "type": "number" },
+        "se_log_loss":      { "type": "number", "minimum": 0 },
+        "mean_brier":       { "type": "number" },
+        "se_brier":         { "type": "number", "minimum": 0 },
+        "mean_rps":         { "type": "number" },
+        "se_rps":           { "type": "number", "minimum": 0 },
+        "fold_log_losses":  {
+          "type": "array",
+          "items": { "type": ["number", "null"] },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "holdout_log_loss": { "type": "number" },
+        "holdout_brier":    { "type": "number" },
+        "holdout_rps":      { "type": "number" },
+        "runtime_seconds":  { "type": "number", "minimum": 0 }
+      }
+    },
+    "champion_selection": {
+      "type": "object",
+      "required": [
+        "primary_criterion",
+        "ranking",
+        "winner_mean_ll",
+        "runner_up_id",
+        "runner_up_mean_ll",
+        "ll_gap_vs_runner_up",
+        "winner_se",
+        "ll_gap_in_se",
+        "sanity_gate_passed",
+        "m_star_vs_m0_gap_se",
+        "tiebreak_used",
+        "decision_narrative"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "primary_criterion":    { "type": "string" },
+        "ranking":              { "type": "array", "items": { "type": "string" } },
+        "winner_mean_ll":       { "type": "number" },
+        "runner_up_id":         { "type": "string" },
+        "runner_up_mean_ll":    { "type": "number" },
+        "ll_gap_vs_runner_up":  { "type": "number" },
+        "winner_se":            { "type": "number", "minimum": 0 },
+        "ll_gap_in_se":         { "type": "number" },
+        "sanity_gate_passed":   { "type": "boolean" },
+        "m_star_vs_m0_gap_se":  { "type": "number" },
+        "tiebreak_used":        { "type": "boolean" },
+        "decision_narrative":   { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "fifa_code": "POR",
+  "display_name": "Portugal",
+  "group": "K",
+  "confederation": "UEFA",
+  "elo_rating": 1984.0,
+  "progression": {
+    "p_champion": 0.031,
+    "p_final": 0.0694,
+    "p_sf": 0.0986,
+    "p_qf": 0.2414,
+    "p_r16": 0.4492,
+    "p_group_qualification": 0.8029,
+    "ci_95_champion": [
+      0.027779,
+      0.034581
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M21",
+      "kickoff_utc": "2026-06-17T17:00:00+00:00",
+      "opponent": "Congo DR",
+      "is_home": true
+    }
+  ]
+}

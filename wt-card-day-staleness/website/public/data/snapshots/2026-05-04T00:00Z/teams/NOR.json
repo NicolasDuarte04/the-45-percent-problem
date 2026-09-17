@@ -1,0 +1,28 @@
+{
+  "fifa_code": "NOR",
+  "display_name": "Norway",
+  "group": "I",
+  "confederation": "UEFA",
+  "elo_rating": 1912.0,
+  "progression": {
+    "p_champion": 0.0097,
+    "p_final": 0.0258,
+    "p_sf": 0.0393,
+    "p_qf": 0.0883,
+    "p_r16": 0.2547,
+    "p_group_qualification": 0.5718,
+    "ci_95_champion": [
+      0.007958,
+      0.011818
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M18",
+      "kickoff_utc": "2026-06-16T22:00:00+00:00",
+      "opponent": "Iraq",
+      "is_home": false
+    }
+  ]
+}

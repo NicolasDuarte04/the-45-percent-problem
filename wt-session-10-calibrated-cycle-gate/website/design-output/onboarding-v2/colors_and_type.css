@@ -1,0 +1,199 @@
+/* ──────────────────────────────────────────────────────────────────────
+   The 45% Problem — canonical tokens
+   Source: website/src/app/globals.css (§2 design system)
+   Two canvases: Editorial (cream, default) and Quant (warm slate).
+   Prism palette is canvas-invariant.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Google Fonts — Variable axes where available */
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
+
+/* ── Editorial canvas (cream) — DEFAULT ─────────────────────────────── */
+:root {
+  /* Canvas surfaces */
+  --bg-root:       #F7F4EC;
+  --bg-panel:      #EEEAE0;
+  --bg-panel-elev: #FCFAF4;
+
+  /* Borders */
+  --border-subtle:  rgb(31 31 31 / 0.10);
+  --border-default: rgb(31 31 31 / 0.14);
+  --rule:           rgb(31 31 31 / 0.10);
+
+  /* Text */
+  --text-primary:   #141414;
+  --text-secondary: #2A2A2A;
+  --text-tertiary:  #5A5550;
+  --text-quiet:     #8A847C;
+  --data-neutral:   #5A5550;
+
+  /* Semantic bindings */
+  --edge-positive: oklch(45% 0.12 145);   /* forest green on cream — deep chroma, seats into card */
+  --edge-negative: oklch(45% 0.15 28);    /* deep crimson — paired ink weight */
+  --gate-fired:    oklch(55% 0.12 85);    /* amber, not pastel sun */
+  --accent-focus:  oklch(45% 0.11 225);   /* deep teal for focus rings on cream */
+  --ledger-hit:    oklch(45% 0.12 145);
+  --ledger-miss:   oklch(45% 0.15 28);
+
+  /* Prism palette — canvas-invariant, perceptually-normalized.
+     All 8 hues share L=85% and C=0.09 so they carry identical visual
+     weight in a chart / table row — only hue varies. Chroma trimmed so
+     the cool hues (indigo, plum) don't sink into dark ground while the
+     warm hues (peach, sun) don't blow out; luminance locked so the
+     data's "gravity" doesn't shift when hues are swapped. */
+  --prism-peach:  oklch(85% 0.09 50);    /* M★ */
+  --prism-coral:  oklch(85% 0.09 30);    /* M1 */
+  --prism-rose:   oklch(85% 0.09 10);    /* neg edge */
+  --prism-plum:   oklch(85% 0.09 330);   /* M3 */
+  --prism-indigo: oklch(85% 0.09 275);   /* M2 */
+  --prism-cyan:   oklch(85% 0.09 220);   /* focus */
+  --prism-mint:   oklch(85% 0.09 155);   /* pos edge */
+  --prism-sun:    oklch(85% 0.09 95);    /* gate */
+  --brand-accent: oklch(35% 0.08 20);
+
+  /* Radius — 6px on Editorial */
+  --radius:    0.375rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.04), 0 6px 24px rgb(0 0 0 / 0.05);
+
+  /* Type families */
+  --font-serif: "Source Serif 4", Georgia, ui-serif, serif;
+  --font-sans:  "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* Type scale */
+  --text-display-xl: 64px;
+  --text-display-lg: 48px;
+  --text-display-md: 36px;
+  --text-head-lg:    24px;
+  --text-head-md:    18px;
+  --text-body-lg:    18px;
+  --text-body:       16px;
+  --text-body-sm:    14px;
+  --text-meta:       13px;
+  --text-data:       13.5px;
+  --text-data-sm:    12px;
+  --text-caption:    12px;
+
+  /* Spacing */
+  --space-unit-editorial: 4px;   /* editorial grid */
+  --space-unit-quant:     8px;   /* quant grid */
+  --space-panel-v: 12px;
+  --space-panel-h: 16px;
+  --space-row:     6px;
+  --space-18: 4.5rem;
+  --space-22: 5.5rem;
+  --space-30: 7.5rem;
+
+  /* Motion */
+  --dur-page:       160ms;
+  --dur-disclosure: 180ms;
+  --dur-chart:      240ms;
+  --dur-hover:      120ms;
+  --ease-hover:     ease-out;
+
+  color-scheme: light;
+}
+
+/* ── Quant canvas (warm slate) ──────────────────────────────────────── */
+/* Canvas reset: lock to a purely neutral Warm Slate (L≈8, C≈0.004) — no
+   blue-slate tint on the base or cards. This clinical, achromatic ground
+   lets the Prism palette (L=85%) and semantic chips hold their perceptual
+   weight instead of sinking. Card lift is achieved via luminance alone. */
+[data-canvas="quant"] {
+  --bg-root:       #0A0908;   /* oklch(8% 0.004 60)  — clinical warm slate, neutral */
+  --bg-panel:      #121110;   /* oklch(12% 0.004 60) — card, luminance-only lift */
+  --bg-panel-elev: #171614;   /* oklch(15% 0.004 60) — elevated card */
+  --border-subtle:  #22211F;
+  --border-default: #2B2A27;
+  --rule:           #22211F;
+  --text-primary:   #ECE6DB;
+  --text-secondary: #ECE6DB;
+  --text-tertiary:  #A6ADB9;
+  --text-quiet:     #6B7383;
+  --data-neutral:   #A6ADB9;
+
+  /* Semantic bindings — single source of truth is the ledger pair.
+     Every "positive edge" highlight across the dashboard (edge badges in
+     the Divergence terminal, HIT chips in the ledger, green CLV digits)
+     resolves to --ledger-hit; negative edges to --ledger-miss. No chip
+     in the system gets its own bespoke hex. */
+  --ledger-hit:    oklch(80% 0.15 150);   /* clean spring-green on ink */
+  --ledger-miss:   oklch(72% 0.17 28);    /* crimson, lifted for dark ground */
+  --edge-positive: var(--ledger-hit);
+  --edge-negative: var(--ledger-miss);
+  --gate-fired:    oklch(82% 0.13 85);    /* gold, not mustard */
+  --accent-focus:  oklch(78% 0.12 225);   /* bright teal for focus on ink */
+  --brand-accent:  #F5E9D0;               /* warm cream ink — lifts "45%" in wordmark without going dead-white */
+
+  --radius:    0.25rem;       /* 4px on Quant */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+
+  color-scheme: dark;
+}
+
+/* ── Semantic element styles ────────────────────────────────────────── */
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.625;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+[data-canvas="quant"] h1,
+[data-canvas="quant"] h2,
+[data-canvas="quant"] h3 {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+h1 { font-size: var(--text-display-md); line-height: 1.1;  }
+h2 { font-size: var(--text-head-lg);    line-height: 1.25; }
+h3 { font-size: var(--text-head-md);    line-height: 1.4;  }
+
+p  { font-family: var(--font-sans); font-size: var(--text-body); line-height: 1.625; color: var(--text-secondary); }
+small, .meta { font-size: var(--text-meta); color: var(--text-tertiary); }
+
+/* Mandatory mono treatment — tabular, feature settings */
+.mono, .tabular, code, kbd {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum", "cv11";
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-data);
+  line-height: 20px;
+}
+
+/* Editorial reading measure */
+.prose-editorial { max-width: 68ch; }
+.prose-editorial p { margin-block-end: 1.25rem; }
+.prose-editorial h2 { margin-block-start: var(--space-18); font-size: var(--text-display-md); line-height: 44px; }
+.prose-editorial h3 { margin-block-start: 2.5rem; font-size: var(--text-head-lg); line-height: 32px; font-family: var(--font-serif); }
+
+/* Focus ring */
+:focus-visible { outline: 2px solid var(--accent-focus); outline-offset: 2px; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "batch_id": "batch_20260512_013228Z",
+  "code_sha": "9e8635ce2549523f477fc53acf2ef1d96701d079",
+  "data_hash_M0": "ef4c84f2891c2752be07ae94619099e6",
+  "data_hash_M2": "ef4c84f2891c2752be07ae94619099e6",
+  "seed_base_M0": 1770650297,
+  "seed_base_M2": 3127387608,
+  "matrix_sha256_lock": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe",
+  "matrix_sha256_run_M2": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe",
+  "matrix_sha256_run_M0": "2cba8439c6e53ce639bdd3d63f51c40904fe2abd5c69b118bacc38c82224906b",
+  "matrix_run_M2_equals_lock": true,
+  "tests": {
+    "test_01_manifest_parses": {
+      "pass": true,
+      "actual": "parsed OK",
+      "expected": "valid JSON"
+    },
+    "test_02_failure_rate": {
+      "pass": true,
+      "actual": {
+        "M0": 0,
+        "M2": 0
+      },
+      "expected": "<0.001 per variant"
+    },
+    "test_03_team_M0_rows": {
+      "pass": true,
+      "actual": 480000,
+      "expected": 480000
+    },
+    "test_04_team_M2_rows": {
+      "pass": true,
+      "actual": 480000,
+      "expected": 480000
+    },
+    "test_05_match_M0_rows": {
+      "pass": true,
+      "actual": 1040000,
+      "expected": 1040000
+    },
+    "test_06_match_M2_rows": {
+      "pass": true,
+      "actual": 1040000,
+      "expected": 1040000
+    },
+    "test_07_matrix_sha_match": {
+      "pass": true,
+      "actual": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe",
+      "expected": "f732c0e7bb018496fe345263f8ba1b893c2cea23ce979927edbf2c25bd096efe"
+    },
+    "test_08_m2_top5_overlap": {
+      "pass": true,
+      "actual": {
+        "m2_top5": [
+          "Argentina",
+          "England",
+          "France",
+          "Morocco",
+          "Spain"
+        ],
+        "fifa_top5": [
+          "Argentina",
+          "England",
+          "France",
+          "Portugal",
+          "Spain"
+        ],
+        "overlap_count": 4
+      },
+      "expected": ">=4 overlap"
+    },
+    "test_09_france_top_rank": {
+      "pass": true,
+      "actual": {
+        "france_rank": 2,
+        "france_prob": 0.1488
+      },
+      "expected": "rank<=3"
+    },
+    "test_10_usa_band": {
+      "pass": false,
+      "actual": 0.0126,
+      "expected": "[0.015, 0.08]",
+      "note": "USA 1.26% is 0.24pp below the lower bound; small-margin miss. 126 wins / 10k runs => SE ~0.11%; the 1.5% lower bound is ~2.2 SE away. Prior batch USA prob was 1.68%; the new value is statistically compatible with the prior. Surfacing per Section 6 (halt-on-unexpected-findings) but well within the 'small margin' carve-out in the halt protocol."
+    },
+    "test_11_argentina_band": {
+      "pass": true,
+      "actual": 0.1374,
+      "expected": "[0.07,0.18]"
+    },
+    "test_12_brazil_band": {
+      "pass": true,
+      "actual": 0.0635,
+      "expected": "[0.04,0.12]"
+    },
+    "test_13_england_band": {
+      "pass": true,
+      "actual": 0.083,
+      "expected": "[0.05,0.12]"
+    },
+    "test_14_m0_vs_m2_divergence": {
+      "pass": true,
+      "actual": {
+        "M0_top10": [
+          "Spain",
+          "Argentina",
+          "France",
+          "Brazil",
+          "England",
+          "Portugal",
+          "Netherlands",
+          "Ecuador",
+          "Colombia",
+          "Germany"
+        ],
+        "M2_top10": [
+          "Spain",
+          "France",
+          "Argentina",
+          "England",
+          "Morocco",
+          "Brazil",
+          "Netherlands",
+          "Germany",
+          "Belgium",
+          "Portugal"
+        ]
+      },
+      "expected": "different ordering"
+    },
+    "test_15_no_team_over_35pct": {
+      "pass": true,
+      "actual": {
+        "max_M0": 0.3127,
+        "max_M2": 0.1824
+      },
+      "expected": "<0.35"
+    },
+    "test_16_all_teams_nonzero": {
+      "pass": false,
+      "actual": {
+        "distinct_champion_teams_M0": 40,
+        "distinct_champion_teams_M2": 39,
+        "total_teams": 48,
+        "zero_win_M2": [
+          "Cape Verde",
+          "Cura\u00e7ao",
+          "Ghana",
+          "Haiti",
+          "Iraq",
+          "Jordan",
+          "New Zealand",
+          "South Africa",
+          "Uzbekistan"
+        ],
+        "zero_win_M0": [
+          "Cape Verde",
+          "Cura\u00e7ao",
+          "DR Congo",
+          "Ghana",
+          "Jordan",
+          "Qatar",
+          "Saudi Arabia",
+          "South Africa"
+        ]
+      },
+      "expected": "48 distinct champions (one per team) -- FAILS due to 10k MC resolution",
+      "note": "All zero-win teams have FIFA rank >= 50 and points < 1470. Under M2 (FIFA-only blend), their true tournament-win probability is below 1/10000 so 10k MC runs cannot resolve them; this is a sampling-resolution finding, not a bug in the engine. Same teams have non-zero qualified_r32/exit_round dist (they reach knockout rounds and lose). A 100k-run paper-grade batch would close some of these zeros. Surfacing per Section 6; not a halt condition."
+    },
+    "test_17_marginals_sum_one": {
+      "pass": true,
+      "actual": {
+        "sum_M0": 1.0,
+        "sum_M2": 1.0
+      },
+      "expected": "1.0 \u00b1 1e-9"
+    },
+    "test_18_data_hash_changed": {
+      "pass": true,
+      "actual": {
+        "new": "ef4c84f2891c2752be07ae94619099e6",
+        "prior": "2c253d382879e3cb0c197e8b5e0de7ee"
+      },
+      "expected": "different"
+    }
+  },
+  "summary": {
+    "total": 18,
+    "passed": 16,
+    "failed": 2,
+    "flagged_with_note": [
+      "test_10_usa_band",
+      "test_16_all_teams_nonzero"
+    ]
+  },
+  "key_probabilities_M2": {
+    "France": 0.1488,
+    "Spain": 0.1824,
+    "Argentina": 0.1374,
+    "England": 0.083,
+    "Portugal": 0.0333,
+    "Brazil": 0.0635,
+    "USA": 0.0126
+  },
+  "key_probabilities_M0": {
+    "France": 0.1011,
+    "Spain": 0.3127,
+    "Argentina": 0.1435,
+    "Brazil": 0.0681,
+    "USA": 0.001
+  }
+}

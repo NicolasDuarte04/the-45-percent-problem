@@ -1,0 +1,26 @@
+{
+  "fifa_code": "ESP",
+  "display_name": "Spain",
+  "group": "F",
+  "progression": {
+    "p_group_qualification": 0.951,
+    "p_r16": 0.736,
+    "p_qf": 0.541,
+    "p_sf": 0.341,
+    "p_final": 0.237,
+    "p_champion": 0.174,
+    "ci_95_champion": [
+      0.151762,
+      0.198733
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-13_Spain_Netherlands",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "opponent": "Netherlands",
+      "is_home": true
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "fifa_code": "CAN",
+  "display_name": "Canada",
+  "group": "C",
+  "progression": {
+    "p_group_qualification": 0.7656,
+    "p_r16": 0.4016,
+    "p_qf": 0.1796,
+    "p_sf": 0.0727,
+    "p_final": 0.024,
+    "p_champion": 0.0049,
+    "ci_95_champion": [
+      0.003709,
+      0.006472
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-12_Canada_Uruguay",
+      "kickoff_utc": "2026-06-12T18:00:00+00:00",
+      "opponent": "Uruguay",
+      "is_home": true
+    }
+  ]
+}

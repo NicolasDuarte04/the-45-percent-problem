@@ -1,0 +1,28 @@
+{
+  "fifa_code": "SUI",
+  "display_name": "Switzerland",
+  "group": "K",
+  "confederation": "UEFA",
+  "elo_rating": 1889.0,
+  "progression": {
+    "p_group_qualification": 0.5642,
+    "p_r16": 0.389,
+    "p_qf": 0.2333,
+    "p_sf": 0.1097,
+    "p_final": 0.0542,
+    "p_champion": 0.015,
+    "ci_95_champion": [
+      0.012797,
+      0.017575
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-16_Switzerland_Turkey",
+      "kickoff_utc": "2026-06-16T18:00:00+00:00",
+      "opponent": "Turkey",
+      "is_home": true
+    }
+  ]
+}

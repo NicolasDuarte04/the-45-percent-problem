@@ -1,0 +1,26 @@
+{
+  "fifa_code": "ITA",
+  "display_name": "Italy",
+  "group": "K",
+  "progression": {
+    "p_group_qualification": 0.516,
+    "p_r16": 0.342,
+    "p_qf": 0.185,
+    "p_sf": 0.087,
+    "p_final": 0.044,
+    "p_champion": 0.015,
+    "ci_95_champion": [
+      0.009111,
+      0.024601
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-16_Italy_Serbia",
+      "kickoff_utc": "2026-06-16T18:00:00+00:00",
+      "opponent": "Serbia",
+      "is_home": true
+    }
+  ]
+}

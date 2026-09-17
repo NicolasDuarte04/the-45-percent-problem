@@ -1,0 +1,51 @@
+{
+  "batch_id": "batch_20260422_180255Z",
+  "batch_dir": "outputs/phase5/batches/batch_20260422_180255Z",
+  "variants": ["M0", "M1", "M2", "M3", "Mstar"],
+  "n_runs_per_variant": 10000,
+  "code_sha": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+  "data_hashes": {
+    "M0":    "356ffdbb086797f6250a5f25ef4520a2",
+    "M1":    "356ffdbb086797f6250a5f25ef4520a2",
+    "M2":    "356ffdbb086797f6250a5f25ef4520a2",
+    "M3":    "356ffdbb086797f6250a5f25ef4520a2",
+    "Mstar": "356ffdbb086797f6250a5f25ef4520a2"
+  },
+  "seed_bases": {
+    "M0":    2847193042,
+    "M1":    1923847162,
+    "M2":    513444667,
+    "M3":    3712948031,
+    "Mstar": 892736154
+  },
+  "start_time_utc": "2026-06-11T09:00:00.000000+00:00",
+  "end_time_utc":   "2026-06-11T09:18:42.000000+00:00",
+  "completed_variants": ["M0", "M1", "M2", "M3", "Mstar"],
+  "failed_runs": {
+    "M0":    [],
+    "M1":    [],
+    "M2":    [],
+    "M3":    [],
+    "Mstar": []
+  },
+  "status": "complete",
+  "_schema_notes": {
+    "batch_id":            "Unique identifier — 'batch_' + UTC timestamp to second resolution",
+    "batch_dir":           "Relative path to the batch output directory",
+    "variants":            "Model variants run; default is all 5 (M0/M1/M2/M3/Mstar)",
+    "n_runs_per_variant":  "Monte Carlo runs per variant (10k website, 100k paper)",
+    "code_sha":            "Git commit SHA at run time — locks code to data",
+    "data_hashes":         "SHA-256 of calibration + raw data files (variant → hash)",
+    "seed_bases":          "Deterministic seed base derived from sha256(model_id|data_hash|batch_ts)",
+    "start_time_utc":      "ISO-8601 UTC timestamp when batch started",
+    "end_time_utc":        "ISO-8601 UTC timestamp when batch completed",
+    "completed_variants":  "Variants that finished successfully (used by --resume logic)",
+    "failed_runs":         "Per-variant list of {run_idx, seed, error} for failed simulations",
+    "status":              "'in_progress' | 'complete'"
+  },
+  "_output_files": {
+    "team_runs_{variant}.parquet":  "48 rows/run × n_runs. Schema: §6.2 team_runs.",
+    "match_runs_{variant}.parquet": "104 rows/run × n_runs. Schema: §6.2 match_runs.",
+    "manifest.json":                "This file — written incrementally, atomic rename on complete."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "fifa_code": "DEN",
+  "display_name": "Denmark",
+  "group": "G",
+  "progression": {
+    "p_group_qualification": 0.852,
+    "p_r16": 0.484,
+    "p_qf": 0.169,
+    "p_sf": 0.07,
+    "p_final": 0.031,
+    "p_champion": 0.011,
+    "ci_95_champion": [
+      0.006153,
+      0.01959
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-14_France_Denmark",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "opponent": "France",
+      "is_home": false
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "fifa_code": "ENG",
+  "display_name": "England",
+  "group": "L",
+  "confederation": "UEFA",
+  "elo_rating": 2020.0,
+  "progression": {
+    "p_group_qualification": 0.8803,
+    "p_r16": 0.5417,
+    "p_qf": 0.3259,
+    "p_sf": 0.1482,
+    "p_final": 0.1067,
+    "p_champion": 0.0567,
+    "ci_95_champion": [
+      0.052335,
+      0.061405
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M23",
+      "kickoff_utc": "2026-06-17T20:00:00+00:00",
+      "opponent": "Croatia",
+      "is_home": true
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+# bias_tests_preregistered.yaml
+# ==============================
+# PRE-REGISTERED test specifications for the seven behavioural bias tests.
+# This file is frozen before the opening match and its SHA-256 is logged
+# on every bias_tests.py run.  Any modification during the tournament
+# requires an OSF amendment and changes the spec_version field.
+#
+# spec_version is the SHA-256 of this file itself (bootstrapped; see note below).
+# On first run, compute: sha256sum bias_tests_preregistered.yaml
+
+spec_version: "preregistered_v1"
+
+tests:
+  - id: T1
+    name: "Favourite-Longshot Bias"
+    description: >
+      Stratify all 1X2 outcomes by q_devigged decile. For each decile, compute
+      realised frequency vs mean q_devigged. Test for monotone deviation:
+      longshot deciles realise less often than priced, favourite deciles more often.
+    stat: "cochran_armitage_trend"
+    alpha: 0.05
+    filter:
+      market_class: "1x2"
+      min_observations: 10
+    stratification:
+      column: "q_devigged"
+      n_deciles: 10
+
+  - id: T2
+    name: "Sentiment / Home-Country Bias"
+    description: >
+      Restrict to matches involving high-sentiment teams (host, FIFA top-5,
+      defending champion). Compute mean signed Edge on the high-sentiment team's
+      win leg vs matched control. Null: mean Edge is zero.
+    stat: "paired_t_bootstrap"
+    alpha: 0.05
+    filter:
+      high_sentiment_flags: ["is_host", "fifa_top5", "defending_champion"]
+    control_matching: "elo_matched"
+
+  - id: T3
+    name: "Recency / Last-Match Bias"
+    description: >
+      For each team, a last-match shock indicator: did the most recent result
+      diverge from Elo expectation by >1σ? Test whether q_devigged on the next
+      market over-reacts relative to p_model.
+    stat: "linear_regression_t"
+    alpha: 0.05
+    filter:
+      market_class: "1x2"
+    shock_threshold_sigma: 1.0
+
+  - id: T4
+    name: "Round-Number / Anchoring Bias"
+    description: >
+      Test whether q_devigged clusters disproportionately at round percentage
+      values (0.50, 0.33, 0.25, etc.) vs a kernel-density null.
+    stat: "kolmogorov_smirnov"
+    alpha: 0.05
+    anchor_values: [0.10, 0.20, 0.25, 0.33, 0.40, 0.50, 0.60, 0.67, 0.75, 0.80, 0.90]
+    anchor_bandwidth: 0.005
+
+  - id: T5
+    name: "Late-Money / Closing-Line Drift"
+    description: >
+      Compute signed drift from opening to closing Pinnacle line, conditional
+      on the sign of Edge at opening. Test slope of regression of close-minus-open
+      on opening-Edge.
+    stat: "linear_regression_t"
+    alpha: 0.05
+    filter:
+      require_closing_line: true
+    null_hypothesis: "slope <= 0"
+
+  - id: T6
+    name: "Stage-Of-Elimination Mispricing"
+    description: >
+      Restrict to stage_of_elimination derivative markets. Test whether the
+      implied tournament-progression curve is consistent with per-match 1X2
+      Monte Carlo synthetic distribution.
+    stat: "chi_squared"
+    alpha: 0.05
+    filter:
+      market_class: "stage_of_elimination"
+    stage_buckets: ["round_of_16", "quarter_final", "semi_final", "final", "winner"]
+
+  - id: T7
+    name: "Manager-Sacking / Coaching-Change Reaction"
+    description: >
+      Restrict to teams whose head coach changed within 90 days of first
+      tournament match. Test whether q_devigged systematically differs from
+      matched control after conditioning on Elo and FIFA rank.
+    stat: "permutation_difference_in_means"
+    alpha: 0.05
+    coaching_change_window_days: 90
+    n_permutations: 10000
+    control_matching: "elo_fifa_matched"
+
+multiple_comparison_correction:
+  method: "benjamini_hochberg"
+  fdr_q: 0.10

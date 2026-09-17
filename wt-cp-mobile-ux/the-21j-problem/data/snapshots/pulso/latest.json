@@ -1,0 +1,59 @@
+{
+  "snapshot_hour": "2026-06-13T13:00:00Z",
+  "generated_at": "2026-06-13T13:01:26.438459Z",
+  "index_value": 75.36,
+  "index_raw": 75.36,
+  "inputs_live": 1,
+  "inputs_total": 5,
+  "readings": [
+    {
+      "source": "headlines",
+      "value": 75.36,
+      "available": true,
+      "weight": 0.4,
+      "source_url": "https://www.eltiempo.com/rss/colombia.xml",
+      "fetched_at": "2026-06-13T13:01:30.082617Z",
+      "note": "5/5 feeds reachable; 69 runoff-relevant of 179 items, 35 carrying a charged term"
+    },
+    {
+      "source": "trends",
+      "value": null,
+      "available": false,
+      "weight": 0.2,
+      "source_url": "https://trends.google.com/trends/explore",
+      "fetched_at": "2026-06-13T13:01:30.084930Z",
+      "note": "pytrends not available (No module named 'pytrends'); Google Trends not ingested"
+    },
+    {
+      "source": "market",
+      "value": null,
+      "available": false,
+      "weight": 0.15,
+      "source_url": "https://gamma-api.polymarket.com/markets",
+      "fetched_at": "2026-06-13T13:01:30.692448Z",
+      "note": "no Colombia 2026 runoff market on Polymarket (no substitute used)"
+    },
+    {
+      "source": "x",
+      "value": null,
+      "available": false,
+      "weight": 0.15,
+      "source_url": null,
+      "fetched_at": "2026-06-13T13:01:30.694529Z",
+      "note": "no accessible X/Twitter API for tone (stub; implement later)"
+    },
+    {
+      "source": "tiktok",
+      "value": null,
+      "available": false,
+      "weight": 0.1,
+      "source_url": null,
+      "fetched_at": "2026-06-13T13:01:30.696031Z",
+      "note": "no accessible TikTok API for hashtag velocity (stub; implement later)"
+    }
+  ],
+  "data_sufficiency": "demo",
+  "methodology": "El Pulso Patrio mide la intensidad y la carga emocional de la conversacion sobre la segunda vuelta. Es una medida de cuanto y con que fuerza se habla, no una probabilidad y no dice quien va adelante. Las probabilidades por candidato viven aparte, en el snapshot del modelo. Las senales que parecen direccionales (divergencia de busquedas, spread de mercado) entran solo como magnitud y volatilidad. Se combinan unicamente las entradas disponibles, renormalizando sus pesos; con menos de dos entradas vivas el indice se marca como demo.",
+  "code_sha": "dbc52df882be504ac49b8f388d49c8aef649e3c4",
+  "data_hash": "d063984bec1e5349a40901ca6e62af34f4df200d11d0446bdcd13526a0339b15"
+}

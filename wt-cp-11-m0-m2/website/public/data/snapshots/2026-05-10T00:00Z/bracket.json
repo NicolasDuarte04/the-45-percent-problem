@@ -1,0 +1,33 @@
+{
+  "snapshot_id": "2026-05-10T00:00Z",
+  "rounds": [
+    {
+      "round": "GRP",
+      "slots": []
+    },
+    {
+      "round": "R32",
+      "slots": []
+    },
+    {
+      "round": "R16",
+      "slots": []
+    },
+    {
+      "round": "QF",
+      "slots": []
+    },
+    {
+      "round": "SF",
+      "slots": []
+    },
+    {
+      "round": "3P",
+      "slots": []
+    },
+    {
+      "round": "FIN",
+      "slots": []
+    }
+  ]
+}

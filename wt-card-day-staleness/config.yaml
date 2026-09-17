@@ -1,0 +1,162 @@
+# =============================================================================
+# The 45% Problem — Master Configuration
+# Framework Blueprint v1.0
+#
+# This file is the single source of truth for all tunable parameters.
+# Values marked [PRE-REGISTERED] are frozen before the tournament begins
+# and must not change after the pre-registration is submitted to OSF.
+# =============================================================================
+
+project:
+  name: "The 45% Problem"
+  version: "0.1.0"
+  tournament: "FIFA World Cup 2026"
+  tournament_start: "2026-06-11"
+  tournament_end: "2026-07-19"
+  hosts: ["USA", "MEX", "CAN"]
+  num_teams: 48
+  num_groups: 12
+
+# ─── File paths ───────────────────────────────────────────────────────────────
+paths:
+  data_raw:        "data/raw"
+  data_processed:  "data/processed"
+  data_snapshots:  "data/snapshots"
+  models:          "models"
+  logs:            "logs"
+  forecast_log:    "data/snapshots/forecast_log.jsonl"
+  event_log:       "data/snapshots/event_log.jsonl"
+
+# ─── API keys (populated from .env) ──────────────────────────────────────────
+api_keys:
+  pinnacle:            "${PINNACLE_API_KEY}"
+  betfair:             "${BETFAIR_API_KEY}"
+  polymarket:          "${POLYMARKET_API_KEY}"
+  football_data_org:   "${FOOTBALL_DATA_ORG_KEY}"
+
+# ─── Data sources ─────────────────────────────────────────────────────────────
+data_sources:
+  historical_matches:
+    # Mart Jürisoo's open international football results dataset
+    url: "https://raw.githubusercontent.com/martj42/international_results/master/results.csv"
+    output_file: "data/raw/historical_matches.parquet"
+
+  elo_ratings:
+    url: "https://www.eloratings.net/World.tsv"
+    output_file: "data/raw/elo_ratings.parquet"
+
+  fifa_rankings:
+    url: "https://www.fifa.com/fifa-world-ranking/men"
+    output_file: "data/raw/fifa_rankings.parquet"
+
+  wc2026_fixtures:
+    output_file: "data/raw/wc2026_fixtures.parquet"
+
+  macro_data:
+    imf_weo_url: "https://www.imf.org/en/Publications/WEO"
+    output_file: "data/raw/macro_data.parquet"
+
+  odds_pinnacle:
+    output_file: "data/raw/odds_pinnacle.parquet"
+
+  odds_polymarket:
+    base_url: "https://gamma-api.polymarket.com"
+    output_file: "data/raw/odds_polymarket.parquet"
+
+  odds_betfair:
+    output_file: "data/raw/odds_betfair.parquet"
+
+# ─── Calibration & hold-out split ─────────────────────────────────────────────
+calibration:
+  tournaments:
+    world_cups: ["2010", "2014", "2018"]   # 2022 is held out
+    continental:
+      - { name: "UEFA Euro",     years: [2020, 2024] }
+      - { name: "Copa America",  years: [2021, 2024] }
+      - { name: "Africa Cup",    years: [2021, 2023] }
+      - { name: "AFC Asian Cup", years: [2023] }
+  holdout_tournament: "FIFA World Cup 2022"
+
+# ─── Elo parameters [PRE-REGISTERED] ─────────────────────────────────────────
+elo:
+  initial_rating: 1500.0
+  k_factor_world_cup:   60
+  k_factor_continental: 50
+  k_factor_friendly:    20
+  lambda_mapping_file:  "models/elo_lambda_params.json"
+
+# ─── M1: Decayed form [PRE-REGISTERED] ───────────────────────────────────────
+form:
+  window_matches:   8
+  decay_half_life:  4       # Placeholder; overwritten by calibrate_form_decay.py
+  adjustment_cap:   0.15    # ±15% cap on Elo-implied lambda
+
+# ─── M2: FIFA ranking blend [PRE-REGISTERED] ─────────────────────────────────
+fifa_blend:
+  blend_weight:      0.15   # Placeholder; overwritten by calibrate_fifa_blend.py
+  blend_weight_file: "models/fifa_blend_weight.json"
+
+# ─── M3: Macro-prior [PRE-REGISTERED] ────────────────────────────────────────
+macro:
+  variables:
+    - "log_gdp_per_capita"
+    - "log_population"
+    - "mean_temp_celsius"
+    - "is_host"
+    - "football_culture_index"
+  tau_0:               0.20  # Placeholder; overwritten by calibration
+  tau_0_file:          "models/macro_tau0.json"
+  culture_decay_years: 16
+
+# ─── Simulation engine [PRE-REGISTERED] ──────────────────────────────────────
+simulation:
+  dixon_coles_rho:               -0.13  # Placeholder; calibrated from historical data
+  dixon_coles_rho_file:          "models/dixon_coles_rho.json"
+  extra_time_lambda_scale:       0.6
+  shootout_elo_skew_max:         0.05
+  home_advantage_lambda_multiplier: 1.12
+  mc_runs_website:               10_000
+  mc_runs_paper:                 100_000
+  mc_random_seed_base:           42
+
+# ─── Market layer [PRE-REGISTERED] ───────────────────────────────────────────
+market:
+  devig_method:              "power"
+  edge_threshold_mainline:   0.03
+  edge_threshold_derivative: 0.05
+  bias_correction_file:      "models/pinnacle_bias_correction.json"
+
+# ─── Volatility Gate [PRE-REGISTERED] ────────────────────────────────────────
+volatility_gate:
+  news_lookback_hours:          24
+  news_suppression_window_hours: 6
+  price_swing_threshold:        0.03
+  price_swing_window_minutes:   30
+  price_swing_lookback_minutes: 120
+  exchange_spread_threshold:    0.025
+  polymarket_min_volume_usd:    50_000
+  pinnacle_max_staleness_hours: 4
+
+# ─── Kelly sizing [PRE-REGISTERED] ───────────────────────────────────────────
+kelly:
+  fraction_mainline:    0.25
+  fraction_longshot:    0.125
+  longshot_threshold:   0.10
+  per_market_cap:       0.05
+  per_event_cap:        0.08
+  drawdown_stop:        0.20
+  drawdown_recovery:    0.90
+
+# ─── Evaluation [PRE-REGISTERED] ─────────────────────────────────────────────
+evaluation:
+  dm_alpha:              0.05
+  kill_criterion_stage:  "Round of 16"
+  nyberg_alpha:          0.05
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:        "INFO"
+  log_to_file:  true
+  log_file:     "logs/pipeline.log"
+  log_format:   "json"
+  rich_console: true

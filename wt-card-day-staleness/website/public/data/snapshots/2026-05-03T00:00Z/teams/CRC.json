@@ -1,0 +1,28 @@
+{
+  "fifa_code": "CRC",
+  "display_name": "Costa Rica",
+  "group": "B",
+  "confederation": "CONCACAF",
+  "elo_rating": 1613.0,
+  "progression": {
+    "p_group_qualification": 0.4852,
+    "p_r16": 0.1748,
+    "p_qf": 0.058,
+    "p_sf": 0.0099,
+    "p_final": 0.0014,
+    "p_champion": 0.0002,
+    "ci_95_champion": [
+      5.5e-05,
+      0.000729
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-11_Ghana_Costa_Rica",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "opponent": "Ghana",
+      "is_home": false
+    }
+  ]
+}

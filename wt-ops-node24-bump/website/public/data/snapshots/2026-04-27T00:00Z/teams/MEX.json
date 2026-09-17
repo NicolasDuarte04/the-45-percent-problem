@@ -1,0 +1,26 @@
+{
+  "fifa_code": "MEX",
+  "display_name": "Mexico",
+  "group": "A",
+  "progression": {
+    "p_group_qualification": 0.8073,
+    "p_r16": 0.6259,
+    "p_qf": 0.36,
+    "p_sf": 0.136,
+    "p_final": 0.0487,
+    "p_champion": 0.0161,
+    "ci_95_champion": [
+      0.013812,
+      0.018759
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-11_Mexico_South_Korea",
+      "kickoff_utc": "2026-06-11T18:00:00+00:00",
+      "opponent": "South Korea",
+      "is_home": true
+    }
+  ]
+}

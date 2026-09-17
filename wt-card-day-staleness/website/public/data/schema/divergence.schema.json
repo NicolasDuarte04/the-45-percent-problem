@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "divergence",
+  "title": "DivergenceSnapshot",
+  "description": "Phase 9 §4.4 — Snapshot wrapper containing all DivergenceRow records.",
+  "type": "object",
+  "required": ["snapshot_id", "generated_at_utc", "rows"],
+  "additionalProperties": false,
+  "properties": {
+    "snapshot_id": { "type": "string" },
+    "generated_at_utc": { "type": "string" },
+    "rows": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/DivergenceRow" }
+    }
+  },
+  "definitions": {
+    "TeamRef": {
+      "type": "object",
+      "required": ["fifa_code", "display_name"],
+      "additionalProperties": false,
+      "properties": {
+        "fifa_code":    { "type": "string" },
+        "display_name": { "type": "string" }
+      }
+    },
+    "DivergenceRow": {
+      "type": "object",
+      "required": [
+        "row_id", "match_id", "kickoff_utc", "round",
+        "home", "away", "market", "outcome",
+        "p_model", "q_market_raw_decimal", "q_market_devigged",
+        "edge_E", "edge_threshold", "gate_status", "gate_rules_tripped",
+        "snapshot_age_minutes", "confidence_band",
+        "source_book", "pinnacle_bias_applied", "model_version",
+        "history"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "row_id":    { "type": "string" },
+        "match_id":  { "type": "string" },
+        "kickoff_utc": { "type": "string" },
+        "round": {
+          "type": "string",
+          "enum": ["GRP", "R32", "R16", "QF", "SF", "3P", "FIN"]
+        },
+        "home": { "$ref": "#/definitions/TeamRef" },
+        "away": { "$ref": "#/definitions/TeamRef" },
+        "market": {
+          "type": "string",
+          "enum": ["1X2", "BTTS", "OU_2_5", "AH_-0.5", "AH_+0.5", "ADV_KO"]
+        },
+        "outcome":               { "type": "string" },
+        "p_model":               { "type": "number", "minimum": 0, "maximum": 1 },
+        "q_market_raw_decimal":  { "type": "number", "minimum": 1 },
+        "q_market_devigged":     { "type": "number", "minimum": 0, "maximum": 1 },
+        "edge_E":                { "type": "number" },
+        "edge_threshold":        { "type": "number", "minimum": 0 },
+        "gate_status":           { "type": "string", "enum": ["OPEN", "FIRED"] },
+        "gate_rules_tripped":    { "type": "array", "items": { "type": "string" } },
+        "snapshot_age_minutes":  { "type": "number", "minimum": 0 },
+        "confidence_band": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "source_book": {
+          "type": "string",
+          "enum": ["PINNACLE", "BETFAIR", "POLYMARKET"]
+        },
+        "pinnacle_bias_applied": {
+          "type": "object",
+          "required": ["draw_delta", "host_delta"],
+          "additionalProperties": false,
+          "properties": {
+            "draw_delta": { "type": "number" },
+            "host_delta": { "type": "number" }
+          }
+        },
+        "model_version": { "type": "string" },
+        "history": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DivergenceHistoryEntry" }
+        }
+      }
+    },
+    "DivergenceHistoryEntry": {
+      "type": "object",
+      "required": ["snapshot_id", "edge_E", "p_model", "q_market_devigged"],
+      "additionalProperties": false,
+      "properties": {
+        "snapshot_id":       { "type": "string" },
+        "edge_E":            { "type": "number" },
+        "p_model":           { "type": "number", "minimum": 0, "maximum": 1 },
+        "q_market_devigged": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

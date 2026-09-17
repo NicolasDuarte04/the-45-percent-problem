@@ -1,0 +1,28 @@
+{
+  "fifa_code": "CZE",
+  "display_name": "Czechia",
+  "group": "A",
+  "confederation": "UEFA",
+  "elo_rating": 1726.0,
+  "progression": {
+    "p_group_qualification": 0.7667,
+    "p_r16": 0.4754,
+    "p_qf": 0.1944,
+    "p_sf": 0.0772,
+    "p_final": 0.0129,
+    "p_champion": 0.0029,
+    "ci_95_champion": [
+      0.00202,
+      0.004162
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M02",
+      "kickoff_utc": "2026-06-12T02:00:00+00:00",
+      "opponent": "Korea Republic",
+      "is_home": false
+    }
+  ]
+}

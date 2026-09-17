@@ -1,0 +1,282 @@
+Every formal claim in the Vault that rests on prior academic work is
+listed here. Entries are grouped by the role the work plays in the
+project: probabilistic football modeling, de-vigging and market
+microstructure, forecast scoring rules, pairwise comparison and
+small-sample inference, bootstrap procedures, bet sizing under
+uncertainty, and the macroeconomic-determinants literature. Within each
+section, citations are alphabetical by first author. The "used in" line
+after each entry points to the Vault page or pages that lean on the
+work.
+
+A canonical citation for this project itself lives at
+[Citation](/vault/citation). A canonical symbol table lives at
+[Notation](/vault/notation).
+
+<SectionRule />
+
+## Probabilistic football modeling
+
+**Dixon, M. J., and Coles, S. G. (1997).** Modelling association
+football scores and inefficiencies in the football betting market.
+*Journal of the Royal Statistical Society: Series C (Applied
+Statistics)*, 46(2), 265 to 280.
+
+*Used in:* [Simulation](/vault/simulation) (the
+<InlineMath math="\tau(x, y)" /> low-score correction with
+<InlineMath math="\rho = -0.05" />), [Models](/vault/models),
+[Notation](/vault/notation).
+
+**Dixon, M. J., and Robinson, M. E. (1998).** A birth process model for
+association football matches. *Journal of the Royal Statistical
+Society: Series D (The Statistician)*, 47(3), 523 to 538.
+
+*Used in:* [Simulation](/vault/simulation) (the empirical baseline for
+extra-time scoring rates that informed the
+<InlineMath math="\lambda^{\mathrm{ET}} = 0.6 \cdot \lambda^{90}" />
+calibration).
+
+**Karlis, D., and Ntzoufras, I. (2003).** Analysis of sports data by
+using bivariate Poisson models. *Journal of the Royal Statistical
+Society: Series D (The Statistician)*, 52(3), 381 to 393.
+
+*Used in:* [Simulation](/vault/simulation) (the
+<InlineMath math="X = W_1 + W_3, \; Y = W_2 + W_3" /> common-shock
+decomposition), [Models](/vault/models). The authors' empirical range
+of <InlineMath math="\lambda_3 \in [0.05, 0.20]" /> on European football
+data is the basis for the project's locked
+<InlineMath math="\lambda_3 = 0.10" />.
+
+**Lee, J., Kim, J., Kim, H., and Lee, J.-S. (2022).** A Bayesian
+approach to predict football matches with changed home advantage in
+spectator-free matches after the COVID-19 break. *Entropy*, 24(3), 366.
+
+*Used in:* contextual reading on home-advantage modeling. The project
+sets <InlineMath math="H = 0" /> for the FIFA 2026 simulation
+(single-host-complex final), but the modeling of home advantage as a
+hierarchical Bayesian shift parameter follows the paper's framing.
+
+**Maher, M. J. (1982).** Modelling association football scores.
+*Statistica Neerlandica*, 36(3), 109 to 118.
+
+*Used in:* [Simulation](/vault/simulation) (the independent Poisson
+case recovered when <InlineMath math="\lambda_3 = 0" />),
+[Models](/vault/models). Maher's paper is the original separable-Poisson
+formulation that Karlis and Ntzoufras (2003) generalize.
+
+**Ogundeji, R., Aleem, A., and Obute, D. (2024).** A Bayesian approach
+for predicting match outcomes: FIFA World Cup 2026. *Journal of
+Innovative Applied Mathematics and Computational Sciences*, 4(2), 153
+to 174. DOI: 10.58205/jiamcs.v4i2.1848.
+
+*Used in:* contextual reading on Bayesian World Cup forecasting. This
+project's frequentist multinomial logit and Bayesian shrinkage prior in
+M3 share the spirit of the paper's hierarchical regression framework
+without adopting the same likelihood.
+
+<SectionRule />
+
+## De-vigging and market microstructure
+
+**Nyberg, H. (2014).** A multinomial logit-based statistical test of
+association football betting market efficiency. *HECER Discussion
+Paper* No. 380, University of Helsinki.
+
+*Used in:* [Evaluation](/vault/evaluation) (the multinomial logit
+specification with Draw as reference and the
+<InlineMath math="\chi^{2}_{2}" /> likelihood ratio test on
+<InlineMath math="H_0: \beta_{2H} = \beta_{2A} = 0" />). The
+pre-registered critical values (5.991 for M★ at
+<InlineMath math="\alpha = 0.05" />, 8.668 for the Bonferroni-corrected
+shadow tests) trace directly to this paper's framework.
+
+**Shin, H. S. (1993).** Measuring the incidence of insider trading in
+a market for state-contingent claims. *The Economic Journal*, 103(420),
+1141 to 1153.
+
+*Used in:* [Market Layer](/vault/market-layer) (the original Power
+method de-vigging derivation that motivates
+<InlineMath math="\sum_i r_i^{z} = 1" />). Shin's paper introduces the
+favorite-longshot bias correction implicit in the Power method's
+<InlineMath math="z" /> exponent.
+
+**Štrumbelj, E. (2014).** On determining probability forecasts from
+betting odds. *International Journal of Forecasting*, 30(4), 934 to
+943.
+
+*Used in:* [Market Layer](/vault/market-layer). Štrumbelj's empirical
+comparison of the Power method against Shin's quadratic-surplus and
+proportional de-vigging on more than 100,000 two-way and three-way
+markets is the basis for the project's choice of the Power method as
+the canonical de-vigging procedure.
+
+<SectionRule />
+
+## Forecast scoring rules
+
+**Brier, G. W. (1950).** Verification of forecasts expressed in terms
+of probability. *Monthly Weather Review*, 78(1), 1 to 3.
+
+*Used in:* [Evaluation](/vault/evaluation), [Glossary](/vault/glossary),
+[Notation](/vault/notation). The original definition of what is now
+called the Brier score; the project uses the multiclass form summed
+over <InlineMath math="K = 3" /> outcomes.
+
+**Epstein, E. S. (1969).** A scoring system for probability forecasts
+of ranked categories. *Journal of Applied Meteorology*, 8(6), 985 to
+987.
+
+*Used in:* [Evaluation](/vault/evaluation) (the cumulative-distribution
+form of the Ranked Probability Score with normalization
+<InlineMath math="1/(K-1)" />).
+
+**Gneiting, T., and Raftery, A. E. (2007).** Strictly proper scoring
+rules, prediction, and estimation. *Journal of the American
+Statistical Association*, 102(477), 359 to 378.
+
+*Used in:* [Why probabilities](/vault/why-probabilities),
+[Evaluation](/vault/evaluation). The two-axis frame of calibration and
+sharpness used to argue that reporting all three scoring rules (Brier,
+log-loss, RPS) is the honest commitment.
+
+<SectionRule />
+
+## Pairwise comparison and small-sample inference
+
+**Diebold, F. X., and Mariano, R. S. (1995).** Comparing predictive
+accuracy. *Journal of Business and Economic Statistics*, 13(3), 253 to
+263.
+
+*Used in:* [Evaluation](/vault/evaluation), [Kill criteria](/vault/kill-criteria).
+The DM test is the inferential procedure under the kill criterion's
+2-SE log-loss gap rule.
+
+**Harvey, D., Leybourne, S., and Newbold, P. (1997).** Testing the
+equality of prediction mean squared errors. *International Journal of
+Forecasting*, 13(2), 281 to 291.
+
+*Used in:* [Evaluation](/vault/evaluation). The HLN small-sample
+correction
+<InlineMath math="\mathrm{DM}^{*} = \mathrm{DM} \cdot \sqrt{(N + 1 - 2h + h(h-1)/N) / N}" />
+is applied because <InlineMath math="N" /> in the dozens of matches
+plus a small hold-out is well inside the regime where the asymptotic
+normal approximation is unreliable.
+
+**Newey, W. K., and West, K. D. (1987).** A simple, positive
+semi-definite, heteroskedasticity and autocorrelation consistent
+covariance matrix. *Econometrica*, 55(3), 703 to 708.
+
+*Used in:* [Evaluation](/vault/evaluation). The Bartlett kernel HAC
+variance with bandwidth
+<InlineMath math="h = \max(1, \lfloor N^{1/3}\rfloor)" /> used inside
+the DM statistic.
+
+<SectionRule />
+
+## Bootstrap and uncertainty quantification
+
+**Hall, P., and Mueller, U. K. (1997).** Bias-corrected bootstrap
+methods for scale-invariant statistics. *(Bias-correction procedure
+adapted in this project as the Hall-Mueller bootstrap Sharpe.)*
+
+*Used in:* [Evaluation](/vault/evaluation) (the
+<InlineMath math="\mathrm{SR}_{\mathrm{HM},b} = 2 \cdot \widehat{\mathrm{SR}} - \mathrm{SR}_{\mathrm{boot},b}" />
+bias correction applied to the stationary block bootstrap of the CLV
+Sharpe ratio). The exact 1997 reference is loosely identified; the
+correction structure as implemented matches the standard bias-correction
+form for ratio statistics in the bootstrap-Sharpe literature.
+
+**Politis, D. N., and Romano, J. P. (1994).** The stationary bootstrap.
+*Journal of the American Statistical Association*, 89(428), 1303 to
+1313.
+
+*Used in:* [Evaluation](/vault/evaluation) (the stationary block
+bootstrap with block-length parameter
+<InlineMath math="\bar{L} = \mathrm{clamp}(\lfloor 1.75 \cdot N^{1/3} \rfloor, [4, 20])" />
+applied to the CLV series).
+
+<SectionRule />
+
+## Bet sizing under uncertainty
+
+**Kelly, J. L., Jr. (1956).** A new interpretation of information
+rate. *Bell System Technical Journal*, 35(4), 917 to 926.
+
+*Used in:* [Volatility Gate](/vault/volatility-gate). The full Kelly
+fraction <InlineMath math="f_{\mathrm{full}} = (p \cdot o - 1)/(o - 1)" />
+is the optimal log-growth solution under known
+<InlineMath math="p" />.
+
+**MacLean, L. C., Thorp, E. O., and Ziemba, W. T. (Eds.) (2010).** *The
+Kelly Capital Growth Investment Criterion: Theory and Practice.* World
+Scientific Handbook in Financial Economics Series. The collected
+volume includes "Good and Bad Properties of the Kelly Criterion" (2010,
+*Risk and Decision Analysis*, 1(1)).
+
+*Used in:* [Volatility Gate](/vault/volatility-gate). The
+mean-variance argument that fractional Kelly with
+<InlineMath math="\phi = 1/4" /> dominates full Kelly under realistic
+estimation error on <InlineMath math="p" /> is the basis for the
+project's locked Kelly fractions.
+
+**Thorp, E. O. (1997).** The Kelly criterion in blackjack, sports
+betting, and the stock market. *Originally presented at the 10th
+International Conference on Gambling and Risk Taking*, Montreal.
+
+*Used in:* [Volatility Gate](/vault/volatility-gate). The standard
+quarter-Kelly recommendation (<InlineMath math="\phi = 1/4" /> on
+mainline markets) traces to the practical analysis here.
+
+<SectionRule />
+
+## Macroeconomic and structural determinants
+
+**Hoffmann, R., Ging, L. C., and Ramasamy, B. (2002).** The
+socio-economic determinants of international soccer performance.
+*Journal of Applied Economics*, 5(2), 253 to 272.
+
+*Used in:* [The 45% Problem](/vault/the-45-percent),
+[Models](/vault/models) (the M3 Bayesian macro prior on GDP, population,
+and climate variables), [Methodology](/vault/methodology). The
+"approximately half of tournament variance is left to chance" framing
+the project's name builds on traces back to this paper's explanatory
+power decomposition.
+
+<SectionRule />
+
+## Open scientific infrastructure
+
+**Center for Open Science.** The Open Science Framework (OSF). DOI
+infrastructure for pre-registrations and time-stamped scholarly
+artifacts. https://osf.io.
+
+*Used in:* [Pre-registration](/vault/preregistration). The project's
+sealed pre-registration carries DOI `10.17605/OSF.IO/8B5HD`.
+
+**Mintz, J., and Hung, T. (2015).** KaTeX: a fast, easy-to-use
+JavaScript math typesetting library. https://katex.org.
+
+*Used in:* every Vault page that renders mathematical notation.
+
+<SectionRule />
+
+## Citation conventions
+
+In essay prose this project cites as "Author and Coauthor (Year)" for
+two-author works and "Author (Year)" for single-author works. Three
+authors are written out in full at first mention and abbreviated to
+"Author et al. (Year)" at subsequent mentions. References that share a
+canonical short name with a named procedure (Diebold-Mariano test, the
+Hall-Mueller bootstrap, the Newey-West kernel) use the hyphenated form
+when referring to the procedure and the author-year form when referring
+to the source paper.
+
+For citations of this project as a whole, see [Citation](/vault/citation).
+
+<SectionRule />
+
+## Where to go next
+
+* **[Citation](/vault/citation)**: how to cite this project itself.
+* **[Notation](/vault/notation)**: the symbol table that names every quantity referenced above.
+* **[Glossary](/vault/glossary)**: plain-language definitions of every term used in the essays.
+* **[Methodology](/vault/methodology)**: the long-form methodology that puts the citations above into a single argument.

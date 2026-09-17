@@ -1,0 +1,121 @@
+# Session 11 — El Voto del 21 de Junio daily publishing cron.
+#
+# Distinct from the World-Cup nightly_pipeline.yml in every way the brief asks:
+#   * different filename + workflow name;
+#   * different cron window — 11:30 UTC (06:30 Colombia), clear of
+#     nightly_pipeline.yml (00:00) AND of ingest_match_outcomes.yml, which runs
+#     every hour ON the :00 minute (so this job uses :30 to avoid that overlap);
+#   * uses ONLY VOTO_-prefixed secrets — it never reads the World-Cup
+#     DATABASE_URL / DIRECT_URL. The 21J pipeline needs no database.
+#
+# It runs the 21J pipeline (ingestion -> aggregator + simulator -> build_mapa ->
+# run_pulso) via scripts/publish_voto_snapshot.py. The calibrated-cycle
+# eligibility gate (Session 10) runs automatically inside the aggregator, so no
+# per-pollster human step is involved. The wrapper writes ONLY
+# the-21j-problem/data/, is silence-aware (freezes the last legally-publishable
+# number on/after publish.silence_boundary), and skips empty commits.
+name: Voto 21J Snapshot Publish
+
+on:
+  schedule:
+    - cron: '30 11 * * *'   # 11:30 UTC daily — non-overlapping window (see header)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voto-snapshot-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Refresh and publish the 21J snapshot
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # Pushes to main use the default GITHUB_TOKEN; the workflow-level
+          # contents: write permission is sufficient on this free-plan repo
+          # (no branch protection). Same arrangement the WC nightly confirmed.
+
+      - name: Set up Python 3.9
+        # Match the WC pipeline's interpreter — the committed 21J snapshots were
+        # generated on 3.9, and the skip-if-unchanged comparison relies on
+        # reproducing an identical data_hash. A newer minor could perturb that.
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+          # The 21J Pydantic schemas use `X | None` annotations, which Pydantic v2
+          # must evaluate at runtime on Python 3.9. eval_type_backport enables that.
+          # It is intentionally NOT added to the root pyproject (out of scope for
+          # this session); install it workflow-locally instead.
+          pip install eval_type_backport
+
+      - name: Configure publish-bot git identity
+        # Distinct from the WC nightly's github-actions[bot]. The wrapper also
+        # sets this per-commit, but the rebase below may need an identity too.
+        run: |
+          git config user.name "voto-publish-bot"
+          git config user.email "voto-publish-bot@users.noreply.github.com"
+
+      - name: Refresh and commit the 21J snapshot
+        id: publish
+        env:
+          CI: "true"
+          # VOTO_-prefixed secrets ONLY. This job must NOT read the World-Cup
+          # DATABASE_URL / DIRECT_URL. The 21J pipeline needs no database today;
+          # any future 21J secret uses the VOTO_ prefix.
+        run: |
+          BEFORE="$(git rev-parse HEAD)"
+          python the-21j-problem/scripts/publish_voto_snapshot.py
+          AFTER="$(git rev-parse HEAD)"
+          if [ "$BEFORE" != "$AFTER" ]; then
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+            echo "New snapshot commit: $AFTER"
+          else
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            echo "No new commit (skip-if-unchanged or electoral-silence skip)."
+          fi
+
+      - name: Push to main
+        if: steps.publish.outputs.committed == 'true'
+        run: |
+          # Defensive rebase in case a hourly/nightly job landed a commit during
+          # this run. --autostash handles any untracked-but-modified pipeline
+          # artifacts on the ephemeral runner.
+          git pull --rebase --autostash origin main
+          git push origin main
+
+      - name: Trigger Vercel deploy hook (optional, belt-and-braces)
+        if: steps.publish.outputs.committed == 'true'
+        run: |
+          set -e
+          HOOK="${{ secrets.VOTO_VERCEL_DEPLOY_HOOK }}"
+          if [ -z "$HOOK" ]; then
+            echo "No VOTO_VERCEL_DEPLOY_HOOK set; relying on the push-to-main Git integration to redeploy."
+            exit 0
+          fi
+          HTTP_CODE=$(curl -s -o /tmp/vercel.out -w "%{http_code}" -X POST "$HOOK")
+          echo "Vercel hook HTTP $HTTP_CODE"
+          cat /tmp/vercel.out || true
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::warning::Vercel deploy hook non-2xx ($HTTP_CODE). The push to main should still trigger a deploy via the Git integration."
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## El Voto 21J publish summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Committed: ${{ steps.publish.outputs.committed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Run date (UTC): $(date -u +%Y-%m-%dT%H:%MZ)" >> "$GITHUB_STEP_SUMMARY"

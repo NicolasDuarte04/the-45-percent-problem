@@ -1,0 +1,70 @@
+{
+  "M0_elo": {
+    "L_CV": 1.03433,
+    "sigma_CV": 0.038444,
+    "delta_CV": 0.0,
+    "brier": 0.620799,
+    "rps": 0.222669,
+    "dm_stat": 0.0,
+    "dm_pvalue": 1.0,
+    "fold_losses": [
+      0.987782,
+      null,
+      1.070005,
+      1.061391,
+      1.018142
+    ],
+    "champion": false
+  },
+  "M1_form": {
+    "L_CV": 1.081097,
+    "sigma_CV": 0.075137,
+    "delta_CV": 0.046767,
+    "brier": 0.649896,
+    "rps": 0.236942,
+    "dm_stat": -2.7634,
+    "dm_pvalue": 0.0061,
+    "fold_losses": [
+      0.970567,
+      null,
+      1.136989,
+      1.115601,
+      1.101231
+    ],
+    "champion": false
+  },
+  "M2_fifa": {
+    "L_CV": 0.99337,
+    "sigma_CV": 0.006587,
+    "delta_CV": -0.04096,
+    "brier": 0.591503,
+    "rps": 0.20756,
+    "dm_stat": 2.9732,
+    "dm_pvalue": 0.0032,
+    "fold_losses": [
+      1.001552,
+      null,
+      0.995845,
+      0.988424,
+      0.987659
+    ],
+    "champion": true
+  },
+  "M3_macro": {
+    "L_CV": 1.026943,
+    "sigma_CV": 0.029486,
+    "delta_CV": -0.007387,
+    "brier": 0.615686,
+    "rps": 0.2199,
+    "dm_stat": 0.9473,
+    "dm_pvalue": 0.3443,
+    "fold_losses": [
+      1.010816,
+      null,
+      1.064534,
+      1.034984,
+      0.997438
+    ],
+    "champion": false
+  }
+}

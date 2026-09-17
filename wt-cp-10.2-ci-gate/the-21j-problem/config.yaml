@@ -1,0 +1,251 @@
+# config.yaml — El Voto del 21 de Junio (21J data pipeline)
+# Single source of truth for the poll-ingestion parameters.
+# Self-contained: paths are relative to this project root (the-21j-problem/).
+
+project: "El Voto del 21 de Junio — 21J poll ingestion"
+runoff_date: "2026-06-21"          # 21 de junio de 2026, Cepeda vs De la Espriella
+first_round_date: "2026-05-31"
+
+# Anchor for the 60-day ingestion window. Explicit (not system clock) so the
+# window is reproducible: a poll is in-window iff fieldwork_end >= as_of_date - window_days.
+as_of_date: "2026-06-04"
+
+ingestion:
+  window_days: 60
+  share_sum_target: 100.0          # cepeda + espriella + other + undecided
+  share_sum_tolerance: 2.0         # +/- band; rows outside are excluded + logged
+  candidates: ["cepeda", "espriella"]
+
+paths:
+  manual_seed: "data/manual/polls_seed.csv"
+  output_parquet: "data/raw/polls_co_2026.parquet"
+  snapshot_registry: "data/snapshots/snapshot_registry.jsonl"
+
+# Output sort key (natural key) applied before writing Parquet.
+sort_key: ["fieldwork_end", "poll_id"]
+
+# Recognised firms with in-window second-round polls (canonical labels).
+pollsters:
+  - AtlasIntel
+  - CNC
+  - GAD3
+  - Guarumo
+  - Invamer
+
+# Original planned five from brand/execution_plan.md (Day 2). Partly stale:
+# only Invamer and Guarumo from this list published in-window runoff polls.
+# Kept for provenance; the standardisation map in schemas.py carries them too.
+pollsters_planned:
+  - Invamer
+  - Datexco
+  - Yanhaas
+  - Guarumo
+  - Cifras y Conceptos
+
+# =============================================================================
+# Session 03 — house effects + recency weighting  [PRE-REGISTERED]
+# =============================================================================
+# These parameters feed the Session 04 aggregator and the public number. Once
+# locked they require a deviation report to change. Read from config; never
+# hardcode them in calibrate_house_effects.py.
+calibration:
+  paths:
+    historical_polls_seed: "data/manual/co_historical_polls.csv"
+    house_effects_json: "data/calibration/co_house_effects.json"
+
+  # [PRE-REGISTERED] Recency-decay half-life: weight = 0.5 ** (days_before / H).
+  # Calibrated by grid search; clamped to [min, max].
+  recency_halflife_grid_days: [5, 7, 9, 11, 13, 15, 18, 21, 25, 30, 35, 40, 45]
+  recency_halflife_min_days: 5
+  recency_halflife_max_days: 45
+
+  # [PRE-REGISTERED] A pollster's house effect is "high" confidence only if it
+  # has polls in at least this many distinct election YEARS (transfer evidence).
+  house_effect_min_election_years: 2
+
+  # [PRE-REGISTERED] Ideological-bloc axis. A MODELING ASSUMPTION, not a fact;
+  # mirrored into co_house_effects.json -> assumptions.bloc_map for audit.
+  bloc_map:
+    left:   # left bloc candidate per round
+      "2018_r1": "Petro"
+      "2018_r2": "Petro"
+      "2022_r1": "Petro"
+      "2022_r2": "Petro"
+      "2026_r2": "Cepeda"
+    right:  # right / other bloc candidate per round
+      "2018_r1": "Duque"
+      "2018_r2": "Duque"
+      "2022_r1": "Hernandez"
+      "2022_r2": "Hernandez"
+      "2026_r2": "De la Espriella"
+
+  # [PRE-REGISTERED] Certified Registraduría results per round (percent of total).
+  # left = Petro/Cepeda, right = Duque/Hernandez/De la Espriella. Authoritative;
+  # the corpus CSV repeats these per row and the script cross-checks them.
+  elections:
+    "2018_r1": { date: "2018-05-27", left_certified_pct: 25.08, right_certified_pct: 39.14 }
+    "2018_r2": { date: "2018-06-17", left_certified_pct: 41.81, right_certified_pct: 53.98 }
+    "2022_r1": { date: "2022-05-29", left_certified_pct: 40.32, right_certified_pct: 28.15 }
+    "2022_r2": { date: "2022-06-19", left_certified_pct: 50.44, right_certified_pct: 47.31 }
+
+# =============================================================================
+# Session 04 — Bayesian aggregator + Monte Carlo runoff simulator  [PRE-REGISTERED]
+# =============================================================================
+# These parameters turn the ingested polls + calibrated house effects into the
+# public probability. Once locked they require a deviation report to change.
+# Read from config; never hardcode them in aggregate_polls.py / simulate_runoff.py.
+aggregator:
+  # [PRE-REGISTERED] House effects are a SOFT prior (Session 03 decision): the
+  # central estimate is corrected by only `house_effect_shrink` of the estimated
+  # bloc bias (not the full bias as if known exactly), and the un-applied part is
+  # carried as extra variance. shrink=0 reproduces the "house effects off" arm.
+  house_effect_shrink: 0.5
+
+  # [PRE-REGISTERED] Low-confidence firms (single-year house-effect evidence in
+  # the calibration JSON) have their per-poll variance multiplied by this factor,
+  # so an unreliable bias estimate widens uncertainty instead of moving the mean.
+  # The set is data-driven from co_house_effects.json (confidence == "low"); this
+  # list is the audit cross-check and must agree with it.
+  low_confidence_firms: ["AtlasIntel", "GAD3"]
+  low_confidence_variance_mult: 3.0
+
+  # [PRE-REGISTERED] Between-poll heterogeneity. The 2026 runoff pollsters
+  # disagree far beyond sampling error, so a fixed-effect inverse-variance CI
+  # would be dishonestly tight. "random_effects" adds a DerSimonian-Laird tau^2
+  # (closed-form, not MCMC) to every poll's variance before precision-weighting.
+  # "fixed" disables it (the classic inverse-variance update) for sensitivity.
+  heterogeneity: "random_effects"
+
+  # A poll's precision is also scaled by its recency weight 0.5**(days_before/H),
+  # where H is read from the calibration JSON (recency_halflife_days), NOT refit
+  # here. This value is an assertion guard only; the JSON is authoritative.
+  expected_recency_halflife_days: 5.0
+
+  # data_sufficiency is "thin" if fewer than this many runoff polls feed the run.
+  min_polls_ok: 5
+
+simulator:
+  mc_runs: 10000
+  seed: 20260621                     # fixed + recorded; rerun reproduces output
+  decision_threshold: 0.5            # two-way Cepeda share above which Cepeda wins
+
+  # [PRE-REGISTERED] Extra share-space std (0..1) folded into every Monte Carlo
+  # draw for turnout + undecided-allocation uncertainty the polls cannot resolve.
+  turnout_undecided_sigma: 0.02
+
+  # [PRE-REGISTERED] Sensitivity / honesty gate. The probability is recomputed
+  # over the cross-product of these half-lives and house-effect modes. If the
+  # winner flips, or p_cepeda moves more than `flip_p_threshold` across the four
+  # arms, data_sufficiency is forced to "thin".
+  sensitivity:
+    halflife_days: [5.0, 10.0]
+    house_effects_modes: ["off", "on"]
+    flip_p_threshold: 0.10
+
+paths_session04:
+  snapshot_dir: "data/snapshots/21j"
+  latest_pointer: "data/snapshots/21j/latest.json"
+
+# =============================================================================
+# Session 05 — Pulso Patrio index (intensity / sentiment combiner)  [PRE-REGISTERED]
+# =============================================================================
+# Pulso is a single 0-100 hourly measure of the INTENSITY and emotional charge
+# of the runoff conversation. It is candidate-neutral, NOT a probability, and
+# NOT directional. The directional-looking inputs (search divergence, market
+# spread) are folded in as MAGNITUDE / volatility signals only. Once locked,
+# these parameters require a deviation report to change. Read from config;
+# never hardcode them in the pulso/ modules.
+pulso:
+  # Combine weights per input. Weights are renormalised across whatever inputs
+  # are actually live in a given hour, so an unavailable input never drags the
+  # index toward zero; it simply drops out and the rest re-share the mass.
+  weights:
+    headlines: 0.40        # built — the spine; RSS from Colombian outlets
+    trends:    0.20        # built if reachable — Google Trends via pytrends
+    market:    0.15        # conditional — Polymarket CO runoff market IF it exists
+    x:         0.15        # stub — no accessible API; returns unavailable
+    tiktok:    0.10        # stub — no accessible API; returns unavailable
+
+  # 6-hour rolling smoothing over the append-only history (inclusive of the
+  # current hour). index_value = mean of index_raw across snapshots whose
+  # snapshot_hour is within this many hours of the current hour.
+  smoothing_window_hours: 6
+
+  # Below this many live inputs the index is labelled "demo" (honest low
+  # confidence); the detail page surfaces the label.
+  min_inputs_ok: 2
+
+  # ── Headlines input (input_headlines.py) ──────────────────────────────────
+  # Colombian outlet RSS feeds. Runoff-relevance filter + a candidate-neutral
+  # emotional-charge lexicon turn the feed into a 0-100 intensity value.
+  headlines:
+    # Feeds verified reachable + parseable at build time (Session 05). Outlets
+    # that 404'd (El Tiempo /elecciones, El Espectador /arcio paths) are omitted
+    # rather than kept as dead URLs; a feed that goes down is logged and skipped
+    # at runtime, never fabricated.
+    feeds:
+      - { outlet: "El Tiempo",      url: "https://www.eltiempo.com/rss/colombia.xml" }
+      - { outlet: "El Tiempo",      url: "https://www.eltiempo.com/rss/politica.xml" }
+      - { outlet: "Semana",         url: "https://www.semana.com/arc/outboundfeeds/rss/category/nacion/?outputType=xml" }
+      - { outlet: "El Colombiano",  url: "https://www.elcolombiano.com/rss/colombia.xml" }
+      - { outlet: "La Silla Vacía", url: "https://www.lasillavacia.com/feed/" }
+    request_timeout_s: 10
+    # An item is runoff-relevant if its title/summary contains any of these
+    # (accent-insensitive, lowercased). Candidate surnames + runoff vocabulary.
+    relevance_terms:
+      - "segunda vuelta"
+      - "balotaje"
+      - "cepeda"
+      - "espriella"
+      - "21 de junio"
+      - "presidencial"
+      - "eleccion"
+      - "elecciones"
+      - "campana"
+      - "votacion"
+    # Candidate-NEUTRAL emotional-charge lexicon (high-arousal / charged terms,
+    # no direction). Presence raises the emotional-charge component.
+    charge_terms:
+      - "crisis"
+      - "tension"
+      - "ataque"
+      - "polemica"
+      - "escandalo"
+      - "denuncia"
+      - "choque"
+      - "alarma"
+      - "amenaza"
+      - "indignacion"
+      - "rechazo"
+      - "furia"
+      - "guerra"
+      - "fraude"
+      - "urgente"
+      - "grave"
+      - "violencia"
+    # Number of runoff-relevant items that saturates the volume component to 1.0.
+    volume_saturation_items: 25
+    # Blend of the two candidate-neutral components into the 0-100 value.
+    volume_component_weight: 0.5
+    charge_component_weight: 0.5
+
+  # ── Trends input (input_trends.py) ────────────────────────────────────────
+  trends:
+    geo: "CO"
+    timeframe: "now 7-d"
+    terms: ["Cepeda", "Espriella", "segunda vuelta"]
+    request_timeout_s: 15
+
+  # ── Market input (input_market.py) ────────────────────────────────────────
+  # Polymarket Gamma API. We search for a Colombia 2026 runoff market; if none
+  # exists, the input is unavailable and says so. We never substitute another
+  # market or invent a spread. A market spread is folded in as MAGNITUDE only.
+  market:
+    gamma_search_url: "https://gamma-api.polymarket.com/markets"
+    search_terms: ["Colombia", "Cepeda", "Espriella"]
+    request_timeout_s: 12
+
+paths_session05:
+  snapshot_dir: "data/snapshots/pulso"
+  history_jsonl: "data/snapshots/pulso/pulso_history.jsonl"
+  latest_pointer: "data/snapshots/pulso/latest.json"

@@ -1,0 +1,28 @@
+{
+  "fifa_code": "USA",
+  "display_name": "United States",
+  "group": "D",
+  "confederation": "CONCACAF",
+  "elo_rating": 1721.0,
+  "progression": {
+    "p_group_qualification": 0.7571,
+    "p_r16": 0.3563,
+    "p_qf": 0.1773,
+    "p_sf": 0.1062,
+    "p_final": 0.0364,
+    "p_champion": 0.0129,
+    "ci_95_champion": [
+      0.010868,
+      0.015306
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M07",
+      "kickoff_utc": "2026-06-13T01:00:00+00:00",
+      "opponent": "Paraguay",
+      "is_home": true
+    }
+  ]
+}

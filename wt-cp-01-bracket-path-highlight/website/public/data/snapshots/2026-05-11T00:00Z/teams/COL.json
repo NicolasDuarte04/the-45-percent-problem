@@ -1,0 +1,28 @@
+{
+  "fifa_code": "COL",
+  "display_name": "Colombia",
+  "group": "K",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1975.0,
+  "progression": {
+    "p_group_qualification": 0.7869,
+    "p_r16": 0.4314,
+    "p_qf": 0.2201,
+    "p_sf": 0.0901,
+    "p_final": 0.0615,
+    "p_champion": 0.0259,
+    "ci_95_champion": [
+      0.022964,
+      0.0292
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M22",
+      "kickoff_utc": "2026-06-17T23:00:00+00:00",
+      "opponent": "Uzbekistan",
+      "is_home": false
+    }
+  ]
+}

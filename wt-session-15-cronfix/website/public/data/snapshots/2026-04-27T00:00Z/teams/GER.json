@@ -1,0 +1,26 @@
+{
+  "fifa_code": "GER",
+  "display_name": "Germany",
+  "group": "I",
+  "progression": {
+    "p_group_qualification": 0.8496,
+    "p_r16": 0.4437,
+    "p_qf": 0.2473,
+    "p_sf": 0.1454,
+    "p_final": 0.0794,
+    "p_champion": 0.0275,
+    "ci_95_champion": [
+      0.024472,
+      0.030891
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-15_Germany_Cote_dIvoire",
+      "kickoff_utc": "2026-06-15T18:00:00+00:00",
+      "opponent": "C\u00f4te d'Ivoire",
+      "is_home": true
+    }
+  ]
+}

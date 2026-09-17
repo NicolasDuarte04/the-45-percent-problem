@@ -5,6 +5,43 @@ Format: [Phase] — date — description. Code SHAs recorded at each phase sign-
 
 ---
 
+## Amendment v1.2 — Evaluation Reporting Corrections — 2026-09-07
+
+**Reporting only. No sealed statistic changes.** Champion remains M2_fifa; every CV, hold-out
+and gate value is byte-identical. Record:
+`osf/amendments/amendment_v1.2_evaluation_reporting_corrections.md`.
+
+### Corrected
+
+| # | Finding | Where |
+|---|---------|-------|
+| H1 | Paper §6.3 claimed M2 "cleared both pre-registered conditions"; `evaluation/cv_battery_result.json` carries `sanity_gate_passed: false`. | `paper/working_paper.md` abstract, §6.3 |
+| H2 | §6.4 described the 2022 hold-out as an independent second surface. It is fold 5 of the Phase 4 battery, so `L_CV` (and `w_star`) saw it. The same battery ran on four folds, not five: the 2016 fold is empty and serialises as `null`. | `paper/working_paper.md` §6.2, §6.4; vault models + kill-criteria |
+| H3 | Neither 6.22 nor 1.75 is a paired difference. 6.22 is the gap over the champion's between-fold SD (`np.std(ddof=1)`, no √n); 1.75 is the gap over the SE of the champion's cross-fold mean, in a different battery. The paired construction gives 1.96 (Phase 4) and 2.24 (Phase 8). | new `paper/working_paper.md` §6.3.1; `evaluation/r16_checkpoint.py`; six vault surfaces; `schemas.ts` comment |
+| H4 | `KillCriteriaPill.tsx` asserted "the marginal SE is the pre-registered LOCKED criterion". False: `pre_reg_constants.yaml` seals a threshold (2.0) and an action, not an SE construction, and the only implementation (`accuracy_metrics.check_kill_criterion`) is paired. | `website/src/components/primitives/KillCriteriaPill.tsx` |
+| H5 | The two-condition gate is described as binding and is not. `models/model_registry.py:849` has no margin term; `run_cv_battery.py:623` warns and continues. | `paper/working_paper.md` §3, §6.2, §6.3, §6.3.1 |
+
+### Deliberately unchanged
+
+- The `marginal_gap_se` field name (published in dozens of historical snapshots).
+- The kill-criteria badge state. It still reads CLEARED on the 6.22 figure. Re-anchoring it to
+  the paired construction is proposed in the amendment's "Proposed but not executed" section and
+  is the maintainer's decision.
+- The selection and gate code. Making the gate binding after the fact would rewrite the
+  adjudication the pre-registration committed to.
+- Every sealed artifact, every previously filed amendment and deviation. The mislabels in
+  `osf/amendments/deviation_cp-25b_r16_checkpoint_forecast_set.md` §4 are corrected by citation,
+  not by edit.
+
+### Verification
+
+Amendment §"Reviewer protocol" reproduces every figure from the sealed artifacts in one block:
+the 2×3 SE table, `fold_losses[4] == holdout_log_loss` across all four models, the fold-5
+composition (64 rows, all hold-out), the leave-fold-5-out ranking, and the absence of any
+consumer branching on `sanity_gate_passed`.
+
+---
+
 ## Phase 5 — Simulation Engine — 2026-04-22
 
 **Sign-off:** §10 acceptance criteria met. Engine frozen pending Phase 6 (Market Layer).

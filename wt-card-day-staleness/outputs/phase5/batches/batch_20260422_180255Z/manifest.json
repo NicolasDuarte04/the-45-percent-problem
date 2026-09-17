@@ -1,0 +1,24 @@
+{
+  "batch_id": "batch_20260422_180255Z",
+  "batch_dir": "/Users/nicolasduarte/Documents/Claude/Projects/The 45% Problem/the-45-percent-problem/outputs/phase5/batches/batch_20260422_180255Z",
+  "variants": [
+    "M2"
+  ],
+  "n_runs_per_variant": 50,
+  "code_sha": "no_git_sha",
+  "data_hashes": {
+    "M2": "356ffdbb086797f6250a5f25ef4520a2"
+  },
+  "seed_bases": {
+    "M2": 513444667
+  },
+  "start_time_utc": "2026-04-22T18:02:55.690169+00:00",
+  "end_time_utc": "2026-04-22T18:02:57.025743+00:00",
+  "completed_variants": [
+    "M2"
+  ],
+  "failed_runs": {
+    "M2": []
+  },
+  "status": "complete"
+}

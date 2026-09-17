@@ -1,0 +1,28 @@
+{
+  "fifa_code": "ALG",
+  "display_name": "Algeria",
+  "group": "J",
+  "confederation": "CAF",
+  "elo_rating": 1743.0,
+  "progression": {
+    "p_group_qualification": 0.325,
+    "p_r16": 0.0773,
+    "p_qf": 0.0138,
+    "p_sf": 0.0036,
+    "p_final": 0.002,
+    "p_champion": 0.0007,
+    "ci_95_champion": [
+      0.000339,
+      0.001444
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M19",
+      "kickoff_utc": "2026-06-17T01:00:00+00:00",
+      "opponent": "Argentina",
+      "is_home": false
+    }
+  ]
+}

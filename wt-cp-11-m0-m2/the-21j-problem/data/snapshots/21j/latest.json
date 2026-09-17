@@ -1,0 +1,59 @@
+{
+  "snapshot_date": "2026-06-04",
+  "generated_at": "2026-06-05T19:11:29.826054+00:00",
+  "p_cepeda": 0.4637,
+  "p_espriella": 0.5363,
+  "share_cepeda": {
+    "mean": 0.4959,
+    "ci80_low": 0.4267,
+    "ci80_high": 0.5654
+  },
+  "share_espriella": {
+    "mean": 0.5041,
+    "ci80_low": 0.4346,
+    "ci80_high": 0.5733
+  },
+  "margin": {
+    "mean": 0.818,
+    "ci80_low": -13.076,
+    "ci80_high": 14.656
+  },
+  "n_polls": 12,
+  "newest_poll_date": "2026-06-02",
+  "oldest_poll_date": "2026-04-09",
+  "recency_halflife_days": 5.0,
+  "house_effect_mode": "soft",
+  "mc_runs": 10000,
+  "seed": 20260621,
+  "data_sufficiency": "thin",
+  "data_sufficiency_reasons": [
+    "sensitivity gate: the winner flips across the house-effect / half-life arms"
+  ],
+  "assumptions": {
+    "input_path": "runoff_head_to_head",
+    "input_path_note": "12 head-to-head Cepeda vs De la Espriella runoff polls fed the posterior directly; no first-round transfer assumption was used.",
+    "share_definition": "Two-way share among the two named candidates: cepeda / (cepeda + espriella); other + undecided are dropped before normalisation. share_cepeda + share_espriella = 1.",
+    "house_effect_application": "Soft prior: the central estimate is corrected by 0.5 of each pollster's estimated bloc bias; the un-applied remainder is carried as variance. Low-confidence firms (['AtlasIntel', 'GAD3']) have their variance multiplied by 3.0.",
+    "aggregation": "Precision-weighted normal update. Per-poll precision = recency / (within-poll variance + tau^2), recency = 0.5**(days_before/H). Between-poll heterogeneity: random_effects (DerSimonian-Laird tau^2 = 0.0); closed-form, no MCMC.",
+    "recency_halflife_note": "H = 5.0 days, read from the calibration JSON, not refit. This is a recency-dominant boundary solution (the lower edge of the calibrated grid): with the polls 19+ days from the runoff, the most recent poll carries most of the weight.",
+    "turnout_model": "Each Monte Carlo draw adds a turnout/undecided share-space std of 0.02 in quadrature with the posterior std, modelling uncertainty in how undecided voters and turnout resolve.",
+    "margin_sign": "margin is in percentage points, positive = De la Espriella lead.",
+    "units": "p_* and share_* are fractions in [0,1]; margin is percentage points."
+  },
+  "sensitivity": {
+    "arms": {
+      "house_effects_off__halflife_5d": 0.4862,
+      "house_effects_off__halflife_10d": 0.5631,
+      "house_effects_on__halflife_5d": 0.4637,
+      "house_effects_on__halflife_10d": 0.5375
+    },
+    "p_cepeda_spread": 0.0994,
+    "winner_flips": true,
+    "flip_p_threshold": 0.1,
+    "trips_thin_gate": true,
+    "note": "Each arm reruns the full aggregate + Monte Carlo with one assumption changed and the same seed. winner_flips is true if p_cepeda crosses 0.5 across arms; the gate also trips if p_cepeda moves more than flip_p_threshold."
+  },
+  "house_effects_corpus_sha": "9037f0f09d83b7f4b6710079312da5b17347cdbe96c810c32728181ee560723b",
+  "code_sha": "b4350d77ed9ca4ef378e5048c1ffa1acf0bd5d36",
+  "data_hash": "dd67cc35e450d4d8f4e94550364854922890c6ba3aa5b3648455323481784bad"
+}

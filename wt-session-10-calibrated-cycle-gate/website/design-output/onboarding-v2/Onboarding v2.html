@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Onboarding v2 · The 45% Problem</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<style>
+  /* Token extension used by the simulator (warm terracotta accent). Defined as
+     the Scenario Simulator does — warm but not gold, not amber. */
+  :root { --accent-warm: oklch(45% 0.09 42); }
+  [data-canvas="quant"] { --accent-warm: oklch(72% 0.10 42); }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body { min-height:100vh; background:var(--bg-root); color:var(--text-primary); }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:4px; }
+
+  /* ── Onboarding keyframes ─────────────────────────────────────────── */
+  /* Priority 1 — chip slides in from outside the bottom-right corner. */
+  @keyframes chipIn    { from { opacity:0; transform:translateX(calc(100% + 24px)); } to { opacity:1; transform:none; } }
+  @keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes modalIn   { from { opacity:0; transform:translateY(10px) scale(0.99); } to { opacity:1; transform:none; } }
+  @keyframes bubbleIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @keyframes slideInL  { from { opacity:0; transform:translateX(-24px); } to { opacity:1; transform:none; } }
+  @keyframes slideInR  { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
+  @keyframes drawRule  { from { transform:scaleY(0); } to { transform:scaleY(1); } }
+  @keyframes badgeIn   { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* Priority 2 — first-visit pulse on the masthead "First time?" pill.
+     Gentle opacity breath, no scale; the reduced-motion backstop freezes it. */
+  @keyframes helpPulse { 0%,100% { opacity:1; } 50% { opacity:0.85; } }
+  .help-pulse { animation: helpPulse 1.5s ease-in-out infinite; }
+
+  /* Priority 3 — trophy settles like Monte Carlo samples resolving: a single
+     one-pass blur→sharp + fade, ~2.4s, never repeats. */
+  @keyframes trophySettle {
+    from { opacity:0.5; filter:blur(4px); transform:translateY(6px); }
+    to   { opacity:1;   filter:blur(0);   transform:none; }
+  }
+  .trophy-settle { animation: trophySettle 2.4s cubic-bezier(0.4,0,0.2,1) both; }
+
+  /* In-page reduced-motion backstop (mirrors the OS setting). */
+  html[data-reduced="1"] *, html[data-reduced="1"] *::before, html[data-reduced="1"] *::after {
+    animation-duration:0.01ms !important; animation-delay:0ms !important; transition-duration:0.01ms !important;
+  }
+
+  /* ── Responsive grids (1440 → 768 → 375) ──────────────────────────── */
+  .grid-hero    { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:48px; align-items:start; }
+  .grid-3       { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .grid-modes   { display:grid; grid-template-columns:repeat(3,1fr); }
+  .grid-ff      { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .grid-compare { display:grid; grid-template-columns:1fr 1px 1fr; gap:40px; align-items:start; }
+  .sim-build    { display:grid; grid-template-columns:1fr; gap:24px; align-items:start; }
+  .sim-build.with-bubble { grid-template-columns:minmax(0,1fr) 360px; }
+  .table-wrap   { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .grid-calib   { display:grid; grid-template-columns:1fr 1fr 1fr 2fr; gap:28px; align-items:center; }
+  .vault-row    { display:grid; grid-template-columns:96px 1fr 160px; gap:24px; align-items:baseline; }
+
+  @media (max-width: 920px) {
+    .grid-hero    { grid-template-columns:1fr; gap:32px; }
+    .grid-hero figure { justify-self:start; }
+    .grid-3       { grid-template-columns:1fr; }
+    .grid-modes   { grid-template-columns:1fr; }
+    .grid-compare { grid-template-columns:1fr; gap:24px; }
+    .grid-compare .rule-v { display:none; }
+    .sim-build.with-bubble { grid-template-columns:1fr; }
+    .grid-calib   { grid-template-columns:1fr 1fr; gap:20px; }
+    .vault-row    { grid-template-columns:1fr; gap:4px; }
+    .vault-row .vault-date { text-align:left !important; }
+  }
+  @media (max-width: 560px) {
+    .grid-ff { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="HomePage.jsx"></script>
+<script type="text/babel" src="SurfaceA.jsx"></script>
+<script type="text/babel" src="SurfaceB.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "reducedMotion": false,
+  "chipDelay": 2.5
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [view, setView] = useState('home');          // 'home' | 'sim'
+  const [helpSignal, setHelpSignal] = useState(0);    // masthead "First time?" → open modal
+  const [aNonce, setANonce] = useState(0);            // remount Surface A (reset onboarding)
+  const [forceTour, setForceTour] = useState(false);  // force Surface B tour on entry
+  // First-visit only: the masthead pill breathes until onboarding is seen.
+  const [helpPulse, setHelpPulse] = useState(() => { try { return localStorage.getItem('45a.onboarding.seen') !== 'true'; } catch (e) { return true; } });
+
+  // OS reduced-motion as the initial value; the tweak overrides it live.
+  const [osReduced] = useState(() => {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+  });
+  const reduced = t.reducedMotion || osReduced;
+
+  // Canvas: editorial (cream) on home, quant (warm slate) in the simulator.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-canvas', view === 'sim' ? 'quant' : 'editorial');
+  }, [view]);
+
+  // Reduced-motion backstop flag on <html>.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-reduced', reduced ? '1' : '0');
+  }, [reduced]);
+
+  function goSim(withTour) { setForceTour(!!withTour); setView('sim'); window.scrollTo(0,0); }
+  function goHome() { setView('home'); window.scrollTo(0,0); }
+
+  function resetOnboarding() {
+    try { localStorage.removeItem('45a.onboarding.seen'); } catch (e) {}
+    setView('home'); setANonce(n=>n+1); setHelpPulse(true); window.scrollTo(0,0);
+  }
+  function resetTour() {
+    try { localStorage.removeItem('45a.onboarding.tour'); } catch (e) {}
+  }
+
+  return (
+    <>
+      {view === 'home' && (
+        <>
+          <HomePage onHelp={()=>{ setHelpSignal(s=>s+1); setHelpPulse(false); }} onOpenTerminal={()=>goSim(false)} helpPulse={helpPulse} />
+          <SurfaceA
+            key={aNonce}
+            helpSignal={helpSignal}
+            reduced={reduced}
+            chipDelayMs={t.chipDelay * 1000}
+            onSeen={()=>setHelpPulse(false)}
+            onTrySimulator={()=>goSim(true)}
+          />
+        </>
+      )}
+
+      {view === 'sim' && (
+        <SurfaceB reduced={reduced} forceTour={forceTour} onExit={goHome} />
+      )}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Motion" />
+        <TweakToggle label="Reduced motion" value={t.reducedMotion} onChange={v=>setTweak('reducedMotion', v)} />
+        <TweakSection label="Surface A · homepage chip" />
+        <TweakSlider label="Chip appear delay" value={t.chipDelay} min={0} max={6} step={0.5} unit="s" onChange={v=>setTweak('chipDelay', v)} />
+        <TweakButton label="Reset onboarding (replay chip)" onClick={resetOnboarding} />
+        <TweakButton label="Open homepage modal" onClick={()=>{ setView('home'); setHelpSignal(s=>s+1); }} />
+        <TweakSection label="Surface B · simulator tour" />
+        <TweakButton label="Enter simulator + run tour" onClick={()=>goSim(true)} />
+        <TweakButton label="Reset tour (so it auto-runs)" onClick={resetTour} />
+        <TweakButton label="Back to homepage" onClick={goHome} />
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

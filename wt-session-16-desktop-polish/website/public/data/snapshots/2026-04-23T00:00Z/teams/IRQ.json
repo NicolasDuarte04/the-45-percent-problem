@@ -1,0 +1,26 @@
+{
+  "fifa_code": "IRQ",
+  "display_name": "Iraq",
+  "group": "F",
+  "progression": {
+    "p_group_qualification": 0.103,
+    "p_r16": 0.046,
+    "p_qf": 0.008,
+    "p_sf": 0.003,
+    "p_final": 0.0,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.003827
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-13_Australia_Iraq",
+      "kickoff_utc": "2026-06-13T21:00:00+00:00",
+      "opponent": "Australia",
+      "is_home": false
+    }
+  ]
+}

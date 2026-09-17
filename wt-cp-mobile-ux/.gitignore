@@ -1,0 +1,106 @@
+# ─── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# ─── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ─── Secrets ────────────────────────────────────────────────────────────────────
+.env.local
+secrets.yaml
+*.key
+
+# ─── Data files (reproducible from scripts — don't commit large binaries) ───────
+data/raw/*.parquet
+# cp-10.1: un-ignore the specific input parquets the production nightly pipeline
+# reads on a clean checkout. These are the locked v1.1 calibration input set used
+# to produce batch_20260512_013228Z; treat them as reproducibility artifacts, not
+# disposable binaries. Without them the cron crashes with FileNotFoundError (the
+# fixtures read every run; the other five on the cp-10 re-batch path). SHA-256s
+# recorded in docs/onboarding/cp-10.1-inspection-notes.md §1. Keep this list
+# explicit by filename — do NOT broaden to `!data/raw/*.parquet`, which would
+# re-track miscellaneous odds/scratch parquets the pipeline does not consume.
+!data/raw/wc2026_fixtures.parquet
+!data/raw/elo_ratings.parquet
+!data/raw/historical_matches.parquet
+!data/raw/recent_form.parquet
+!data/raw/fifa_rankings.parquet
+!data/raw/macro_data.parquet
+data/raw/*.csv
+data/raw/*.json
+# cp-19: the FD-sourced kickoff override map is a committed input (consumed by
+# the snapshot regen + the website override). Track it like the parquets above.
+!data/raw/wc2026_kickoffs.json
+data/processed/*.parquet
+data/processed/forecast_mapping_audit.json
+data/processed/cp14_settled_table.md
+data/snapshots/*.parquet
+data/snapshots/*.jsonl
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/snapshots/.gitkeep
+
+# ─── Model artefacts (keep frozen JSON param files) ─────────────────────────────
+models/*.pkl
+models/*.joblib
+!models/*.json
+
+# ─── Logs ───────────────────────────────────────────────────────────────────────
+logs/
+*.log
+!logs/.gitkeep
+
+# ─── IDE & OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# ─── Claude Code session memory (per-machine; never tracked) ────────────────────
+.claude/
+
+# ─── Scratch / temporary work (per-machine; never tracked) ──────────────────────
+tmp/
+
+# ─── Testing & linting ──────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Jupyter ────────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Website build artefacts ────────────────────────────────────────────────────
+website/.next/
+website/node_modules/
+website/out/
+website/.svelte-kit/
+
+# ─── pnpm content-addressable store (per-machine cache, never tracked) ──────────
+.pnpm-store/
+
+# ─── Personal notes & documents (never commit) ───────────────────────────────
+*.docx
+*.doc
+*.pdf
+!evaluation/*.pdf
+
+# ─── Calibration / hypothesis artefacts ──────────────────────────────────────
+.hypothesis/

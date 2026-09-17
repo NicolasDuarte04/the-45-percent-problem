@@ -1,0 +1,25 @@
+pollster,election_id,election_date,fieldwork_end,days_before_election,left_candidate,right_candidate,left_poll_pct,right_poll_pct,left_certified_pct,right_certified_pct,sample_size,source_url
+Invamer,2018_r1,2018-05-27,2018-03-27,61,Petro,Duque,26.7,45.9,25.08,39.14,1200,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Invamer,2018_r1,2018-05-27,2018-04-27,30,Petro,Duque,31.0,41.3,25.08,39.14,1200,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+CNC,2018_r2,2018-06-17,2018-05-31,17,Petro,Duque,35.0,55.0,41.81,53.98,1323,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Yanhaas,2018_r2,2018-06-17,2018-06-05,12,Petro,Duque,34.0,52.0,41.81,53.98,1251,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Mosqueteros,2018_r2,2018-06-17,2018-06-07,10,Petro,Duque,38.3,50.2,41.81,53.98,2147,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Invamer,2018_r2,2018-06-17,2018-06-07,10,Petro,Duque,37.3,57.2,41.81,53.98,1200,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Datexco,2018_r2,2018-06-17,2018-06-08,9,Petro,Duque,40.2,46.2,41.81,53.98,1993,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Cifras y Conceptos,2018_r2,2018-06-17,2018-06-08,9,Petro,Duque,36.4,45.3,41.81,53.98,1983,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+CNC,2018_r2,2018-06-17,2018-06-09,8,Petro,Duque,38.0,51.0,41.81,53.98,1591,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Guarumo,2018_r2,2018-06-17,2018-06-10,7,Petro,Duque,36.0,52.5,41.81,53.98,3955,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+CELAG,2018_r2,2018-06-17,2018-06-11,6,Petro,Duque,40.0,45.5,41.81,53.98,2063,https://en.wikipedia.org/wiki/2018_Colombian_presidential_election
+Guarumo,2022_r1,2022-05-29,2022-04-29,30,Petro,Hernandez,36.4,12.4,40.32,28.15,2132,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+Yanhaas,2022_r1,2022-05-29,2022-05-07,22,Petro,Hernandez,40.0,12.0,40.32,28.15,1232,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+CNC,2022_r1,2022-05-29,2022-05-13,16,Petro,Hernandez,38.0,16.0,40.32,28.15,6204,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+Invamer,2022_r1,2022-05-29,2022-05-18,11,Petro,Hernandez,40.6,20.9,40.32,28.15,1312,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+CNC,2022_r1,2022-05-29,2022-05-19,10,Petro,Hernandez,41.0,21.9,40.32,28.15,3860,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+Guarumo,2022_r1,2022-05-29,2022-05-19,10,Petro,Hernandez,37.9,20.3,40.32,28.15,2258,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+CELAG,2022_r1,2022-05-29,2022-05-20,9,Petro,Hernandez,45.1,20.4,40.32,28.15,2174,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+CNC,2022_r2,2022-06-19,2022-06-02,17,Petro,Hernandez,44.9,41.0,50.44,47.31,2172,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+Invamer,2022_r2,2022-06-19,2022-06-07,12,Petro,Hernandez,47.2,48.2,50.44,47.31,1329,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+Guarumo,2022_r2,2022-06-19,2022-06-09,10,Petro,Hernandez,46.5,48.2,50.44,47.31,2029,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+Yanhaas,2022_r2,2022-06-19,2022-06-10,9,Petro,Hernandez,45.0,35.0,50.44,47.31,1234,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+GAD3,2022_r2,2022-06-19,2022-06-10,9,Petro,Hernandez,47.1,47.9,50.44,47.31,5236,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022
+AtlasIntel,2022_r2,2022-06-19,2022-06-11,8,Petro,Hernandez,47.5,50.2,50.44,47.31,4467,https://es.wikipedia.org/wiki/Anexo:Sondeos_de_intenci%C3%B3n_de_voto_para_las_elecciones_presidenciales_de_Colombia_de_2022

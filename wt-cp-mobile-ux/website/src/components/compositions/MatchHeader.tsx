@@ -1,0 +1,173 @@
+import type { MatchDetail } from "@/lib/data/schemas";
+import { NumericCell } from "@/components/primitives/NumericCell";
+import { Flag } from "@/components/primitives/Flag";
+import { formatProbability } from "@/lib/formatters";
+
+interface MatchHeaderProps {
+  match: MatchDetail;
+}
+
+export function MatchHeader({ match }: MatchHeaderProps) {
+  const { home, away, p_model_1x2: p, kickoff_utc, round } = match;
+  const kickoff = new Date(kickoff_utc);
+  const kickoffLabel = kickoff.toISOString().replace("T", " ").slice(0, 16) + "Z";
+
+  return (
+    <section
+      className="rounded-lg"
+      style={{
+        background: "var(--bg-panel)",
+        border: "1px solid var(--border-subtle)",
+        padding: "24px 28px 20px",
+      }}
+    >
+      <div className="flex justify-between items-center mb-5">
+        <div
+          className="mono text-[11px] uppercase tracking-[.06em]"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          {round} · {match.match_id}
+        </div>
+        <div
+          className="mono text-[11px]"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          {kickoffLabel}
+        </div>
+      </div>
+
+      <div
+        // Stacks to a single column below md so the two team blocks and the
+        // probability block do not have to share a 360 to 430px row. The
+        // three-column "auto 1fr auto" layout (which needs roughly 200px per
+        // team side plus the probability block, well over a phone width and
+        // which previously crushed the middle column so its 1X2 figures
+        // collided) is restored from md upwards, leaving desktop unchanged.
+        className="grid items-center gap-y-5 gap-x-6 grid-cols-1 md:grid-cols-[auto_1fr_auto]"
+      >
+        <TeamSide team={home} align="start" />
+
+        <div className="px-2">
+          <div
+            className="mono flex justify-between items-baseline text-[10px] uppercase tracking-[.08em] mb-[7px]"
+            style={{ color: "var(--text-quiet)" }}
+          >
+            <span>p · model</span>
+            <span>1X2</span>
+          </div>
+          <div
+            className="flex overflow-hidden"
+            style={{
+              height: 10,
+              borderRadius: 3,
+              background: "var(--bg-root)",
+              border: "0.5px solid var(--border-subtle)",
+            }}
+            role="img"
+            aria-label={`1X2 probabilities: ${home.display_name} ${(p.H * 100).toFixed(1)}%, draw ${(p.D * 100).toFixed(1)}%, ${away.display_name} ${(p.A * 100).toFixed(1)}%`}
+          >
+            <div style={{ flex: p.H, background: "var(--prism-peach)" }} />
+            <div
+              style={{
+                flex: p.D,
+                background:
+                  "color-mix(in oklch, var(--prism-sun) 55%, var(--bg-panel))",
+              }}
+            />
+            <div style={{ flex: p.A, background: "var(--prism-cyan)" }} />
+          </div>
+          <div
+            className="mono flex justify-between items-baseline mt-2 text-[12px]"
+            style={{ color: "var(--text-primary)" }}
+          >
+            <span className="flex flex-col items-start">
+              <NumericCell
+                value={p.H}
+                formatter={(x) => formatProbability(x, 1)}
+                ariaLabel={`${(p.H * 100).toFixed(1)} percent`}
+              />
+              <span className="text-[10px]" style={{ color: "var(--text-quiet)" }}>
+                {home.fifa_code} win
+              </span>
+            </span>
+            <span
+              className="flex flex-col items-center"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              <NumericCell
+                value={p.D}
+                formatter={(x) => formatProbability(x, 1)}
+                ariaLabel={`${(p.D * 100).toFixed(1)} percent`}
+              />
+              <span className="text-[10px]" style={{ color: "var(--text-quiet)" }}>
+                draw
+              </span>
+            </span>
+            <span className="flex flex-col items-end">
+              <NumericCell
+                value={p.A}
+                formatter={(x) => formatProbability(x, 1)}
+                ariaLabel={`${(p.A * 100).toFixed(1)} percent`}
+              />
+              <span className="text-[10px]" style={{ color: "var(--text-quiet)" }}>
+                {away.fifa_code} win
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <TeamSide team={away} align="end" />
+      </div>
+    </section>
+  );
+}
+
+function TeamSide({
+  team,
+  align,
+}: {
+  team: { fifa_code: string; display_name: string };
+  align: "start" | "end";
+}) {
+  return (
+    <div
+      // The 200px floor is desktop-only: on a phone the block stacks full
+      // width, so a hard min-width there only reintroduced horizontal
+      // overflow. min-w-0 below md lets it shrink to the column.
+      className="flex flex-col gap-2.5 min-w-0 md:min-w-[200px]"
+      style={{
+        alignItems: align === "start" ? "flex-start" : "flex-end",
+        textAlign: align === "start" ? "left" : "right",
+      }}
+    >
+      <span
+        className="inline-flex items-center justify-center"
+        style={{
+          width: 56,
+          height: 36,
+          borderRadius: 4,
+          background: "var(--bg-panel-elev)",
+          border: "1px solid var(--border-subtle)",
+        }}
+      >
+        <Flag
+          code={team.fifa_code}
+          size={40}
+          style={{ borderRadius: 2 }}
+        />
+      </span>
+      <div
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: 26,
+          fontWeight: 500,
+          letterSpacing: "-0.015em",
+          color: "var(--text-primary)",
+          lineHeight: 1.05,
+        }}
+      >
+        {team.display_name}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "match",
+  "title": "MatchDetail",
+  "description": "Phase 9 §4.5 — Full per-match breakdown.",
+  "type": "object",
+  "required": [
+    "match_id", "round", "kickoff_utc", "home", "away",
+    "p_model_1x2", "p_model_goals", "lambda",
+    "shootout_applicable", "p_shootout_home_if_ko",
+    "market_divergence", "strength_inputs", "forecast_ids"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "match_id":    { "type": "string" },
+    "round":       { "type": "string" },
+    "kickoff_utc": { "type": "string" },
+    "home": {
+      "type": "object",
+      "required": ["fifa_code", "display_name"],
+      "additionalProperties": false,
+      "properties": {
+        "fifa_code":    { "type": "string" },
+        "display_name": { "type": "string" }
+      }
+    },
+    "away": {
+      "type": "object",
+      "required": ["fifa_code", "display_name"],
+      "additionalProperties": false,
+      "properties": {
+        "fifa_code":    { "type": "string" },
+        "display_name": { "type": "string" }
+      }
+    },
+    "p_model_1x2": {
+      "type": "object",
+      "required": ["H", "D", "A"],
+      "additionalProperties": false,
+      "properties": {
+        "H": { "type": "number", "minimum": 0, "maximum": 1 },
+        "D": { "type": "number", "minimum": 0, "maximum": 1 },
+        "A": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "p_model_goals": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "lambda": {
+      "type": "object",
+      "required": ["home", "away", "rho"],
+      "additionalProperties": false,
+      "properties": {
+        "home": { "type": "number", "minimum": 0 },
+        "away": { "type": "number", "minimum": 0 },
+        "rho":  { "type": "number" }
+      }
+    },
+    "shootout_applicable":    { "type": "boolean" },
+    "p_shootout_home_if_ko":  { "type": ["number", "null"] },
+    "market_divergence": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "strength_inputs": {
+      "type": "object",
+      "required": ["elo_home", "elo_away", "form_home", "form_away", "fifa_rank_home", "fifa_rank_away"],
+      "additionalProperties": false,
+      "properties": {
+        "elo_home":      { "type": "number" },
+        "elo_away":      { "type": "number" },
+        "form_home":     { "type": "number" },
+        "form_away":     { "type": "number" },
+        "fifa_rank_home":{ "type": "integer" },
+        "fifa_rank_away":{ "type": "integer" }
+      }
+    },
+    "forecast_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,871 @@
+{
+  "snapshot_id": "2026-05-06T00:00Z",
+  "generated_at_utc": "2026-05-06T16:50:29Z",
+  "mc_runs": 10000,
+  "teams": [
+    {
+      "fifa_code": "ESP",
+      "display_name": "Spain",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.3085,
+      "p_final": 0.452,
+      "p_semifinal": 0.568,
+      "p_quarterfinal": 0.7376,
+      "p_r16": 0.8823,
+      "p_group_qualification": 0.9883,
+      "ci_95_champion": [
+        0.299522,
+        0.317625
+      ],
+      "elo_current": 2165.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "ARG",
+      "display_name": "Argentina",
+      "confederation": "CONMEBOL",
+      "seed": 1,
+      "p_champion": 0.14,
+      "p_final": 0.2413,
+      "p_semifinal": 0.2897,
+      "p_quarterfinal": 0.4323,
+      "p_r16": 0.6427,
+      "p_group_qualification": 0.9363,
+      "ci_95_champion": [
+        0.133337,
+        0.146939
+      ],
+      "elo_current": 2113.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "FRA",
+      "display_name": "France",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.1033,
+      "p_final": 0.1784,
+      "p_semifinal": 0.2264,
+      "p_quarterfinal": 0.3537,
+      "p_r16": 0.6009,
+      "p_group_qualification": 0.8657,
+      "ci_95_champion": [
+        0.097486,
+        0.109418
+      ],
+      "elo_current": 2082.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "BRA",
+      "display_name": "Brazil",
+      "confederation": "CONMEBOL",
+      "seed": 1,
+      "p_champion": 0.0692,
+      "p_final": 0.1411,
+      "p_semifinal": 0.3326,
+      "p_quarterfinal": 0.4864,
+      "p_r16": 0.6939,
+      "p_group_qualification": 0.9642,
+      "ci_95_champion": [
+        0.064389,
+        0.074342
+      ],
+      "elo_current": 1984.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "ENG",
+      "display_name": "England",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.0563,
+      "p_final": 0.1063,
+      "p_semifinal": 0.1471,
+      "p_quarterfinal": 0.3262,
+      "p_r16": 0.5417,
+      "p_group_qualification": 0.8806,
+      "ci_95_champion": [
+        0.05195,
+        0.060991
+      ],
+      "elo_current": 2020.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "POR",
+      "display_name": "Portugal",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.0311,
+      "p_final": 0.069,
+      "p_semifinal": 0.0976,
+      "p_quarterfinal": 0.2418,
+      "p_r16": 0.45,
+      "p_group_qualification": 0.8029,
+      "ci_95_champion": [
+        0.027874,
+        0.034686
+      ],
+      "elo_current": 1984.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "ECU",
+      "display_name": "Ecuador",
+      "confederation": "CONMEBOL",
+      "seed": 1,
+      "p_champion": 0.0311,
+      "p_final": 0.0746,
+      "p_semifinal": 0.1495,
+      "p_quarterfinal": 0.3514,
+      "p_r16": 0.5936,
+      "p_group_qualification": 0.9664,
+      "ci_95_champion": [
+        0.027874,
+        0.034686
+      ],
+      "elo_current": 1933.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "NED",
+      "display_name": "Netherlands",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.0296,
+      "p_final": 0.0682,
+      "p_semifinal": 0.1203,
+      "p_quarterfinal": 0.3103,
+      "p_r16": 0.5207,
+      "p_group_qualification": 0.8553,
+      "ci_95_champion": [
+        0.026455,
+        0.033107
+      ],
+      "elo_current": 1961.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "GER",
+      "display_name": "Germany",
+      "confederation": "UEFA",
+      "seed": 2,
+      "p_champion": 0.0268,
+      "p_final": 0.0646,
+      "p_semifinal": 0.1379,
+      "p_quarterfinal": 0.3314,
+      "p_r16": 0.5971,
+      "p_group_qualification": 0.9637,
+      "ci_95_champion": [
+        0.023812,
+        0.030152
+      ],
+      "elo_current": 1923.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "COL",
+      "display_name": "Colombia",
+      "confederation": "CONMEBOL",
+      "seed": 2,
+      "p_champion": 0.025,
+      "p_final": 0.0603,
+      "p_semifinal": 0.0878,
+      "p_quarterfinal": 0.2187,
+      "p_r16": 0.43,
+      "p_group_qualification": 0.787,
+      "ci_95_champion": [
+        0.022118,
+        0.028247
+      ],
+      "elo_current": 1975.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "SUI",
+      "display_name": "Switzerland",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.0229,
+      "p_final": 0.0586,
+      "p_semifinal": 0.1811,
+      "p_quarterfinal": 0.3694,
+      "p_r16": 0.5954,
+      "p_group_qualification": 0.9058,
+      "ci_95_champion": [
+        0.020146,
+        0.02602
+      ],
+      "elo_current": 1889.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "TUR",
+      "display_name": "T\u00fcrkiye",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.02,
+      "p_final": 0.0495,
+      "p_semifinal": 0.1471,
+      "p_quarterfinal": 0.2385,
+      "p_r16": 0.4364,
+      "p_group_qualification": 0.7524,
+      "ci_95_champion": [
+        0.017435,
+        0.022934
+      ],
+      "elo_current": 1902.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "MEX",
+      "display_name": "Mexico",
+      "confederation": "CONCACAF",
+      "seed": 1,
+      "p_champion": 0.0167,
+      "p_final": 0.049,
+      "p_semifinal": 0.1755,
+      "p_quarterfinal": 0.3551,
+      "p_r16": 0.6049,
+      "p_group_qualification": 0.9198,
+      "ci_95_champion": [
+        0.014368,
+        0.019404
+      ],
+      "elo_current": 1858.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "URU",
+      "display_name": "Uruguay",
+      "confederation": "CONMEBOL",
+      "seed": 2,
+      "p_champion": 0.0143,
+      "p_final": 0.0367,
+      "p_semifinal": 0.073,
+      "p_quarterfinal": 0.1488,
+      "p_r16": 0.5324,
+      "p_group_qualification": 0.8341,
+      "ci_95_champion": [
+        0.012152,
+        0.016821
+      ],
+      "elo_current": 1892.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "CRO",
+      "display_name": "Croatia",
+      "confederation": "UEFA",
+      "seed": 2,
+      "p_champion": 0.0137,
+      "p_final": 0.0387,
+      "p_semifinal": 0.0609,
+      "p_quarterfinal": 0.1749,
+      "p_r16": 0.3896,
+      "p_group_qualification": 0.7704,
+      "ci_95_champion": [
+        0.011601,
+        0.016172
+      ],
+      "elo_current": 1930.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "BEL",
+      "display_name": "Belgium",
+      "confederation": "UEFA",
+      "seed": 1,
+      "p_champion": 0.013,
+      "p_final": 0.0346,
+      "p_semifinal": 0.0925,
+      "p_quarterfinal": 0.1756,
+      "p_r16": 0.4509,
+      "p_group_qualification": 0.9234,
+      "ci_95_champion": [
+        0.010959,
+        0.015415
+      ],
+      "elo_current": 1866.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "JPN",
+      "display_name": "Japan",
+      "confederation": "AFC",
+      "seed": 2,
+      "p_champion": 0.0117,
+      "p_final": 0.0378,
+      "p_semifinal": 0.079,
+      "p_quarterfinal": 0.2126,
+      "p_r16": 0.4304,
+      "p_group_qualification": 0.7787,
+      "ci_95_champion": [
+        0.009772,
+        0.014003
+      ],
+      "elo_current": 1904.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "MAR",
+      "display_name": "Morocco",
+      "confederation": "CAF",
+      "seed": 2,
+      "p_champion": 0.0099,
+      "p_final": 0.0352,
+      "p_semifinal": 0.1468,
+      "p_quarterfinal": 0.2726,
+      "p_r16": 0.5363,
+      "p_group_qualification": 0.8314,
+      "ci_95_champion": [
+        0.008139,
+        0.012037
+      ],
+      "elo_current": 1821.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "NOR",
+      "display_name": "Norway",
+      "confederation": "UEFA",
+      "seed": 2,
+      "p_champion": 0.0096,
+      "p_final": 0.0259,
+      "p_semifinal": 0.0396,
+      "p_quarterfinal": 0.0893,
+      "p_r16": 0.2574,
+      "p_group_qualification": 0.5737,
+      "ci_95_champion": [
+        0.007868,
+        0.011708
+      ],
+      "elo_current": 1912.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "PAR",
+      "display_name": "Paraguay",
+      "confederation": "CONMEBOL",
+      "seed": 2,
+      "p_champion": 0.0064,
+      "p_final": 0.019,
+      "p_semifinal": 0.0739,
+      "p_quarterfinal": 0.1417,
+      "p_r16": 0.3051,
+      "p_group_qualification": 0.612,
+      "ci_95_champion": [
+        0.005015,
+        0.008164
+      ],
+      "elo_current": 1833.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "SCO",
+      "display_name": "Scotland",
+      "confederation": "UEFA",
+      "seed": 3,
+      "p_champion": 0.0063,
+      "p_final": 0.0242,
+      "p_semifinal": 0.1143,
+      "p_quarterfinal": 0.2358,
+      "p_r16": 0.4899,
+      "p_group_qualification": 0.755,
+      "ci_95_champion": [
+        0.004928,
+        0.008052
+      ],
+      "elo_current": 1767.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "CAN",
+      "display_name": "Canada",
+      "confederation": "CONCACAF",
+      "seed": 2,
+      "p_champion": 0.0057,
+      "p_final": 0.0178,
+      "p_semifinal": 0.0745,
+      "p_quarterfinal": 0.1896,
+      "p_r16": 0.4284,
+      "p_group_qualification": 0.7976,
+      "ci_95_champion": [
+        0.004402,
+        0.007377
+      ],
+      "elo_current": 1784.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "KOR",
+      "display_name": "Korea Republic",
+      "confederation": "AFC",
+      "seed": 2,
+      "p_champion": 0.0053,
+      "p_final": 0.0183,
+      "p_semifinal": 0.0883,
+      "p_quarterfinal": 0.2172,
+      "p_r16": 0.4935,
+      "p_group_qualification": 0.8138,
+      "ci_95_champion": [
+        0.004055,
+        0.006925
+      ],
+      "elo_current": 1752.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "SEN",
+      "display_name": "Senegal",
+      "confederation": "CAF",
+      "seed": 3,
+      "p_champion": 0.0046,
+      "p_final": 0.0144,
+      "p_semifinal": 0.0268,
+      "p_quarterfinal": 0.0644,
+      "p_r16": 0.2,
+      "p_group_qualification": 0.4875,
+      "ci_95_champion": [
+        0.003451,
+        0.00613
+      ],
+      "elo_current": 1878.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "IRN",
+      "display_name": "IR Iran",
+      "confederation": "AFC",
+      "seed": 2,
+      "p_champion": 0.0036,
+      "p_final": 0.0159,
+      "p_semifinal": 0.0662,
+      "p_quarterfinal": 0.1483,
+      "p_r16": 0.3769,
+      "p_group_qualification": 0.8029,
+      "ci_95_champion": [
+        0.002602,
+        0.00498
+      ],
+      "elo_current": 1760.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "AUS",
+      "display_name": "Australia",
+      "confederation": "AFC",
+      "seed": 3,
+      "p_champion": 0.0032,
+      "p_final": 0.0114,
+      "p_semifinal": 0.0498,
+      "p_quarterfinal": 0.1026,
+      "p_r16": 0.2361,
+      "p_group_qualification": 0.5061,
+      "ci_95_champion": [
+        0.002268,
+        0.004514
+      ],
+      "elo_current": 1783.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "CZE",
+      "display_name": "Czechia",
+      "confederation": "UEFA",
+      "seed": 3,
+      "p_champion": 0.0028,
+      "p_final": 0.0128,
+      "p_semifinal": 0.0778,
+      "p_quarterfinal": 0.1938,
+      "p_r16": 0.4751,
+      "p_group_qualification": 0.7667,
+      "ci_95_champion": [
+        0.001938,
+        0.004044
+      ],
+      "elo_current": 1726.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "EGY",
+      "display_name": "Egypt",
+      "confederation": "CAF",
+      "seed": 3,
+      "p_champion": 0.0019,
+      "p_final": 0.0073,
+      "p_semifinal": 0.0502,
+      "p_quarterfinal": 0.1353,
+      "p_r16": 0.3475,
+      "p_group_qualification": 0.6909,
+      "ci_95_champion": [
+        0.001217,
+        0.002966
+      ],
+      "elo_current": 1689.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "CIV",
+      "display_name": "C\u00f4te d'Ivoire",
+      "confederation": "CAF",
+      "seed": 3,
+      "p_champion": 0.0018,
+      "p_final": 0.0106,
+      "p_semifinal": 0.0739,
+      "p_quarterfinal": 0.202,
+      "p_r16": 0.4637,
+      "p_group_qualification": 0.6705,
+      "ci_95_champion": [
+        0.001139,
+        0.002844
+      ],
+      "elo_current": 1676.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "AUT",
+      "display_name": "Austria",
+      "confederation": "UEFA",
+      "seed": 2,
+      "p_champion": 0.0018,
+      "p_final": 0.0077,
+      "p_semifinal": 0.0135,
+      "p_quarterfinal": 0.0397,
+      "p_r16": 0.1688,
+      "p_group_qualification": 0.5161,
+      "ci_95_champion": [
+        0.001139,
+        0.002844
+      ],
+      "elo_current": 1827.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "USA",
+      "display_name": "United States",
+      "confederation": "CONCACAF",
+      "seed": 4,
+      "p_champion": 0.001,
+      "p_final": 0.0039,
+      "p_semifinal": 0.0244,
+      "p_quarterfinal": 0.0643,
+      "p_r16": 0.1591,
+      "p_group_qualification": 0.361,
+      "ci_95_champion": [
+        0.000543,
+        0.00184
+      ],
+      "elo_current": 1721.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "SWE",
+      "display_name": "Sweden",
+      "confederation": "UEFA",
+      "seed": 3,
+      "p_champion": 0.0009,
+      "p_final": 0.0038,
+      "p_semifinal": 0.025,
+      "p_quarterfinal": 0.0741,
+      "p_r16": 0.1797,
+      "p_group_qualification": 0.3867,
+      "ci_95_champion": [
+        0.000474,
+        0.00171
+      ],
+      "elo_current": 1719.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "ALG",
+      "display_name": "Algeria",
+      "confederation": "CAF",
+      "seed": 3,
+      "p_champion": 0.0007,
+      "p_final": 0.0018,
+      "p_semifinal": 0.0035,
+      "p_quarterfinal": 0.0139,
+      "p_r16": 0.0767,
+      "p_group_qualification": 0.324,
+      "ci_95_champion": [
+        0.000339,
+        0.001444
+      ],
+      "elo_current": 1743.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "UZB",
+      "display_name": "Uzbekistan",
+      "confederation": "AFC",
+      "seed": 3,
+      "p_champion": 0.0005,
+      "p_final": 0.0009,
+      "p_semifinal": 0.002,
+      "p_quarterfinal": 0.0137,
+      "p_r16": 0.0654,
+      "p_group_qualification": 0.2564,
+      "ci_95_champion": [
+        0.000214,
+        0.00117
+      ],
+      "elo_current": 1727.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "NZL",
+      "display_name": "New Zealand",
+      "confederation": "OFC",
+      "seed": 4,
+      "p_champion": 0.0003,
+      "p_final": 0.0017,
+      "p_semifinal": 0.0233,
+      "p_quarterfinal": 0.0778,
+      "p_r16": 0.2503,
+      "p_group_qualification": 0.4395,
+      "ci_95_champion": [
+        0.000102,
+        0.000882
+      ],
+      "elo_current": 1585.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "PAN",
+      "display_name": "Panama",
+      "confederation": "CONCACAF",
+      "seed": 3,
+      "p_champion": 0.0003,
+      "p_final": 0.0012,
+      "p_semifinal": 0.003,
+      "p_quarterfinal": 0.0192,
+      "p_r16": 0.0882,
+      "p_group_qualification": 0.3027,
+      "ci_95_champion": [
+        0.000102,
+        0.000882
+      ],
+      "elo_current": 1737.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "TUN",
+      "display_name": "Tunisia",
+      "confederation": "CAF",
+      "seed": 4,
+      "p_champion": 0.0001,
+      "p_final": 0.0014,
+      "p_semifinal": 0.0104,
+      "p_quarterfinal": 0.0378,
+      "p_r16": 0.1008,
+      "p_group_qualification": 0.2291,
+      "ci_95_champion": [
+        1.8e-05,
+        0.000566
+      ],
+      "elo_current": 1636.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "KSA",
+      "display_name": "Saudi Arabia",
+      "confederation": "AFC",
+      "seed": 3,
+      "p_champion": 0.0001,
+      "p_final": 0.0005,
+      "p_semifinal": 0.0048,
+      "p_quarterfinal": 0.0196,
+      "p_r16": 0.0854,
+      "p_group_qualification": 0.1715,
+      "ci_95_champion": [
+        1.8e-05,
+        0.000566
+      ],
+      "elo_current": 1568.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "BIH",
+      "display_name": "Bosnia & Herzegovina",
+      "confederation": "UEFA",
+      "seed": 3,
+      "p_champion": 0.0,
+      "p_final": 0.0011,
+      "p_semifinal": 0.0134,
+      "p_quarterfinal": 0.0465,
+      "p_r16": 0.1669,
+      "p_group_qualification": 0.3816,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1594.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "QAT",
+      "display_name": "Qatar",
+      "confederation": "AFC",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0,
+      "p_semifinal": 0.0007,
+      "p_quarterfinal": 0.0066,
+      "p_r16": 0.0476,
+      "p_group_qualification": 0.1167,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1425.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "HAI",
+      "display_name": "Haiti",
+      "confederation": "CONCACAF",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0005,
+      "p_semifinal": 0.0103,
+      "p_quarterfinal": 0.0404,
+      "p_r16": 0.1432,
+      "p_group_qualification": 0.2179,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1532.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "RSA",
+      "display_name": "South Africa",
+      "confederation": "CAF",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0006,
+      "p_semifinal": 0.0096,
+      "p_quarterfinal": 0.0395,
+      "p_r16": 0.1882,
+      "p_group_qualification": 0.298,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1524.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "CPV",
+      "display_name": "Cabo Verde",
+      "confederation": "CAF",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0005,
+      "p_semifinal": 0.0031,
+      "p_quarterfinal": 0.0155,
+      "p_r16": 0.0743,
+      "p_group_qualification": 0.1494,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1549.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "CUW",
+      "display_name": "Cura\u00e7ao",
+      "confederation": "CONCACAF",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0,
+      "p_semifinal": 0.0028,
+      "p_quarterfinal": 0.0219,
+      "p_r16": 0.114,
+      "p_group_qualification": 0.1496,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1436.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "JOR",
+      "display_name": "Jordan",
+      "confederation": "AFC",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0004,
+      "p_semifinal": 0.001,
+      "p_quarterfinal": 0.0061,
+      "p_r16": 0.0436,
+      "p_group_qualification": 0.2236,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1690.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "IRQ",
+      "display_name": "Iraq",
+      "confederation": "AFC",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0,
+      "p_semifinal": 0.0,
+      "p_quarterfinal": 0.0006,
+      "p_r16": 0.0099,
+      "p_group_qualification": 0.0731,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1607.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "COD",
+      "display_name": "Congo DR",
+      "confederation": "CAF",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0005,
+      "p_semifinal": 0.0011,
+      "p_quarterfinal": 0.0051,
+      "p_r16": 0.0305,
+      "p_group_qualification": 0.1537,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1655.0,
+      "rank_change_7d": 0
+    },
+    {
+      "fifa_code": "GHA",
+      "display_name": "Ghana",
+      "confederation": "CAF",
+      "seed": 4,
+      "p_champion": 0.0,
+      "p_final": 0.0,
+      "p_semifinal": 0.0,
+      "p_quarterfinal": 0.0004,
+      "p_r16": 0.0046,
+      "p_group_qualification": 0.0463,
+      "ci_95_champion": [
+        0.0,
+        0.000384
+      ],
+      "elo_current": 1505.0,
+      "rank_change_7d": 0
+    }
+  ]
+}

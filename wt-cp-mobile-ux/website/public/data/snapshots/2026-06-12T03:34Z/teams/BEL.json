@@ -1,0 +1,28 @@
+{
+  "fifa_code": "BEL",
+  "display_name": "Belgium",
+  "group": "G",
+  "confederation": "UEFA",
+  "elo_rating": 1866.0,
+  "progression": {
+    "p_group_qualification": 0.9714,
+    "p_r16": 0.5692,
+    "p_qf": 0.2905,
+    "p_sf": 0.1708,
+    "p_final": 0.0842,
+    "p_champion": 0.0366,
+    "ci_95_champion": [
+      0.033094,
+      0.040462
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M13",
+      "kickoff_utc": "2026-06-15T19:00:00+00:00",
+      "opponent": "Egypt",
+      "is_home": true
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "team",
+  "title": "TeamProgression",
+  "description": "Phase 9 §4.6 — Per-team progression cone.",
+  "type": "object",
+  "required": ["fifa_code", "display_name", "group", "progression", "history", "upcoming_matches"],
+  "additionalProperties": false,
+  "properties": {
+    "fifa_code":    { "type": "string" },
+    "display_name": { "type": "string" },
+    "group":        { "type": "string" },
+    "progression": {
+      "type": "object",
+      "required": [
+        "p_group_qualification", "p_r16", "p_qf", "p_sf",
+        "p_final", "p_champion", "ci_95_champion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "p_group_qualification": { "type": "number", "minimum": 0, "maximum": 1 },
+        "p_r16":     { "type": "number", "minimum": 0, "maximum": 1 },
+        "p_qf":      { "type": "number", "minimum": 0, "maximum": 1 },
+        "p_sf":      { "type": "number", "minimum": 0, "maximum": 1 },
+        "p_final":   { "type": "number", "minimum": 0, "maximum": 1 },
+        "p_champion":{ "type": "number", "minimum": 0, "maximum": 1 },
+        "ci_95_champion": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0, "maximum": 1 },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["snapshot_id", "p_champion"],
+        "additionalProperties": false,
+        "properties": {
+          "snapshot_id": { "type": "string" },
+          "p_champion":  { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "upcoming_matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["match_id", "kickoff_utc", "opponent"],
+        "properties": {
+          "match_id":    { "type": "string" },
+          "kickoff_utc": { "type": "string" },
+          "opponent":    { "type": "string" },
+          "is_home":     { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

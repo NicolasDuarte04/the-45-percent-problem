@@ -1,0 +1,26 @@
+{
+  "fifa_code": "USA",
+  "display_name": "USA",
+  "group": "B",
+  "progression": {
+    "p_group_qualification": 0.711,
+    "p_r16": 0.309,
+    "p_qf": 0.12,
+    "p_sf": 0.027,
+    "p_final": 0.008,
+    "p_champion": 0.001,
+    "ci_95_champion": [
+      0.000177,
+      0.005643
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-11_USA_Panama",
+      "kickoff_utc": "2026-06-11T21:00:00+00:00",
+      "opponent": "Panama",
+      "is_home": true
+    }
+  ]
+}

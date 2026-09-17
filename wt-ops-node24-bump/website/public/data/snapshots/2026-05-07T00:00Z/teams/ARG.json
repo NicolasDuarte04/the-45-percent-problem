@@ -1,0 +1,28 @@
+{
+  "fifa_code": "ARG",
+  "display_name": "Argentina",
+  "group": "J",
+  "confederation": "CONMEBOL",
+  "elo_rating": 2113.0,
+  "progression": {
+    "p_group_qualification": 0.9361,
+    "p_r16": 0.6435,
+    "p_qf": 0.4334,
+    "p_sf": 0.2907,
+    "p_final": 0.2423,
+    "p_champion": 0.1409,
+    "ci_95_champion": [
+      0.134219,
+      0.147857
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M19",
+      "kickoff_utc": "2026-06-17T01:00:00+00:00",
+      "opponent": "Algeria",
+      "is_home": true
+    }
+  ]
+}

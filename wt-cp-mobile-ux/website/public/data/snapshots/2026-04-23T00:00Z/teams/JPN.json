@@ -1,0 +1,26 @@
+{
+  "fifa_code": "JPN",
+  "display_name": "Japan",
+  "group": "E",
+  "progression": {
+    "p_group_qualification": 0.736,
+    "p_r16": 0.423,
+    "p_qf": 0.221,
+    "p_sf": 0.119,
+    "p_final": 0.055,
+    "p_champion": 0.022,
+    "ci_95_champion": [
+      0.014573,
+      0.033086
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-13_Brazil_Japan",
+      "kickoff_utc": "2026-06-13T18:00:00+00:00",
+      "opponent": "Brazil",
+      "is_home": false
+    }
+  ]
+}

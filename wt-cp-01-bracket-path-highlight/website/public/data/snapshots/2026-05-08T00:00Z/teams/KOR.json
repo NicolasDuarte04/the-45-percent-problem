@@ -1,0 +1,28 @@
+{
+  "fifa_code": "KOR",
+  "display_name": "Korea Republic",
+  "group": "A",
+  "confederation": "AFC",
+  "elo_rating": 1752.0,
+  "progression": {
+    "p_group_qualification": 0.814,
+    "p_r16": 0.4937,
+    "p_qf": 0.2159,
+    "p_sf": 0.0874,
+    "p_final": 0.0185,
+    "p_champion": 0.0053,
+    "ci_95_champion": [
+      0.004055,
+      0.006925
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M02",
+      "kickoff_utc": "2026-06-12T02:00:00+00:00",
+      "opponent": "Czechia",
+      "is_home": true
+    }
+  ]
+}

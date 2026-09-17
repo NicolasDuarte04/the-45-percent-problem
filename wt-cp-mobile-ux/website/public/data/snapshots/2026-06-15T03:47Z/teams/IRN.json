@@ -1,0 +1,28 @@
+{
+  "fifa_code": "IRN",
+  "display_name": "IR Iran",
+  "group": "G",
+  "confederation": "AFC",
+  "elo_rating": 1760.0,
+  "progression": {
+    "p_group_qualification": 0.8965,
+    "p_r16": 0.4816,
+    "p_qf": 0.2207,
+    "p_sf": 0.1132,
+    "p_final": 0.0308,
+    "p_champion": 0.0086,
+    "ci_95_champion": [
+      0.006969,
+      0.010608
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M14",
+      "kickoff_utc": "2026-06-16T01:00:00+00:00",
+      "opponent": "New Zealand",
+      "is_home": true
+    }
+  ]
+}

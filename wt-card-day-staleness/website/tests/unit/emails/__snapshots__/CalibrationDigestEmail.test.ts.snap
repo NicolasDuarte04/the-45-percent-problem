@@ -1,0 +1,71 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`<CalibrationDigestEmail />: snapshot > renders a plain-text output that matches the committed snapshot 1`] = `
+"[45A] FORECAST DESK · DAILY UPDATE
+
+2026-06-15
+
+----------------------------------------
+
+3 forecasts on your desk changed state.
+
+----------------------------------------
+
+#1
+
+FINAL FOUR
+
+Spain, France, Argentina, Morocco in the semifinals.
+
+ALIVE → DEAD
+
+GER eliminated in R32 vs ITA (0-2). Scenario contradicted.
+
+[ View this forecast → ] https://45analytics.com/scenario/p/45A-2026-AAAA
+
+----------------------------------------
+
+#2
+
+CHAMPION'S PATH
+
+Argentina's path to the final.
+
+ALIVE → PROMOTED
+
+ARG R16 W confirmed. Scenario promoted.
+
+[ View this forecast → ] https://45analytics.com/scenario/p/45A-2026-BBBB
+
+----------------------------------------
+
+#3
+
+FULL BRACKET
+
+A full bracket call submitted on 2026-06-10.
+
+PROMOTED → DEAD
+
+POR lost in QF (1-2). Scenario contradicted.
+
+[ View this forecast → ] https://45analytics.com/scenario/p/45A-2026-CCCC
+
+----------------------------------------
+
+[ View all forecasts → ] https://45analytics.com/me
+
+View methodology: https://45analytics.com/methodology
+
+----------------------------------------
+
+45analytics is a research project investigating market efficiency in the 2026 FIFA World Cup. The probabilities, divergences, and edges presented here are model outputs published for academic and research purposes. They are not financial advice, betting tips, or recommendations to place wagers. The model is described in full at /methodology, including its known limitations. Past divergences do not imply future divergences will be priced.
+
+----------------------------------------
+
+You are receiving this email because you armed an alert on a forecast at 45analytics.com.
+
+[ Unsubscribe in one click ] https://45analytics.com/api/unsubscribe?u=fixture-u-not-a-real-token&s=fixture-s-not-a-real-sig"
+`;
+
+exports[`<CalibrationDigestEmail />: snapshot > renders an HTML output that matches the committed snapshot 1`] = `"<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html dir="ltr" lang="en"><head><meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/><meta name="x-apple-disable-message-reformatting"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/></head><body style="background-color:#F4F1EA;margin:0;padding:0"><!--$--><!--html--><!--head--><div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0" data-skip-in-text="true">3 forecasts on your desk changed state today.<div> ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿</div></div><!--body--><table border="0" width="100%" cellPadding="0" cellSpacing="0" role="presentation" align="center"><tbody><tr><td style="background-color:#F4F1EA;color:#0E0E0E;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;margin:0;padding:0"><table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="max-width:560px;background-color:#F4F1EA;margin:0 auto;padding:32px 24px"><tbody><tr style="width:100%"><td><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;color:#0E0E0E;letter-spacing:0.10em;text-transform:uppercase;margin:0 0 8px;margin-top:0;margin-right:0;margin-bottom:8px;margin-left:0">[45A] FORECAST DESK · DAILY UPDATE</p><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.06em;color:#5A5A5A;margin:0 0 24px;margin-top:0;margin-right:0;margin-bottom:24px;margin-left:0">2026-06-15</p><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:0 0 24px"/><p style="font-size:18px;line-height:1.45;font-family:Source Serif 4, Source Serif Pro, Georgia, ui-serif, serif;color:#0E0E0E;margin:0 0 24px;margin-top:0;margin-right:0;margin-bottom:24px;margin-left:0">3<!-- --> <!-- -->forecasts<!-- --> on your desk changed state.</p><table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin:0 0 24px"><tbody><tr><td><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:0 0 24px"/><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.10em;text-transform:uppercase;color:#9A968A;margin:0 0 4px;margin-top:0;margin-right:0;margin-bottom:4px;margin-left:0">#<!-- -->1</p><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.10em;text-transform:uppercase;color:#0E0E0E;margin:0 0 8px;margin-top:0;margin-right:0;margin-bottom:8px;margin-left:0">FINAL FOUR</p><p style="font-size:15px;line-height:1.45;font-family:Source Serif 4, Source Serif Pro, Georgia, ui-serif, serif;color:#0E0E0E;margin:0 0 10px;margin-top:0;margin-right:0;margin-bottom:10px;margin-left:0">Spain, France, Argentina, Morocco in the semifinals.</p><p style="font-size:12px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.06em;color:#0E0E0E;margin:0 0 10px;margin-top:0;margin-right:0;margin-bottom:10px;margin-left:0"><span style="color:#0E0E0E">ALIVE</span> <!-- -->→<!-- --> <span style="color:#9A968A">DEAD</span></p><p style="font-size:13px;line-height:1.6;font-family:Inter, IBM Plex Sans, system-ui, -apple-system, sans-serif;color:#5A5A5A;margin:0 0 12px;margin-top:0;margin-right:0;margin-bottom:12px;margin-left:0">GER eliminated in R32 vs ITA (0-2). Scenario contradicted.</p><a href="https://45analytics.com/scenario/p/45A-2026-AAAA" style="color:#0E0E0E;text-decoration-line:none;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px" target="_blank">[ View this forecast → ]</a></td></tr></tbody></table><table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin:0 0 24px"><tbody><tr><td><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:0 0 24px"/><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.10em;text-transform:uppercase;color:#9A968A;margin:0 0 4px;margin-top:0;margin-right:0;margin-bottom:4px;margin-left:0">#<!-- -->2</p><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.10em;text-transform:uppercase;color:#0E0E0E;margin:0 0 8px;margin-top:0;margin-right:0;margin-bottom:8px;margin-left:0">CHAMPION&#x27;S PATH</p><p style="font-size:15px;line-height:1.45;font-family:Source Serif 4, Source Serif Pro, Georgia, ui-serif, serif;color:#0E0E0E;margin:0 0 10px;margin-top:0;margin-right:0;margin-bottom:10px;margin-left:0">Argentina&#x27;s path to the final.</p><p style="font-size:12px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.06em;color:#0E0E0E;margin:0 0 10px;margin-top:0;margin-right:0;margin-bottom:10px;margin-left:0"><span style="color:#0E0E0E">ALIVE</span> <!-- -->→<!-- --> <span style="color:#F9B88A">PROMOTED</span></p><p style="font-size:13px;line-height:1.6;font-family:Inter, IBM Plex Sans, system-ui, -apple-system, sans-serif;color:#5A5A5A;margin:0 0 12px;margin-top:0;margin-right:0;margin-bottom:12px;margin-left:0">ARG R16 W confirmed. Scenario promoted.</p><a href="https://45analytics.com/scenario/p/45A-2026-BBBB" style="color:#0E0E0E;text-decoration-line:none;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px" target="_blank">[ View this forecast → ]</a></td></tr></tbody></table><table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin:0 0 24px"><tbody><tr><td><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:0 0 24px"/><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.10em;text-transform:uppercase;color:#9A968A;margin:0 0 4px;margin-top:0;margin-right:0;margin-bottom:4px;margin-left:0">#<!-- -->3</p><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.10em;text-transform:uppercase;color:#0E0E0E;margin:0 0 8px;margin-top:0;margin-right:0;margin-bottom:8px;margin-left:0">FULL BRACKET</p><p style="font-size:15px;line-height:1.45;font-family:Source Serif 4, Source Serif Pro, Georgia, ui-serif, serif;color:#0E0E0E;margin:0 0 10px;margin-top:0;margin-right:0;margin-bottom:10px;margin-left:0">A full bracket call submitted on 2026-06-10.</p><p style="font-size:12px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;letter-spacing:0.06em;color:#0E0E0E;margin:0 0 10px;margin-top:0;margin-right:0;margin-bottom:10px;margin-left:0"><span style="color:#F9B88A">PROMOTED</span> <!-- -->→<!-- --> <span style="color:#9A968A">DEAD</span></p><p style="font-size:13px;line-height:1.6;font-family:Inter, IBM Plex Sans, system-ui, -apple-system, sans-serif;color:#5A5A5A;margin:0 0 12px;margin-top:0;margin-right:0;margin-bottom:12px;margin-left:0">POR lost in QF (1-2). Scenario contradicted.</p><a href="https://45analytics.com/scenario/p/45A-2026-CCCC" style="color:#0E0E0E;text-decoration-line:none;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px" target="_blank">[ View this forecast → ]</a></td></tr></tbody></table><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:0 0 24px"/><table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin:16px 0 0"><tbody><tr><td><a href="https://45analytics.com/me" style="color:#0E0E0E;text-decoration-line:none;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px" target="_blank">[ View all forecasts → ]</a><p style="font-size:11px;line-height:24px;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;color:#5A5A5A;margin:8px 0 0;margin-top:8px;margin-right:0;margin-bottom:0;margin-left:0">View methodology:<!-- --> <a href="https://45analytics.com/methodology" style="color:#5A5A5A;text-decoration-line:none;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;font-size:12px;text-decoration:underline;text-underline-offset:3px" target="_blank">https://45analytics.com/methodology</a></p></td></tr></tbody></table><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:24px 0 16px"/><table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="border:1px solid #C4BEB0;padding:12px 16px;margin:16px 0"><tbody><tr><td><p style="font-size:11px;line-height:1.6;font-family:Source Serif 4, Source Serif Pro, Georgia, ui-serif, serif;font-style:italic;color:#5A5A5A;margin:0;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">45analytics is a research project investigating market efficiency in the 2026 FIFA World Cup. The probabilities, divergences, and edges presented here are model outputs published for academic and research purposes. They are not financial advice, betting tips, or recommendations to place wagers. The model is described in full at /methodology, including its known limitations. Past divergences do not imply future divergences will be priced.</p></td></tr></tbody></table><hr style="width:100%;border:none;border-top:1px solid #eaeaea;border-color:#C4BEB0;border-style:solid;border-width:0 0 1px 0;margin:16px 0"/><p style="font-size:11px;line-height:1.6;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;color:#9A968A;margin:16px 0 8px;margin-top:16px;margin-right:0;margin-bottom:8px;margin-left:0">You are receiving this email because you armed an alert on a forecast at 45analytics.com.</p><a href="https://45analytics.com/api/unsubscribe?u=fixture-u-not-a-real-token&amp;s=fixture-s-not-a-real-sig" style="color:#0E0E0E;text-decoration-line:none;font-family:JetBrains Mono, IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px" target="_blank">[ Unsubscribe in one click ]</a></td></tr></tbody></table></td></tr></tbody></table><!--/$--></body></html>"`;

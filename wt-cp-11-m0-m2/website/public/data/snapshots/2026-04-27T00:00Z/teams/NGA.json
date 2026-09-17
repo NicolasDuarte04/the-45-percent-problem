@@ -1,0 +1,26 @@
+{
+  "fifa_code": "NGA",
+  "display_name": "Nigeria",
+  "group": "H",
+  "progression": {
+    "p_group_qualification": 0.3946,
+    "p_r16": 0.17,
+    "p_qf": 0.0499,
+    "p_sf": 0.0184,
+    "p_final": 0.0056,
+    "p_champion": 0.0012,
+    "ci_95_champion": [
+      0.000687,
+      0.002096
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-14_Nigeria_Venezuela",
+      "kickoff_utc": "2026-06-14T21:00:00+00:00",
+      "opponent": "Venezuela",
+      "is_home": true
+    }
+  ]
+}

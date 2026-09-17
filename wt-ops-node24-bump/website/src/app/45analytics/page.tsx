@@ -1,0 +1,144 @@
+/**
+ * 45 Analytics — parent umbrella homepage (Session 01).
+ *
+ * The §0 laboratory block (plain-Spanish revision), the two-product switcher,
+ * and a free daily-brief CTA. Mounted at /45analytics for PR1; Session 15
+ * PR-B1 repointed the card to The 45% Problem at /the-45-percent-problem
+ * (live via the additive rewrite in next.config.ts). PR-B2 moves this page
+ * to "/" by rewrite at cutover.
+ */
+
+import { daysUntil } from "../voto21junio/_lib/voto-runtime";
+import { ProductSwitcherCard } from "@/components/voto/ProductSwitcherCard";
+import { BriefSignup } from "../voto21junio/_components/BriefSignup";
+import { DotPattern } from "../voto21junio/_components/DotPattern";
+import { SNAPSHOT_STAMP } from "../voto21junio/_lib/demo-data";
+import { getVotoData } from "../voto21junio/_lib/snapshot-source";
+
+export default function ParentHome() {
+  const days = daysUntil();
+  // Live read, never a hardcoded demo constant: the Pulso here is the real
+  // index, framed by how many of its five signals are actually live so the
+  // parent page never shows a bare number as if it were the full composite.
+  const { pulso } = getVotoData();
+
+  return (
+    <div className="pshell">
+      <header className="pmast">
+        <a className="wm" href="/45analytics">
+          45<b> </b>Analytics
+        </a>
+        <nav className="pnav">
+          <a href="#productos">Productos</a>
+          <a href="#brief">Brief diario</a>
+          <span className="tag">Bogotá · CO</span>
+        </nav>
+      </header>
+
+      {/* §0 · El laboratorio */}
+      <section className="phero">
+        {/* Session 16: desktop-only campo-de-votos motif (display:none
+            below 1024px, so mobile is untouched). Masked toward the
+            headline to keep the dot safe-zone. */}
+        <DotPattern
+          className="phero-campo"
+          cols={16}
+          rows={12}
+          live={0.18}
+          gap={14}
+          r={2.6}
+          seed={17}
+          mask="linear-gradient(245deg,#000 42%,transparent 88%)"
+        />
+        <div className="eyebrow">
+          <span className="sec">§ 0</span> · El laboratorio
+        </div>
+        <h1>
+          Probabilidad bajo <em>incertidumbre</em>.
+        </h1>
+        <p className="manifesto">
+          45 Analytics es un grupo en Bogotá que hace las cuentas sobre eventos grandes que están por
+          pasar. Una elección. Una Copa del Mundo. Cosas donde todos opinan pero nadie tiene los
+          números. Nosotros los publicamos. No decimos quién gana. Calculamos qué tan probable es cada
+          resultado, y mostramos cómo llegamos al número.
+        </p>
+        <p className="thesis mono">no predecimos · calibramos · publicamos la matemática</p>
+      </section>
+
+      {/* § · Dos productos insignia */}
+      <section id="productos">
+        <div className="eyebrow" style={{ marginBottom: 8 }}>
+          <span className="sec">§</span> · Dos productos insignia
+        </div>
+        <div className="switch">
+          <ProductSwitcherCard
+            n="1"
+            label="Académico"
+            status="En vivo"
+            titleLead="The"
+            titleBold="45%"
+            titleTail="Problem"
+            desc="La Copa del Mundo, calculada partido por partido. Modelo abierto, revisable, registrado."
+            stats={[
+              { k: "Brier", v: "0.1842" },
+              { k: "Pre-registro", v: "OSF" },
+              { k: "Fase", v: "Grupos" },
+            ]}
+            cta="Entrar"
+            // Session 15 PR-B1: the WC card points at the product's
+            // post-migration canonical path, served today by the additive
+            // rewrite; the old root paths keep working unchanged.
+            href="/the-45-percent-problem"
+            cold
+            motifSeed={21}
+            motifLive={0.22}
+          />
+          <ProductSwitcherCard
+            n="2"
+            label="Cívico"
+            status="Nuevo · lanza 21 jun"
+            titleLead="El Voto del"
+            titleBold="21 de Junio"
+            desc="La segunda vuelta presidencial, calculada cada mañana. Cuánto vale tu voto, dónde, y por qué."
+            stats={[
+              { k: `Pulso · ${pulso.inputsLive}/${pulso.inputsTotal}`, v: String(pulso.index) },
+              { k: "Faltan", v: `${days} días` },
+              { k: "Método", v: "Abierto" },
+            ]}
+            cta="Entrar"
+            href="/voto21junio"
+            motifSeed={9}
+            motifLive={0.26}
+          />
+        </div>
+      </section>
+
+      {/* § · El brief diario (free) */}
+      <section className="card brief" id="brief">
+        <div>
+          <div className="eyebrow">
+            <span className="sec">§ 3</span> · Cada mañana
+          </div>
+          <h3>El brief diario</h3>
+          <p>
+            Una cifra, su intervalo y el método detrás, en tu correo a las 07:00 COT. De ambos
+            productos, sin ruido y sin costo.
+          </p>
+        </div>
+        <BriefSignup />
+      </section>
+
+      <footer className="pfoot">
+        <p className="mono">
+          45 Analytics · Bogotá, Colombia. Publicación de investigación. Las cifras son estadística
+          descriptiva, no consejo de inversión, apuestas ni voto.
+          <br />
+          Código abierto · <a href="https://github.com/45analytics">github.com/45analytics</a> ·
+          pre-registro <a href="https://osf.io/8b5hd">osf.io/8b5hd</a> · <a href="/voto21junio/metodologia">método</a>
+          <br />
+          <span style={{ color: "var(--ink-4)" }}>{SNAPSHOT_STAMP}</span>
+        </p>
+      </footer>
+    </div>
+  );
+}

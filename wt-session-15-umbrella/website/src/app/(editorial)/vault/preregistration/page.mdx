@@ -1,0 +1,394 @@
+<Dropcap>
+  Pre-registration is a procedural commitment whose value is
+  invisible until the protocol fires. In Phase 8 the protocol fired a
+  sanity-gate warning. The cross-validation log-loss battery sealed
+  M2_fifa as M★ with `CHAMPION_LOCKED: true`; the same battery, under
+  the paired-difference SE convention used in
+  `evaluation/cv_battery_result.json`, returned a 1.75 SE gap to M0,
+  below the pre-registered 2.0 SE bar. The marginal-SE reading in
+  `champion_model.json` reports the same comparison as 6.22 SE. The
+  pre-registered contingency on a sanity-gate firing was
+  `pivot_paper_framing`, the procedural obligation to acknowledge the
+  gap publicly. M2 stays as M★; the warning is documented. Amendment
+  v1.1 (data-completeness backfill on `fifa_rankings.parquet`, filed
+  2026-05-12) is the second contingency to fire under this
+  registration. What this page describes is the procedural skeleton
+  that made both catches possible.
+</Dropcap>
+
+This project pre-registered its hypothesis, model specification,
+evaluation metrics, and kill criterion at the **Open Science Framework**
+on **2026-04-22**, the day before the opening match of the 2026 FIFA
+World Cup. The registration is publicly readable and cannot be amended
+without creating a visible fork in the audit trail.
+
+<MarginNote>
+  The Open Science Framework (OSF) is free scholarly infrastructure
+  hosted by the Center for Open Science. Pre-registrations receive a
+  DOI and are time-stamped against an immutable server log. The record
+  for this project is at [osf.io/spmkg](https://osf.io/spmkg/overview?view_only=b2ba9087b4ac494f8255388d78af0321).
+</MarginNote>
+
+The substantive event the registration was protecting against happened
+in Phase 8 and is described in detail at
+[Kill criteria](/vault/kill-criteria). This page is about the procedural
+lock itself: what was sealed, how the cryptographic anchors work, how a
+reviewer can verify independently, what amendments would look like, and
+what pre-registration does and does not commit the project to.
+
+<SectionRule />
+
+## What the registration seals
+
+The pre-registration commits the project to specific values across four
+headline categories and roughly seventy leaf-level constants. None can
+be amended without a deviation notice that is itself part of the
+permanent record.
+
+### The champion model (M★)
+
+Phase 8 of the project selected a champion model from the candidate
+set <InlineMath math="\{M_0, M_1, M_2, M_3\}" /> using out-of-sample
+log-loss on historical data, before a single 2026 match was settled.
+The pre-registered protocol pairs a primary criterion (lowest mean CV
+log-loss with adequate gap to the runner-up) with a 2-SE sanity gate
+against M0. Both are sealed in the registration. The primary
+criterion adjudicates champion identity; the sanity gate fires a
+warning whose pre-registered action is `pivot_paper_framing`. The
+terminal, ledger, and all calibration metrics report whichever model
+the primary criterion selects, not whichever model performs best in
+hindsight.
+
+M★ is **M2_fifa**, sealed in `data/calibration/champion_model.json`
+with `CHAMPION_LOCKED: true`. The sanity-gate warning fired under the
+paired-difference SE convention in `evaluation/cv_battery_result.json`
+(1.75 SE gap, below the 2.0 SE bar); under the marginal-SE convention
+in `champion_model.json` the gap is 6.22 SE and the bar is cleared.
+The full selection procedure, the dual SE reading, and the
+contingency that fired are documented in
+[Models](/vault/models) and [Kill criteria](/vault/kill-criteria).
+The key invariant: selection used only pre-tournament data, completed
+before the opening match.
+
+### The evaluation metrics
+
+The project reports Brier score, log-loss, and Ranked Probability Score
+(RPS) as primary calibration measures. Cumulative Closing Line Value
+(CLV) is a secondary, M★-only metric. No additional metrics are added
+after the tournament begins. The formal definitions live at
+[Evaluation](/vault/evaluation).
+
+### The edge thresholds (ε)
+
+Mainline markets (1X2, match winner, group winner, tournament winner)
+use a threshold of <InlineMath math="\varepsilon = 0.03" />. Derivative
+markets (over/under 2.5, BTTS, correct score, stage of elimination,
+both teams to score) use <InlineMath math="\varepsilon = 0.05" />.
+These thresholds determine which rows in the divergence terminal carry
+an active gate status. They are instruments, not targets.
+
+### The kill criterion
+
+The 2.0 SE log-loss gap requirement, locked in
+`pre_reg_constants.yaml::kill_criterion.threshold_standard_errors`
+and mirrored at `kill.ll_gap_se`. Pre-registered action on firing:
+`pivot_paper_framing`. The Phase 8 sanity gate ran the criterion as a
+pre-flight check on the cross-validation hold-out; under the
+paired-difference SE convention it fired a warning, and under the
+marginal SE convention it cleared. The pre-registered consequence
+took effect: the paper's framing pivoted, the vault essays
+acknowledge the warning, and the locked file
+`champion_model.json` records M2_fifa as M★ with
+`CHAMPION_LOCKED: true`. The full mathematical statement, the dual
+SE reading, and the operational response are at
+[Kill criteria](/vault/kill-criteria).
+
+### The full sealed set
+
+The four commitments above are headlines. The actual sealed YAML
+contains roughly seventy leaf-level constants spanning Elo calibration
+(<InlineMath math="c^* = 0.580386" />,
+<InlineMath math="\mu^* = 1.715874" />), Bivariate Poisson parameters
+(<InlineMath math="\rho = -0.05" />,
+<InlineMath math="\lambda_3 = 0.10" />), Pinnacle bias corrections
+(<InlineMath math="\Delta_{\text{draw}} = +0.014" />,
+<InlineMath math="\Delta_{\text{host}} = -0.006" />), Volatility Gate
+thresholds (six-hour news window, three-pp price-discovery move, USD
+50,000 Polymarket floor, four-hour Pinnacle staleness), Kelly fractions
+and per-market caps (<InlineMath math="\phi = 1/4" /> mainline,
+<InlineMath math="\phi = 1/8" /> longshot, 5% / 2.5% caps), per-event
+and per-day caps (8% / 15%), simulation run counts (10,000 website /
+100,000 paper), bootstrap parameters, and the Diebold-Mariano and
+Nyberg critical values. Every threshold cited anywhere in this vault
+traces back to one of those constants.
+
+<SectionRule />
+
+## The cryptographic locks
+
+Three independent mechanisms anchor the pre-registration to the
+artifacts it commits to. Any one of them is sufficient to detect
+tampering; the combination is what makes the lock forensically
+defensible.
+
+### The OSF record
+
+DOI `10.17605/OSF.IO/8B5HD`. The record carries a creation timestamp, a
+PDF snapshot of the registration form as submitted, and an immutable
+canonical URL at `osf.io/spmkg`. No account is required to read it.
+Pre-registrations on OSF cannot be deleted; they can be amended only by
+filing a child registration that references the parent and produces a
+visible fork in the audit trail.
+
+### The signed Git tag
+
+`v1.0.0-mstar-lock`. The same constant set is committed to the project
+repository under this signed Git tag. A signed tag cannot be moved or
+backdated without invalidating its cryptographic signature. The
+tagger's GPG public key fingerprint is published on the OSF record and
+in the repository's `SECURITY.md`.
+
+### The sealed `pre_reg_constants.yaml`
+
+The constants file lives at the tagged commit. It carries three
+forensic anchors in its `meta` block:
+
+* `data_snapshot_sha`: SHA-256 of the frozen 2026-04 calibration data snapshot.
+* `cv_report_sha`: SHA-256 of the cross-validation battery PDF report.
+* `cv_result_sha`: SHA-256 of the cross-validation results JSON.
+
+Together the three SHAs bind the YAML to the data and the results that
+produced the M★ adjudication. A reviewer can verify that the YAML's
+sealed constants were computed against the data they claim, by hashing
+the actual artifacts and comparing.
+
+<SectionRule />
+
+## How to verify independently
+
+A reviewer with no special access can verify the entire chain in a few
+minutes.
+
+### OSF lookup
+
+Navigate to `osf.io/spmkg`. Confirm the lockdown timestamp
+(2026-04-22T00:00:00Z) and the registration status (LOCKED). Read the
+form as submitted. Note the DOI for citation: `10.17605/OSF.IO/8B5HD`.
+
+### Signed-tag verification
+
+```bash
+git clone https://github.com/the45percent/the-45-percent
+git verify-tag v1.0.0-mstar-lock
+```
+
+A successful response shows the tagger identity, the signing key
+fingerprint, and the commit SHA the tag points to. The fingerprint can
+be cross-checked against the value published on the OSF record. A
+mismatch indicates the tag was forged or tampered with.
+
+<MarginNote>
+  The `git verify-tag` command requires that the tagger's GPG public key
+  is in your local keyring. The key fingerprint is published on the OSF
+  record and in the repository's `SECURITY.md`.
+</MarginNote>
+
+### Constants file SHA check
+
+At the tagged commit, the YAML's `meta` block declares SHAs for three
+artifacts: the data snapshot, the cross-validation battery PDF, and the
+cross-validation results JSON. Hash each artifact and compare against
+the declared values:
+
+```bash
+sha256sum data/snapshots/cv_battery_2026-04.parquet
+sha256sum evaluation/cv_battery_report.pdf
+sha256sum evaluation/cv_battery_result.json
+```
+
+A match confirms that the sealed constants were computed against the
+data they claim. A mismatch indicates the YAML and the artifacts have
+drifted apart, which is a research-integrity concern in its own right.
+
+<SectionRule />
+
+## The pre_reg_constants file
+
+The constants below are reproduced from the tagged commit for
+reference. The canonical version lives at
+`v1.0.0-mstar-lock:evaluation/pre_reg_constants.yaml` in the project
+repository, and that version contains roughly seventy leaf-level
+constants. The block reproduced here is a curated subset covering the
+headline commitments. Any discrepancy between this page and the tagged
+file is an error in this page.
+
+```yaml
+# pre_reg_constants.yaml (curated subset)
+# Sealed 2026-04-22 · tag v1.0.0-mstar-lock
+# Schema version 8.0 · status LOCKED
+
+meta:
+  schema_version: '8.0'
+  created_at_utc: '2026-04-22T00:00:00Z'
+  pre_registration_status: LOCKED
+  data_snapshot_sha: 94389c17ff6ba2a980337b1f2f08efa774aeeefc39d8712cf4ab8953c80033fc
+  cv_report_sha:    56a819fb25f06e1b5f1b82a23a774d86138b5d8a2fb70f3c468bdbd03bf716d9
+  cv_result_sha:    2d917befcc75162d208e85e4fe6982522bed4a83ff78c4ec6992dcfa78c56b25
+
+elo:
+  c_star:  0.580386
+  mu_star: 1.715874
+  k_factor_base: 40.0
+  initial_rating: 1500.0
+
+match_model:
+  rho: -0.05
+  lambda_3: 0.10
+  max_goals: 10
+
+market:
+  devig_method: power
+  pinnacle_bias:
+    draw_delta: 0.014
+    host_delta: -0.006
+  edge_threshold_mainline: 0.03
+  edge_threshold_derivative: 0.05
+
+gate:
+  news_window_hours: 6
+  price_discovery_pct: 0.03
+  price_discovery_window_min: 30
+  cross_book_spread_pp: 0.025
+  liquidity_floor_usd: 50000
+  pinnacle_staleness_hours: 4
+
+kelly:
+  phi_mainline: 0.25
+  phi_longshot: 0.125
+  longshot_cutoff: 0.10
+  cap_per_market: 0.05
+  cap_per_market_longshot: 0.025
+  cap_per_event: 0.08
+  cap_per_day:   0.15
+
+kill:
+  checkpoint_round: R16
+  ll_gap_se: 2.0
+  action: pivot_paper_framing
+```
+
+The full file adds further keys for the form-decay parameters, the FIFA
+blend weight, the macro-prior coefficients, the simulation engine run
+counts, the Diebold-Mariano and Nyberg comparison thresholds, and the
+CLV bootstrap parameters. They live in the canonical file and feed the
+prose on every other page in this vault.
+
+<SectionRule />
+
+## Amendments
+
+The pre-registration anticipates two distinct ways the project's
+locked state can change during the tournament. They are not the same.
+
+A **pre-registered contingency** is an action sealed in the original
+registration that conditionally takes effect when its trigger fires.
+The canonical example is the kill criterion's `pivot_paper_framing`
+action, which fired in Phase 8 when the paired-difference SE reading
+returned 1.75 SE against the 2.0 SE bar. Applying a contingency does
+not require an amendment, because the action was part of the
+registration from the start. The Phase 8 framing pivot is recorded in
+the vault essays and on this site.
+
+An **amendment** is a formal change to a locked constant or
+commitment, filed as a child registration on OSF that references the
+parent record. Amendments are public artifacts and produce a visible
+fork in the audit trail. They cannot be backdated, unfiled, or
+applied silently.
+
+**As of 2026-05-12, one amendment has been filed for this project:
+amendment v1.1, a data-completeness backfill against
+`data/raw/fifa_rankings.parquet`.** The prior snapshot had 16 of the
+48 World Cup 2026 qualifier teams missing under their canonical
+names; M2 reads `w_star = 1.0` (FIFA only), so those 16 teams had
+been running on a fallback strength during simulation. The amendment
+restored the missing rows from the real 2026-04-01 FIFA publication,
+re-fit M2 against the corrected data (producing a new
+`matrix_sha256`), confirmed champion invariance by a diagnostic CV
+re-score, and updated `champion_model.json` to record the prior
+`matrix_sha256` under `matrix_sha256_prior` with
+`amendment_v: "v1.1"`. The full amendment record lives at
+`osf/amendments/amendment_v1.1_data_completeness.md`; the diagnostic
+at `osf/amendments/amendment_v1.1_diagnostic_cv_rescore.json`. OSF
+filing status: PENDING_USER_FILING; the founder files the record on
+OSF after the 2026-05-11 lockdown sprint closes.
+
+What requires an amendment: changing M★ identity (for example,
+restoring M0 or any non-M2 model as M★ in response to live tournament
+data), modifying any sealed constant (any edge threshold, any Kelly
+fraction, any gate threshold, the kill criterion's 2 SE bar),
+changing the evaluation metrics or their pre-registered alpha levels,
+or modifying the simulation engine parameters
+(<InlineMath math="\rho" />, <InlineMath math="\lambda_3" />,
+<InlineMath math="c^*" />, <InlineMath math="\mu^*" />). Anything in
+the YAML at the tagged commit is locked.
+
+What does not require an amendment: applying a pre-registered
+contingency (as above); ingesting new match data (the calibration
+data snapshot is locked, but new tournament results that arrive
+during play append to the live forecast log); and running the
+pre-registered evaluation machinery on whatever data is current.
+
+<SectionRule />
+
+## What pre-registration does not commit us to
+
+Pre-registration is not a claim that the model is correct. It is a
+claim that the model's evaluation is honest.
+
+The Phase 8 sanity-gate warning is the strongest possible
+illustration of this distinction. The protocol committed to publishing
+whatever the cross-validation battery returned, including a 1.75 SE
+result under one of the two locked SE conventions and a 6.22 SE
+result under the other. Pre-registration delivered on the commitment.
+Both readings are in the public record.
+
+A pre-registered contingency firing (sanity-gate warning under a
+locked SE convention, contingency triggered, framing pivots, vault
+essays acknowledge the gap) is not a failure. It is the correct
+outcome of a correctly run experiment. The kill criterion exists
+precisely because the project acknowledged this possibility in
+advance, and amendment v1.1 exists because the protocol also
+acknowledged that data-completeness gaps would need a formal,
+auditable route to correction.
+
+Pre-registration also does not prevent exploratory analysis. If an
+unexpected pattern emerges during the tournament, the project can
+describe it; the description must be labeled clearly as post-hoc,
+unregistered, and outside the project's primary evaluation. The
+distinction matters because everything in the terminal and the ledger
+is a pre-registered claim. Anything else is descriptive.
+
+<PullQuote cite="Center for Open Science, Why Pre-register?">
+  Pre-registration distinguishes confirmatory from exploratory research.
+  Both are valuable; only one is what this project is doing.
+</PullQuote>
+
+The Phase 8 sanity-gate warning made the procedural commitment
+visible. Without it, the project would have launched a public website
+with M2 as M★ and reported only the marginal-SE reading that clears
+the 2 SE bar. With it, the project launched with M2 as M★ under the
+protocol's primary criterion and a transparent acknowledgement of
+both SE readings. Amendment v1.1 made the procedural commitment
+visible a second time: a data-completeness gap was caught, filed as a
+public child record, and corrected against the protocol's own
+amendment process. That is what pre-registration was for.
+
+<SectionRule />
+
+## Where to go next
+
+* **[Kill criteria](/vault/kill-criteria)**: the substantive event the pre-registration was protecting against, the mathematical statement of the criterion, the dual SE reading, and the live status block.
+* **[The 45% Problem](/vault/the-45-percent)**: the lead essay that frames the project's purpose and reads the Phase 8 sanity-gate warning as part of the project's brand commitment.
+* **[Models](/vault/models)**: the four-candidate ablation, the cross-validation battery, and the table that adjudicated champion selection.
+* **[Evaluation](/vault/evaluation)**: Brier, log-loss, RPS, the Diebold-Mariano machinery, and the metrics whose alpha levels the registration sealed.
+* **[Notation](/vault/notation)**: the symbol table for every constant cited above.

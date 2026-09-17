@@ -1,0 +1,111 @@
+# cp-10.2 — Minimal CI gate. Runs on every PR and every push to main.
+#
+# The gate that protects against the cp-09 class of bug (a read of an
+# untracked/gitignored input file that only surfaces on a clean checkout) is the
+# `python-smoke` job: it runs scripts/regenerate_snapshot_from_batch.py
+# end-to-end. cp-09's regression would have turned this job red at PR time.
+#
+# Cross-project scoping (see docs/onboarding/cp-10.2-inspection-notes.md, PLAN.md
+# Q9, and the 2026-06-05 El Voto coordination): ruff runs over WC paths ONLY and
+# never sweeps `the-21j-problem/` (also excluded in pyproject.toml [tool.ruff]).
+# pytest is already scoped by `testpaths = ["tests"]`. The website job runs the
+# shared Next.js app's typecheck + unit tests.
+#
+# ruff is intentionally advisory (continue-on-error) for now: the configured
+# rule set has a large pre-existing baseline dominated by the project's own
+# mandated conventions (E402 from the required sys.path.insert import pattern;
+# N806/N803 scientific math notation). Cleaning that up — and tuning the shared
+# [tool.ruff] rule set, which El Voto also uses — is a separate, coordinated
+# checkpoint. Until then ruff surfaces findings in PR annotations without
+# blocking the merge path that the smoke test actually protects.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python lint + tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project (with dev tooling)
+        run: pip install -e ".[dev]"
+
+      # Advisory only — see header. WC paths are listed explicitly; the
+      # pyproject [tool.ruff] exclude is the belt-and-suspenders backstop.
+      - name: ruff (advisory, WC paths only)
+        continue-on-error: true
+        run: ruff check simulation/ scripts/ ingestion/ models/ utils/ evaluation/ tests/ --output-format=github
+
+      # Excludes the smoke test; that runs in the dedicated python-smoke job.
+      - name: pytest
+        run: pytest -q --ignore=tests/scripts/test_snapshot_regen_smoke.py
+
+  python-smoke:
+    name: Regenerate-snapshot smoke (cp-09 guard)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project (with dev tooling)
+        run: pip install -e ".[dev]"
+
+      # Runs the real regenerate script against the checked-out tree. Fails if a
+      # file the pipeline reads is untracked/gitignored (the cp-09 failure mode).
+      - name: Smoke — regenerate_snapshot_from_batch.py end-to-end
+        run: pytest -q tests/scripts/test_snapshot_regen_smoke.py
+
+  website:
+    name: Website typecheck + unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm exec tsc --noEmit
+
+      # Unit tests only: the integration suite needs DB secrets and is covered by
+      # snapshot-deploy.yml on website PRs. The unit suite is secret-free and
+      # includes the tournament.json schema/provenance test.
+      - name: Unit tests (vitest)
+        run: pnpm exec vitest run tests/unit

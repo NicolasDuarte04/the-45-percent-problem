@@ -1,0 +1,28 @@
+{
+  "fifa_code": "POR",
+  "display_name": "Portugal",
+  "group": "J",
+  "confederation": "UEFA",
+  "elo_rating": 1984.0,
+  "progression": {
+    "p_group_qualification": 0.755,
+    "p_r16": 0.5394,
+    "p_qf": 0.3396,
+    "p_sf": 0.2303,
+    "p_final": 0.1432,
+    "p_champion": 0.0582,
+    "ci_95_champion": [
+      0.053779,
+      0.062961
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-15_Portugal_Croatia",
+      "kickoff_utc": "2026-06-15T21:00:00+00:00",
+      "opponent": "Croatia",
+      "is_home": true
+    }
+  ]
+}

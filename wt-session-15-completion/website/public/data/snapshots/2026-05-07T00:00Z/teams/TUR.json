@@ -1,0 +1,28 @@
+{
+  "fifa_code": "TUR",
+  "display_name": "T\u00fcrkiye",
+  "group": "D",
+  "confederation": "UEFA",
+  "elo_rating": 1902.0,
+  "progression": {
+    "p_group_qualification": 0.7525,
+    "p_r16": 0.4363,
+    "p_qf": 0.2386,
+    "p_sf": 0.1477,
+    "p_final": 0.0499,
+    "p_champion": 0.0203,
+    "ci_95_champion": [
+      0.017715,
+      0.023254
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M08",
+      "kickoff_utc": "2026-06-14T04:00:00+00:00",
+      "opponent": "Australia",
+      "is_home": false
+    }
+  ]
+}

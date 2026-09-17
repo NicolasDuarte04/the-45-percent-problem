@@ -1,0 +1,28 @@
+{
+  "fifa_code": "MAR",
+  "display_name": "Morocco",
+  "group": "C",
+  "confederation": "CAF",
+  "elo_rating": 1821.0,
+  "progression": {
+    "p_group_qualification": 0.9702,
+    "p_r16": 0.7143,
+    "p_qf": 0.4315,
+    "p_sf": 0.2932,
+    "p_final": 0.1359,
+    "p_champion": 0.0602,
+    "ci_95_champion": [
+      0.055705,
+      0.065033
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M05",
+      "kickoff_utc": "2026-06-13T22:00:00+00:00",
+      "opponent": "Brazil",
+      "is_home": false
+    }
+  ]
+}

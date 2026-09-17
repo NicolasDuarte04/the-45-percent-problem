@@ -1,0 +1,19 @@
+metric,metric_label,probability,std_error,ci_90_lower,ci_90_upper,n_runs,snapshot_sha
+group_winner,Finishes 1st in Group D,0.4239,0.004942,0.415797,0.432051,10000,d97a256125b3b3a1
+group_runner_up,Finishes 2nd in Group D,0.2785,0.004483,0.271197,0.285942,10000,d97a256125b3b3a1
+group_third,Finishes 3rd in Group D,0.1828,0.003865,0.176542,0.189257,10000,d97a256125b3b3a1
+group_fourth,Finishes 4th in Group D,0.1148,0.003188,0.109677,0.120165,10000,d97a256125b3b3a1
+qualified_r32,Qualifies for Round of 32,0.7576,0.004285,0.750471,0.764567,10000,d97a256125b3b3a1
+reach_r32,Reaches R32 (qualified),0.7576,0.004285,0.750471,0.764567,10000,d97a256125b3b3a1
+reach_r16,Reaches R16,0.3618,0.004805,0.35394,0.369746,10000,d97a256125b3b3a1
+reach_qf,Reaches Quarter-finals,0.1845,0.003879,0.178219,0.190979,10000,d97a256125b3b3a1
+reach_sf,Reaches Semi-finals,0.1034,0.003045,0.098516,0.108533,10000,d97a256125b3b3a1
+reach_final,Reaches Final,0.0357,0.001855,0.032791,0.0389,10000,d97a256125b3b3a1
+exit_round_group,Eliminated in group stage,0.2424,0.004285,0.235433,0.249529,10000,d97a256125b3b3a1
+exit_round_r32,Eliminated in R32,0.3958,0.00489,0.38779,0.403875,10000,d97a256125b3b3a1
+exit_round_r16,Eliminated in R16,0.1773,0.003819,0.171119,0.183683,10000,d97a256125b3b3a1
+exit_round_qf,Eliminated in QF,0.0811,0.00273,0.07674,0.085723,10000,d97a256125b3b3a1
+exit_round_sf,Eliminated in SF,0.0,0.0,5e-06,0.000299,10000,d97a256125b3b3a1
+exit_round_3rd,Plays 3rd-place match,0.0677,0.002512,0.063702,0.071969,10000,d97a256125b3b3a1
+exit_round_runner_up,Loses final (runner-up),0.0231,0.001502,0.020775,0.025724,10000,d97a256125b3b3a1
+champion,Wins the tournament,0.0126,0.001115,0.010913,0.014593,10000,d97a256125b3b3a1

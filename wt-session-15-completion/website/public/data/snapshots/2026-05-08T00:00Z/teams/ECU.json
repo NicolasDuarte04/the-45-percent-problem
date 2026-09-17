@@ -1,0 +1,28 @@
+{
+  "fifa_code": "ECU",
+  "display_name": "Ecuador",
+  "group": "E",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1933.0,
+  "progression": {
+    "p_group_qualification": 0.9664,
+    "p_r16": 0.5951,
+    "p_qf": 0.3521,
+    "p_sf": 0.1484,
+    "p_final": 0.0735,
+    "p_champion": 0.0309,
+    "ci_95_champion": [
+      0.027684,
+      0.034476
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M10",
+      "kickoff_utc": "2026-06-14T23:00:00+00:00",
+      "opponent": "C\u00f4te d'Ivoire",
+      "is_home": false
+    }
+  ]
+}

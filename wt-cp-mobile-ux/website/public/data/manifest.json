@@ -1,0 +1,482 @@
+[
+  {
+    "snapshot_id": "2026-05-07T00:00Z",
+    "generated_at_utc": "2026-05-07T01:51:52Z",
+    "bundle_url": "/data/snapshots/2026-05-07T00:00Z/",
+    "meta_url": "/data/snapshots/2026-05-07T00:00Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-05-12T12:44Z",
+    "generated_at_utc": "2026-05-12T12:44:13Z",
+    "bundle_url": "/data/snapshots/2026-05-12T12:44Z/",
+    "meta_url": "/data/snapshots/2026-05-12T12:44Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-05-27T19:39Z",
+    "generated_at_utc": "2026-05-27T19:39:17Z",
+    "bundle_url": "/data/snapshots/2026-05-27T19:39Z/",
+    "meta_url": "/data/snapshots/2026-05-27T19:39Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-05-28T01:51Z",
+    "generated_at_utc": "2026-05-28T01:51:30Z",
+    "bundle_url": "/data/snapshots/2026-05-28T01:51Z/",
+    "meta_url": "/data/snapshots/2026-05-28T01:51Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-05-29T02:01Z",
+    "generated_at_utc": "2026-05-29T02:01:10Z",
+    "bundle_url": "/data/snapshots/2026-05-29T02:01Z/",
+    "meta_url": "/data/snapshots/2026-05-29T02:01Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-05-30T01:55Z",
+    "generated_at_utc": "2026-05-30T01:55:18Z",
+    "bundle_url": "/data/snapshots/2026-05-30T01:55Z/",
+    "meta_url": "/data/snapshots/2026-05-30T01:55Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-05-31T02:09Z",
+    "generated_at_utc": "2026-05-31T02:09:36Z",
+    "bundle_url": "/data/snapshots/2026-05-31T02:09Z/",
+    "meta_url": "/data/snapshots/2026-05-31T02:09Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-01T02:31Z",
+    "generated_at_utc": "2026-06-01T02:31:08Z",
+    "bundle_url": "/data/snapshots/2026-06-01T02:31Z/",
+    "meta_url": "/data/snapshots/2026-06-01T02:31Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-02T02:30Z",
+    "generated_at_utc": "2026-06-02T02:30:42Z",
+    "bundle_url": "/data/snapshots/2026-06-02T02:30Z/",
+    "meta_url": "/data/snapshots/2026-06-02T02:30Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-02T16:24Z",
+    "generated_at_utc": "2026-06-02T16:24:10Z",
+    "bundle_url": "/data/snapshots/2026-06-02T16:24Z/",
+    "meta_url": "/data/snapshots/2026-06-02T16:24Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-05T23:01Z",
+    "generated_at_utc": "2026-06-05T23:01:44Z",
+    "bundle_url": "/data/snapshots/2026-06-05T23:01Z/",
+    "meta_url": "/data/snapshots/2026-06-05T23:01Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-06T01:58Z",
+    "generated_at_utc": "2026-06-06T01:58:35Z",
+    "bundle_url": "/data/snapshots/2026-06-06T01:58Z/",
+    "meta_url": "/data/snapshots/2026-06-06T01:58Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-07T02:14Z",
+    "generated_at_utc": "2026-06-07T02:14:27Z",
+    "bundle_url": "/data/snapshots/2026-06-07T02:14Z/",
+    "meta_url": "/data/snapshots/2026-06-07T02:14Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-08T02:31Z",
+    "generated_at_utc": "2026-06-08T02:31:00Z",
+    "bundle_url": "/data/snapshots/2026-06-08T02:31Z/",
+    "meta_url": "/data/snapshots/2026-06-08T02:31Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-08T20:30Z",
+    "generated_at_utc": "2026-06-08T20:30:15Z",
+    "bundle_url": "/data/snapshots/2026-06-08T20:30Z/",
+    "meta_url": "/data/snapshots/2026-06-08T20:30Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-09T01:55Z",
+    "generated_at_utc": "2026-06-09T01:55:33Z",
+    "bundle_url": "/data/snapshots/2026-06-09T01:55Z/",
+    "meta_url": "/data/snapshots/2026-06-09T01:55Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-10T02:07Z",
+    "generated_at_utc": "2026-06-10T02:07:32Z",
+    "bundle_url": "/data/snapshots/2026-06-10T02:07Z/",
+    "meta_url": "/data/snapshots/2026-06-10T02:07Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-10T17:30Z",
+    "generated_at_utc": "2026-06-10T17:30:22Z",
+    "bundle_url": "/data/snapshots/2026-06-10T17:30Z/",
+    "meta_url": "/data/snapshots/2026-06-10T17:30Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-10T17:33Z",
+    "generated_at_utc": "2026-06-10T17:33:42Z",
+    "bundle_url": "/data/snapshots/2026-06-10T17:33Z/",
+    "meta_url": "/data/snapshots/2026-06-10T17:33Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-10T21:01Z",
+    "generated_at_utc": "2026-06-10T21:01:50Z",
+    "bundle_url": "/data/snapshots/2026-06-10T21:01Z/",
+    "meta_url": "/data/snapshots/2026-06-10T21:01Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-10T21:18Z",
+    "generated_at_utc": "2026-06-10T21:18:37Z",
+    "bundle_url": "/data/snapshots/2026-06-10T21:18Z/",
+    "meta_url": "/data/snapshots/2026-06-10T21:18Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-11T02:31Z",
+    "generated_at_utc": "2026-06-11T02:31:03Z",
+    "bundle_url": "/data/snapshots/2026-06-11T02:31Z/",
+    "meta_url": "/data/snapshots/2026-06-11T02:31Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-11T23:43Z",
+    "generated_at_utc": "2026-06-11T23:43:43Z",
+    "bundle_url": "/data/snapshots/2026-06-11T23:43Z/",
+    "meta_url": "/data/snapshots/2026-06-11T23:43Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T02:16Z",
+    "generated_at_utc": "2026-06-12T02:16:25Z",
+    "bundle_url": "/data/snapshots/2026-06-12T02:16Z/",
+    "meta_url": "/data/snapshots/2026-06-12T02:16Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T03:34Z",
+    "generated_at_utc": "2026-06-12T03:34:25Z",
+    "bundle_url": "/data/snapshots/2026-06-12T03:34Z/",
+    "meta_url": "/data/snapshots/2026-06-12T03:34Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T08:24Z",
+    "generated_at_utc": "2026-06-12T08:24:26Z",
+    "bundle_url": "/data/snapshots/2026-06-12T08:24Z/",
+    "meta_url": "/data/snapshots/2026-06-12T08:24Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T12:18Z",
+    "generated_at_utc": "2026-06-12T12:18:54Z",
+    "bundle_url": "/data/snapshots/2026-06-12T12:18Z/",
+    "meta_url": "/data/snapshots/2026-06-12T12:18Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T16:17Z",
+    "generated_at_utc": "2026-06-12T16:17:39Z",
+    "bundle_url": "/data/snapshots/2026-06-12T16:17Z/",
+    "meta_url": "/data/snapshots/2026-06-12T16:17Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T19:05Z",
+    "generated_at_utc": "2026-06-12T19:05:21Z",
+    "bundle_url": "/data/snapshots/2026-06-12T19:05Z/",
+    "meta_url": "/data/snapshots/2026-06-12T19:05Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T21:32Z",
+    "generated_at_utc": "2026-06-12T21:32:07Z",
+    "bundle_url": "/data/snapshots/2026-06-12T21:32Z/",
+    "meta_url": "/data/snapshots/2026-06-12T21:32Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-12T23:17Z",
+    "generated_at_utc": "2026-06-12T23:17:00Z",
+    "bundle_url": "/data/snapshots/2026-06-12T23:17Z/",
+    "meta_url": "/data/snapshots/2026-06-12T23:17Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T02:09Z",
+    "generated_at_utc": "2026-06-13T02:09:35Z",
+    "bundle_url": "/data/snapshots/2026-06-13T02:09Z/",
+    "meta_url": "/data/snapshots/2026-06-13T02:09Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T03:00Z",
+    "generated_at_utc": "2026-06-13T03:00:01Z",
+    "bundle_url": "/data/snapshots/2026-06-13T03:00Z/",
+    "meta_url": "/data/snapshots/2026-06-13T03:00Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T07:01Z",
+    "generated_at_utc": "2026-06-13T07:01:07Z",
+    "bundle_url": "/data/snapshots/2026-06-13T07:01Z/",
+    "meta_url": "/data/snapshots/2026-06-13T07:01Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T10:01Z",
+    "generated_at_utc": "2026-06-13T10:01:04Z",
+    "bundle_url": "/data/snapshots/2026-06-13T10:01Z/",
+    "meta_url": "/data/snapshots/2026-06-13T10:01Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T11:58Z",
+    "generated_at_utc": "2026-06-13T11:58:09Z",
+    "bundle_url": "/data/snapshots/2026-06-13T11:58Z/",
+    "meta_url": "/data/snapshots/2026-06-13T11:58Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T13:54Z",
+    "generated_at_utc": "2026-06-13T13:54:36Z",
+    "bundle_url": "/data/snapshots/2026-06-13T13:54Z/",
+    "meta_url": "/data/snapshots/2026-06-13T13:54Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T15:44Z",
+    "generated_at_utc": "2026-06-13T15:44:15Z",
+    "bundle_url": "/data/snapshots/2026-06-13T15:44Z/",
+    "meta_url": "/data/snapshots/2026-06-13T15:44Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T17:22Z",
+    "generated_at_utc": "2026-06-13T17:22:06Z",
+    "bundle_url": "/data/snapshots/2026-06-13T17:22Z/",
+    "meta_url": "/data/snapshots/2026-06-13T17:22Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T19:22Z",
+    "generated_at_utc": "2026-06-13T19:22:45Z",
+    "bundle_url": "/data/snapshots/2026-06-13T19:22Z/",
+    "meta_url": "/data/snapshots/2026-06-13T19:22Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T21:14Z",
+    "generated_at_utc": "2026-06-13T21:14:29Z",
+    "bundle_url": "/data/snapshots/2026-06-13T21:14Z/",
+    "meta_url": "/data/snapshots/2026-06-13T21:14Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-13T23:04Z",
+    "generated_at_utc": "2026-06-13T23:04:04Z",
+    "bundle_url": "/data/snapshots/2026-06-13T23:04Z/",
+    "meta_url": "/data/snapshots/2026-06-13T23:04Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T02:31Z",
+    "generated_at_utc": "2026-06-14T02:31:38Z",
+    "bundle_url": "/data/snapshots/2026-06-14T02:31Z/",
+    "meta_url": "/data/snapshots/2026-06-14T02:31Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T03:37Z",
+    "generated_at_utc": "2026-06-14T03:37:43Z",
+    "bundle_url": "/data/snapshots/2026-06-14T03:37Z/",
+    "meta_url": "/data/snapshots/2026-06-14T03:37Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T08:15Z",
+    "generated_at_utc": "2026-06-14T08:15:11Z",
+    "bundle_url": "/data/snapshots/2026-06-14T08:15Z/",
+    "meta_url": "/data/snapshots/2026-06-14T08:15Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T11:30Z",
+    "generated_at_utc": "2026-06-14T11:30:53Z",
+    "bundle_url": "/data/snapshots/2026-06-14T11:30Z/",
+    "meta_url": "/data/snapshots/2026-06-14T11:30Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T14:00Z",
+    "generated_at_utc": "2026-06-14T14:00:33Z",
+    "bundle_url": "/data/snapshots/2026-06-14T14:00Z/",
+    "meta_url": "/data/snapshots/2026-06-14T14:00Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T15:50Z",
+    "generated_at_utc": "2026-06-14T15:50:37Z",
+    "bundle_url": "/data/snapshots/2026-06-14T15:50Z/",
+    "meta_url": "/data/snapshots/2026-06-14T15:50Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T17:19Z",
+    "generated_at_utc": "2026-06-14T17:19:48Z",
+    "bundle_url": "/data/snapshots/2026-06-14T17:19Z/",
+    "meta_url": "/data/snapshots/2026-06-14T17:19Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T19:23Z",
+    "generated_at_utc": "2026-06-14T19:23:30Z",
+    "bundle_url": "/data/snapshots/2026-06-14T19:23Z/",
+    "meta_url": "/data/snapshots/2026-06-14T19:23Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T21:10Z",
+    "generated_at_utc": "2026-06-14T21:10:15Z",
+    "bundle_url": "/data/snapshots/2026-06-14T21:10Z/",
+    "meta_url": "/data/snapshots/2026-06-14T21:10Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-14T23:08Z",
+    "generated_at_utc": "2026-06-14T23:08:05Z",
+    "bundle_url": "/data/snapshots/2026-06-14T23:08Z/",
+    "meta_url": "/data/snapshots/2026-06-14T23:08Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-15T02:34Z",
+    "generated_at_utc": "2026-06-15T02:34:41Z",
+    "bundle_url": "/data/snapshots/2026-06-15T02:34Z/",
+    "meta_url": "/data/snapshots/2026-06-15T02:34Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-15T03:47Z",
+    "generated_at_utc": "2026-06-15T03:47:57Z",
+    "bundle_url": "/data/snapshots/2026-06-15T03:47Z/",
+    "meta_url": "/data/snapshots/2026-06-15T03:47Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-15T10:02Z",
+    "generated_at_utc": "2026-06-15T10:02:31Z",
+    "bundle_url": "/data/snapshots/2026-06-15T10:02Z/",
+    "meta_url": "/data/snapshots/2026-06-15T10:02Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-15T15:54Z",
+    "generated_at_utc": "2026-06-15T15:54:18Z",
+    "bundle_url": "/data/snapshots/2026-06-15T15:54Z/",
+    "meta_url": "/data/snapshots/2026-06-15T15:54Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-15T19:47Z",
+    "generated_at_utc": "2026-06-15T19:47:03Z",
+    "bundle_url": "/data/snapshots/2026-06-15T19:47Z/",
+    "meta_url": "/data/snapshots/2026-06-15T19:47Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-15T22:19Z",
+    "generated_at_utc": "2026-06-15T22:19:03Z",
+    "bundle_url": "/data/snapshots/2026-06-15T22:19Z/",
+    "meta_url": "/data/snapshots/2026-06-15T22:19Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T00:31Z",
+    "generated_at_utc": "2026-06-16T00:31:21Z",
+    "bundle_url": "/data/snapshots/2026-06-16T00:31Z/",
+    "meta_url": "/data/snapshots/2026-06-16T00:31Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T02:38Z",
+    "generated_at_utc": "2026-06-16T02:38:56Z",
+    "bundle_url": "/data/snapshots/2026-06-16T02:38Z/",
+    "meta_url": "/data/snapshots/2026-06-16T02:38Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T06:34Z",
+    "generated_at_utc": "2026-06-16T06:34:10Z",
+    "bundle_url": "/data/snapshots/2026-06-16T06:34Z/",
+    "meta_url": "/data/snapshots/2026-06-16T06:34Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T12:13Z",
+    "generated_at_utc": "2026-06-16T12:13:26Z",
+    "bundle_url": "/data/snapshots/2026-06-16T12:13Z/",
+    "meta_url": "/data/snapshots/2026-06-16T12:13Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T18:04Z",
+    "generated_at_utc": "2026-06-16T18:04:53Z",
+    "bundle_url": "/data/snapshots/2026-06-16T18:04Z/",
+    "meta_url": "/data/snapshots/2026-06-16T18:04Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T21:43Z",
+    "generated_at_utc": "2026-06-16T21:43:43Z",
+    "bundle_url": "/data/snapshots/2026-06-16T21:43Z/",
+    "meta_url": "/data/snapshots/2026-06-16T21:43Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-16T23:24Z",
+    "generated_at_utc": "2026-06-16T23:24:13Z",
+    "bundle_url": "/data/snapshots/2026-06-16T23:24Z/",
+    "meta_url": "/data/snapshots/2026-06-16T23:24Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T02:36Z",
+    "generated_at_utc": "2026-06-17T02:36:19Z",
+    "bundle_url": "/data/snapshots/2026-06-17T02:36Z/",
+    "meta_url": "/data/snapshots/2026-06-17T02:36Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T03:41Z",
+    "generated_at_utc": "2026-06-17T03:41:40Z",
+    "bundle_url": "/data/snapshots/2026-06-17T03:41Z/",
+    "meta_url": "/data/snapshots/2026-06-17T03:41Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T09:02Z",
+    "generated_at_utc": "2026-06-17T09:02:43Z",
+    "bundle_url": "/data/snapshots/2026-06-17T09:02Z/",
+    "meta_url": "/data/snapshots/2026-06-17T09:02Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T12:57Z",
+    "generated_at_utc": "2026-06-17T12:57:56Z",
+    "bundle_url": "/data/snapshots/2026-06-17T12:57Z/",
+    "meta_url": "/data/snapshots/2026-06-17T12:57Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T16:40Z",
+    "generated_at_utc": "2026-06-17T16:40:18Z",
+    "bundle_url": "/data/snapshots/2026-06-17T16:40Z/",
+    "meta_url": "/data/snapshots/2026-06-17T16:40Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T19:26Z",
+    "generated_at_utc": "2026-06-17T19:26:22Z",
+    "bundle_url": "/data/snapshots/2026-06-17T19:26Z/",
+    "meta_url": "/data/snapshots/2026-06-17T19:26Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T21:01Z",
+    "generated_at_utc": "2026-06-17T21:01:55Z",
+    "bundle_url": "/data/snapshots/2026-06-17T21:01Z/",
+    "meta_url": "/data/snapshots/2026-06-17T21:01Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T22:00Z",
+    "generated_at_utc": "2026-06-17T22:00:59Z",
+    "bundle_url": "/data/snapshots/2026-06-17T22:00Z/",
+    "meta_url": "/data/snapshots/2026-06-17T22:00Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-17T23:29Z",
+    "generated_at_utc": "2026-06-17T23:29:15Z",
+    "bundle_url": "/data/snapshots/2026-06-17T23:29Z/",
+    "meta_url": "/data/snapshots/2026-06-17T23:29Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-18T02:33Z",
+    "generated_at_utc": "2026-06-18T02:33:33Z",
+    "bundle_url": "/data/snapshots/2026-06-18T02:33Z/",
+    "meta_url": "/data/snapshots/2026-06-18T02:33Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-18T03:33Z",
+    "generated_at_utc": "2026-06-18T03:33:16Z",
+    "bundle_url": "/data/snapshots/2026-06-18T03:33Z/",
+    "meta_url": "/data/snapshots/2026-06-18T03:33Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-18T08:44Z",
+    "generated_at_utc": "2026-06-18T08:44:50Z",
+    "bundle_url": "/data/snapshots/2026-06-18T08:44Z/",
+    "meta_url": "/data/snapshots/2026-06-18T08:44Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-18T12:25Z",
+    "generated_at_utc": "2026-06-18T12:25:11Z",
+    "bundle_url": "/data/snapshots/2026-06-18T12:25Z/",
+    "meta_url": "/data/snapshots/2026-06-18T12:25Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-18T16:29Z",
+    "generated_at_utc": "2026-06-18T16:29:52Z",
+    "bundle_url": "/data/snapshots/2026-06-18T16:29Z/",
+    "meta_url": "/data/snapshots/2026-06-18T16:29Z/snapshot_meta.json"
+  },
+  {
+    "snapshot_id": "2026-06-18T19:27Z",
+    "generated_at_utc": "2026-06-18T19:27:43Z",
+    "bundle_url": "/data/snapshots/2026-06-18T19:27Z/",
+    "meta_url": "/data/snapshots/2026-06-18T19:27Z/snapshot_meta.json"
+  }
+]

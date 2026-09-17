@@ -1,0 +1,28 @@
+{
+  "fifa_code": "TUR",
+  "display_name": "Turkey",
+  "group": "K",
+  "confederation": "UEFA",
+  "elo_rating": 1902.0,
+  "progression": {
+    "p_group_qualification": 0.6112,
+    "p_r16": 0.4261,
+    "p_qf": 0.2564,
+    "p_sf": 0.1215,
+    "p_final": 0.0639,
+    "p_champion": 0.0196,
+    "ci_95_champion": [
+      0.017062,
+      0.022507
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-16_Switzerland_Turkey",
+      "kickoff_utc": "2026-06-16T18:00:00+00:00",
+      "opponent": "Switzerland",
+      "is_home": false
+    }
+  ]
+}

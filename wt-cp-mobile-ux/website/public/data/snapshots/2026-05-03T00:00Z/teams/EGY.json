@@ -1,0 +1,28 @@
+{
+  "fifa_code": "EGY",
+  "display_name": "Egypt",
+  "group": "G",
+  "confederation": "CAF",
+  "elo_rating": 1689.0,
+  "progression": {
+    "p_group_qualification": 0.5238,
+    "p_r16": 0.3419,
+    "p_qf": 0.0873,
+    "p_sf": 0.0314,
+    "p_final": 0.0079,
+    "p_champion": 0.0012,
+    "ci_95_champion": [
+      0.000687,
+      0.002096
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "2026-06-14_Egypt_Cameroon",
+      "kickoff_utc": "2026-06-14T18:00:00+00:00",
+      "opponent": "Cameroon",
+      "is_home": true
+    }
+  ]
+}

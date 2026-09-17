@@ -1,0 +1,1445 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+/* Checkpoint 17 (C2): KaTeX CSS is now scoped to the vault route
+   group (src/app/(editorial)/vault/layout.tsx) so non-vault routes
+   stop shipping the ~25 KB stylesheet they never use. */
+@import "./styles/brief-tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Editorial canvas (cream): default ─────────────────────────────────────── */
+/* §2.2 tokens. These names are preserved from v1.0 for backwards compatibility  */
+/* with all existing components that use var(--bg-root) etc.                     */
+:root {
+  /* Canvas surfaces */
+  --bg-root:       #F7F4EC;
+  --bg-panel:      #EEEAE0;
+  --bg-panel-elev: #FCFAF4;
+
+  /* Borders */
+  --border-subtle:  rgb(31 31 31 / 0.10);
+  --border-default: rgb(31 31 31 / 0.14);
+
+  /* Text */
+  --text-primary:   #141414;
+  --text-secondary: #2A2A2A;
+  --text-tertiary:  #5A5550;
+  --text-quiet:     #8A847C;
+  --data-neutral:   #5A5550;
+
+  /* Semantic: deeper values on cream so text clears WCAG AA (≥ 4.5:1).
+     The lit Prism versions are restored on the quant canvas below. */
+  --edge-positive: #2B8A5F;   /* deep mint · 4.7:1 on --paper */
+  --edge-negative: #C4435E;   /* deep rose · 5.2:1 on --paper */
+  --gate-fired:    #B07A00;   /* deep amber · 4.6:1 on --paper */
+  --accent-focus:  #0F6B7D;   /* deep teal · 6.8:1 on --paper */
+  --ledger-hit:    #2B8A5F;
+  --ledger-miss:   #C4435E;
+
+  /* ── Role-aliased UI tokens (Mission 3) ──────────────────────────────────
+     Four semantic roles built as `var()` aliases of the existing palette
+     entries above. No new hex values introduced. The point: components
+     can declare what they MEAN ("active step", "completion") rather than
+     what they LOOK LIKE ("teal", "mint"), so future re-themes touch four
+     indirections instead of every component.
+
+     Quant canvas does NOT redeclare these. `--accent-focus` etc. already
+     swap to the lit Prism variants under `[data-canvas="quant"]`, and the
+     aliases below dereference at use-site, so the same `var(--ui-success)`
+     resolves correctly inside or outside the quant canvas. */
+  --ui-guidance: var(--accent-focus);   /* teal: focus, current step, active */
+  --ui-success:  var(--edge-positive);  /* mint: completion, submitted, filled */
+  --ui-danger:   var(--edge-negative);  /* rose: errors, destructive */
+  --ui-warning:  var(--gate-fired);     /* amber: caveats only: reserved */
+
+  /* Prism palette: invariant across canvases */
+  --prism-peach:  #F9B88A;
+  /* Warm-accent alias (used by SnapshotPicker selection state on
+     editorial / quant surfaces). Same hex as the simulator canvas
+     binding at L177; declared here so non-simulator surfaces can
+     resolve var(--accent-warm) without introducing a new colour. */
+  --accent-warm:  var(--prism-peach);
+  --prism-coral:  #EC7C6A;
+  --prism-rose:   #E76E8A;
+  --prism-plum:   #8E5A8A;
+  --prism-indigo: #5B6CEC;
+  --prism-cyan:   #7ED0E8;
+  --prism-mint:   #88E0B6;
+  --prism-sun:    #F5D76E;
+
+  /* Editorial ornament rule */
+  --rule: rgb(31 31 31 / 0.10);
+
+  /* Rarity band fills · CP-00 (V3). Consumed by the live gauge (CP-02)
+     and the post-submit reveal (CP-08). Common and Plausible mute toward
+     bone; Uncommon, Rare, and Vanishingly rare reach toward --accent-warm.
+     The companion --band-vanishing-glow drives the post-submit border
+     treatment in CP-08. */
+  --band-common:         color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  --band-plausible:      color-mix(in srgb, var(--text-primary) 60%, transparent);
+  --band-uncommon:       color-mix(in srgb, var(--accent-warm) 30%, var(--bg-panel-elev));
+  --band-rare:           color-mix(in srgb, var(--accent-warm) 60%, var(--bg-panel-elev));
+  --band-vanishing:      var(--accent-warm);
+  --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
+
+  /* Button radius · 6px on Editorial (§2.11) */
+  --radius: 0.375rem;
+
+  /* cp-08 additive onboarding tokens. Consumed by OnboardingChip,
+     OnboardingModal, and the modal's eyebrow ornament. Values copied
+     verbatim from website/design-output/onboarding-v2/colors_and_type.css
+     (the design package's editorial declarations). Quant canvas does
+     not redeclare these because the onboarding only renders on the
+     editorial canvas (homepage and other editorial routes). */
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.04), 0 6px 24px rgb(0 0 0 / 0.05);
+  --brand-accent: oklch(35% 0.08 20);
+
+  /* Shadcn semantic tokens: editorial light mode */
+  --background:          #F7F4EC;
+  --foreground:          #141414;
+  --card:                #FCFAF4;
+  --card-foreground:     #141414;
+  --popover:             #FCFAF4;
+  --popover-foreground:  #141414;
+  --primary:             #7ED0E8;
+  --primary-foreground:  #141414;
+  --secondary:           #EEEAE0;
+  --secondary-foreground:#141414;
+  --muted:               #EEEAE0;
+  --muted-foreground:    #5A5550;
+  --accent:              #EEEAE0;
+  --accent-foreground:   #141414;
+  --destructive:         #E76E8A;
+  --border:              rgb(31 31 31 / 0.14);
+  --input:               rgb(31 31 31 / 0.14);
+  --ring:                #7ED0E8;
+}
+
+/* ── Quant canvas (warm slate); data-dense routes ──────────────────────────── */
+/* §2.3 tokens. Overrides applied when [data-canvas="quant"] is in the DOM tree.  */
+[data-canvas="quant"] {
+  --bg-root:       #0F1216;
+  --bg-panel:      #151A21;
+  --bg-panel-elev: #1C222B;
+  --border-subtle:  #262D37;
+  --border-default: #262D37;
+  --text-primary:   #EEE8DD;
+  --text-secondary: #EEE8DD;
+  --text-tertiary:  #A8AFBC;
+  --text-quiet:     #6D7585;
+  --data-neutral:   #A8AFBC;
+  --rule:           #262D37;
+
+  /* Semantic: restored to lit Prism on slate where the dark canvas gives
+     the light tones enough contrast without needing to deepen them.
+     --edge-negative is chroma-bumped on quant (#EF5A7D vs #E76E8A on editorial)
+     so the warning signal reads clearly against the dark slate canvas. */
+  --edge-positive: #88E0B6;
+  --edge-negative: #EF5A7D;
+  --gate-fired:    #F5D76E;
+  --accent-focus:  #7ED0E8;
+  --ledger-hit:    #88E0B6;
+  --ledger-miss:   #E76E8A;
+
+  /* Re-bind the role tokens to the quant variants. CSS custom-property
+     indirection resolves at the declaring element, not at the consumer:
+     the `:root` definitions of `--ui-*` capture the editorial palette
+     and inherit those resolved hexes downward. Without these re-binds,
+     a future quant component reading `var(--ui-success)` would render
+     in deep editorial mint instead of lit Prism mint. No surface uses
+     the aliases inside quant today (which is why this whole block is
+     additive, not a fix), but the rebind preserves the plan's promise
+     that aliases re-target cleanly per canvas. */
+  --ui-guidance: var(--accent-focus);
+  --ui-success:  var(--edge-positive);
+  --ui-danger:   var(--edge-negative);
+  --ui-warning:  var(--gate-fired);
+
+  /* Rarity band fills · CP-00 (V3). Same six lines as the editorial
+     block; var() references resolve against the quant palette here
+     (lit Prism --accent-warm, dark --bg-panel-elev), so the same
+     declarations yield surface-appropriate hexes without further
+     branching. Tune the percentages per surface if legibility fails
+     on the dev review page. */
+  --band-common:         color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  --band-plausible:      color-mix(in srgb, var(--text-primary) 60%, transparent);
+  --band-uncommon:       color-mix(in srgb, var(--accent-warm) 30%, var(--bg-panel-elev));
+  --band-rare:           color-mix(in srgb, var(--accent-warm) 60%, var(--bg-panel-elev));
+  --band-vanishing:      var(--accent-warm);
+  --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
+
+  /* Button radius · 4px on Quant (§2.11) */
+  --radius: 0.25rem;
+
+  /* Shadcn semantic tokens: quant dark mode */
+  --background:          #0F1216;
+  --foreground:          #EEE8DD;
+  --card:                #151A21;
+  --card-foreground:     #EEE8DD;
+  --popover:             #1C222B;
+  --popover-foreground:  #EEE8DD;
+  --primary:             #F9B88A;
+  --primary-foreground:  #0F1216;
+  --secondary:           #151A21;
+  --secondary-foreground:#EEE8DD;
+  --muted:               #1C222B;
+  --muted-foreground:    #A8AFBC;
+  --accent:              #1C222B;
+  --accent-foreground:   #EEE8DD;
+  --destructive:         #E76E8A;
+  --border:              #262D37;
+  --input:               #262D37;
+  --ring:                #F9B88A;
+}
+
+/* ── Simulator canvas. Tournament Scenario Simulator ──────────────────────── */
+/* Inherits the same warm-slate base as quant. Brutalist tone: sharp corners
+   everywhere (`--radius: 0`), no shadows. The peach accent is reserved for
+   exactly three surfaces (CTA hover, PROMOTED state, Trade Ticket flag border)
+   per design v2 §6 + Patch v2.1 §2; cyan is forbidden as a fill on simulator
+   surfaces (IMPL_PROMPT §15.2). State colors are alias entries so component
+   code can read --state-dead / --state-promoted directly. */
+[data-canvas="simulator"] {
+  --bg-root:        #0F1216;
+  --bg-panel:       #151A21;
+  --bg-panel-elev:  #1C222B;
+  --border-subtle:  #262D37;
+  --border-default: #262D37;
+  --text-primary:   #EEE8DD;
+  --text-secondary: #EEE8DD;
+  --text-tertiary:  #A8AFBC;
+  --text-quiet:     #6D7585;
+  --data-neutral:   #A8AFBC;
+  --rule:           #262D37;
+  --accent-focus:   #7ED0E8;
+
+  /* Simulator-only tokens. Aliases of existing prism palette entries. 
+     no new color values are introduced here (IMPL_PROMPT §15.2). */
+  --accent-warm:    #F9B88A;
+  --state-dead:     color-mix(in oklab, #E76E8A 60%, transparent);
+  --state-promoted: #F9B88A;
+
+  /* Semantic: restored to lit Prism on the simulator canvas, mirroring
+     the quant block. The mid-:root values of --edge-* are deepened for
+     the cream canvas; on slate the lit Prism tones read with adequate
+     contrast and signal correctly. Without these the caret-color and
+     focus-underline rules in PredictionAlertConfigurator would resolve
+     to editorial-deep colors and read as muddy on the dark canvas. */
+  --edge-positive: #88E0B6;
+  --edge-negative: #EF5A7D;
+  --gate-fired:    #F5D76E;
+
+  /* Re-bind the role tokens so var(--ui-success) etc. resolve to the
+     lit-Prism values on this canvas. CSS custom-property indirection
+     resolves at the declaring element, not at the consumer; without
+     this rebind every --ui-* alias inherits the editorial values from
+     :root and prints as the wrong color on the simulator surface. */
+  --ui-guidance: var(--accent-focus);
+  --ui-success:  var(--edge-positive);
+  --ui-danger:   var(--edge-negative);
+  --ui-warning:  var(--gate-fired);
+
+  /* Brutalist: 0 radius across the board. */
+  --radius: 0;
+
+  /* Shadcn semantic tokens: same shape as quant, with primary swapped to
+     bone-white so default buttons render as inverted-bone hits. */
+  --background:          #0F1216;
+  --foreground:          #EEE8DD;
+  --card:                #151A21;
+  --card-foreground:     #EEE8DD;
+  --popover:             #1C222B;
+  --popover-foreground:  #EEE8DD;
+  --primary:             #EEE8DD;
+  --primary-foreground:  #0F1216;
+  --secondary:           #151A21;
+  --secondary-foreground:#EEE8DD;
+  --muted:               #1C222B;
+  --muted-foreground:    #A8AFBC;
+  --accent:              #1C222B;
+  --accent-foreground:   #EEE8DD;
+  --destructive:         #E76E8A;
+  --border:              #262D37;
+  --input:               #262D37;
+  --ring:                #F9B88A;
+
+  /* Rarity band fills · CP-00 (V3). Cascade note: CSS custom-property
+     `var()` substitution resolves at the declaring element, not at the
+     consuming element (UI_IMPROVEMENT_ARCHITECTURE_V3.md §1, locked
+     guardrails). The `:root` definitions of these tokens bake in the
+     editorial `--text-tertiary`, `--accent-warm`, and `--bg-panel-elev`
+     values; a `[data-canvas="simulator"]` descendant inherits those
+     already-substituted strings and ignores its own palette overrides.
+     Each canvas that needs the band fills against its own surface must
+     redefine them inside its own block. The same six lines below also
+     appear (with their own values) in the `:root` editorial block and
+     in the `[data-canvas="quant"]` block. */
+  --band-common:         color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  --band-plausible:      color-mix(in srgb, var(--text-primary) 60%, transparent);
+  --band-uncommon:       color-mix(in srgb, var(--accent-warm) 30%, var(--bg-panel-elev));
+  --band-rare:           color-mix(in srgb, var(--accent-warm) 60%, var(--bg-panel-elev));
+  --band-vanishing:      var(--accent-warm);
+  --band-vanishing-glow: color-mix(in srgb, var(--accent-warm) 70%, transparent);
+}
+
+/* ── Sticky meter footer compensation (cp-07) ──────────────────────────────
+   StickyProgressMeter sets `body[data-has-sticky-meter]` while mounted.
+   The meter is `fixed` at bottom of viewport (z-40, opaque) and would
+   otherwise occlude the SiteFooter at scroll-bottom. Extending the body's
+   scrollable area by the meter's height pushes the footer up out from
+   under the meter when the user scrolls to page-bottom. Same fallback
+   (96px) the mode sections already use for picker-control padding. */
+body[data-has-sticky-meter] {
+  padding-bottom: var(--sticky-meter-h, 96px);
+}
+
+/* ── Simulator reveal sequence (IMPL_PROMPT §9) ─────────────────────────────
+   CSS-only fade-in chain triggered on first paint. `backwards` fill mode
+   means the element holds the `from` state (opacity 0) during the
+   pre-animation delay, so there is no flash of fully-rendered content
+   even before JS hydration. The chain mirrors §9 exactly:
+
+     t=0    : Reality Score percentage snaps to value (no animation)
+     t=100ms: Rarity band fades in (180ms ease-out)
+     t=200ms: 1-in-N line fades in
+     t=400ms: Trade Ticket / scenario block fades in
+     t=1000ms: Email gate fades in (non-blocking)
+
+   prefers-reduced-motion: reduce overrides every animation to
+   `animation: none; opacity: 1` so the elements render immediately
+   with no delay. Scoped under [data-canvas="simulator"] so the
+   reveal classes never bleed onto editorial or quant surfaces. */
+
+@keyframes simulator-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+[data-canvas="simulator"] .reveal-band {
+  animation: simulator-fade-in 180ms ease-out 100ms 1 backwards;
+}
+[data-canvas="simulator"] .reveal-one-in-n {
+  animation: simulator-fade-in 180ms ease-out 200ms 1 backwards;
+}
+[data-canvas="simulator"] .reveal-ticket {
+  animation: simulator-fade-in 180ms ease-out 400ms 1 backwards;
+}
+[data-canvas="simulator"] .reveal-gate {
+  animation: simulator-fade-in 180ms ease-out 1000ms 1 backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas="simulator"] .reveal-band,
+  [data-canvas="simulator"] .reveal-one-in-n,
+  [data-canvas="simulator"] .reveal-ticket,
+  [data-canvas="simulator"] .reveal-gate {
+    animation: none;
+    opacity: 1;
+  }
+  /* Disable dnd-kit drag-overlay translate so items snap to cursor
+     instead of animating. The click-fallback path still functions. */
+  [data-canvas="simulator"] [aria-grabbed="true"] {
+    transform: none !important;
+  }
+}
+
+/* EmptySlot tap-to-fill pulse per UX_POLISH_PLAN_SIMULATOR_PHASE_D §3.1.
+   Slot armed for tap-to-fill pulses opacity 0.6 → 1.0 and back over
+   1.2s. Honors prefers-reduced-motion: reduce. */
+@keyframes empty-slot-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.empty-slot-pulse {
+  animation: empty-slot-pulse 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty-slot-pulse { animation: none; opacity: 1; }
+}
+
+/* LiveAgreementGauge segment fill transition per
+   UX_POLISH_PLAN_SIMULATOR_PHASE_D §4.4. CSS-only; no JS animation
+   loop. Honors prefers-reduced-motion: reduce by snapping. */
+.live-gauge-segment {
+  transition: opacity 200ms ease-out, background-color 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-gauge-segment { transition: none; }
+}
+
+/* Checkpoint 17 (B1): three Framer Motion animations migrated to CSS
+   keyframes / transitions so they no longer pay the Framer Motion
+   runtime cost. Timings and easing match the `motion` vocabulary
+   defined in src/lib/motion/vocabulary.ts: 250ms accent pulse, 400ms
+   entry, 450ms gauge fill, all on the standard ease-out cubic-bezier
+   (0.22, 1, 0.36, 1). Reduced-motion users get instant snaps. */
+@keyframes ck17-accent-pulse {
+  from { opacity: 0.08; }
+  to   { opacity: 0; }
+}
+.ck17-accent-pulse {
+  animation: ck17-accent-pulse 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck17-accent-pulse { animation: none; opacity: 0; }
+}
+
+@keyframes ck17-reveal-entry {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ck17-reveal-entry {
+  animation: ck17-reveal-entry 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck17-reveal-entry {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* V2-02 (A3): Champion's Path stages reveal sequentially. Each stage `<li>`
+   gets the class on mount; existing stages do not re-fire. Matches the
+   ck17 vocabulary (ease-out cubic-bezier) with the shorter 280ms timing
+   the V2 spec asks for ("terminal output stream in, deliberate"). */
+@keyframes ck17-stage-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ck17-stage-reveal {
+  animation: ck17-stage-reveal 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck17-stage-reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* V2-02 (A3): grid template for the Champion's Path stage list. Mobile
+   stacks vertically; at sm+ we lay out the visible stages side-by-side.
+   The column count is fed via the `--cp-stages-count` custom property
+   from the component so the stages grow into the available width as
+   they reveal (1, then 2, then 3, then 4 columns). */
+.cp-stages-grid {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .cp-stages-grid {
+    grid-template-columns: repeat(var(--cp-stages-count, 4), minmax(0, 1fr));
+  }
+}
+
+/* Gauge-fill segment overlay. Defaults to zero (off); the component
+   adds `data-active="true"` to the active segment and the CSS tweens
+   opacity and scaleX from there. Used both by LiveAgreementGauge (no
+   delay) and by RealityScoreReveal's post-submit rarity bar (with a
+   100ms delay so the cascade matches the original Framer Motion
+   sequence). */
+.ck17-gauge-fill {
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition:
+    opacity 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ck17-gauge-fill[data-active="true"] {
+  opacity: 1;
+  transform: scaleX(1);
+}
+.ck17-gauge-fill-delayed {
+  transition-delay: 100ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck17-gauge-fill,
+  .ck17-gauge-fill-delayed {
+    transition: none;
+  }
+}
+
+/* Alert-configurator decoration per VIRAL_LOOP_PIVOT.md §2.2 + §2.4.
+
+   .reveal-alert; entrance fade for the configurator panel,
+                         starts 200ms after the trade-ticket reveal so
+                         the eye lands hero → share → alert in order.
+   .alert-status-pip; the blinking cursor bar in the eyebrow's
+                         "STATUS: ▍" before submit. Anchors the panel
+                         visually as a terminal config window.
+   .alert-armed-glyph; the success ✓ glyph in --ui-success after the
+                         alert is armed.
+   .alert-input; brutalist hide-the-affordance: rest state has
+                         no underline; focus draws a 1px --ui-guidance
+                         rule. The valid / invalid modifier classes
+                         override on blur to --ui-success / --ui-danger
+                         respectively. Tailwind v4 arbitrary-value
+                         variants with var() do not always survive the
+                         compile pass, so the state machine lives here. */
+[data-canvas="simulator"] .reveal-alert {
+  animation: simulator-fade-in 250ms ease-out 600ms 1 backwards;
+}
+@keyframes alert-status-pip {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.alert-status-pip {
+  display: inline-block;
+  color: var(--ui-guidance);
+  animation: alert-status-pip 1.05s steps(1, end) infinite;
+}
+.alert-armed-glyph {
+  color: var(--ui-success);
+}
+/* Visible-affordance input state machine.
+   The previous brutalist hide-the-affordance pattern (transparent
+   border at rest, underline only on focus) post-launch tested as
+   too stealth: users did not register that the NOTIFY value column
+   was an input. The new resting state shows a solid --text-tertiary
+   bottom rule and a subtle inset background so the field reads
+   unmistakably as an input on first glance. The cyan / mint / rose
+   focus and validation transitions are unchanged.
+   Anchored under [data-canvas="simulator"] so the selectors carry
+   higher specificity than Tailwind v4's `* { border-color: ... }`
+   from @layer base. */
+[data-canvas="simulator"] input.alert-input {
+  border-bottom: 1px solid var(--text-tertiary);
+  background-color: rgba(0, 0, 0, 0.20);
+  caret-color: var(--ui-guidance);
+  padding-left: 8px;
+  padding-right: 8px;
+  transition: border-bottom-color 100ms ease-out, background-color 100ms ease-out;
+}
+[data-canvas="simulator"] input.alert-input:focus {
+  outline: none;
+  border-bottom-color: var(--ui-guidance);
+  background-color: rgba(0, 0, 0, 0.30);
+}
+[data-canvas="simulator"] input.alert-input.is-valid,
+[data-canvas="simulator"] input.alert-input.is-valid:focus {
+  border-bottom-color: var(--ui-success);
+}
+[data-canvas="simulator"] input.alert-input.is-invalid,
+[data-canvas="simulator"] input.alert-input.is-invalid:focus {
+  border-bottom-color: var(--ui-danger);
+}
+/* Placeholder ("operator@domain.com") rendered in --text-quiet so the
+   format hint reads as terminal example syntax, not as user-entered
+   data. opacity: 1 defeats the user-agent default that dims the
+   placeholder past the token's intended weight. */
+[data-canvas="simulator"] input.alert-input::placeholder {
+  color: var(--text-quiet);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-canvas="simulator"] .reveal-alert {
+    animation: none;
+    opacity: 1;
+  }
+  .alert-status-pip {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* StaggeredReveal item transition per MOTION_SPEC.md §2.
+   240ms entry, easing matches motion.entry from
+   src/lib/motion/vocabulary.ts. The component's useEffect supplies
+   the per-item delay; CSS just owns the timing curve so a fully
+   no-JS render lands at the final state. */
+.stagger-item {
+  transition:
+    opacity 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stagger-item {
+    transition: none;
+  }
+}
+
+/* Share-strip idle nudge per VIRAL_LOOP_PIVOT.md §3.1.E.
+   A single opacity cycle (1 → 0.7 → 1 over 1.6s) fires once after the
+   share buttons have been in the viewport without action for 6 s.
+   The TicketShareButton effect adds the class on the timer and strips
+   it after the animation, so the cue never repeats. */
+@keyframes nudge-once {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+.nudge-once {
+  animation: nudge-once 1.6s ease-in-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nudge-once { animation: none; }
+}
+
+/* ── Tailwind v4 theme bridge ───────────────────────────────────────────── */
+@theme inline {
+  /* Canvas-aware colors: resolve through CSS vars so they flip with the canvas */
+  --color-bg-root:       var(--bg-root);
+  --color-bg-panel:      var(--bg-panel);
+  --color-bg-panel-elev: var(--bg-panel-elev);
+  --color-border-subtle:  var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-text-primary:   var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary:  var(--text-tertiary);
+  --color-text-quiet:     var(--text-quiet);
+  --color-data-neutral:   var(--data-neutral);
+  --color-edge-positive:  var(--edge-positive);
+  --color-edge-negative:  var(--edge-negative);
+  --color-gate-fired:     var(--gate-fired);
+  --color-accent-focus:   var(--accent-focus);
+  --color-ledger-hit:     var(--ledger-hit);
+  --color-ledger-miss:    var(--ledger-miss);
+
+  /* Paper tokens (editorial) */
+  --color-paper:      #F7F4EC;
+  --color-paper-sunk: #EEEAE0;
+  --color-paper-elev: #FCFAF4;
+
+  /* Ink tokens */
+  --color-ink:       #141414;
+  --color-ink-body:  #2A2A2A;
+  --color-ink-soft:  #5A5550;
+  --color-ink-quiet: #8A847C;
+
+  /* Slate tokens */
+  --color-slate-canvas:    #0F1216;
+  --color-slate-panel:     #151A21;
+  --color-slate-elev:      #1C222B;
+  --color-slate-rule:      #262D37;
+  --color-slate-ink:       #EEE8DD;
+  --color-slate-ink-soft:  #A8AFBC;
+  --color-slate-ink-quiet: #6D7585;
+
+  /* Prism palette: static, not canvas-aware */
+  --color-prism-peach:  #F9B88A;
+  --color-prism-coral:  #EC7C6A;
+  --color-prism-rose:   #E76E8A;
+  --color-prism-plum:   #8E5A8A;
+  --color-prism-indigo: #5B6CEC;
+  --color-prism-cyan:   #7ED0E8;
+  --color-prism-mint:   #88E0B6;
+  --color-prism-sun:    #F5D76E;
+
+  /* Shadcn semantic */
+  --color-background:           var(--background);
+  --color-foreground:           var(--foreground);
+  --color-card:                 var(--card);
+  --color-card-foreground:      var(--card-foreground);
+  --color-popover:              var(--popover);
+  --color-popover-foreground:   var(--popover-foreground);
+  --color-primary:              var(--primary);
+  --color-primary-foreground:   var(--primary-foreground);
+  --color-secondary:            var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:                var(--muted);
+  --color-muted-foreground:     var(--muted-foreground);
+  --color-accent:               var(--accent);
+  --color-accent-foreground:    var(--accent-foreground);
+  --color-destructive:          var(--destructive);
+  --color-border:               var(--border);
+  --color-input:                var(--input);
+  --color-ring:                 var(--ring);
+
+  /* Radii */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+
+  /* Font families · §2.5 */
+  --font-serif: "Source Serif 4 Variable", Georgia, ui-serif, serif;
+  --font-sans:  "Inter Variable", system-ui, sans-serif;
+  --font-mono:  "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+
+  /* Type scale · §2.5 */
+  --text-display-xl: 64px;
+  --text-display-lg: 48px;
+  --text-display-md: 36px;
+  --text-head-lg:    24px;
+  --text-head-md:    18px;
+  --text-body-lg:    18px;
+  --text-body:       16px;
+  --text-body-sm:    14px;
+  --text-meta:       13px;
+  --text-data:       13.5px;
+  --text-data-sm:    12px;
+  --text-caption:    12px;
+
+  /* Spacing additions · §2.6 editorial 4-point rhythm */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-30: 7.5rem;
+}
+
+/* ── Base layer ─────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  [data-canvas="quant"],
+  [data-canvas="simulator"] {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-root);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* FOUC fix · §2.1 dual-canvas: when a quant-canvas div is present anywhere
+     in the tree (terminal, ledger, bracket, match, team routes), promote the
+     slate background up the tree so overscroll/pull-to-refresh never reveals
+     the editorial cream. Uses :has() which is supported in all evergreen
+     browsers since 2023; no fallback needed for this site's audience.
+
+     The slate must be promoted all the way to <html>, not just <body>: with
+     viewport-fit=cover the iOS safe-area insets (notch, home indicator) are
+     painted by the propagated root-element background. Because html carries a
+     non-transparent background (the `html, body` rule above), html's own
+     background is what propagates to the canvas, so a body-only rule never
+     reaches the insets and the cream --bg-root bleeds through as thin edge
+     lines. Painting html slate on the dark canvases fills the insets edge to
+     edge. Editorial routes carry data-canvas="editorial" (no match here) so
+     html stays cream; on desktop the insets are 0 so this is a no-op.
+
+     Value is the literal slate token (#0F1216), byte-identical to the slate
+     that --bg-root resolves to under [data-canvas="quant"] / ="simulator"
+     (lines 121 / 203), so the inset slate and the inner-canvas slate are the
+     same hue with no two-tone seam. The earlier rule referenced an undefined
+     --slate-canvas and was inert; --color-slate-canvas is the real token. */
+  html:has([data-canvas="quant"]),
+  html:has([data-canvas="simulator"]),
+  body:has([data-canvas="quant"]),
+  body:has([data-canvas="simulator"]) {
+    background-color: var(--color-slate-canvas);
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.625;
+  }
+
+  /* Headings use serif on Editorial canvas, sans on Quant. §2.9 */
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+  }
+
+  [data-canvas="quant"] h1,
+  [data-canvas="quant"] h2,
+  [data-canvas="quant"] h3 {
+    font-family: var(--font-sans);
+  }
+
+  /* Canvas wrapper: covers full viewport and inherits canvas variables */
+  [data-canvas] {
+    background-color: var(--bg-root);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Monospaced numeric elements: tabular alignment is mandatory · §0.1.3 */
+  .mono,
+  .tabular {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum", "cv11";
+    font-variant-numeric: tabular-nums;
+    font-size: 13.5px;
+    line-height: 20px;
+  }
+
+  /* Editorial reading measure · §2.5 */
+  .prose-editorial {
+    max-width: 68ch;
+  }
+  .prose-editorial p {
+    margin-block-end: 1.25rem;
+  }
+  .prose-editorial h2 {
+    margin-block-start: 4.5rem;
+    font-size: 36px;
+    line-height: 44px;
+  }
+  .prose-editorial h3 {
+    margin-block-start: 2.5rem;
+    font-size: 24px;
+    line-height: 32px;
+    font-family: var(--font-serif);
+  }
+
+  /* Reduced motion · §2.7 */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 2px solid var(--accent-focus);
+    outline-offset: 2px;
+  }
+
+  /* Masthead wordmark accent: teal on editorial, canvas-native light on quant.
+     Using a rule instead of an inline style so it flips with the canvas. */
+  .wordmark-accent {
+    color: rgb(15, 107, 125);
+  }
+  [data-canvas="quant"] .wordmark-accent,
+  [data-canvas="simulator"] .wordmark-accent {
+    color: var(--text-primary);
+  }
+
+  /* ── §8.3 Vault article template ──────────────────────────────────────── */
+  /* Two-column grid: reading column (≤ 68ch) + 220px side rail at ≥ 1280px. */
+  .vault-article-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 68ch);
+    column-gap: 48px;
+    row-gap: 0;
+    justify-content: start;
+  }
+
+  @media (min-width: 1280px) {
+    .vault-article-grid {
+      grid-template-columns: minmax(0, 68ch) 220px;
+    }
+  }
+
+  /* Side-rail column target for <MarginNote> elements (≥ 1280px) */
+  .vault-side-rail {
+    display: none;
+  }
+  @media (min-width: 1280px) {
+    .vault-side-rail {
+      display: block;
+      grid-column: 2;
+    }
+  }
+
+  /* Mobile / tablet TOC: collapsible <details> shown above the prose when
+     the side-rail is hidden (<1280px). Folded by default so the reading
+     surface starts clean. Hidden on desktop where the sticky side-rail
+     does the work. The inner VaultToc instance keeps its scroll-tracking
+     and footnote-pulse behaviours since the same component is reused. */
+  .vault-toc-mobile {
+    grid-column: 1;
+    margin: 0 0 24px;
+  }
+  @media (min-width: 1280px) {
+    .vault-toc-mobile { display: none; }
+  }
+  .vault-toc-mobile > details {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-panel);
+  }
+  .vault-toc-mobile-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    user-select: none;
+  }
+  .vault-toc-mobile-summary::-webkit-details-marker {
+    display: none;
+  }
+  .vault-toc-mobile-chevron {
+    color: var(--text-tertiary);
+    transition: transform 160ms ease;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .vault-toc-mobile > details[open] .vault-toc-mobile-chevron {
+    transform: rotate(180deg);
+  }
+  .vault-toc-mobile-body {
+    padding: 4px 16px 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  /* Inside the mobile TOC the inner .vault-toc must NOT be sticky (it lives
+     inside a folded disclosure, not in a fixed side rail). Override the
+     sticky positioning and the rail's left border so the markup reads as a
+     plain inline list of links. */
+  .vault-toc-mobile-body .vault-toc {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    border-left: none;
+    padding-left: 0;
+  }
+
+  /* Inline/narrow margin-note fallback: shown below 1280px, hidden on wide */
+  .vault-margin-inline {
+    display: block;
+    margin: 16px 0;
+    padding: 12px 16px;
+    border-left: 2px solid var(--rule);
+    background: var(--bg-panel);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+  @media (min-width: 1280px) {
+    .vault-margin-inline { display: none; }
+  }
+
+  .vault-margin-rail {
+    display: none;
+  }
+  @media (min-width: 1280px) {
+    .vault-margin-rail {
+      display: block;
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--text-tertiary);
+      border-left: 1px solid var(--rule);
+      padding-left: 16px;
+      margin-block-end: 24px;
+    }
+  }
+
+  /* Dropcap: first glyph of first paragraph, display-md, floated left.
+     The wrapper is a <div> so MDX-nested <p> children stay valid markup;
+     ::first-letter targets the first paragraph inside. */
+  .vault-dropcap p:first-child::first-letter,
+  .vault-dropcap::first-letter {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--text-primary);
+    float: left;
+    padding-right: 10px;
+    padding-top: 6px;
+    margin-bottom: -6px;
+  }
+
+  /* Section rule between H2s: centered · · · in --ink-quiet */
+  .vault-section-rule {
+    text-align: center;
+    color: var(--text-quiet);
+    letter-spacing: 0.5em;
+    font-size: 12px;
+    margin: 56px 0;
+    user-select: none;
+  }
+  .vault-section-rule::before {
+    content: "\00B7  \00B7  \00B7";
+  }
+
+  /* Pull quote: left-hang indent on ≥ 1024px, 96px opening serif quote */
+  .vault-pullquote {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 40px;
+    color: var(--text-primary);
+    margin: 48px 0;
+    position: relative;
+    padding-left: 24px;
+    border-left: 2px solid var(--prism-peach);
+  }
+  @media (min-width: 1024px) {
+    .vault-pullquote {
+      margin-left: -48px;
+      padding-left: 48px;
+    }
+  }
+  .vault-pullquote-cite {
+    display: block;
+    margin-top: 12px;
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+  }
+
+  /* Figure. 56px above, 40px below, italic caption in --ink-quiet */
+  .vault-figure {
+    margin: 56px 0 40px;
+  }
+  .vault-figure figcaption {
+    margin-top: 16px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 18px;
+    font-style: italic;
+    color: var(--text-quiet);
+  }
+
+  /* Eyebrow label · §2.5 meta token */
+  .vault-eyebrow {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+  }
+
+  /* Byline row */
+  .vault-byline {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-tertiary);
+  }
+
+  /* Cite chip: click-to-copy BibTeX surface at foot of article */
+  .vault-citechip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--text-tertiary);
+    padding: 10px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-panel-elev);
+    white-space: pre-wrap;
+  }
+
+  /* MDX prose defaults on the editorial canvas */
+  .vault-prose p {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 30px;
+    color: var(--text-secondary);
+    margin-block-end: 20px;
+  }
+  .vault-prose h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-block-start: 72px;
+    margin-block-end: 16px;
+  }
+  .vault-prose h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 32px;
+    color: var(--text-primary);
+    margin-block-start: 40px;
+    margin-block-end: 12px;
+  }
+  .vault-prose a {
+    color: var(--accent-focus);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent-focus) 40%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 120ms ease-out;
+  }
+  .vault-prose a:hover {
+    text-decoration-color: var(--accent-focus);
+  }
+  .vault-prose strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .vault-prose em {
+    font-style: italic;
+  }
+  .vault-prose code {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-panel);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .vault-prose ul,
+  .vault-prose ol {
+    margin-block-end: 20px;
+    padding-left: 24px;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 30px;
+    color: var(--text-secondary);
+  }
+  .vault-prose li {
+    margin-block-end: 8px;
+  }
+  .vault-prose blockquote {
+    margin: 32px 0;
+    padding-left: 20px;
+    border-left: 2px solid var(--rule);
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+
+  /* KaTeX output size tune for body readability */
+  .vault-prose .katex { font-size: 1.05em; }
+
+  /* Mobile prose tighten. At <640px the 18px serif at 30px line-height is
+     a touch generous on a 375px viewport. Drop to 17 / 28 for body and
+     30 / 38 for h2 so the line measure lands around 38ch, the well-trodden
+     phone reading sweet spot. Desktop values remain pristine. */
+  @media (max-width: 640px) {
+    .vault-prose p,
+    .vault-prose ul,
+    .vault-prose ol {
+      font-size: 17px;
+      line-height: 28px;
+    }
+    .vault-prose h2 {
+      font-size: 30px;
+      line-height: 38px;
+      margin-block-start: 56px;
+    }
+    .vault-prose h3 {
+      font-size: 22px;
+      line-height: 30px;
+      margin-block-start: 32px;
+    }
+    .vault-dropcap p:first-child::first-letter,
+    .vault-dropcap::first-letter {
+      font-size: 56px;
+    }
+  }
+
+  /* ── Sticky table of contents (side rail, ≥1280px) ───────────────────── */
+  .vault-toc {
+    position: sticky;
+    top: 96px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 18px;
+    padding-left: 16px;
+    border-left: 1px solid var(--rule);
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+  }
+  .vault-toc-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin-bottom: 14px;
+  }
+  .vault-toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .vault-toc-item {
+    position: relative;
+  }
+  /* Reading-progress bar: a per-item overlay on the container's left rail.
+     Width and opacity reveal where the reader is in the document; future
+     items render no bar so vertical position reads at a glance. */
+  .vault-toc-item::before {
+    content: "";
+    position: absolute;
+    left: -17px;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--text-tertiary);
+    border-radius: 1px;
+    opacity: 0;
+    transition:
+      width 200ms ease,
+      opacity 200ms ease,
+      background-color 200ms ease;
+  }
+  .vault-toc-item--passed::before {
+    width: 1px;
+    opacity: 0.4;
+  }
+  .vault-toc-item--active::before {
+    width: 2px;
+    opacity: 1;
+    background: var(--text-primary);
+  }
+  .vault-toc-item a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    display: block;
+    padding: 2px 0;
+    transition: color 120ms ease-out, background-color 200ms ease;
+    border-radius: 3px;
+  }
+  .vault-toc-item a:hover {
+    color: var(--text-primary);
+  }
+  .vault-toc-item--sub {
+    padding-left: 14px;
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--text-quiet);
+  }
+  .vault-toc-item--active > a {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  /* Footnote-to-TOC pulse: a 600ms background flash on the item that owns
+     the section containing the hovered footnote ref. Mirrors the matrix
+     crosshair gesture in editorial form. */
+  .vault-toc-item--pulse > a {
+    background-color: color-mix(in oklch, var(--accent-focus) 14%, transparent);
+    color: var(--text-primary);
+  }
+  .vault-toc-item--pulse::before {
+    background: var(--accent-focus);
+    opacity: 1;
+    width: 2px;
+  }
+
+  /* ── Footnotes ───────────────────────────────────────────────────────── */
+  .vault-fnref {
+    font-family: var(--font-mono);
+    font-size: 0.7em;
+    line-height: 0;
+    margin-left: 1px;
+    vertical-align: super;
+  }
+  .vault-fnref a {
+    color: var(--accent-focus);
+    text-decoration: none;
+    padding: 0 2px;
+  }
+  .vault-fnref a:hover {
+    text-decoration: underline;
+  }
+  .vault-fns {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .vault-prose h2.vault-fns-heading,
+  .vault-fns-heading {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-quiet);
+    margin: 0 0 16px;
+  }
+  .vault-fns-list {
+    list-style: decimal;
+    padding-left: 24px;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--text-tertiary);
+  }
+  .vault-fn {
+    padding-left: 4px;
+  }
+  .vault-fn::marker {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-quiet);
+  }
+  .vault-fn-back {
+    color: var(--text-quiet);
+    text-decoration: none;
+    margin-left: 4px;
+    font-size: 13px;
+  }
+  .vault-fn-back:hover {
+    color: var(--accent-focus);
+  }
+
+  /* Vault pillar cards: the base background lives here (instead of an
+     inline `style={{ background }}`) so the hover state's background-color
+     rule can actually win against the `background` shorthand specificity.
+     Lift on hover so the card reads as affordance rather than ornament.
+     Default = --bg-panel (sunken), hover = --bg-panel-elev (elevated); a
+     real tone shift on both canvases. */
+  .vault-pillar {
+    background-color: var(--bg-panel);
+    transition:
+      transform 140ms ease-out,
+      background-color 140ms ease-out,
+      border-color 140ms ease-out,
+      box-shadow 140ms ease-out;
+    will-change: transform;
+  }
+  .vault-pillar:hover {
+    transform: translateY(-3px);
+    background-color: var(--bg-panel-elev);
+    border-color: color-mix(in oklch, var(--text-primary) 24%, var(--border-subtle));
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.05),
+      0 14px 36px rgb(0 0 0 / 0.12);
+  }
+  .vault-pillar:focus-within {
+    border-color: color-mix(in oklch, var(--accent-focus) 70%, var(--border-subtle));
+  }
+  /* Inner entry rows: group-hover underline feels right for a text link. */
+  .vault-pillar a.group:hover span:first-child {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, var(--text-primary) 30%, transparent);
+    text-underline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vault-pillar,
+    .vault-pillar:hover {
+      transform: none;
+      transition: background-color 140ms ease-out, border-color 140ms ease-out;
+    }
+  }
+
+  /* Hidden scrollbar utility for mobile-overflow surfaces (masthead nav,
+     table wrappers, bracket grids), so the horizontal scroll affordance
+     does not contaminate the editorial chrome. The scroll still works via
+     touch-drag on phones and trackpad on desktop. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Most-likely bracket: interactive states.
+     Team rows link to /team/[code]. The row highlights on hover, and the
+     enclosing card lifts slightly. */
+  .bracket-team-row {
+    transition: background-color 120ms ease-out;
+  }
+  .bracket-team-row:hover {
+    background-color: color-mix(in oklch, var(--text-primary) 5%, transparent);
+  }
+  .bracket-team-row:focus-visible {
+    outline: 2px solid var(--accent-focus);
+    outline-offset: -2px;
+    border-radius: 2px;
+  }
+  .bracket-match-card {
+    transition:
+      transform 140ms ease-out,
+      border-color 140ms ease-out,
+      box-shadow 140ms ease-out;
+  }
+  .bracket-match-card:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklch, var(--text-primary) 20%, var(--border-subtle));
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.04),
+      0 10px 24px rgb(0 0 0 / 0.08);
+  }
+  .bracket-champion-link:hover {
+    color: var(--accent-focus);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bracket-match-card,
+    .bracket-match-card:hover {
+      transform: none;
+    }
+  }
+
+}
+
+/* ── cp-08 additive onboarding (Surface A) ────────────────────────────────── */
+/* Animations and class hooks consumed by OnboardingChip, OnboardingModal,
+   MastheadOnboardingPill, and HeroGraphic's opt-in withSettle prop. All
+   four entrance animations stay in the cubic-bezier(0.4, 0, 0.2, 1) family
+   and clamp under prefers-reduced-motion. Specs are copied verbatim from
+   website/design-output/onboarding-v2/Design Package.md section 10. */
+
+/* P1 · Chip slide-in. Rises from outside the bottom-right corner. */
+@keyframes chipIn {
+  from { transform: translateX(calc(100% + 24px)); opacity: 0; }
+  to   { transform: translateX(0);                 opacity: 1; }
+}
+
+/* Modal scrim fade-in. */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modal card animate-in. Translates upward 6px while fading. */
+@keyframes modalIn {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* P3 · Trophy settle. One-pass, never repeats. Reads as Monte Carlo
+   samples resolving from a blurred posterior to a sharp render. */
+@keyframes trophySettle {
+  from { filter: blur(4px); opacity: 0.5; transform: translateY(6px); }
+  to   { filter: blur(0);   opacity: 1;   transform: translateY(0); }
+}
+
+/* P2 · Masthead pill pulse. Opacity-only breath, no scale. */
+@keyframes helpPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.85; }
+}
+
+/* Pulse is CSS-driven via the `data-onboarding-seen` attribute that the
+   pre-hydrate script in layout.tsx stamps on <html> before paint. For
+   returning visitors the attribute is "true" before first paint, so
+   the animation rule never matches and the pill renders static. For
+   first-visit visitors the attribute is "false" and the animation runs
+   until any dismissal path writes seen=true (which updates the dataset
+   in writeSeen, see OnboardingController). The pill itself also adds
+   a local `help-pulse-paused` class on click so the pulse stops the
+   moment the visitor clicks even before the modal-close path writes
+   the global flag. */
+html:not([data-onboarding-seen="true"]) .help-pulse:not(.help-pulse-paused) {
+  animation: helpPulse 1500ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Trophy settle is scoped to visitors who have not yet seen the
+   onboarding. The data attribute on <html> is stamped by an inline
+   beforeInteractive script in layout.tsx (mirroring the existing
+   DESKTOP_BANNER_PRE_HYDRATE pattern), so returning visitors get
+   zero animation and zero first-paint flash. */
+html:not([data-onboarding-seen="true"]) .trophy-settle {
+  animation: trophySettle 2400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-pulse,
+  .trophy-settle,
+  html:not([data-onboarding-seen="true"]) .trophy-settle {
+    animation: none !important;
+  }
+}

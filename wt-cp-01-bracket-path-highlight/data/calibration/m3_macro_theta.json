@@ -1,0 +1,21 @@
+{
+  "theta": [
+    1681.6968335416093,
+    -5.782676187600212,
+    8.153002828983084,
+    -6.633937905779169,
+    -83.54802675359659,
+    58.807991027021345
+  ],
+  "r2": 0.404103,
+  "rmse": 111.4379,
+  "n_teams": 48,
+  "features": [
+    "intercept",
+    "log_gdp_per_capita",
+    "log_population",
+    "mean_temp_celsius",
+    "is_host",
+    "football_culture_index"
+  ]
+}

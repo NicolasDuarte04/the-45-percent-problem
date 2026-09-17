@@ -1,0 +1,28 @@
+{
+  "fifa_code": "GER",
+  "display_name": "Germany",
+  "group": "E",
+  "confederation": "UEFA",
+  "elo_rating": 1923.0,
+  "progression": {
+    "p_group_qualification": 0.9635,
+    "p_r16": 0.5974,
+    "p_qf": 0.332,
+    "p_sf": 0.1375,
+    "p_final": 0.0642,
+    "p_champion": 0.0267,
+    "ci_95_champion": [
+      0.023718,
+      0.030046
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M09",
+      "kickoff_utc": "2026-06-14T17:00:00+00:00",
+      "opponent": "Cura\u00e7ao",
+      "is_home": true
+    }
+  ]
+}

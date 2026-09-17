@@ -1,0 +1,75 @@
+/**
+ * Brief / email-system design tokens.
+ *
+ * Scope: surfaces S1. S7 from the design canvas (capture form, verify, confirmed,
+ * unsubscribe, daily brief web view, archive, team page). These run with their
+ * own palette distinct from the editorial / quant canvases in globals.css.
+ *
+ * Activation: any DOM subtree marked `data-surface="brief"` adopts these tokens.
+ *
+ * Theme inheritance: the brief surface follows its enclosing canvas, not
+ * `prefers-color-scheme`. The editorial canvas is always cream (light); the
+ * quant canvas is always slate (dark). Mirroring the canvas keeps the brief
+ * panel from clashing with the page it sits on. The original brief specifies
+ * `prefers-color-scheme`, but in this app the canvases are themselves not
+ * preference-aware: so following them is the only way to honor the spirit of
+ * "respect the page's theme context."
+ *
+ * Forced overrides: `[data-theme="light"]` and `[data-theme="dark"]` pin the
+ * surface to one palette regardless of canvas (used by the static web archive
+ * view and email-iframe contexts where canvas cues are unavailable).
+ */
+
+[data-surface="brief"] {
+  /* Light theme: paper canvas (default) */
+  --brief-bg:              #F4F1EA;
+  --brief-bg-elev:         #FCFAF4;
+  --brief-ink:             #0E0E0E;
+  --brief-graphite:        #5A5A5A;
+  --brief-graphite-quiet:  #9A968A;
+  --brief-hairline:        #C4BEB0;
+  --brief-edge-positive:   #2B8A5F;
+  --brief-edge-negative:   #C4435E;
+  --brief-suppression:     #B07A00;
+  --brief-accent-fan:      #3FBC8E;
+
+  /* Typography roles inherit the project-wide font CSS variables defined in
+     layout.tsx (--font-sans, --font-mono, --font-serif). */
+  --brief-font-mono:  var(--font-mono);
+  --brief-font-sans:  var(--font-sans);
+  --brief-font-serif: var(--font-serif);
+
+  background: var(--brief-bg);
+  color: var(--brief-ink);
+}
+
+/* Inherit dark palette when the surface is nested inside a quant canvas, so
+   the brief panel reads as a continuation of the dark page rather than as a
+   contrasting island. */
+[data-canvas="quant"] [data-surface="brief"]:not([data-theme="light"]) {
+  --brief-bg:              #0E0E0E;
+  --brief-bg-elev:         #161616;
+  --brief-ink:             #E8E4D8;
+  --brief-graphite:        #C8C2B4;
+  --brief-graphite-quiet:  #6D7585;
+  --brief-hairline:        #3A3833;
+  --brief-edge-positive:   #88E0B6;
+  --brief-edge-negative:   #EF5A7D;
+  --brief-suppression:     #D4A845;
+  --brief-accent-fan:      #3FBC8E;
+}
+
+/* Forced light/dark variants (used inside email iframes / archive pages where
+   canvas cues are unavailable, e.g. the static web archive view). */
+[data-surface="brief"][data-theme="dark"] {
+  --brief-bg:              #0E0E0E;
+  --brief-bg-elev:         #161616;
+  --brief-ink:             #E8E4D8;
+  --brief-graphite:        #C8C2B4;
+  --brief-graphite-quiet:  #6D7585;
+  --brief-hairline:        #3A3833;
+  --brief-edge-positive:   #88E0B6;
+  --brief-edge-negative:   #EF5A7D;
+  --brief-suppression:     #D4A845;
+  --brief-accent-fan:      #3FBC8E;
+}

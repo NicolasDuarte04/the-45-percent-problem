@@ -1,0 +1,28 @@
+{
+  "fifa_code": "URU",
+  "display_name": "Uruguay",
+  "group": "H",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1892.0,
+  "progression": {
+    "p_group_qualification": 0.8343,
+    "p_r16": 0.5327,
+    "p_qf": 0.1495,
+    "p_sf": 0.0731,
+    "p_final": 0.0369,
+    "p_champion": 0.0145,
+    "ci_95_champion": [
+      0.012337,
+      0.017036
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M16",
+      "kickoff_utc": "2026-06-15T22:00:00+00:00",
+      "opponent": "Saudi Arabia",
+      "is_home": false
+    }
+  ]
+}

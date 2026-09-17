@@ -1,0 +1,28 @@
+{
+  "fifa_code": "PAR",
+  "display_name": "Paraguay",
+  "group": "D",
+  "confederation": "CONMEBOL",
+  "elo_rating": 1833.0,
+  "progression": {
+    "p_group_qualification": 0.6112,
+    "p_r16": 0.304,
+    "p_qf": 0.1421,
+    "p_sf": 0.0738,
+    "p_final": 0.0192,
+    "p_champion": 0.0068,
+    "ci_95_champion": [
+      0.005368,
+      0.008611
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M07",
+      "kickoff_utc": "2026-06-13T01:00:00+00:00",
+      "opponent": "United States",
+      "is_home": false
+    }
+  ]
+}
