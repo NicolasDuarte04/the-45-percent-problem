@@ -1,0 +1,28 @@
+{
+  "fifa_code": "MEX",
+  "display_name": "Mexico",
+  "group": "A",
+  "confederation": "CONCACAF",
+  "elo_rating": 1858.0,
+  "progression": {
+    "p_group_qualification": 0.9228,
+    "p_r16": 0.6537,
+    "p_qf": 0.4155,
+    "p_sf": 0.2023,
+    "p_final": 0.0749,
+    "p_champion": 0.0282,
+    "ci_95_champion": [
+      0.025132,
+      0.03163
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M01",
+      "kickoff_utc": "2026-06-11T19:00:00+00:00",
+      "opponent": "South Africa",
+      "is_home": true
+    }
+  ]
+}
