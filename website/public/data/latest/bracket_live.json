@@ -1,5 +1,5 @@
 {
-  "snapshot_id": "2026-10-11T02:37Z",
+  "snapshot_id": "2026-10-12T03:01Z",
   "rounds": [
     {
       "round": "GRP",
@@ -2222,13 +2222,13 @@
     }
   ],
   "live_provenance": {
-    "live_source_batch_id": "batch_20261011_023622Z",
+    "live_source_batch_id": "batch_20261012_030027Z",
     "conditioned": true,
     "conditioned_count": 72,
     "conditioned_reason": null,
     "settled_source": "postgres:match_outcomes",
     "knockout_conditioned": true,
     "knockout_conditioned_count": 32,
-    "generated_at_utc": "2026-10-11T02:37:44Z"
+    "generated_at_utc": "2026-10-12T03:01:45Z"
   }
 }
