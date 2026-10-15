@@ -1,8 +1,8 @@
 {
   "schema_version": "9.0",
-  "snapshot_id": "2026-10-14T02:29Z",
-  "generated_at_utc": "2026-10-14T02:29:05Z",
-  "code_sha": "8524d62fb8d9613d",
+  "snapshot_id": "2026-10-15T02:10Z",
+  "generated_at_utc": "2026-10-15T02:10:06Z",
+  "code_sha": "df4efcf555d35be4",
   "data_sha": "sha256:49974caa284edc2eb31524afb92aca4b",
   "pre_reg_tag": "v1.0.0-MSTAR-LOCKED",
   "champion_model": "M_STAR",

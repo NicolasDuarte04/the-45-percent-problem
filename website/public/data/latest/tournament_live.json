@@ -1,6 +1,6 @@
 {
-  "snapshot_id": "2026-10-14T02:29Z",
-  "generated_at_utc": "2026-10-14T02:29:05Z",
+  "snapshot_id": "2026-10-15T02:10Z",
+  "generated_at_utc": "2026-10-15T02:10:06Z",
   "mc_runs": 10000,
   "model_variant": "M2_fifa",
   "teams": [
@@ -9,15 +9,15 @@
       "display_name": "Spain",
       "confederation": "UEFA",
       "seed": 1,
-      "p_champion": 0.567,
+      "p_champion": 0.5689,
       "p_final": 1.0,
       "p_semifinal": 1.0,
       "p_quarterfinal": 1.0,
       "p_r16": 1.0,
       "p_group_qualification": 1.0,
       "ci_95_champion": [
-        0.557264,
-        0.576684
+        0.559169,
+        0.578578
       ],
       "elo_current": 2165.0,
       "rank_change_7d": 0
@@ -27,15 +27,15 @@
       "display_name": "England",
       "confederation": "UEFA",
       "seed": 2,
-      "p_champion": 0.433,
+      "p_champion": 0.4311,
       "p_final": 1.0,
       "p_semifinal": 1.0,
       "p_quarterfinal": 1.0,
       "p_r16": 1.0,
       "p_group_qualification": 1.0,
       "ci_95_champion": [
-        0.423316,
-        0.442736
+        0.421422,
+        0.440831
       ],
       "elo_current": 2020.0,
       "rank_change_7d": 0
@@ -870,13 +870,13 @@
     }
   ],
   "live_provenance": {
-    "live_source_batch_id": "batch_20261014_022747Z",
+    "live_source_batch_id": "batch_20261015_020847Z",
     "conditioned": true,
     "conditioned_count": 72,
     "conditioned_reason": null,
     "settled_source": "postgres:match_outcomes",
     "knockout_conditioned": true,
     "knockout_conditioned_count": 32,
-    "generated_at_utc": "2026-10-14T02:29:05Z"
+    "generated_at_utc": "2026-10-15T02:10:06Z"
   }
 }
