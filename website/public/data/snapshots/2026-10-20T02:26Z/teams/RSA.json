@@ -1,0 +1,28 @@
+{
+  "fifa_code": "RSA",
+  "display_name": "South Africa",
+  "group": "A",
+  "confederation": "CAF",
+  "elo_rating": 1524.0,
+  "progression": {
+    "p_group_qualification": 0.4276,
+    "p_r16": 0.2729,
+    "p_qf": 0.0866,
+    "p_sf": 0.0231,
+    "p_final": 0.0012,
+    "p_champion": 0.0,
+    "ci_95_champion": [
+      0.0,
+      0.000384
+    ]
+  },
+  "history": [],
+  "upcoming_matches": [
+    {
+      "match_id": "M01",
+      "kickoff_utc": "2026-06-11T19:00:00+00:00",
+      "opponent": "Mexico",
+      "is_home": false
+    }
+  ]
+}
